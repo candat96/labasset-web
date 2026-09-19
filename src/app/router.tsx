@@ -15,6 +15,7 @@ const implemented: RouteObject[] = [
   { path: 'admin/users/:id', lazy: () => import('@/features/users/pages/UserDetailPage') },
   { path: 'admin/catalogs/:name', lazy: () => import('@/features/catalogs/pages/CatalogPage') },
   { path: 'admin/settings', lazy: () => import('@/features/settings/pages/SettingsPage') },
+  { path: 'admin/audit-logs', lazy: () => import('@/features/audit-logs/pages/AuditLogsPage') },
   {
     path: 'admin/departments/:id',
     lazy: () => import('@/features/departments/pages/DepartmentDetailPage'),
