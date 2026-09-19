@@ -43,3 +43,14 @@ test('login → dashboard → departments CRUD', async ({ page }) => {
   await expect(page.getByRole('alertdialog')).toBeHidden()
   await expect(row).toBeHidden()
 })
+
+test('equipment list is reachable', async ({ page }) => {
+  await page.goto('/login')
+  const hc = page.getByLabel('Mã bệnh viện')
+  if (await hc.isVisible().catch(() => false)) await hc.fill(code)
+  await page.getByLabel('Tài khoản').fill(user)
+  await page.getByLabel('Mật khẩu').fill(pass)
+  await page.getByRole('button', { name: 'Đăng nhập' }).click()
+  await page.goto('/equipment')
+  await expect(page.getByRole('heading', { name: 'Hồ sơ thiết bị' })).toBeVisible()
+})

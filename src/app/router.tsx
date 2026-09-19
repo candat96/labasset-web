@@ -36,6 +36,19 @@ const implemented: RouteObject[] = [
   { path: 'profile', lazy: () => import('@/features/auth/pages/ProfilePage') },
   { path: 'change-password', lazy: () => import('@/features/auth/pages/ChangePasswordPage') },
   { path: 'sessions', lazy: () => import('@/features/auth/pages/SessionsPage') },
+  { path: 'equipment', lazy: () => import('@/features/equipment/pages/EquipmentPage') },
+  { path: 'equipment/new', lazy: () => import('@/features/equipment/pages/EquipmentFormPage') },
+  { path: 'equipment/compare', lazy: () => import('@/features/equipment/pages/ComparePage') },
+  { path: 'equipment/transfers', lazy: () => import('@/features/equipment/pages/TransfersPage') },
+  {
+    path: 'equipment/by-qr/:token',
+    lazy: () => import('@/features/equipment/pages/ByQrPage'),
+  },
+  {
+    path: 'equipment/:id/edit',
+    lazy: () => import('@/features/equipment/pages/EquipmentFormPage'),
+  },
+  { path: 'equipment/:id', lazy: () => import('@/features/equipment/pages/EquipmentDetailPage') },
 ]
 
 const sysImplemented = [

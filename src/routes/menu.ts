@@ -202,6 +202,7 @@ export const EXTRA_ITEMS: MenuItem[] = [
   { path: '/profile', labelKey: 'menu:items.profile' },
   { path: '/change-password', labelKey: 'menu:items.changePassword' },
   { path: '/sessions', labelKey: 'menu:items.sessions' },
+  { path: '/equipment/compare', labelKey: 'menu:items.equipmentCompare' },
 ]
 
 export const allMenuItems = (): MenuItem[] => MENU.flatMap((g) => g.items)

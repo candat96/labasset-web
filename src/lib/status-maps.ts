@@ -13,3 +13,32 @@ export const commonStatusMap: StatusMap = {
   cancelled: { label: 'Đã huỷ', tone: 'muted' },
   posted: { label: 'Đã ghi sổ', tone: 'success' },
 }
+
+export const equipmentStatusMap: StatusMap = {
+  active: { label: 'Hoạt động', tone: 'success' },
+  broken: { label: 'Hỏng', tone: 'danger' },
+  awaiting_parts: { label: 'Chờ linh kiện', tone: 'warning' },
+  suspended: { label: 'Tạm ngưng', tone: 'muted' },
+  retired: { label: 'Ngừng sử dụng', tone: 'muted' },
+  disposed: { label: 'Thanh lý', tone: 'muted' },
+}
+
+export const accessoryConditionMap: StatusMap = {
+  good: { label: 'Tốt', tone: 'success' },
+  worn: { label: 'Mòn', tone: 'warning' },
+  broken: { label: 'Hỏng', tone: 'danger' },
+}
+
+export const componentStatusMap: StatusMap = {
+  ok: { label: 'OK', tone: 'success' },
+  warning: { label: 'Cảnh báo', tone: 'warning' },
+  due: { label: 'Đến hạn', tone: 'danger' },
+  replaced: { label: 'Đã thay', tone: 'muted' },
+}
+
+export const transferStatusMap: StatusMap = {
+  pending: { label: 'Chờ duyệt', tone: 'warning' },
+  approved: { label: 'Đã duyệt', tone: 'success' },
+  rejected: { label: 'Từ chối', tone: 'danger' },
+  cancelled: { label: 'Đã huỷ', tone: 'muted' },
+}

@@ -48,5 +48,17 @@
   "SETTING_UNKNOWN": "Khoá cấu hình không tồn tại",
   "HOSPITAL_CODE_TAKEN": "Mã bệnh viện đã tồn tại",
   "HOSPITAL_STATE_CONFLICT": "Trạng thái bệnh viện không cho phép thao tác này",
-  "SYS_MULTI_ONLY": "Chỉ dùng được khi hệ thống chạy đa viện"
+  "SYS_MULTI_ONLY": "Chỉ dùng được khi hệ thống chạy đa viện",
+  "EQUIPMENT_NOT_FOUND": "Không tìm thấy máy",
+  "EQUIPMENT_CODE_TAKEN": "Mã máy đã tồn tại",
+  "EQUIPMENT_SERIAL_TAKEN": "Số serial đã tồn tại",
+  "EQUIPMENT_INVALID_STATUS_TRANSITION": "Không chuyển được sang trạng thái này",
+  "EQUIPMENT_DELETE_NOT_ALLOWED": "Chỉ xoá máy đã ngừng hoặc thanh lý",
+  "TRANSFER_PENDING_EXISTS": "Máy đang có yêu cầu điều chuyển chờ duyệt",
+  "TRANSFER_NOT_FOUND": "Không tìm thấy phiếu điều chuyển",
+  "COMPONENT_NOT_FOUND": "Không tìm thấy linh kiện",
+  "SOFTWARE_NOT_FOUND": "Không tìm thấy phần mềm",
+  "COMPARE_REQUIRES_TWO_IDS": "Cần chọn đúng hai máy để so sánh",
+  "QR_TOKEN_NOT_FOUND": "Tem QR không còn hiệu lực",
+  "ACCESSORY_NOT_FOUND": "Không tìm thấy phụ kiện"
 }
