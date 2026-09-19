@@ -60,5 +60,21 @@
   "SOFTWARE_NOT_FOUND": "Không tìm thấy phần mềm",
   "COMPARE_REQUIRES_TWO_IDS": "Cần chọn đúng hai máy để so sánh",
   "QR_TOKEN_NOT_FOUND": "Tem QR không còn hiệu lực",
-  "ACCESSORY_NOT_FOUND": "Không tìm thấy phụ kiện"
+  "ACCESSORY_NOT_FOUND": "Không tìm thấy phụ kiện",
+  "REPAIR_NOT_FOUND": "Không tìm thấy phiếu sửa chữa",
+  "REPAIR_EQUIPMENT_FORBIDDEN": "Bạn không được báo hỏng máy này",
+  "REPAIR_INVALID_TRANSITION": "Không chuyển được sang trạng thái này",
+  "REPAIR_RATING_REQUIRED": "Cần đánh giá khi nghiệm thu đạt",
+  "REPAIR_CANCEL_NOT_ALLOWED": "Không huỷ được phiếu đã hoàn thành",
+  "REPAIR_NOT_ASSIGNEE": "Chỉ người được phân công mới thao tác được",
+  "REPAIR_ALREADY_COMPLETED": "Phiếu đã hoàn thành",
+  "REPAIR_ACCEPTANCE_REQUIRED": "Cần nghiệm thu trước khi đóng phiếu",
+  "FAULT_NOT_FOUND": "Không tìm thấy lỗi",
+  "FAULT_INVALID_TRANSITION": "Không chuyển được trạng thái lỗi này",
+  "FAULT_ARCHIVED": "Lỗi đã lưu trữ, không sửa được",
+  "FAULT_NOT_PUBLISHED": "Lỗi chưa ban hành",
+  "SUGGESTION_NOT_FOUND": "Không tìm thấy đề xuất",
+  "SUGGESTION_ALREADY_REVIEWED": "Đề xuất đã được duyệt",
+  "STOCK_INSUFFICIENT": "Tồn kho không đủ",
+  "STOCK_DEFAULT_WAREHOUSE_MISSING": "Chưa cấu hình kho mặc định"
 }
