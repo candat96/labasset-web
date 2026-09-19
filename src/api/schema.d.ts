@@ -3814,6 +3814,214 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/stocktakes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["StocktakesController_list"];
+        put?: never;
+        post: operations["StocktakesController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/stocktakes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["StocktakesController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["StocktakesController_update"];
+        trace?: never;
+    };
+    "/v1/stocktakes/{id}/assign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["StocktakesController_assign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/stocktakes/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["StocktakesController_cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/stocktakes/{id}/counts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["StocktakesController_countsSubmit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/stocktakes/{id}/extras": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["StocktakesController_extras"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/stocktakes/{id}/extras/{extraId}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["StocktakesController_resolveExtra"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/stocktakes/{id}/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["StocktakesController_items"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/stocktakes/{id}/items/{itemId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["StocktakesController_patchItem"];
+        trace?: never;
+    };
+    "/v1/stocktakes/{id}/open": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["StocktakesController_open"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/stocktakes/{id}/package": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["StocktakesController_package"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/stocktakes/{id}/progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["StocktakesController_progress"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/stocktakes/{id}/start-counting": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["StocktakesController_startCounting"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/supplies": {
         parameters: {
             query?: never;
@@ -4113,6 +4321,10 @@ export interface components {
         ApproveTransferDto: {
             note?: string;
         };
+        AssignmentDto: {
+            subScope?: components["schemas"]["StocktakeSubScopeDto"];
+            userId: string;
+        };
         AssignmentResponseDto: {
             note?: string;
             /** @enum {string} */
@@ -4123,6 +4335,9 @@ export interface components {
             /** Format: date-time */
             dueAt?: string;
             primaryUserId: string;
+        };
+        AssignStocktakeDto: {
+            assignments: components["schemas"]["AssignmentDto"][];
         };
         AttachmentViewDto: {
             /** Format: date-time */
@@ -4386,6 +4601,19 @@ export interface components {
             source: string;
             testCount: number | null;
         };
+        CountLineDto: {
+            clientId: string;
+            /** Format: date-time */
+            countedAt?: string;
+            countedLocation?: Record<string, never>;
+            countedQty?: string;
+            countedStatus?: Record<string, never>;
+            itemId?: string;
+            lotId?: string;
+            note?: Record<string, never>;
+            photoFileId?: Record<string, never>;
+            qrToken?: string;
+        };
         CreateAnnouncementDto: {
             body: string;
             /** Format: date-time */
@@ -4447,6 +4675,9 @@ export interface components {
             isActive?: boolean;
             name: string;
             sortOrder?: number;
+        };
+        CreateCountsDto: {
+            counts: components["schemas"]["CountLineDto"][];
         };
         CreateDepartmentDto: {
             code: string;
@@ -4643,6 +4874,17 @@ export interface components {
             reason?: Record<string, never>;
             /** @enum {string} */
             type: "supply" | "repair";
+        };
+        CreateStocktakeDto: {
+            name: string;
+            notes?: Record<string, never>;
+            /** Format: date-time */
+            plannedAt?: Record<string, never>;
+            scopeId?: Record<string, never>;
+            /** @enum {string} */
+            scopeType: "department" | "warehouse" | "all";
+            /** @enum {string} */
+            type: "equipment" | "supply";
         };
         CreateSupplierDto: {
             address?: Record<string, never>;
@@ -5375,6 +5617,29 @@ export interface components {
             /** @description otpToken trả về từ /login */
             otpToken: string;
         };
+        PackageDto: {
+            items: components["schemas"]["PackageItemDto"][];
+            sessionId: string;
+        };
+        PackageItemDto: {
+            bookQty: string;
+            code: string;
+            equipmentId: string | null;
+            itemId: string;
+            location: string | null;
+            lotId: string | null;
+            lotNo: string | null;
+            name: string;
+        };
+        PatchItemDto: {
+            countedLocation?: Record<string, never>;
+            countedQty?: string;
+            countedStatus?: Record<string, never>;
+            diffReason?: Record<string, never>;
+            note?: Record<string, never>;
+            photoFileId?: Record<string, never>;
+            resolution?: Record<string, never>;
+        };
         PendingMigrationsDto: {
             error?: string;
             pending: string[] | null;
@@ -5437,6 +5702,24 @@ export interface components {
             };
             /** Format: uri */
             uploadUrl: string;
+        };
+        ProgressAssigneeDto: {
+            counted: number;
+            fullName: string | null;
+            percent: number;
+            total: number;
+            userId: string;
+        };
+        ProgressDto: {
+            byAssignee: components["schemas"]["ProgressAssigneeDto"][];
+            counted: number;
+            percent: number;
+            total: number;
+            unassigned: {
+                counted?: number;
+                percent?: number;
+                total?: number;
+            };
         };
         ProposeFaultDto: {
             /** Format: uuid */
@@ -6060,6 +6343,10 @@ export interface components {
             /** @description Token trong liên kết email: <tenantId>.<token> */
             token: string;
         };
+        ResolveExtraDto: {
+            ignore?: boolean;
+            itemId?: string;
+        };
         ResultDto: {
             key: string;
             note?: string;
@@ -6243,6 +6530,72 @@ export interface components {
             limit: number;
             page: number;
             total: number;
+        };
+        StocktakeSessionDetailDto: {
+            assignments: components["schemas"]["AssignmentResponseDto"][];
+            /** Format: date-time */
+            closedAt: string | null;
+            closedBy: string | null;
+            code: string;
+            counts: {
+                counted?: number;
+                diff?: number;
+                total?: number;
+            };
+            /** Format: date-time */
+            createdAt: string;
+            createdBy: string | null;
+            id: string;
+            name: string;
+            notes: string | null;
+            /** Format: date-time */
+            plannedAt: string | null;
+            scopeId: string | null;
+            /** @enum {string} */
+            scopeType: "department" | "warehouse" | "all";
+            /** Format: date-time */
+            snapshotAt: string | null;
+            /** @enum {string} */
+            status: "draft" | "open" | "counting" | "review" | "closed" | "cancelled";
+            /** @enum {string} */
+            type: "equipment" | "supply";
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        StocktakeSessionPageDto: {
+            items: components["schemas"]["StocktakeSessionResponseDto"][];
+            limit: number;
+            page: number;
+            total: number;
+        };
+        StocktakeSessionResponseDto: {
+            /** Format: date-time */
+            closedAt: string | null;
+            closedBy: string | null;
+            code: string;
+            /** Format: date-time */
+            createdAt: string;
+            createdBy: string | null;
+            id: string;
+            name: string;
+            notes: string | null;
+            /** Format: date-time */
+            plannedAt: string | null;
+            scopeId: string | null;
+            /** @enum {string} */
+            scopeType: "department" | "warehouse" | "all";
+            /** Format: date-time */
+            snapshotAt: string | null;
+            /** @enum {string} */
+            status: "draft" | "open" | "counting" | "review" | "closed" | "cancelled";
+            /** @enum {string} */
+            type: "equipment" | "supply";
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        StocktakeSubScopeDto: {
+            locations?: string[];
+            warehouseIds?: string[];
         };
         SuggestedAssigneeDto: {
             fullName: string;
@@ -6737,6 +7090,12 @@ export interface components {
             /** Format: date-time */
             updatedOn?: string | null;
             version?: string | null;
+        };
+        UpdateStocktakeDto: {
+            name?: string;
+            notes?: Record<string, never>;
+            /** Format: date-time */
+            plannedAt?: Record<string, never>;
         };
         UpdateSupplierDto: {
             address?: Record<string, never>;
@@ -15483,6 +15842,391 @@ export interface operations {
                     "application/json": {
                         value?: string;
                     };
+                };
+            };
+        };
+    };
+    StocktakesController_list: {
+        parameters: {
+            query?: {
+                from?: string;
+                limit?: components["schemas"]["Object"];
+                page?: components["schemas"]["Object"];
+                status?: "draft" | "open" | "counting" | "review" | "closed" | "cancelled";
+                to?: string;
+                type?: "equipment" | "supply";
+            };
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StocktakeSessionPageDto"];
+                };
+            };
+        };
+    };
+    StocktakesController_create: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateStocktakeDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StocktakeSessionDetailDto"];
+                };
+            };
+        };
+    };
+    StocktakesController_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StocktakeSessionDetailDto"];
+                };
+            };
+        };
+    };
+    StocktakesController_update: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateStocktakeDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StocktakeSessionDetailDto"];
+                };
+            };
+        };
+    };
+    StocktakesController_assign: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssignStocktakeDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StocktakeSessionDetailDto"];
+                };
+            };
+        };
+    };
+    StocktakesController_cancel: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StocktakeSessionDetailDto"];
+                };
+            };
+        };
+    };
+    StocktakesController_countsSubmit: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateCountsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    StocktakesController_extras: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    StocktakesController_resolveExtra: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                extraId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResolveExtraDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    StocktakesController_items: {
+        parameters: {
+            query?: {
+                assignee?: string;
+                diffOnly?: boolean;
+                limit?: components["schemas"]["Object"];
+                page?: components["schemas"]["Object"];
+                status?: "counted" | "uncounted";
+            };
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    StocktakesController_patchItem: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+                itemId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PatchItemDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    StocktakesController_open: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StocktakeSessionDetailDto"];
+                };
+            };
+        };
+    };
+    StocktakesController_package: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PackageDto"];
+                };
+            };
+        };
+    };
+    StocktakesController_progress: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgressDto"];
+                };
+            };
+        };
+    };
+    StocktakesController_startCounting: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StocktakeSessionDetailDto"];
                 };
             };
         };
