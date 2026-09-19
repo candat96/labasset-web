@@ -1,4 +1,4 @@
-import { api, unwrap } from '@/api/client'
+import { api, unwrap, unwrapAs } from '@/api/client'
 import type { components } from '@/api/schema'
 import type { LoginResult } from '@/stores/auth.store'
 
@@ -49,4 +49,15 @@ export function logoutRemote(all: boolean, refreshToken?: string | null) {
       body: refreshToken ? { refreshToken } : {},
     }),
   )
+}
+
+// TODO(api): GET /v1/settings/public chưa có response schema trong OpenAPI.
+export interface PublicSettings {
+  name?: string
+  hospitalName?: string
+  [k: string]: unknown
+}
+
+export function publicSettings() {
+  return unwrapAs<PublicSettings>(api.GET('/v1/settings/public'))
 }

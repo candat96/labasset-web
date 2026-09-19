@@ -105,3 +105,11 @@ export async function unwrap<T>(p: Promise<FetchResult<T>>): Promise<T> {
   }
   return data as T
 }
+
+/**
+ * Dùng cho endpoint OpenAPI CHƯA khai response schema (data sinh ra là `undefined`).
+ * Caller tự khai type trong `types.ts` của feature kèm `// TODO(api)`.
+ */
+export async function unwrapAs<T>(p: Promise<FetchResult<unknown>>): Promise<T> {
+  return (await unwrap(p)) as T
+}

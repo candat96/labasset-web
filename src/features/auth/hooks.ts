@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next'
 import * as authApi from './api'
 import { isOtpChallenge } from './api'
 import { useAuthStore } from '@/stores/auth.store'
+import { useUiStore } from '@/stores/ui.store'
 import { resolveTenantMode } from '@/api/tenant-mode'
 import { messageFor } from '@/api/errors'
 
@@ -128,4 +129,22 @@ export function useLogout() {
     mutationFn: () => authApi.logoutRemote(false, useAuthStore.getState().refreshToken),
     onSettled: () => logout('manual'),
   })
+}
+
+/** Tên bệnh viện cho sidebar (best-effort; lỗi thì bỏ qua). */
+export function usePublicSettings() {
+  const token = useAuthStore((s) => s.accessToken)
+  const setHospitalName = useUiStore((s) => s.setHospitalName)
+  const q = useQuery({
+    queryKey: ['settings', 'public'],
+    queryFn: authApi.publicSettings,
+    enabled: !!token,
+    staleTime: 10 * 60_000,
+    retry: false,
+  })
+  useEffect(() => {
+    if (!q.data) return
+    const name = q.data.hospitalName ?? q.data.name
+    setHospitalName(typeof name === 'string' && name ? name : null)
+  }, [q.data, setHospitalName])
 }

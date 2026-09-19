@@ -1,1 +1,14 @@
-{}
+{
+  "title": "Tổng quan",
+  "desc": "Tình hình thiết bị, vật tư và công việc cần xử lý.",
+  "mockNote": "Số liệu minh hoạ — sẽ thay bằng API tổng hợp (GET /v1/dashboard) khi backend bổ sung.",
+  "kpi": {
+    "equipmentActive": "Máy đang hoạt động",
+    "equipmentBroken": "Máy hỏng",
+    "maintenanceDue": "Đến hạn bảo dưỡng",
+    "calibrationDue": "Đến hạn kiểm định",
+    "suppliesLow": "Hoá chất sắp hết / hết hạn",
+    "requestsPending": "Phiếu chờ duyệt",
+    "repairsOpen": "Sửa chữa đang mở"
+  }
+}

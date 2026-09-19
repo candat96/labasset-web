@@ -5,7 +5,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { AppSidebar } from './AppSidebar'
 import { Topbar } from './Topbar'
 import { NotificationBell } from './NotificationBell'
-import { useBootstrapSession } from '@/features/auth/hooks'
+import { useBootstrapSession, usePublicSettings } from '@/features/auth/hooks'
 
 export function PageSkeleton() {
   return (
@@ -19,6 +19,7 @@ export function PageSkeleton() {
 
 export function AppShell() {
   useBootstrapSession()
+  usePublicSettings()
   return (
     <SidebarProvider>
       <AppSidebar />
