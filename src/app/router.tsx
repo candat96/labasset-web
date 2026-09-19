@@ -12,6 +12,10 @@ import i18n from '@/lib/i18n'
 /** Route đã có trang thật; mọi mục MENU còn lại tự sinh placeholder. */
 const implemented: RouteObject[] = [
   {
+    path: 'admin/departments/:id',
+    lazy: () => import('@/features/departments/pages/DepartmentDetailPage'),
+  },
+  {
     path: 'notifications/preferences',
     lazy: () => import('@/features/notifications/pages/PreferencesPage'),
   },
@@ -46,7 +50,9 @@ const placeholders: RouteObject[] = MENU.flatMap((g) =>
 function guarded(route: RouteObject): RouteObject {
   const path = route.index ? '/' : `/${route.path}`
   for (const g of MENU) {
-    const item = g.items.find((i) => i.path === path)
+    const item = g.items.find(
+      (i) => i.path === path || (i.path !== '/' && path.startsWith(i.path + '/')),
+    )
     if (item) {
       const roles = item.roles ?? g.roles
       if (!roles) return route

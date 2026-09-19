@@ -59,3 +59,19 @@ export function exportDepartments(params: Pick<DepartmentListParams, 'q' | 'isAc
 export function downloadDepartmentTemplate() {
   return downloadFile('/v1/departments/template', {}, 'khoa-phong-mau.xlsx')
 }
+
+// TODO(api): endpoint users chưa có response schema.
+export interface DepartmentUser {
+  id: string
+  username: string
+  fullName: string
+  email: string | null
+  roles: string[]
+  isActive: boolean
+}
+export const getDepartmentUsers = (id: string, page = 1, limit = 20) =>
+  unwrapAs<PageResult<DepartmentUser>>(
+    api.GET('/v1/departments/{id}/users', {
+      params: { path: { id }, query: pageQuery({ page, limit }) },
+    }),
+  )
