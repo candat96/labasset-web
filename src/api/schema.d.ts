@@ -2021,6 +2021,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/equipment/{id}/supplies/runway": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["RunwayController_runway"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/equipment/{id}/transfers": {
         parameters: {
             query?: never;
@@ -3142,6 +3158,262 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["RequestsController_list"];
+        put?: never;
+        post: operations["RequestsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/requests/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["RequestsController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["RequestsController_update"];
+        trace?: never;
+    };
+    "/v1/requests/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RequestsController_approve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/requests/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RequestsController_cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/requests/{id}/clone": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RequestsController_clone"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/requests/{id}/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["RequestsController_listComments"];
+        put?: never;
+        post: operations["RequestsController_addComment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/requests/{id}/dept-approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RequestsController_deptApprove"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/requests/{id}/issue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RequestsController_issue"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/requests/{id}/receive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RequestsController_receive"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/requests/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RequestsController_reject"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/requests/{id}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RequestsController_submit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/requests/approve-bulk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RequestsController_approveBulk"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/requests/quotas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["RequestsController_listQuotas"];
+        put?: never;
+        post: operations["RequestsController_createQuota"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/requests/quotas/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["RequestsController_deleteQuota"];
+        options?: never;
+        head?: never;
+        patch: operations["RequestsController_updateQuota"];
+        trace?: never;
+    };
+    "/v1/requests/recurring": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["RequestsController_listRecurring"];
+        put?: never;
+        post: operations["RequestsController_createRecurring"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/requests/recurring/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["RequestsController_deleteRecurring"];
+        options?: never;
+        head?: never;
+        patch: operations["RequestsController_updateRecurring"];
+        trace?: never;
+    };
     "/v1/settings": {
         parameters: {
             query?: never;
@@ -3174,6 +3446,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/stock/adjust": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["StockOperationsController_adjust"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/stock/alerts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["StockController_listAlerts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/stock/alerts/{id}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["StockController_resolveAlert"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/stock/balances": {
         parameters: {
             query?: never;
@@ -3182,6 +3502,134 @@ export interface paths {
             cookie?: never;
         };
         get: operations["StockController_balances"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/stock/forecast": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["StockController_forecastSupply"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/stock/issues": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["IssuesController_list"];
+        put?: never;
+        post: operations["IssuesController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/stock/issues/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["IssuesController_get"];
+        put?: never;
+        post?: never;
+        delete: operations["IssuesController_remove"];
+        options?: never;
+        head?: never;
+        patch: operations["IssuesController_update"];
+        trace?: never;
+    };
+    "/v1/stock/issues/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["IssuesController_cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/stock/issues/{id}/post": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["IssuesController_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/stock/issues/{id}/print.pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["IssuesController_print"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/stock/issues/quick": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["IssuesController_quick"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/stock/issues/suggest-lots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["IssuesController_suggest"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3200,6 +3648,150 @@ export interface paths {
         get: operations["StockController_lots"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/stock/lots/{id}/open": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["StockOperationsController_open"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/stock/receipts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ReceiptsController_list"];
+        put?: never;
+        post: operations["ReceiptsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/stock/receipts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ReceiptsController_get"];
+        put?: never;
+        post?: never;
+        delete: operations["ReceiptsController_remove"];
+        options?: never;
+        head?: never;
+        patch: operations["ReceiptsController_update"];
+        trace?: never;
+    };
+    "/v1/stock/receipts/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ReceiptsController_cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/stock/receipts/{id}/post": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ReceiptsController_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/stock/receipts/{id}/print.pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ReceiptsController_print"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/stock/receipts/{id}/qc": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ReceiptsController_qc"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/stock/transfers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["StockOperationsController_transfer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/stock/transfers/{transferId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["StockOperationsController_cancelTransfer"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3467,6 +4059,11 @@ export interface components {
             replacedAt: string | null;
             type: string;
         };
+        AdjustDto: {
+            lotId: string;
+            newQty: string;
+            reason: string;
+        };
         AdminResetResponseDto: {
             /** @description Returned once; never stored in the master database */
             tempPassword: string;
@@ -3491,6 +4088,27 @@ export interface components {
             /** Format: date-time */
             startsAt: string;
             title: string;
+        };
+        ApproveBulkDto: {
+            ids: string[];
+        };
+        ApproveBulkResultDto: {
+            approved: string[];
+            skipped: {
+                code?: string;
+                id?: string;
+                message?: string;
+            }[];
+        };
+        ApproveItemDto: {
+            approverNote?: Record<string, never>;
+            id: string;
+            qtyApproved: string;
+        };
+        ApproveRequestDto: {
+            /** @description Omitted lines keep qtyRequested */
+            items?: components["schemas"]["ApproveItemDto"][];
+            note?: Record<string, never>;
         };
         ApproveTransferDto: {
             note?: string;
@@ -3664,6 +4282,9 @@ export interface components {
         CancelRepairDto: {
             reason: string;
         };
+        CancelRequestDto: {
+            reason?: Record<string, never>;
+        };
         ChangePasswordDto: {
             current: string;
             /** @description ≥8 ký tự, có chữ và số */
@@ -3814,6 +4435,9 @@ export interface components {
             /** @enum {string} */
             type: "inspection" | "calibration";
         };
+        CreateCommentDto: {
+            body: string;
+        };
         CreateComponentTypeDto: {
             code: string;
             defaultLifespanHours?: Record<string, never>;
@@ -3932,6 +4556,23 @@ export interface components {
             /** @enum {string} */
             plan?: "standard" | "pro";
         };
+        CreateIssueDto: {
+            equipmentId?: Record<string, never>;
+            issuedAt?: string;
+            items: components["schemas"]["IssueItemDto"][];
+            maintenanceTaskId?: Record<string, never>;
+            notes?: Record<string, never>;
+            reason?: Record<string, never>;
+            receiverName?: Record<string, never>;
+            receiverSignatureFileId?: Record<string, never>;
+            receiverUserId?: Record<string, never>;
+            repairTicketId?: Record<string, never>;
+            requestId?: Record<string, never>;
+            toDepartmentId?: Record<string, never>;
+            /** @enum {string} */
+            type: "to_department" | "for_repair" | "for_maintenance" | "dispose" | "return_to_supplier" | "adjust_out";
+            warehouseId: string;
+        };
         CreateManufacturerDto: {
             code: string;
             country?: Record<string, never>;
@@ -3940,6 +4581,37 @@ export interface components {
             name: string;
             sortOrder?: number;
             website?: Record<string, never>;
+        };
+        CreateQuotaDto: {
+            departmentId: string;
+            monthlyQty: string;
+            supplyId: string;
+        };
+        CreateReceiptDto: {
+            fromDepartmentId?: Record<string, never>;
+            invoiceDate?: Record<string, never>;
+            invoiceNo?: Record<string, never>;
+            items: components["schemas"]["ReceiptItemDto"][];
+            notes?: Record<string, never>;
+            qcNote?: Record<string, never>;
+            /** @enum {string} */
+            qcStatus?: "pending" | "passed" | "failed";
+            receivedAt?: string;
+            supplierId?: Record<string, never>;
+            /** @enum {string} */
+            type: "purchase" | "return_from_dept" | "adjust_in";
+            warehouseId: string;
+        };
+        CreateRecurringDto: {
+            dayOfMonth: number;
+            /** @description Required for ADM; ignored for DEPT_HEAD (own department) */
+            departmentId?: string;
+            items: components["schemas"]["RecurringItemDto"][];
+            /**
+             * @default normal
+             * @enum {string}
+             */
+            priority: "normal" | "urgent";
         };
         CreateRepairDto: {
             description: string;
@@ -3953,6 +4625,24 @@ export interface components {
              * @enum {string}
              */
             severity: "low" | "medium" | "high" | "critical";
+        };
+        CreateRequestDto: {
+            /** @description Required for ADM/VT creating on behalf of a department */
+            departmentId?: string;
+            /** @description Required for type=repair */
+            equipmentId?: Record<string, never>;
+            items?: components["schemas"]["RequestItemDto"][];
+            /** Format: date */
+            neededBy?: Record<string, never>;
+            /**
+             * @default normal
+             * @enum {string}
+             */
+            priority: "normal" | "urgent";
+            /** @description Required for type=repair */
+            reason?: Record<string, never>;
+            /** @enum {string} */
+            type: "supply" | "repair";
         };
         CreateSupplierDto: {
             address?: Record<string, never>;
@@ -4428,6 +5118,19 @@ export interface components {
             overallPass?: boolean;
             suppliesUsed?: components["schemas"]["UsedSupplyDto"][];
         };
+        ForecastResponseDto: {
+            /** @description Average daily consumption, last 30 days */
+            avg30: string;
+            /** @description Average daily consumption, last 90 days */
+            avg90: string;
+            /** @enum {string} */
+            basis: "avg30" | "avg90" | "unknown";
+            dailyUsage: string;
+            daysLeft: number | null;
+            onHand: string;
+            supplyId: string;
+            warehouseId: string | null;
+        };
         ForgotPasswordDto: {
             /** @description Mã bệnh viện (bắt buộc ở cloud) */
             hospitalCode?: string;
@@ -4510,6 +5213,47 @@ export interface components {
             statusMessage: string | null;
             /** Format: date-time */
             updatedAt: string;
+        };
+        IssueItemDto: {
+            lotId?: Record<string, never>;
+            quantity: string;
+            supplyId: string;
+        };
+        IssuePageDto: {
+            items: components["schemas"]["IssueResponseDto"][];
+            limit: number;
+            page: number;
+            total: number;
+        };
+        IssueRequestDto: {
+            /** @description Subset of item ids */
+            itemIds?: string[];
+            /** @description Defaults to stock.defaultWarehouseId */
+            warehouseId?: string;
+        };
+        IssueResponseDto: {
+            code: string;
+            equipmentId?: Record<string, never>;
+            fefoWarning: boolean;
+            id: string;
+            issuedAt?: string;
+            items: components["schemas"]["IssueItemDto"][];
+            maintenanceTaskId?: Record<string, never>;
+            notes?: Record<string, never>;
+            /** Format: date-time */
+            postedAt: string | null;
+            reason?: Record<string, never>;
+            receiverName?: Record<string, never>;
+            receiverSignatureFileId?: Record<string, never>;
+            receiverUserId?: Record<string, never>;
+            repairTicketId?: Record<string, never>;
+            requestId?: Record<string, never>;
+            /** @enum {string} */
+            status: "draft" | "posted" | "cancelled";
+            toDepartmentId?: Record<string, never>;
+            /** @enum {string} */
+            type: "to_department" | "for_repair" | "for_maintenance" | "dispose" | "return_to_supplier" | "adjust_out";
+            warehouseId: string;
         };
         JobRunViewDto: {
             /** Format: date-time */
@@ -4717,6 +5461,11 @@ export interface components {
             status: "queued" | "running" | "success" | "failed";
             step: string;
         };
+        QcReceiptDto: {
+            note?: string;
+            /** @enum {string} */
+            status: "passed" | "failed";
+        };
         QrEquipmentDto: {
             code: string;
             departmentId: string | null;
@@ -4724,11 +5473,97 @@ export interface components {
             name: string;
             status: string;
         };
+        QuotaPageDto: {
+            items: components["schemas"]["QuotaResponseDto"][];
+            limit: number;
+            page: number;
+            total: number;
+        };
+        QuotaResponseDto: {
+            /** Format: date-time */
+            createdAt: string;
+            departmentId: string;
+            id: string;
+            isActive: boolean;
+            monthlyQty: string;
+            supplyId: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
         ReassignTaskDto: {
             assigneeId: string;
         };
+        ReceiptItemDto: {
+            expiresAt?: string;
+            lotNo?: string;
+            quantity: string;
+            supplyId: string;
+            unitCost: string;
+        };
+        ReceiptPageDto: {
+            items: components["schemas"]["ReceiptResponseDto"][];
+            limit: number;
+            page: number;
+            total: number;
+        };
+        ReceiptResponseDto: {
+            code: string;
+            fromDepartmentId?: Record<string, never>;
+            id: string;
+            invoiceDate?: Record<string, never>;
+            invoiceNo?: Record<string, never>;
+            items: components["schemas"]["ReceiptItemDto"][];
+            notes?: Record<string, never>;
+            /** Format: date-time */
+            postedAt: string | null;
+            postedBy: string | null;
+            qcNote?: Record<string, never>;
+            /** @enum {string} */
+            qcStatus?: "pending" | "passed" | "failed";
+            receivedAt?: string;
+            /** @enum {string} */
+            status: "draft" | "posted" | "cancelled";
+            supplierId?: Record<string, never>;
+            totalAmount: string;
+            /** @enum {string} */
+            type: "purchase" | "return_from_dept" | "adjust_in";
+            warehouseId: string;
+        };
+        ReceiveRequestDto: {
+            note?: Record<string, never>;
+        };
+        RecurringItemDto: {
+            note?: Record<string, never>;
+            qty: string;
+            supplyId: string;
+        };
+        RecurringPageDto: {
+            items: components["schemas"]["RecurringResponseDto"][];
+            limit: number;
+            page: number;
+            total: number;
+        };
+        RecurringResponseDto: {
+            /** Format: date-time */
+            createdAt: string;
+            dayOfMonth: number;
+            departmentId: string | null;
+            id: string;
+            isActive: boolean;
+            items: components["schemas"]["RecurringItemDto"][];
+            /** Format: date-time */
+            lastGeneratedAt: string | null;
+            name: string | null;
+            priority: string;
+            requesterId: string | null;
+            /** Format: date-time */
+            updatedAt: string;
+        };
         RefreshDto: {
             refreshToken: string;
+        };
+        RejectRequestDto: {
+            reason: string;
         };
         RejectSuggestionDto: {
             note: string;
@@ -5046,6 +5881,179 @@ export interface components {
             /** Format: date-time */
             replacedAt: string;
         };
+        RequestCommentResponseDto: {
+            body: string;
+            /** Format: date-time */
+            createdAt: string;
+            id: string;
+            requestId: string;
+            user?: {
+                fullName?: string;
+                id?: string;
+            } | null;
+            userId: string | null;
+        };
+        RequestDetailDto: {
+            approvalLevels: number;
+            /** Format: date-time */
+            approvedAt: string | null;
+            approvedBy: string | null;
+            code: string;
+            comments: components["schemas"]["RequestCommentResponseDto"][];
+            /** Format: date-time */
+            createdAt: string;
+            department?: {
+                code?: string;
+                id?: string;
+                name?: string;
+            } | null;
+            departmentId: string | null;
+            departmentName: string | null;
+            /** Format: date-time */
+            deptApprovedAt: string | null;
+            deptApprovedBy: string | null;
+            equipment?: {
+                code?: string;
+                id?: string;
+                name?: string;
+            } | null;
+            equipmentId: string | null;
+            id: string;
+            issueId: string | null;
+            issues: {
+                code?: string;
+                id?: string;
+                /** Format: date-time */
+                postedAt?: string | null;
+                status?: string;
+                warehouseId?: string | null;
+            }[];
+            itemCount: number;
+            items: components["schemas"]["RequestItemResponseDto"][];
+            /** Format: date */
+            neededBy: string | null;
+            partiallyIssued: boolean;
+            /** @enum {string} */
+            priority: "normal" | "urgent";
+            quotaExceeded: boolean;
+            reason: string | null;
+            /** Format: date-time */
+            receivedAt: string | null;
+            receivedBy: string | null;
+            receiveNote: string | null;
+            /** Format: date-time */
+            receiveReminderAt: string | null;
+            recurringId: string | null;
+            rejectedReason: string | null;
+            repairTicket?: {
+                code?: string;
+                id?: string;
+                status?: string;
+            } | null;
+            repairTicketId: string | null;
+            requester?: {
+                fullName?: string;
+                id?: string;
+            } | null;
+            requesterId: string | null;
+            requesterName: string | null;
+            /** @enum {string} */
+            status: "draft" | "submitted" | "dept_approved" | "approved" | "partially_approved" | "rejected" | "issued" | "received" | "cancelled" | "converted";
+            /** Format: date-time */
+            submittedAt: string | null;
+            /** @enum {string} */
+            type: "supply" | "repair";
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        RequestIssueResultDto: {
+            code: string;
+            issueId: string;
+        };
+        RequestItemDto: {
+            note?: Record<string, never>;
+            /** @example 10 */
+            qtyRequested: string;
+            supplyId: string;
+        };
+        RequestItemResponseDto: {
+            approverNote: string | null;
+            id: string;
+            note: string | null;
+            qtyApproved: string | null;
+            qtyIssued: string | null;
+            qtyRequested: string;
+            quotaExceeded: boolean;
+            requestId: string;
+            shortage: string | null;
+            supply?: {
+                code?: string;
+                id?: string;
+                name?: string;
+                unit?: string | null;
+            } | null;
+            supplyId: string;
+        };
+        RequestPageDto: {
+            items: components["schemas"]["RequestResponseDto"][];
+            limit: number;
+            page: number;
+            total: number;
+        };
+        RequestResponseDto: {
+            approvalLevels: number;
+            /** Format: date-time */
+            approvedAt: string | null;
+            approvedBy: string | null;
+            code: string;
+            /** Format: date-time */
+            createdAt: string;
+            department?: {
+                code?: string;
+                id?: string;
+                name?: string;
+            } | null;
+            departmentId: string | null;
+            departmentName: string | null;
+            /** Format: date-time */
+            deptApprovedAt: string | null;
+            deptApprovedBy: string | null;
+            equipmentId: string | null;
+            id: string;
+            issueId: string | null;
+            itemCount: number;
+            items: components["schemas"]["RequestItemResponseDto"][];
+            /** Format: date */
+            neededBy: string | null;
+            partiallyIssued: boolean;
+            /** @enum {string} */
+            priority: "normal" | "urgent";
+            quotaExceeded: boolean;
+            reason: string | null;
+            /** Format: date-time */
+            receivedAt: string | null;
+            receivedBy: string | null;
+            receiveNote: string | null;
+            /** Format: date-time */
+            receiveReminderAt: string | null;
+            recurringId: string | null;
+            rejectedReason: string | null;
+            repairTicketId: string | null;
+            requester?: {
+                fullName?: string;
+                id?: string;
+            } | null;
+            requesterId: string | null;
+            requesterName: string | null;
+            /** @enum {string} */
+            status: "draft" | "submitted" | "dept_approved" | "approved" | "partially_approved" | "rejected" | "issued" | "received" | "cancelled" | "converted";
+            /** Format: date-time */
+            submittedAt: string | null;
+            /** @enum {string} */
+            type: "supply" | "repair";
+            /** Format: date-time */
+            updatedAt: string;
+        };
         ResetPasswordDto: {
             /** @description ≥8 ký tự, có chữ và số */
             next: string;
@@ -5064,6 +6072,22 @@ export interface components {
             id: string;
             /** Format: uuid */
             qrToken: string;
+        };
+        RunwayItemDto: {
+            /** @enum {string} */
+            basis: "norm_day" | "norm_test" | "history" | "unknown";
+            dailyUsage: string;
+            daysLeft: number | null;
+            isPrimary: boolean;
+            onHand: string;
+            supplyId: string;
+        };
+        RunwayResponseDto: {
+            equipmentId: string;
+            items: components["schemas"]["RunwayItemDto"][];
+            /** @enum {string} */
+            scope: "department" | "hospital";
+            warehouseIds: string[];
         };
         SaveResultsDto: {
             clientVersion: number;
@@ -5159,6 +6183,26 @@ export interface components {
             refId: string | null;
             refType: string;
             toStatus: string;
+        };
+        StockAlertResponseDto: {
+            /** Format: date-time */
+            createdAt: string;
+            id: string;
+            level: string;
+            lotId: string | null;
+            message: string;
+            /** Format: date-time */
+            resolvedAt: string | null;
+            supplyId: string;
+            /** @enum {string} */
+            type: "low_stock" | "expiring" | "expired" | "open_vial_expiring" | "stale";
+            warehouseId: string | null;
+        };
+        StockAlertsPageDto: {
+            items: components["schemas"]["StockAlertResponseDto"][];
+            limit: number;
+            page: number;
+            total: number;
         };
         StockBalanceResponseDto: {
             available: string;
@@ -5359,6 +6403,10 @@ export interface components {
             toDepartmentId: string;
             toLocation?: string | null;
         };
+        TransferItemDto: {
+            lotId: string;
+            quantity: string;
+        };
         TransferPageDto: {
             items: components["schemas"]["TransferResponseDto"][];
             limit: number;
@@ -5555,6 +6603,23 @@ export interface components {
             /** @enum {string} */
             plan?: "standard" | "pro";
         };
+        UpdateIssueDto: {
+            equipmentId?: Record<string, never>;
+            issuedAt?: string;
+            items?: components["schemas"]["IssueItemDto"][];
+            maintenanceTaskId?: Record<string, never>;
+            notes?: Record<string, never>;
+            reason?: Record<string, never>;
+            receiverName?: Record<string, never>;
+            receiverSignatureFileId?: Record<string, never>;
+            receiverUserId?: Record<string, never>;
+            repairTicketId?: Record<string, never>;
+            requestId?: Record<string, never>;
+            toDepartmentId?: Record<string, never>;
+            /** @enum {string} */
+            type?: "to_department" | "for_repair" | "for_maintenance" | "dispose" | "return_to_supplier" | "adjust_out";
+            warehouseId?: string;
+        };
         UpdateManufacturerDto: {
             country?: Record<string, never>;
             description?: string;
@@ -5578,6 +6643,35 @@ export interface components {
             startDate?: string;
             supplierId?: Record<string, never> | null;
             templateId?: string;
+        };
+        UpdateQuotaDto: {
+            isActive?: boolean;
+            monthlyQty?: string;
+        };
+        UpdateReceiptDto: {
+            fromDepartmentId?: Record<string, never>;
+            invoiceDate?: Record<string, never>;
+            invoiceNo?: Record<string, never>;
+            items?: components["schemas"]["ReceiptItemDto"][];
+            notes?: Record<string, never>;
+            qcNote?: Record<string, never>;
+            /** @enum {string} */
+            qcStatus?: "pending" | "passed" | "failed";
+            receivedAt?: string;
+            supplierId?: Record<string, never>;
+            /** @enum {string} */
+            type?: "purchase" | "return_from_dept" | "adjust_in";
+            warehouseId?: string;
+        };
+        UpdateRecurringDto: {
+            dayOfMonth?: number;
+            isActive?: boolean;
+            items?: components["schemas"]["RecurringItemDto"][];
+            /**
+             * @default normal
+             * @enum {string}
+             */
+            priority: "normal" | "urgent";
         };
         UpdateRepairCostDto: {
             amount?: string;
@@ -5619,6 +6713,20 @@ export interface components {
             supplierId?: string;
             /** Format: date-time */
             visitAt?: string;
+        };
+        UpdateRequestDto: {
+            /** @description Required for type=repair */
+            equipmentId?: Record<string, never>;
+            items?: components["schemas"]["RequestItemDto"][];
+            /** Format: date */
+            neededBy?: Record<string, never>;
+            /**
+             * @default normal
+             * @enum {string}
+             */
+            priority: "normal" | "urgent";
+            /** @description Required for type=repair */
+            reason?: Record<string, never>;
         };
         UpdateSoftwareDto: {
             /** Format: date-time */
@@ -10517,6 +11625,30 @@ export interface operations {
             };
         };
     };
+    RunwayController_runway: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunwayResponseDto"];
+                };
+            };
+        };
+    };
     TimelineController_list: {
         parameters: {
             query?: {
@@ -12890,6 +14022,616 @@ export interface operations {
             };
         };
     };
+    RequestsController_list: {
+        parameters: {
+            query?: {
+                departmentId?: string;
+                from?: string;
+                limit?: components["schemas"]["Object"];
+                page?: components["schemas"]["Object"];
+                /** @description Requests waiting for the caller to approve */
+                pendingFor?: "me";
+                priority?: "normal" | "urgent";
+                q?: string;
+                quotaExceeded?: boolean;
+                requesterId?: string;
+                sort?: "createdAt" | "neededBy" | "status" | "code";
+                /** @description Comma-separated */
+                status?: string;
+                to?: string;
+                type?: "supply" | "repair";
+            };
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RequestPageDto"];
+                };
+            };
+        };
+    };
+    RequestsController_create: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateRequestDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RequestDetailDto"];
+                };
+            };
+        };
+    };
+    RequestsController_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RequestDetailDto"];
+                };
+            };
+        };
+    };
+    RequestsController_update: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateRequestDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RequestDetailDto"];
+                };
+            };
+        };
+    };
+    RequestsController_approve: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApproveRequestDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RequestDetailDto"];
+                };
+            };
+        };
+    };
+    RequestsController_cancel: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CancelRequestDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RequestDetailDto"];
+                };
+            };
+        };
+    };
+    RequestsController_clone: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RequestDetailDto"];
+                };
+            };
+        };
+    };
+    RequestsController_listComments: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RequestCommentResponseDto"][];
+                };
+            };
+        };
+    };
+    RequestsController_addComment: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateCommentDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RequestCommentResponseDto"];
+                };
+            };
+        };
+    };
+    RequestsController_deptApprove: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RequestDetailDto"];
+                };
+            };
+        };
+    };
+    RequestsController_issue: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IssueRequestDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RequestIssueResultDto"];
+                };
+            };
+        };
+    };
+    RequestsController_receive: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReceiveRequestDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RequestDetailDto"];
+                };
+            };
+        };
+    };
+    RequestsController_reject: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RejectRequestDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RequestDetailDto"];
+                };
+            };
+        };
+    };
+    RequestsController_submit: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RequestDetailDto"];
+                };
+            };
+        };
+    };
+    RequestsController_approveBulk: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApproveBulkDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApproveBulkResultDto"];
+                };
+            };
+        };
+    };
+    RequestsController_listQuotas: {
+        parameters: {
+            query?: {
+                departmentId?: string;
+                limit?: components["schemas"]["Object"];
+                page?: components["schemas"]["Object"];
+                supplyId?: string;
+            };
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuotaPageDto"];
+                };
+            };
+        };
+    };
+    RequestsController_createQuota: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateQuotaDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuotaResponseDto"];
+                };
+            };
+        };
+    };
+    RequestsController_deleteQuota: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RequestsController_updateQuota: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateQuotaDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuotaResponseDto"];
+                };
+            };
+        };
+    };
+    RequestsController_listRecurring: {
+        parameters: {
+            query?: {
+                limit?: components["schemas"]["Object"];
+                page?: components["schemas"]["Object"];
+            };
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecurringPageDto"];
+                };
+            };
+        };
+    };
+    RequestsController_createRecurring: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateRecurringDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecurringResponseDto"];
+                };
+            };
+        };
+    };
+    RequestsController_deleteRecurring: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RequestsController_updateRecurring: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateRecurringDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecurringResponseDto"];
+                };
+            };
+        };
+    };
     SettingsController_getAll: {
         parameters: {
             query?: never;
@@ -12956,6 +14698,90 @@ export interface operations {
             };
         };
     };
+    StockOperationsController_adjust: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdjustDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        fromQty?: string;
+                        id?: string;
+                        lotId?: string;
+                        toQty?: string;
+                    };
+                };
+            };
+        };
+    };
+    StockController_listAlerts: {
+        parameters: {
+            query?: {
+                limit?: components["schemas"]["Object"];
+                page?: components["schemas"]["Object"];
+                resolved?: boolean;
+                supplyId?: string;
+                type?: "low_stock" | "expiring" | "expired" | "open_vial_expiring" | "stale";
+                warehouseId?: string;
+            };
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StockAlertsPageDto"];
+                };
+            };
+        };
+    };
+    StockController_resolveAlert: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StockAlertResponseDto"];
+                };
+            };
+        };
+    };
     StockController_balances: {
         parameters: {
             query?: {
@@ -12991,6 +14817,290 @@ export interface operations {
             };
         };
     };
+    StockController_forecastSupply: {
+        parameters: {
+            query: {
+                supplyId: string;
+                warehouseId?: string;
+            };
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ForecastResponseDto"];
+                };
+            };
+        };
+    };
+    IssuesController_list: {
+        parameters: {
+            query?: {
+                limit?: components["schemas"]["Object"];
+                page?: components["schemas"]["Object"];
+                q?: string;
+                status?: string;
+                warehouseId?: string;
+            };
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IssuePageDto"];
+                };
+            };
+        };
+    };
+    IssuesController_create: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateIssueDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IssueResponseDto"];
+                };
+            };
+        };
+    };
+    IssuesController_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IssueResponseDto"];
+                };
+            };
+        };
+    };
+    IssuesController_remove: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IssueResponseDto"];
+                };
+            };
+        };
+    };
+    IssuesController_update: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateIssueDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IssueResponseDto"];
+                };
+            };
+        };
+    };
+    IssuesController_cancel: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IssueResponseDto"];
+                };
+            };
+        };
+    };
+    IssuesController_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IssueResponseDto"];
+                };
+            };
+        };
+    };
+    IssuesController_print: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+        };
+    };
+    IssuesController_quick: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateIssueDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IssueResponseDto"];
+                };
+            };
+        };
+    };
+    IssuesController_suggest: {
+        parameters: {
+            query: {
+                quantity: string;
+                supplyId: string;
+                warehouseId: string;
+            };
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        lotId?: string;
+                        lotNo?: string;
+                        quantity?: string;
+                        unitCost?: string;
+                    }[];
+                };
+            };
+        };
+    };
     StockController_lots: {
         parameters: {
             query?: {
@@ -13022,6 +15132,320 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StockLotsPageDto"];
+                };
+            };
+        };
+    };
+    StockOperationsController_open: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StockLotResponseDto"];
+                };
+            };
+        };
+    };
+    ReceiptsController_list: {
+        parameters: {
+            query?: {
+                limit?: components["schemas"]["Object"];
+                page?: components["schemas"]["Object"];
+                q?: string;
+                status?: string;
+                warehouseId?: string;
+            };
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceiptPageDto"];
+                };
+            };
+        };
+    };
+    ReceiptsController_create: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateReceiptDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceiptResponseDto"];
+                };
+            };
+        };
+    };
+    ReceiptsController_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceiptResponseDto"];
+                };
+            };
+        };
+    };
+    ReceiptsController_remove: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceiptResponseDto"];
+                };
+            };
+        };
+    };
+    ReceiptsController_update: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateReceiptDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceiptResponseDto"];
+                };
+            };
+        };
+    };
+    ReceiptsController_cancel: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceiptResponseDto"];
+                };
+            };
+        };
+    };
+    ReceiptsController_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceiptResponseDto"];
+                };
+            };
+        };
+    };
+    ReceiptsController_print: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+        };
+    };
+    ReceiptsController_qc: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QcReceiptDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceiptResponseDto"];
+                };
+            };
+        };
+    };
+    StockOperationsController_transfer: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransferDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code?: string;
+                        id?: string;
+                        issue?: Record<string, never>;
+                        receipt?: Record<string, never>;
+                    };
+                };
+            };
+        };
+    };
+    StockOperationsController_cancelTransfer: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                transferId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        code?: string;
+                        id?: string;
+                        issue?: Record<string, never>;
+                        receipt?: Record<string, never>;
+                    };
                 };
             };
         };
