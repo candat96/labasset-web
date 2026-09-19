@@ -45,5 +45,8 @@
   "USER_IN_USE": "Người dùng đã có dữ liệu",
   "CATALOG_IN_USE": "Danh mục đang được sử dụng. Hãy chọn Ngưng hoạt động.",
   "SETTING_INVALID": "Giá trị cấu hình không hợp lệ",
-  "SETTING_UNKNOWN": "Khoá cấu hình không tồn tại"
+  "SETTING_UNKNOWN": "Khoá cấu hình không tồn tại",
+  "HOSPITAL_CODE_TAKEN": "Mã bệnh viện đã tồn tại",
+  "HOSPITAL_STATE_CONFLICT": "Trạng thái bệnh viện không cho phép thao tác này",
+  "SYS_MULTI_ONLY": "Chỉ dùng được khi hệ thống chạy đa viện"
 }

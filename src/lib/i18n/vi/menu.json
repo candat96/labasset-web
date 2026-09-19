@@ -47,8 +47,10 @@
     "auditLogs": "Nhật ký hệ thống",
     "backup": "Sao lưu & khôi phục",
     "sysHospitals": "Bệnh viện",
+    "sysMigrations": "Migration",
     "sysJobs": "Tác vụ nền",
     "sysAnnouncements": "Thông báo hệ thống",
+    "sysStats": "Thống kê",
     "profile": "Hồ sơ cá nhân",
     "changePassword": "Đổi mật khẩu",
     "sessions": "Phiên đăng nhập"

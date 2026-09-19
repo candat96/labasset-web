@@ -1,7 +1,8 @@
 import { http, HttpResponse } from 'msw'
 import { server } from '@/test/msw/server'
-import { api, unwrap } from './client'
+import { api, unwrap, unwrapAs } from './client'
 import { useAuthStore } from '@/stores/auth.store'
+import { useSysAuthStore } from '@/stores/sys-auth.store'
 import { ApiError } from './errors'
 
 const user = {
@@ -129,6 +130,52 @@ it('unwrap throws ApiError with code', async () => {
     ),
   )
   await expect(unwrap(api.GET('/v1/auth/me'))).rejects.toBeInstanceOf(ApiError)
+})
+
+it('sys paths use sys token and omit tenant header', async () => {
+  useSysAuthStore.getState().setSession({
+    accessToken: 'SYS1',
+    user: { id: 's1', username: 'sys', fullName: 'System' },
+  })
+  let seen: Headers | undefined
+  server.use(
+    http.get('/sys/stats', ({ request }) => {
+      seen = request.headers
+      return HttpResponse.json({
+        hospitals: 0,
+        byStatus: {},
+        users: '0',
+        storageBytes: '0',
+        sampledHospitals: 0,
+      })
+    }),
+  )
+  await unwrap(api.GET('/sys/stats'))
+  expect(seen?.get('authorization')).toBe('Bearer SYS1')
+  expect(seen?.get('x-tenant-id')).toBeNull()
+})
+
+it('sys login is public and sys 401 logs out sys store only', async () => {
+  useSysAuthStore.getState().setSession({
+    accessToken: 'SYS1',
+    user: { id: 's1', username: 'sys', fullName: 'System' },
+  })
+  let loginHeaders: Headers | undefined
+  server.use(
+    http.post('/sys/auth/login', ({ request }) => {
+      loginHeaders = request.headers
+      return HttpResponse.json({
+        accessToken: 'X',
+        user: { id: 's1', username: 'sys', fullName: 'S' },
+      })
+    }),
+    http.get('/sys/stats', () => unauthorized()),
+  )
+  await unwrapAs(api.POST('/sys/auth/login', { body: { username: 'sys', password: 'x' } }))
+  expect(loginHeaders?.get('authorization')).toBeNull()
+  await expect(unwrap(api.GET('/sys/stats'))).rejects.toMatchObject({ status: 401 })
+  expect(useSysAuthStore.getState().accessToken).toBeNull()
+  expect(useAuthStore.getState().accessToken).toBe('A1')
 })
 
 it('TENANT_SUSPENDED logs out with reason tenant', async () => {

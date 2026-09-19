@@ -4,7 +4,9 @@ import '@/lib/i18n'
 import { RequireAuth } from './RequireAuth'
 import { RequireRole } from './RequireRole'
 import { RequirePasswordChanged } from './RequirePasswordChanged'
+import { RequireSysAuth } from './RequireSysAuth'
 import { useAuthStore, type UserView } from '@/stores/auth.store'
+import { useSysAuthStore } from '@/stores/sys-auth.store'
 import { ADM } from '@/routes/roles'
 
 const user = (roles: string[], must = false): UserView => ({
@@ -69,6 +71,39 @@ it('renders content for allowed role', () => {
     </RequireRole>,
   )
   expect(screen.getByText('USERS')).toBeInTheDocument()
+})
+
+it('redirects anonymous sys users to sys login', () => {
+  const router = createMemoryRouter(
+    [
+      { path: '/sys/login', element: <div>SYSLOGIN</div> },
+      {
+        element: <RequireSysAuth />,
+        children: [{ path: '/sys/hospitals', element: <div>HOS</div> }],
+      },
+    ],
+    { initialEntries: ['/sys/hospitals'] },
+  )
+  render(<RouterProvider router={router} />)
+  expect(screen.getByText('SYSLOGIN')).toBeInTheDocument()
+})
+
+it('renders sys content when sys token exists', () => {
+  useSysAuthStore.getState().setSession({
+    accessToken: 'SYS1',
+    user: { id: 's1', username: 'sys', fullName: 'System' },
+  })
+  const router = createMemoryRouter(
+    [
+      {
+        element: <RequireSysAuth />,
+        children: [{ path: '/sys/hospitals', element: <div>HOS</div> }],
+      },
+    ],
+    { initialEntries: ['/sys/hospitals'] },
+  )
+  render(<RouterProvider router={router} />)
+  expect(screen.getByText('HOS')).toBeInTheDocument()
 })
 
 it('forces password change', () => {

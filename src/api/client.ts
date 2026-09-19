@@ -1,6 +1,7 @@
 import createClient, { type Middleware } from 'openapi-fetch'
 import type { paths } from './schema'
 import { useAuthStore } from '@/stores/auth.store'
+import { useSysAuthStore } from '@/stores/sys-auth.store'
 import { toApiError } from './errors'
 
 /** Các path không gắn Authorization và không kích hoạt refresh khi 401. */
@@ -11,15 +12,25 @@ export const PUBLIC_PATHS = [
   '/v1/auth/otp/verify',
   '/v1/auth/forgot-password',
   '/v1/auth/reset-password',
+  '/sys/auth/login',
 ]
 
 export const isPublicPath = (pathname: string) =>
   PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'))
 
+export const isSysPath = (pathname: string) => pathname === '/sys' || pathname.startsWith('/sys/')
+
 export const baseUrl: string =
   import.meta.env.VITE_API_URL || (typeof window !== 'undefined' ? window.location.origin : '')
 
-export function authHeaders(): Record<string, string> {
+export function authHeaders(url?: string): Record<string, string> {
+  if (url) {
+    const path = new URL(url, 'http://local.invalid').pathname
+    if (isSysPath(path)) {
+      const token = useSysAuthStore.getState().accessToken
+      return token ? { Authorization: `Bearer ${token}` } : {}
+    }
+  }
   const { accessToken, tenantId } = useAuthStore.getState()
   const h: Record<string, string> = {}
   if (accessToken) h.Authorization = `Bearer ${accessToken}`
@@ -69,20 +80,26 @@ const clones = new WeakMap<Request, Request>()
 
 const authMiddleware: Middleware = {
   onRequest({ request }) {
-    if (isPublicPath(new URL(request.url).pathname)) return request
-    for (const [k, v] of Object.entries(authHeaders())) request.headers.set(k, v)
+    const path = new URL(request.url).pathname
+    if (isPublicPath(path)) return request
+    for (const [k, v] of Object.entries(authHeaders(request.url))) request.headers.set(k, v)
     clones.set(request, request.clone())
     return request
   },
   async onResponse({ request, response }) {
     if (response.status !== 401) return response
+    const path = new URL(request.url).pathname
     const clone = clones.get(request)
-    if (!clone || isPublicPath(new URL(request.url).pathname)) return response
+    if (!clone || isPublicPath(path)) return response
     clones.delete(request)
+    if (isSysPath(path)) {
+      useSysAuthStore.getState().logout()
+      return response
+    }
     const ok = await refreshTokens()
     if (!ok) return response
     const retry = new Request(clone)
-    for (const [k, v] of Object.entries(authHeaders())) retry.headers.set(k, v)
+    for (const [k, v] of Object.entries(authHeaders(request.url))) retry.headers.set(k, v)
     return fetch(retry)
   },
 }
