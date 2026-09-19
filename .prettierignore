@@ -1,0 +1,7 @@
+dist
+node_modules
+src/api/schema.d.ts
+src/components/ui
+package-lock.json
+playwright-report
+test-results
