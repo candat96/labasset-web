@@ -1,3 +1,4 @@
+import { AnnouncementBanner } from '@/components/announcement-banner'
 import { Suspense } from 'react'
 import { Outlet } from 'react-router'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
@@ -25,6 +26,7 @@ export function AppShell() {
       <AppSidebar />
       <SidebarInset className="min-w-0">
         <Topbar notifications={<NotificationBell />} />
+        <AnnouncementBanner />
         <main className="flex-1 p-4 lg:p-6">
           <Suspense fallback={<PageSkeleton />}>
             <Outlet />

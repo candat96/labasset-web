@@ -6,16 +6,41 @@ export type Notification = components['schemas']['NotificationViewDto']
 export type NotificationsPage = components['schemas']['NotificationsPageDto']
 
 export interface NotificationListParams {
+  type?: string
   unread?: boolean
   page?: number
   limit?: number
 }
 
-export function listNotifications(params: NotificationListParams = {}) {
-  return unwrap(
-    api.GET('/v1/notifications', { params: { query: pageQuery(params) } }),
-  ) as Promise<NotificationsPage>
+export async function listNotifications(
+  params: NotificationListParams = {},
+): Promise<NotificationsPage> {
+  const { type, ...rest } = params
+  const load = (query: Omit<NotificationListParams, 'type'>) =>
+    unwrap(api.GET('/v1/notifications', { params: { query: pageQuery(query) } }))
+  if (!type) return load(rest)
+  // TODO(api): API chưa lọc type; duyệt toàn bộ trang rồi mới lọc/phân trang, không lọc riêng trang hiện tại.
+  const first = await load({ ...rest, page: 1, limit: 200 })
+  const all = [...first.items]
+  for (let page = 2; all.length < first.total; page++) {
+    const next = await load({ ...rest, page, limit: 200 })
+    if (!next.items.length) break
+    all.push(...next.items)
+  }
+  const filtered = all.filter((n) => n.type === type)
+  const page = rest.page ?? 1,
+    limit = rest.limit ?? 20
+  return {
+    ...first,
+    items: filtered.slice((page - 1) * limit, page * limit),
+    total: filtered.length,
+    page,
+    limit,
+  }
 }
+export const getPreferences = () => unwrap(api.GET('/v1/notifications/preferences'))
+export const savePreferences = (preferences: components['schemas']['PreferenceDto'][]) =>
+  unwrap(api.PUT('/v1/notifications/preferences', { body: { preferences } }))
 
 export function markRead(id: string) {
   return unwrap(api.POST('/v1/notifications/{id}/read', { params: { path: { id } } }))

@@ -1,3 +1,4 @@
+import { notificationLink } from '@/lib/notification-link'
 import { Bell } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router'
@@ -26,8 +27,8 @@ export function NotificationBell() {
 
   const open = (n: Notification) => {
     if (!n.readAt) markRead.mutate(n.id)
-    const path = n.data?.path
-    if (path && path.startsWith('/')) navigate(path)
+    const path = notificationLink(n.data)
+    if (path) navigate(path)
   }
 
   return (

@@ -1,0 +1,17 @@
+export const NOTIFICATION_TYPES: Record<string, string> = {
+  'request.pending': 'Yêu cầu chờ duyệt',
+  'request.pending_dept': 'Chờ khoa duyệt',
+  'request.issued': 'Đã xuất cho yêu cầu',
+  'request.partially_issued': 'Xuất một phần',
+  'request.rejected': 'Yêu cầu bị từ chối',
+  'request.shortage': 'Yêu cầu thiếu hàng',
+  'request.received': 'Đã nhận hàng',
+  'request.receive_reminder': 'Nhắc nhận hàng',
+  'request.comment': 'Bình luận yêu cầu',
+  'request.recurring_created': 'Yêu cầu định kỳ',
+  'maintenance.done': 'Hoàn thành bảo dưỡng',
+  'maintenance.skipped': 'Bỏ qua bảo dưỡng',
+  'maintenance.overdue': 'Bảo dưỡng quá hạn',
+  'maintenance.due': 'Bảo dưỡng sắp đến hạn',
+  'stock.alerts.daily': 'Cảnh báo kho hằng ngày',
+}

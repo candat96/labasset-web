@@ -11,6 +11,10 @@ import i18n from '@/lib/i18n'
 
 /** Route đã có trang thật; mọi mục MENU còn lại tự sinh placeholder. */
 const implemented: RouteObject[] = [
+  {
+    path: 'notifications/preferences',
+    lazy: () => import('@/features/notifications/pages/PreferencesPage'),
+  },
   { index: true, lazy: () => import('@/features/dashboard/pages/DashboardPage') },
   { path: 'notifications', lazy: () => import('@/features/notifications/pages/NotificationsPage') },
   {

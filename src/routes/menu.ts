@@ -183,6 +183,7 @@ export const MENU: MenuGroup[] = [
 
 /** Mục ngoài sidebar (user menu) — vẫn cần nhãn breadcrumb. */
 export const EXTRA_ITEMS: MenuItem[] = [
+  { path: '/notifications/preferences', labelKey: 'notifications:preferences' },
   { path: '/profile', labelKey: 'menu:items.profile' },
   { path: '/change-password', labelKey: 'menu:items.changePassword' },
   { path: '/sessions', labelKey: 'menu:items.sessions' },

@@ -11,5 +11,6 @@
   "status": "Trạng thái",
   "markRead": "Đánh dấu đã đọc",
   "allRead": "Đã đánh dấu tất cả là đã đọc",
-  "polling": "Đang dùng chế độ cập nhật định kỳ"
+  "polling": "Đang dùng chế độ cập nhật định kỳ",
+  "preferences": "Tuỳ chọn thông báo"
 }

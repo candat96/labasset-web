@@ -34,5 +34,10 @@
   "FILE_TYPE_NOT_ALLOWED": "Loại tệp không được hỗ trợ",
   "MAIL_UNAVAILABLE": "Hệ thống email tạm không khả dụng",
   "SYS_UNAVAILABLE": "Hệ thống tạm không sẵn sàng",
-  "NOTIFICATION_NOT_FOUND": "Không tìm thấy thông báo"
+  "NOTIFICATION_NOT_FOUND": "Không tìm thấy thông báo",
+  "ATTACHMENT_FORBIDDEN": "Bạn không có quyền thay đổi đính kèm này",
+  "FILE_NOT_FOUND": "Không tìm thấy tệp",
+  "FILE_NOT_READY": "Tệp chưa tải xong",
+  "FILE_UPLOAD_MISMATCH": "Tệp tải lên không khớp thông tin đăng ký",
+  "FILE_UPLOAD_MODE": "Phương thức tải tệp không được hỗ trợ"
 }

@@ -1,3 +1,7 @@
+import { Link } from 'react-router'
+import { Input } from '@/components/ui/input'
+import { NOTIFICATION_TYPES } from '../types'
+import { notificationLink } from '@/lib/notification-link'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
@@ -18,11 +22,12 @@ export function Component() {
   const { t } = useTranslation('notifications')
   const { t: tc } = useTranslation()
   const navigate = useNavigate()
-  const table = useServerTable({ filterKeys: ['unread'] })
+  const table = useServerTable({ filterKeys: ['unread', 'type'] })
   const onlyUnread = table.params.filters.unread === 'true'
   const list = useNotifications({
     page: table.params.page,
     limit: table.params.limit,
+    type: table.params.filters.type,
     ...(onlyUnread ? { unread: true } : {}),
   })
   const markRead = useMarkRead()
@@ -73,13 +78,19 @@ export function Component() {
         title={t('title')}
         description={t('desc')}
         actions={
-          <Button
-            variant="outline"
-            onClick={() => markAll.mutate()}
-            disabled={markAll.isPending || !list.data?.unreadCount}
-          >
-            <CheckCheck aria-hidden /> {tc('actions.markAllRead')}
-          </Button>
+          <>
+            {' '}
+            <Button variant="outline" asChild>
+              <Link to="/notifications/preferences">Tuỳ chọn</Link>
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => markAll.mutate()}
+              disabled={markAll.isPending || !list.data?.unreadCount}
+            >
+              <CheckCheck aria-hidden /> {tc('actions.markAllRead')}
+            </Button>
+          </>
         }
       />
       <DataTable
@@ -97,11 +108,27 @@ export function Component() {
         getRowId={(r) => r.id}
         onRowClick={(n) => {
           if (!n.readAt) markRead.mutate(n.id)
-          const path = n.data?.path
-          if (path?.startsWith('/')) navigate(path)
+          const path = notificationLink(n.data)
+          if (path) navigate(path)
         }}
         toolbarLeft={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Label htmlFor="notification-type">Loại</Label>
+            <Input
+              id="notification-type"
+              className="w-56"
+              list="notification-types"
+              value={table.params.filters.type ?? ''}
+              onChange={(e) => table.setFilter('type', e.target.value || undefined)}
+              placeholder="Tất cả loại"
+            />
+            <datalist id="notification-types">
+              {Object.entries(NOTIFICATION_TYPES).map(([type, label]) => (
+                <option key={type} value={type}>
+                  {label}
+                </option>
+              ))}
+            </datalist>
             <Switch
               id="only-unread"
               checked={onlyUnread}
