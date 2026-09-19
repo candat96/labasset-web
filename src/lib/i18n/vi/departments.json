@@ -1,1 +1,49 @@
-{}
+{
+  "title": "Khoa/phòng",
+  "description": "Danh sách khoa, phòng trong bệnh viện; dùng để gán người dùng, thiết bị và phiếu yêu cầu.",
+  "fields": {
+    "code": "Mã",
+    "name": "Tên",
+    "type": "Loại",
+    "headUserId": "Trưởng khoa",
+    "phone": "Điện thoại",
+    "location": "Vị trí",
+    "sortOrder": "Thứ tự",
+    "isActive": "Trạng thái",
+    "isActiveSwitch": "Đang hoạt động"
+  },
+  "types": {
+    "lab": "Khoa xét nghiệm",
+    "equipment_office": "Phòng Vật tư – TBYT",
+    "other": "Khác"
+  },
+  "filter": { "status": "Trạng thái" },
+  "create": "Thêm khoa/phòng",
+  "edit": "Sửa khoa/phòng",
+  "codeHint": "Chữ hoa, số, gạch dưới, gạch ngang; tối đa 32 ký tự. Không đổi được sau khi tạo.",
+  "codeInvalid": "Chỉ gồm chữ hoa, số, gạch dưới, gạch ngang (1–32 ký tự)",
+  "phoneInvalid": "Số điện thoại 6–32 ký tự, chỉ số, dấu + và khoảng trắng",
+  "deleteTitle": "Xoá khoa/phòng \"{{name}}\"?",
+  "deleteDesc": "Nếu khoa đang được tham chiếu (người dùng, thiết bị…), hệ thống sẽ chuyển sang ngừng hoạt động thay vì xoá.",
+  "deleted": "Đã xoá khoa/phòng",
+  "deactivated": "Khoa đang được tham chiếu nên đã chuyển sang ngừng hoạt động",
+  "created": "Đã tạo khoa/phòng",
+  "updated": "Đã cập nhật khoa/phòng",
+  "empty": "Chưa có khoa/phòng nào",
+  "export": "Xuất Excel",
+  "import": {
+    "title": "Nhập khoa/phòng từ Excel",
+    "step1": "Bước 1: tải tệp mẫu, điền dữ liệu (mã có sẵn sẽ được cập nhật, mã mới sẽ được tạo).",
+    "template": "Tải tệp mẫu",
+    "step2": "Bước 2: chọn tệp .xlsx (tối đa 5 MB) rồi bấm Nhập.",
+    "file": "Tệp Excel",
+    "tooLarge": "Tệp vượt quá 5 MB",
+    "wrongType": "Chỉ nhận tệp .xlsx",
+    "submit": "Nhập",
+    "result": "Tạo mới {{created}}, cập nhật {{updated}}.",
+    "errors": "Lỗi ({{count}}) — chưa ghi dữ liệu nào",
+    "row": "Dòng",
+    "field": "Trường",
+    "message": "Nội dung"
+  }
+}

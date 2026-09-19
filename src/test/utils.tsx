@@ -3,6 +3,7 @@ import { render } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createMemoryRouter, RouterProvider, type RouteObject } from 'react-router'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { Toaster } from 'sonner'
 import '@/lib/i18n'
 
 /** Render trong QueryClient + memory router; trả router để kiểm tra điều hướng. */
@@ -20,6 +21,7 @@ export function renderWithProviders(
     <QueryClientProvider client={client}>
       <TooltipProvider>
         <RouterProvider router={router} />
+        <Toaster />
       </TooltipProvider>
     </QueryClientProvider>,
   )

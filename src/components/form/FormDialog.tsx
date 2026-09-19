@@ -16,7 +16,7 @@ import { FormRootError } from './FormRootError'
 import { cn } from '@/lib/utils'
 
 /** Dialog chứa form react-hook-form; dùng cho form ≤ 8 field. */
-export function FormDialog<T extends FieldValues>({
+export function FormDialog<T extends FieldValues, O extends FieldValues = T>({
   open,
   onOpenChange,
   title,
@@ -32,8 +32,8 @@ export function FormDialog<T extends FieldValues>({
   onOpenChange: (open: boolean) => void
   title: string
   description?: string
-  form: UseFormReturn<T>
-  onSubmit: (values: T) => void | Promise<unknown>
+  form: UseFormReturn<T, unknown, O>
+  onSubmit: (values: O) => void | Promise<unknown>
   submitting?: boolean
   submitLabel?: string
   width?: 'md' | 'lg'
@@ -58,7 +58,7 @@ export function FormDialog<T extends FieldValues>({
             className="space-y-4"
           >
             {children}
-            <FormRootError form={form} />
+            <FormRootError form={form as unknown as UseFormReturn<T>} />
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 {t('actions.cancel')}

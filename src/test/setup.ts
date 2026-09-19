@@ -11,3 +11,27 @@ afterEach(() => {
   localStorage.clear()
 })
 afterAll(() => server.close())
+
+// Polyfill cho Radix trong jsdom.
+class RO {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+if (!('ResizeObserver' in globalThis))
+  (globalThis as { ResizeObserver?: unknown }).ResizeObserver = RO
+if (!Element.prototype.scrollIntoView) Element.prototype.scrollIntoView = () => {}
+if (!Element.prototype.hasPointerCapture) Element.prototype.hasPointerCapture = () => false
+if (!Element.prototype.releasePointerCapture) Element.prototype.releasePointerCapture = () => {}
+if (!window.matchMedia) {
+  window.matchMedia = ((q: string) => ({
+    matches: false,
+    media: q,
+    onchange: null,
+    addListener: () => {},
+    removeListener: () => {},
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    dispatchEvent: () => false,
+  })) as unknown as typeof window.matchMedia
+}
