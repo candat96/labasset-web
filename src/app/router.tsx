@@ -11,6 +11,8 @@ import i18n from '@/lib/i18n'
 
 /** Route đã có trang thật; mọi mục MENU còn lại tự sinh placeholder. */
 const implemented: RouteObject[] = [
+  { path: 'admin/users', lazy: () => import('@/features/users/pages/UsersPage') },
+  { path: 'admin/users/:id', lazy: () => import('@/features/users/pages/UserDetailPage') },
   {
     path: 'admin/departments/:id',
     lazy: () => import('@/features/departments/pages/DepartmentDetailPage'),

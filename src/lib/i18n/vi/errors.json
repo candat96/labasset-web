@@ -39,5 +39,9 @@
   "FILE_NOT_FOUND": "Không tìm thấy tệp",
   "FILE_NOT_READY": "Tệp chưa tải xong",
   "FILE_UPLOAD_MISMATCH": "Tệp tải lên không khớp thông tin đăng ký",
-  "FILE_UPLOAD_MODE": "Phương thức tải tệp không được hỗ trợ"
+  "FILE_UPLOAD_MODE": "Phương thức tải tệp không được hỗ trợ",
+  "USER_USERNAME_TAKEN": "Tài khoản đã tồn tại",
+  "TENANT_USER_LIMIT": "Bệnh viện đã đạt giới hạn người dùng",
+  "USER_IN_USE": "Người dùng đã có dữ liệu",
+  "CATALOG_IN_USE": "Danh mục đang được sử dụng. Hãy chọn Ngưng hoạt động."
 }
