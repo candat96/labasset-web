@@ -9,6 +9,7 @@ import { useAuthStore } from '@/stores/auth.store'
 import { useUiStore } from '@/stores/ui.store'
 import { resolveTenantMode } from '@/api/tenant-mode'
 import { messageFor } from '@/api/errors'
+import { safeReturnTo } from '@/lib/return-to'
 
 export const authKeys = {
   me: ['auth', 'me'] as const,
@@ -27,8 +28,7 @@ export function useTenantMode() {
 /** Đường về sau đăng nhập, chỉ chấp nhận path nội bộ. */
 export function useReturnTo() {
   const [sp] = useSearchParams()
-  const raw = sp.get('returnTo') ?? '/'
-  return raw.startsWith('/') && !raw.startsWith('//') ? raw : '/'
+  return safeReturnTo(sp.get('returnTo'))
 }
 
 export function useLogin() {

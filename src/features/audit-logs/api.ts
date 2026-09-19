@@ -36,9 +36,12 @@ export async function fetchAllAuditLogs(params: Omit<ServerParams, 'page' | 'lim
   return items
 }
 
+/** Tắt lọc client action/q cho tới khi API có (review 01 C2). */
+export const AUDIT_CLIENT_FILTER = false
+
 export async function listAuditLogs(params: AuditListParams): Promise<AuditPage> {
   const { action, q, page = 1, limit = 20, ...server } = params
-  if (action || q) {
+  if (AUDIT_CLIENT_FILTER && (action || q)) {
     const items = (await fetchAllAuditLogs(server)).filter((item) =>
       matchesAuditQuery(item, action, q),
     )

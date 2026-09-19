@@ -16,7 +16,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { AsyncSelect } from '@/components/form/async-select'
 import { TemporaryPasswordDialog } from '@/components/temporary-password-dialog'
-import { departmentOptions, allDepartments } from '@/api/references'
+import { departmentOptions, allDepartments, resolveDepartment } from '@/api/references'
 import { useCan } from '@/app/guards/useCan'
 import { ADM, ROLES, type Role } from '@/routes/roles'
 import { roleLabels } from '@/lib/role-labels'
@@ -149,6 +149,7 @@ export function Component() {
               label="Lọc khoa"
               queryKey="departments"
               loadOptions={departmentOptions}
+              resolveOption={resolveDepartment}
               value={filters.departmentId ?? null}
               clearable
               onChange={(v) =>

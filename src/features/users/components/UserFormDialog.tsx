@@ -11,7 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { ROLES } from '@/routes/roles'
 import { roleLabels } from '@/lib/role-labels'
-import { departmentOptions } from '@/api/references'
+import { departmentOptions, resolveDepartment } from '@/api/references'
 import { applyServerErrors, messageFor } from '@/api/errors'
 import { createUser, updateUser } from '../api'
 import { userSchema, type UserValues } from '../schema'
@@ -120,6 +120,7 @@ export function UserFormDialog({
               label="Khoa/phòng"
               queryKey="departments"
               loadOptions={departmentOptions}
+              resolveOption={resolveDepartment}
               value={field.value}
               onChange={(v) => field.onChange(v)}
               clearable

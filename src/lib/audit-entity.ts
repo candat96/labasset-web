@@ -1,6 +1,26 @@
+const catalogPaths: Record<string, string> = {
+  supplier: 'suppliers',
+  manufacturer: 'manufacturers',
+  equipment_group: 'equipment-groups',
+  supply_group: 'supply-groups',
+  unit: 'units',
+  warehouse: 'warehouses',
+  funding_source: 'funding-sources',
+  connection_type: 'connection-types',
+  component_type: 'component-types',
+  calibration_agency: 'calibration-agencies',
+  fault_group: 'fault-groups',
+}
+
 const paths: Record<string, (id: string) => string> = {
   users: (id) => `/admin/users/${id}`,
   departments: (id) => `/admin/departments/${id}`,
+  ...Object.fromEntries(
+    Object.entries(catalogPaths).map(([entity, slug]) => [
+      entity,
+      (id: string) => `/admin/catalogs/${slug}?highlight=${id}`,
+    ]),
+  ),
   equipment: (id) => `/equipment/${id}`,
   supply: (id) => `/supplies/${id}`,
   repair_ticket: (id) => `/repairs/${id}`,

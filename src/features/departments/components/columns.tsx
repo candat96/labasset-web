@@ -1,7 +1,4 @@
 import { Link } from 'react-router'
-import { useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
-import { getDepartmentUsers } from '../api'
 import type { ColumnDef } from '@tanstack/react-table'
 import type { TFunction } from 'i18next'
 import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
@@ -17,25 +14,9 @@ import { StatusBadge } from '@/components/page/StatusBadge'
 import type { Department } from '../types'
 
 function UserCount({ id }: { id: string }) {
-  const qc = useQueryClient()
-  const cached = qc.getQueryData<{ total: number }>(['departments', id, 'user-count'])
-  const [count, setCount] = useState<number | undefined>(cached?.total)
   return (
-    <Link
-      className="text-primary hover:underline"
-      to={`/admin/departments/${id}?tab=users`}
-      onMouseEnter={() => {
-        void qc
-          .fetchQuery({
-            queryKey: ['departments', id, 'user-count'],
-            queryFn: () => getDepartmentUsers(id, 1, 1),
-            staleTime: 60000,
-          })
-          .then((r) => setCount(r.total))
-          .catch(() => undefined)
-      }}
-    >
-      {count ?? 'Xem người dùng'}
+    <Link className="text-primary hover:underline" to={`/admin/departments/${id}?tab=users`}>
+      Xem người dùng
     </Link>
   )
 }

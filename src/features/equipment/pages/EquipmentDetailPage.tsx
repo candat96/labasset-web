@@ -33,6 +33,7 @@ import { ADM, STAFF } from '@/routes/roles'
 import { applyServerErrors, isApiError, messageFor } from '@/api/errors'
 import { departmentOptions } from '@/api/references'
 import { useAuthStore } from '@/stores/auth.store'
+import { assistantPath } from '@/lib/ai-link'
 import * as api from '../api'
 import { useEquipment, useInvalidateEquipment } from '../hooks'
 import {
@@ -121,6 +122,9 @@ export function Component() {
                 Nhân bản
               </Button>
             )}
+            <Button asChild variant="outline">
+              <Link to={assistantPath({ equipmentId: id })}>Hỏi AI về máy này</Link>
+            </Button>
             <Button
               variant="outline"
               onClick={async () => {

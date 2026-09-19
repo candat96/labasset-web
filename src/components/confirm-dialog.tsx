@@ -9,8 +9,8 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from '@/components/ui/alert-dialog'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 interface ConfirmOptions {
   title: string
   description?: string
@@ -59,7 +59,12 @@ export function useConfirm() {
         {options?.requireReason && (
           <div className="space-y-2">
             <Label htmlFor="confirm-reason">Lý do (bắt buộc)</Label>
-            <Input id="confirm-reason" value={reason} onChange={(e) => setReason(e.target.value)} />
+            <Textarea
+              id="confirm-reason"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              rows={3}
+            />
           </div>
         )}
         <AlertDialogFooter>

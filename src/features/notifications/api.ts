@@ -19,11 +19,12 @@ export async function listNotifications(
   const load = (query: Omit<NotificationListParams, 'type'>) =>
     unwrap(api.GET('/v1/notifications', { params: { query: pageQuery(query) } }))
   if (!type) return load(rest)
-  // TODO(api): API chưa lọc type; duyệt toàn bộ trang rồi mới lọc/phân trang, không lọc riêng trang hiện tại.
-  const first = await load({ ...rest, page: 1, limit: 200 })
+  // TODO(api): API chưa lọc type; trần 5 trang rồi lọc/phân trang phía client.
+  const pageSize = 200
+  const first = await load({ ...rest, page: 1, limit: pageSize })
   const all = [...first.items]
-  for (let page = 2; all.length < first.total; page++) {
-    const next = await load({ ...rest, page, limit: 200 })
+  for (let page = 2; page <= 5 && all.length < first.total; page++) {
+    const next = await load({ ...rest, page, limit: pageSize })
     if (!next.items.length) break
     all.push(...next.items)
   }

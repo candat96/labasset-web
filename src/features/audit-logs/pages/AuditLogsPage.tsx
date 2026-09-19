@@ -14,30 +14,24 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import { formatDateTime } from '@/lib/format/date'
+import { dayRangeToIso } from '@/lib/format/date-range'
+import { auditActionLabel } from '@/lib/audit-actions'
 import { auditEntityPath } from '@/lib/audit-entity'
 import { useAuditLogs, useAuditUsers } from '../hooks'
 import { searchAuditUsers } from '../api'
 import type { AuditLog } from '../types'
 
-function toStart(date: string) {
-  return `${date}T00:00:00.000Z`
-}
-function toEnd(date: string) {
-  return `${date}T23:59:59.999Z`
-}
-
 export function Component() {
-  const table = useServerTable({ filterKeys: ['userId', 'entityType', 'action', 'from', 'to'] })
+  const table = useServerTable({ filterKeys: ['userId', 'entityType', 'from', 'to'] })
   const filters = table.params.filters
+  const range = dayRangeToIso(filters.from, filters.to)
   const params = {
     page: table.params.page,
     limit: table.params.limit,
-    q: table.params.q || undefined,
     userId: filters.userId,
     entityType: filters.entityType,
-    action: filters.action,
-    from: filters.from ? toStart(filters.from) : undefined,
-    to: filters.to ? toEnd(filters.to) : undefined,
+    from: range.from,
+    to: range.to,
   }
   const list = useAuditLogs(params)
   const users = useAuditUsers()
@@ -63,7 +57,11 @@ export function Component() {
         cell: ({ row }) => names.get(row.original.userId ?? '') ?? row.original.userId ?? '—',
       },
       { accessorKey: 'entityType', header: 'Đối tượng' },
-      { accessorKey: 'action', header: 'Hành động' },
+      {
+        accessorKey: 'action',
+        header: 'Hành động',
+        cell: ({ row }) => auditActionLabel(row.original.action),
+      },
       {
         accessorKey: 'entityId',
         header: 'Mã bản ghi',
@@ -110,12 +108,6 @@ export function Component() {
         toolbarLeft={
           <>
             <Input
-              aria-label="Tìm nhật ký"
-              placeholder="Tìm hành động, đối tượng, IP…"
-              value={table.inputQ}
-              onChange={(event) => table.setQ(event.target.value)}
-            />
-            <Input
               aria-label="Từ ngày"
               type="date"
               value={filters.from ?? ''}
@@ -149,12 +141,6 @@ export function Component() {
               placeholder="entityType"
               value={filters.entityType ?? ''}
               onChange={(event) => table.setFilter('entityType', event.target.value || undefined)}
-            />
-            <Input
-              aria-label="Hành động"
-              placeholder="action"
-              value={filters.action ?? ''}
-              onChange={(event) => table.setFilter('action', event.target.value || undefined)}
             />
           </>
         }

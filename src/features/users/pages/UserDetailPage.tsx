@@ -72,7 +72,7 @@ export function Component() {
               </Button>
               {!self && (
                 <>
-                  {row.isActive !== false && (
+                  {row.isActive === true && (
                     <Button
                       variant="outline"
                       disabled={action.isPending}
@@ -81,7 +81,7 @@ export function Component() {
                       Khoá
                     </Button>
                   )}
-                  {row.isActive !== true && (
+                  {row.isActive === false && (
                     <Button
                       variant="outline"
                       disabled={action.isPending}
@@ -89,6 +89,9 @@ export function Component() {
                     >
                       Mở khoá
                     </Button>
+                  )}
+                  {row.isActive === undefined && (
+                    <p className="text-muted-foreground text-sm">Trạng thái: chưa có từ API</p>
                   )}
                   <Button
                     variant="destructive"

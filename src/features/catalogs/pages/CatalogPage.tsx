@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Navigate, useParams } from 'react-router'
+import { Navigate, useNavigate, useParams } from 'react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { toast } from 'sonner'
@@ -55,11 +55,12 @@ export function CatalogPage({ slug }: { slug: CatalogSlug }) {
   const [formOpen, setFormOpen] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
   const { confirm, dialog } = useConfirm()
+  const navigate = useNavigate()
   const remove = useMutation({
     mutationFn: (id: string) => deleteCatalog(slug, id),
-    onSuccess: () => {
+    onSuccess: (result) => {
       void queryClient.invalidateQueries({ queryKey: ['catalogs', slug] })
-      toast.success('Đã xoá danh mục')
+      toast.success(result.deactivated ? 'Đã ngừng hoạt động danh mục' : 'Đã xoá danh mục')
     },
     onError: (error) => toast.error(messageFor(error)),
   })
@@ -153,6 +154,20 @@ export function CatalogPage({ slug }: { slug: CatalogSlug }) {
           </>
         }
       />
+      <div className="mb-3 max-w-sm">
+        <Select value={slug} onValueChange={(value) => navigate(`/admin/catalogs/${value}`)}>
+          <SelectTrigger aria-label="Chọn danh mục">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {catalogSlugs.map((item) => (
+              <SelectItem key={item} value={item}>
+                {catalogConfigs[item].title}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
       <DataTable
         tableId={`catalog-${slug}`}
         columns={columns}

@@ -58,11 +58,11 @@ export interface MenuGroup {
 const showSys = import.meta.env.VITE_SHOW_SYS === 'true'
 
 export const SYS_ITEMS = [
-  { path: '/sys/hospitals', label: 'Bệnh viện', icon: Hospital },
-  { path: '/sys/migrations', label: 'Migration', icon: DatabaseBackup },
-  { path: '/sys/announcements', label: 'Thông báo hệ thống', icon: Megaphone },
-  { path: '/sys/stats', label: 'Thống kê', icon: PieChart },
-  { path: '/sys/jobs', label: 'Tác vụ nền', icon: Cog },
+  { path: '/sys/hospitals', labelKey: 'menu:items.sysHospitals', icon: Hospital },
+  { path: '/sys/migrations', labelKey: 'menu:items.sysMigrations', icon: DatabaseBackup },
+  { path: '/sys/announcements', labelKey: 'menu:items.sysAnnouncements', icon: Megaphone },
+  { path: '/sys/stats', labelKey: 'menu:items.sysStats', icon: PieChart },
+  { path: '/sys/jobs', labelKey: 'menu:items.sysJobs', icon: Cog },
 ] as const
 
 /** Nguồn duy nhất cho sidebar, breadcrumb, route placeholder và guard. */

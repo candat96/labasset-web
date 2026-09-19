@@ -118,5 +118,6 @@ export function settingField(key: string): string | undefined {
     'alerts.repairCostPctOfValue',
     'maintenance.dueGraceDays',
   ])
+  if (key.startsWith('numbering.')) return key
   return allowed.has(key) ? key : undefined
 }

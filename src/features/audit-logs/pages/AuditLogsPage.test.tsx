@@ -52,7 +52,7 @@ it('lists audit logs and sends server-supported filters', async () => {
     }),
   )
   const { router } = renderWithProviders(<Component />)
-  expect(await screen.findByText('create')).toBeVisible()
+  expect(await screen.findByText('Tạo')).toBeVisible()
   expect(screen.getByText('Quản trị viên')).toBeVisible()
   expect(screen.getByText('10.0.0.1')).toBeVisible()
   expect(screen.getAllByRole('link', { name: 'u1' })[0]).toHaveAttribute('href', '/admin/users/u1')
@@ -66,30 +66,27 @@ it('lists audit logs and sends server-supported filters', async () => {
   expect(router.state.location.search).toContain('entityType=users')
 })
 
-it('loads every page before filtering by action or q', async () => {
-  const pages: string[] = []
+it('does not send client-side action or q filters', async () => {
+  const urls: string[] = []
   server.use(
     http.get('/v1/audit-logs', ({ request }) => {
+      urls.push(request.url)
       const url = new URL(request.url)
       expect(url.searchParams.get('action')).toBeNull()
       expect(url.searchParams.get('q')).toBeNull()
-      pages.push(url.searchParams.get('page') ?? '1')
-      return url.searchParams.get('page') === '2'
-        ? HttpResponse.json({ items: [updateLog], total: 2, page: 2, limit: 100 })
-        : HttpResponse.json({ items: [createLog], total: 2, page: 1, limit: 100 })
+      return HttpResponse.json({ items: [createLog, updateLog], total: 2, page: 1, limit: 20 })
     }),
   )
   renderWithProviders(<Component />)
-  await screen.findByText('create')
-  await userEvent.type(screen.getByLabelText('Hành động'), 'update')
-  expect(await screen.findByText('update')).toBeVisible()
-  expect(screen.queryByText('create')).not.toBeInTheDocument()
-  await waitFor(() => expect(pages).toEqual(expect.arrayContaining(['1', '2'])))
+  expect(await screen.findByText('Tạo')).toBeVisible()
+  expect(screen.queryByLabelText('Hành động')).not.toBeInTheDocument()
+  expect(screen.queryByLabelText('Tìm nhật ký')).not.toBeInTheDocument()
+  expect(urls.some((item) => item.includes('action=') || item.includes('q='))).toBe(false)
 })
 
 it('opens a before/after drawer and highlights changed keys', async () => {
   renderWithProviders(<Component />)
-  await userEvent.click(await screen.findByText('update'))
+  await userEvent.click(await screen.findByText('Sửa'))
   const dialog = await screen.findByRole('dialog')
   expect(within(dialog).getByText('Trước')).toBeVisible()
   expect(within(dialog).getByText('Sau')).toBeVisible()
@@ -108,7 +105,7 @@ it('reuses AuditTrail against the entity endpoint', async () => {
     }),
   )
   renderWithProviders(<AuditTrail entityType="users" entityId="u1" />)
-  expect(await screen.findByText('update')).toBeVisible()
+  expect(await screen.findByText('Sửa')).toBeVisible()
   expect(screen.getByLabelText('Dòng thời gian')).toBeVisible()
 })
 
@@ -125,5 +122,5 @@ it('shows error and retries the list', async () => {
   expect(await screen.findByText('Lỗi hệ thống, vui lòng thử lại')).toBeVisible()
   failed = false
   await userEvent.click(screen.getByRole('button', { name: 'Thử lại' }))
-  expect(await screen.findByText('create')).toBeVisible()
+  expect(await screen.findByText('Tạo')).toBeVisible()
 })

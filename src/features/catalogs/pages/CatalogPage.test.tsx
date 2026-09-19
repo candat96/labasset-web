@@ -4,6 +4,7 @@ import { http, HttpResponse } from 'msw'
 import { server } from '@/test/msw/server'
 import { renderWithProviders } from '@/test/utils'
 import { Component } from './CatalogPage'
+import { Component as CatalogsIndexPage } from './CatalogsIndexPage'
 
 const row = {
   id: 'c1',
@@ -101,14 +102,12 @@ it('imports Excel and displays errors by row', async () => {
   expect(dialog.getByText(/Tạo mới: 1/)).toBeVisible()
 })
 
-it('shows the in-use guidance returned by delete', async () => {
+it('shows deactivated notice when delete keeps the row', async () => {
   server.use(
     http.get('/v1/catalogs/manufacturers', () =>
       HttpResponse.json({ items: [row], total: 1, page: 1, limit: 20 }),
     ),
-    http.delete('/v1/catalogs/manufacturers/c1', () =>
-      HttpResponse.json({ code: 'CATALOG_IN_USE' }, { status: 409 }),
-    ),
+    http.delete('/v1/catalogs/manufacturers/c1', () => HttpResponse.json({ deactivated: true })),
   )
   renderWithProviders(<Component />, {
     path: '/admin/catalogs/:name',
@@ -116,7 +115,15 @@ it('shows the in-use guidance returned by delete', async () => {
   })
   await userEvent.click(await screen.findByRole('button', { name: 'Xoá' }))
   await userEvent.click(screen.getByRole('button', { name: 'Xác nhận' }))
-  expect(
-    await screen.findByText('Danh mục đang được sử dụng. Hãy chọn Ngưng hoạt động.'),
-  ).toBeVisible()
+  expect(await screen.findByText('Đã ngừng hoạt động danh mục')).toBeVisible()
+})
+
+it('renders the catalogs index with 11 links', async () => {
+  server.use(http.get('/v1/catalogs/:name', () => HttpResponse.json({ items: [], total: 0 })))
+  renderWithProviders(<CatalogsIndexPage />)
+  expect(await screen.findByRole('link', { name: /Hãng sản xuất/ })).toHaveAttribute(
+    'href',
+    '/admin/catalogs/manufacturers',
+  )
+  expect(screen.getAllByRole('link').length).toBeGreaterThanOrEqual(11)
 })

@@ -39,6 +39,7 @@ import { applyServerErrors, messageFor } from '@/api/errors'
 import { catalogOptions, staffUserOptions, supplyOptions } from '@/api/references'
 import { uploadFile } from '@/api/files'
 import { useAuthStore } from '@/stores/auth.store'
+import { assistantPath } from '@/lib/ai-link'
 import * as api from '../api'
 import { usePublicRepairSettings, useRepair, useInvalidateRepairs } from '../hooks'
 import { visibleRepairActions, type RepairAction } from '../actions'
@@ -160,6 +161,13 @@ export function Component() {
         }
         actions={
           <div className="flex flex-wrap gap-2">
+            {row.equipment?.id && (
+              <Button asChild variant="outline">
+                <Link to={assistantPath({ equipmentId: row.equipment.id, repairId: id })}>
+                  Hỏi AI về máy này
+                </Link>
+              </Button>
+            )}
             {actions.includes('accept') && (
               <Button onClick={() => void run('Tiếp nhận phiếu?', () => api.acceptRepair(id))}>
                 Tiếp nhận

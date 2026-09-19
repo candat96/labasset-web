@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -8,6 +9,10 @@ import { ErrorState } from '@/components/page/ErrorState'
 import { Form } from '@/components/ui/form'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { TextField, NumberField, SwitchField } from '@/components/form/fields'
 import { FormField, FormItem, FormMessage } from '@/components/ui/form'
 import { AsyncSelect } from '@/components/form/async-select'
@@ -15,7 +20,7 @@ import { FileField } from '@/components/form/file-field'
 import { useCan } from '@/app/guards/useCan'
 import { ADM } from '@/routes/roles'
 import { applyServerErrors, isApiError, messageFor } from '@/api/errors'
-import { previewNumber, saveSettings, searchWarehouses } from '../api'
+import { previewNumber, resolveWarehouse, saveSettings, searchWarehouses } from '../api'
 import { changedSettings, settingField, values } from '../diff'
 import { settingsKeys, useSettings } from '../hooks'
 import { settingsSchema, type SettingsForm } from '../schema'
@@ -45,10 +50,14 @@ function previewText(result: { example?: string } | string) {
   return result.example ?? JSON.stringify(result)
 }
 
+const TABS = ['hospital', 'workflow', 'stock', 'alerts', 'numbering', 'ai', 'other'] as const
+
 export function Component() {
   const canWrite = useCan(ADM)
   const queryClient = useQueryClient()
   const settings = useSettings()
+  const [params, setParams] = useSearchParams()
+  const tab = TABS.find((item) => item === params.get('tab')) ?? 'hospital'
   const form = useForm<SettingsForm>({
     resolver: zodResolver(settingsSchema),
     defaultValues: values({}),
@@ -58,6 +67,16 @@ export function Component() {
     ...NUMBER_DEFAULTS,
   }))
   const [previews, setPreviews] = useState<Record<string, string>>({})
+  const [templateErrors, setTemplateErrors] = useState<Record<string, string>>({})
+  const [ai, setAi] = useState({
+    enabled: false,
+    provider: 'anthropic',
+    model: 'claude-sonnet-5',
+    embeddingProvider: '',
+    embeddingModel: '',
+    monthlyTokenBudget: '0',
+    apiKey: '',
+  })
   useEffect(() => {
     if (settings.data) {
       form.reset(values(settings.data))
@@ -71,6 +90,16 @@ export function Component() {
           ]),
         ) as Record<NumberingType, string>,
       )
+      setAi((current) => ({
+        ...current,
+        enabled: Boolean(settings.data?.['ai.enabled']),
+        provider: String(settings.data?.['ai.provider'] ?? 'anthropic'),
+        model: String(settings.data?.['ai.model'] ?? 'claude-sonnet-5'),
+        embeddingProvider: String(settings.data?.['ai.embeddingProvider'] ?? ''),
+        embeddingModel: String(settings.data?.['ai.embeddingModel'] ?? ''),
+        monthlyTokenBudget: String(settings.data?.['ai.monthlyTokenBudget'] ?? '0'),
+        apiKey: '',
+      }))
     }
   }, [settings.data, form])
   const mutation = useMutation({
@@ -88,6 +117,10 @@ export function Component() {
         'key' in error.details
       ) {
         const key = String((error.details as { key: unknown }).key)
+        if (key.startsWith('numbering.')) {
+          setTemplateErrors((current) => ({ ...current, [key]: messageFor(error) }))
+          return
+        }
         const field = settingField(key)
         if (field)
           form.setError(field as 'hospital.name', { type: 'server', message: messageFor(error) })
@@ -104,15 +137,45 @@ export function Component() {
   if (settings.error)
     return <ErrorState error={settings.error} onRetry={() => void settings.refetch()} />
   const submit = (after: SettingsForm) => {
+    const errors: Record<string, string> = {}
+    for (const type of NUMBER_TYPES) {
+      if (templates[type] && !/\{SEQ/.test(templates[type]))
+        errors[`numbering.${type}`] = 'Mẫu số phải chứa {SEQ'
+    }
+    setTemplateErrors(errors)
+    if (Object.keys(errors).length) return
     const body = changedSettings(values(settings.data ?? {}), after, templates, settings.data ?? {})
-    if (Object.keys(body).length) mutation.mutate(body)
+    const original = settings.data ?? {}
+    const putAi = (key: string, value: unknown, fallback: unknown) => {
+      const previous = original[key] === undefined ? fallback : original[key]
+      if (JSON.stringify(previous) !== JSON.stringify(value)) body[key] = value
+    }
+    putAi('ai.enabled', ai.enabled, false)
+    putAi('ai.provider', ai.provider, 'anthropic')
+    putAi('ai.model', ai.model, 'claude-sonnet-5')
+    putAi('ai.embeddingProvider', ai.embeddingProvider, '')
+    putAi('ai.embeddingModel', ai.embeddingModel, '')
+    putAi('ai.monthlyTokenBudget', ai.monthlyTokenBudget, '0')
+    if (ai.apiKey) body['ai.apiKey'] = ai.apiKey
+    if (!Object.keys(body).length) {
+      toast.message('Không có thay đổi')
+      return
+    }
+    mutation.mutate(body)
   }
   return (
     <>
       <PageHeader title="Cấu hình hệ thống" />
       <Form {...form}>
         <form className="space-y-4" noValidate onSubmit={form.handleSubmit(submit)}>
-          <Tabs defaultValue="hospital">
+          <Tabs
+            value={tab}
+            onValueChange={(value) => {
+              const next = new URLSearchParams(params)
+              next.set('tab', value)
+              setParams(next, { replace: true })
+            }}
+          >
             <TabsList className="max-w-full flex-wrap">
               <TabsTrigger value="hospital">Viện</TabsTrigger>
               <TabsTrigger value="workflow">Quy trình</TabsTrigger>
@@ -157,20 +220,18 @@ export function Component() {
                   <FormItem>
                     <fieldset className="space-y-2">
                       <legend className="text-sm font-medium">Số cấp duyệt</legend>
-                      <div className="flex gap-4">
+                      <RadioGroup
+                        className="flex gap-4"
+                        value={String(field.value)}
+                        onValueChange={(value) => field.onChange(Number(value) as 1 | 2)}
+                      >
                         {([1, 2] as const).map((level) => (
                           <label key={level} className="flex min-h-8 items-center gap-2 text-sm">
-                            <input
-                              type="radio"
-                              name={field.name}
-                              value={level}
-                              checked={Number(field.value) === level}
-                              onChange={() => field.onChange(level)}
-                            />
+                            <RadioGroupItem value={String(level)} />
                             {level} cấp
                           </label>
                         ))}
-                      </div>
+                      </RadioGroup>
                     </fieldset>
                     <FormMessage />
                   </FormItem>
@@ -227,6 +288,7 @@ export function Component() {
                       label="Kho mặc định"
                       queryKey="warehouses"
                       loadOptions={searchWarehouses}
+                      resolveOption={resolveWarehouse}
                       value={field.value}
                       onChange={field.onChange}
                       clearable
@@ -297,14 +359,18 @@ export function Component() {
                     {NUMBER_LABELS[type]}
                   </label>
                   <div>
-                    <input
+                    <Input
                       id={`number-${type}`}
-                      className="border-input h-9 w-full rounded-md border px-3"
                       value={templates[type] ?? ''}
                       onChange={(event) =>
                         setTemplates((current) => ({ ...current, [type]: event.target.value }))
                       }
                     />
+                    {templateErrors[`numbering.${type}`] && (
+                      <p className="text-destructive text-xs">
+                        {templateErrors[`numbering.${type}`]}
+                      </p>
+                    )}
                     {previews[type] && (
                       <p className="text-muted-foreground text-xs">
                         Xem trước đã lưu: {previews[type]}
@@ -328,8 +394,86 @@ export function Component() {
                 </div>
               ))}
             </TabsContent>
-            <TabsContent value="ai" forceMount className="data-[state=inactive]:hidden">
-              <p className="text-muted-foreground">Cấu hình AI sẽ được bổ sung ở giai đoạn D2.</p>
+            <TabsContent value="ai" forceMount className="space-y-4 data-[state=inactive]:hidden">
+              <p className="text-muted-foreground text-sm">
+                {/* TODO(api): D2 chưa có GET /v1/ai/status. Khoá gửi qua PUT /v1/settings. */}
+                API D2 chưa có — lưu khoá `ai.*` khi backend sẵn sàng. Không hiện lại API key đã
+                đặt.
+              </p>
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="ai-enabled"
+                  checked={ai.enabled}
+                  onCheckedChange={(value) => setAi((current) => ({ ...current, enabled: value }))}
+                />
+                <Label htmlFor="ai-enabled">Bật trợ lý AI</Label>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="ai-provider">Nhà cung cấp</Label>
+                  <Input
+                    id="ai-provider"
+                    value={ai.provider}
+                    onChange={(event) =>
+                      setAi((current) => ({ ...current, provider: event.target.value }))
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="ai-model">Mô hình</Label>
+                  <Input
+                    id="ai-model"
+                    value={ai.model}
+                    onChange={(event) =>
+                      setAi((current) => ({ ...current, model: event.target.value }))
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="ai-embed-provider">Embedding</Label>
+                  <Input
+                    id="ai-embed-provider"
+                    value={ai.embeddingProvider}
+                    onChange={(event) =>
+                      setAi((current) => ({ ...current, embeddingProvider: event.target.value }))
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="ai-embed-model">Mô hình embedding</Label>
+                  <Input
+                    id="ai-embed-model"
+                    value={ai.embeddingModel}
+                    onChange={(event) =>
+                      setAi((current) => ({ ...current, embeddingModel: event.target.value }))
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="ai-budget">Ngân sách token/tháng (0 = không giới hạn)</Label>
+                  <Input
+                    id="ai-budget"
+                    value={ai.monthlyTokenBudget}
+                    onChange={(event) =>
+                      setAi((current) => ({ ...current, monthlyTokenBudget: event.target.value }))
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="ai-key">
+                    API key {settings.data?.['ai.apiKeySet'] ? '(đã đặt)' : '(chưa đặt)'}
+                  </Label>
+                  <Input
+                    id="ai-key"
+                    type="password"
+                    autoComplete="new-password"
+                    value={ai.apiKey}
+                    onChange={(event) =>
+                      setAi((current) => ({ ...current, apiKey: event.target.value }))
+                    }
+                  />
+                </div>
+              </div>
             </TabsContent>
             <TabsContent value="other" forceMount className="data-[state=inactive]:hidden">
               <pre className="bg-muted overflow-auto rounded p-3 text-xs">

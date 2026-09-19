@@ -52,11 +52,82 @@ export function patchStocktakeItem(id: string, itemId: string, body: Record<stri
     }),
   )
 }
+
+export type StocktakePackageItem = {
+  id: string
+  code: string
+  name: string
+  qrToken?: string
+  lotNo?: string
+  bookQty?: string
+  location?: string
+}
+
+type PackageRaw = {
+  items?: Array<{
+    id?: string
+    itemId?: string
+    code?: string
+    name?: string
+    qrToken?: string | null
+    lotNo?: string | null
+    bookQty?: string | null
+    location?: string | null
+  }>
+}
+
+export function stocktakePackage(id: string) {
+  const get = api.GET as (path: string, init?: object) => ReturnType<typeof api.GET>
+  return unwrapAs<PackageRaw>(
+    get('/v1/stocktakes/{id}/package', { params: { path: { id } } }),
+  ).then((data) => ({
+    items: (data.items ?? []).map((item) => ({
+      id: item.id ?? item.itemId ?? '',
+      code: item.code ?? '',
+      name: item.name ?? '',
+      qrToken: item.qrToken ?? undefined,
+      lotNo: item.lotNo ?? undefined,
+      bookQty: item.bookQty ?? undefined,
+      location: item.location ?? undefined,
+    })),
+  }))
+}
+
+export type StocktakeCountsResult = {
+  accepted: number
+  duplicated: number
+  conflicts: { clientId: string; itemId: string; keptCountedAt?: string | null }[]
+  extras: string[]
+}
+
 export function postCounts(id: string, counts: Record<string, unknown>[]) {
-  return unwrap(
+  return unwrapAs<StocktakeCountsResult>(
     api.POST('/v1/stocktakes/{id}/counts', { params: { path: { id } }, body: { counts } as never }),
   )
 }
+
+export type StocktakeCompareItem = {
+  key: string
+  code: string
+  name: string
+  prevDiff: string | null
+  currDiff: string | null
+}
+
+export type StocktakeCompare = {
+  items: StocktakeCompareItem[]
+  summary: { prevDiffCount: number; currDiffCount: number; repeated: number }
+}
+
+export function compareStocktakes(id: string, withSessionId: string) {
+  const get = api.GET as (path: string, init?: object) => ReturnType<typeof api.GET>
+  return unwrapAs<StocktakeCompare>(
+    get('/v1/stocktakes/{id}/compare', {
+      params: { path: { id }, query: { withSessionId } },
+    }),
+  )
+}
+
 export function stocktakeExtras(id: string) {
   return unwrap(api.GET('/v1/stocktakes/{id}/extras', { params: { path: { id } } }))
 }

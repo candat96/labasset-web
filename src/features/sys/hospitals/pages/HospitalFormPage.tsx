@@ -72,8 +72,29 @@ export function Component() {
     try {
       const body = toBody(values) as components['schemas']['CreateHospitalDto']
       if (editing) {
-        const patch = { ...body }
-        delete (patch as { code?: string }).code
+        const before = detail.data
+          ? toBody({
+              code: detail.data.code,
+              name: detail.data.name,
+              plan: detail.data.plan === 'pro' ? 'pro' : 'standard',
+              maxUsers: detail.data.maxUsers ?? '',
+              licenseExpiresAt: detail.data.licenseExpiresAt ?? '',
+              contactName: detail.data.contactName ?? '',
+              contactEmail: detail.data.contactEmail ?? '',
+              contactPhone: detail.data.contactPhone ?? '',
+              notes: detail.data.notes ?? '',
+            })
+          : null
+        const patch: Record<string, unknown> = {}
+        for (const key of Object.keys(body) as (keyof typeof body)[]) {
+          if (key === 'code') continue
+          if (!before || JSON.stringify(body[key]) !== JSON.stringify(before[key]))
+            patch[key] = body[key]
+        }
+        if (!Object.keys(patch).length) {
+          toast.message('Không có thay đổi')
+          return
+        }
         await mutations.update.mutateAsync({
           id,
           body: patch as components['schemas']['UpdateHospitalDto'],

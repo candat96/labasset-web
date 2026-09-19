@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { notificationLink } from '@/lib/notification-link'
 import { Bell } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -19,20 +20,22 @@ export function NotificationBell() {
   const { t } = useTranslation()
   const { t: tn } = useTranslation('notifications')
   const navigate = useNavigate()
+  const [open, setOpen] = useState(false)
   useNotificationStream()
   const list = useNotifications({ page: 1, limit: 8 })
   const markRead = useMarkRead()
   const markAll = useMarkAllRead()
   const unread = list.data?.unreadCount ?? 0
 
-  const open = (n: Notification) => {
+  const openItem = (n: Notification) => {
     if (!n.readAt) markRead.mutate(n.id)
+    setOpen(false)
     const path = notificationLink(n.data)
     if (path) navigate(path)
   }
 
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           variant="ghost"
@@ -74,7 +77,7 @@ export function NotificationBell() {
                     'hover:bg-accent w-full px-3 py-2 text-left',
                     !n.readAt && 'bg-primary/5',
                   )}
-                  onClick={() => open(n)}
+                  onClick={() => openItem(n)}
                 >
                   <div className={cn('truncate text-sm', !n.readAt && 'font-semibold')}>
                     {n.title}

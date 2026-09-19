@@ -83,7 +83,12 @@ export function GlobalSearch() {
       >
         <Search className="size-4" aria-hidden />
       </Button>
-      <CommandDialog open={open} onOpenChange={setOpen} title={t('actions.search')}>
+      <CommandDialog
+        open={open}
+        onOpenChange={setOpen}
+        title={t('actions.search')}
+        shouldFilter={false}
+      >
         <CommandInput placeholder={t('search.hint')} value={q} onValueChange={setQ} />
         <CommandList>
           {search.length < 2 ? (
@@ -95,7 +100,7 @@ export function GlobalSearch() {
                   Đang tìm…
                 </p>
               )}
-              <CommandEmpty>Không tìm thấy kết quả</CommandEmpty>
+              {!results.isPending && <CommandEmpty>Không tìm thấy kết quả</CommandEmpty>}
               {results.data?.map((group) => (
                 <CommandGroup key={group.path} heading={group.title}>
                   {group.error && (

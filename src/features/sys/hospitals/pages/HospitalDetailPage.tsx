@@ -11,6 +11,7 @@ import { formatDateTime } from '@/lib/format/date'
 import { formatQty } from '@/lib/format/number'
 import { useConfirm } from '@/components/confirm-dialog'
 import { TemporaryPasswordDialog } from '@/components/temporary-password-dialog'
+import { messageFor } from '@/api/errors'
 import { hospitalUsage } from '../api'
 import { useHospital, useHospitalMutations } from '../hooks'
 
@@ -33,14 +34,18 @@ export function Component() {
     title: string,
   ) => {
     if ((await confirm({ title, destructive: action === 'suspend' })) === false) return
-    if (action === 'reset-admin') {
-      const result = await mutations.resetAdmin.mutateAsync(id)
-      setPassword(result.tempPassword)
-      toast.success(`Mật khẩu tạm cho ${result.username}`)
-      return
+    try {
+      if (action === 'reset-admin') {
+        const result = await mutations.resetAdmin.mutateAsync(id)
+        setPassword(result.tempPassword)
+        toast.success(`Mật khẩu tạm cho ${result.username}`)
+        return
+      }
+      await mutations.action.mutateAsync({ id, action })
+      toast.success('Đã thực hiện')
+    } catch (error) {
+      toast.error(messageFor(error))
     }
-    await mutations.action.mutateAsync({ id, action })
-    toast.success('Đã thực hiện')
   }
   return (
     <>

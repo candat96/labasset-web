@@ -15,6 +15,7 @@ import { AsyncSelect } from '@/components/form/async-select'
 import { applyServerErrors, messageFor } from '@/api/errors'
 import { catalogOptions, supplyOptions } from '@/api/references'
 import { formatVnd, moneyAdd, moneyMul } from '@/lib/format/money'
+import { decimalString } from '@/lib/validation/decimal'
 import { createReceipt } from '../api'
 
 const schema = z.object({
@@ -29,8 +30,8 @@ const schema = z.object({
         supplyId: z.string().min(1, 'Bắt buộc'),
         lotNo: z.string(),
         expiresAt: z.string(),
-        quantity: z.string().min(1, 'Bắt buộc'),
-        unitCost: z.string().min(1, 'Bắt buộc'),
+        quantity: decimalString({ maxScale: 3, min: '0' }),
+        unitCost: decimalString({ maxScale: 0, min: '0' }),
       }),
     )
     .min(1),

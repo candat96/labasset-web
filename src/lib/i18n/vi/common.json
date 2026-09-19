@@ -18,7 +18,8 @@
     "refresh": "Làm mới",
     "more": "Thao tác",
     "markAllRead": "Đánh dấu tất cả đã đọc",
-    "viewAll": "Xem tất cả"
+    "viewAll": "Xem tất cả",
+    "noChange": "Không có thay đổi"
   },
   "status": { "active": "Hoạt động", "inactive": "Ngừng", "all": "Tất cả" },
   "table": {

@@ -25,3 +25,14 @@ export async function searchWarehouses(q: string) {
   )
   return Array.isArray(result) ? result : result.items
 }
+
+export async function resolveWarehouse(id: string) {
+  try {
+    return await unwrapAs<{ id: string; code: string; name: string }>(
+      api.GET('/v1/catalogs/warehouses/{id}', { params: { path: { id } } }),
+    )
+  } catch {
+    const list = await searchWarehouses('')
+    return list.find((row) => row.id === id) ?? null
+  }
+}

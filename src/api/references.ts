@@ -91,3 +91,37 @@ export async function equipmentOptions(q: string): Promise<Reference[]> {
   )
   return result.items
 }
+
+export async function resolveDepartment(id: string): Promise<Reference | null> {
+  try {
+    return await unwrapAs<Reference>(api.GET('/v1/departments/{id}', { params: { path: { id } } }))
+  } catch {
+    return null
+  }
+}
+
+export async function resolveUser(id: string): Promise<Reference | null> {
+  try {
+    const row = await unwrapAs<{ id: string; username: string; fullName: string }>(
+      api.GET('/v1/users/{id}', { params: { path: { id } } }),
+    )
+    return { id: row.id, code: row.username, name: row.fullName }
+  } catch {
+    return null
+  }
+}
+
+export async function resolveCatalogItem(
+  slug: Parameters<typeof catalogOptions>[0],
+  id: string,
+): Promise<Reference | null> {
+  try {
+    return await unwrapAs<Reference>(
+      api.GET(`/v1/catalogs/${slug}/{id}` as '/v1/catalogs/warehouses/{id}', {
+        params: { path: { id } },
+      }),
+    )
+  } catch {
+    return null
+  }
+}

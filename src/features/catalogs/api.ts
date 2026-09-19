@@ -16,6 +16,9 @@ export function listCatalog(
     api.GET(collection(slug), { params: { query: pageQuery(params) } }),
   )
 }
+export function getCatalog(slug: CatalogSlug, id: string) {
+  return unwrapAs<CatalogRow>(api.GET(detail(slug), { params: { path: { id } } }))
+}
 export function createCatalog(slug: CatalogSlug, body: CatalogBody) {
   return unwrapAs<CatalogRow>(api.POST(collection(slug), { body: body as never }))
 }
@@ -24,8 +27,18 @@ export function updateCatalog(slug: CatalogSlug, id: string, body: CatalogBody) 
     api.PATCH(detail(slug), { params: { path: { id } }, body: body as never }),
   )
 }
-export function deleteCatalog(slug: CatalogSlug, id: string) {
-  return unwrap(api.DELETE(detail(slug), { params: { path: { id } } }))
+/** 204 = xoá hẳn; 200 `{ deactivated: true }` = còn tham chiếu nên ngừng hoạt động. */
+export async function deleteCatalog(
+  slug: CatalogSlug,
+  id: string,
+): Promise<{ deactivated: boolean }> {
+  const { data, response, error } = await api.DELETE(detail(slug), { params: { path: { id } } })
+  if (error !== undefined || !response.ok) {
+    await unwrap(Promise.resolve({ response, error }))
+  }
+  if (response.status === 204) return { deactivated: false }
+  const body = data as { deactivated?: boolean } | undefined
+  return { deactivated: !!body?.deactivated }
 }
 export function importCatalog(slug: CatalogSlug, file: File) {
   const data = new FormData()

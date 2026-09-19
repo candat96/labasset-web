@@ -11,7 +11,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog'
 import { useConfirm } from './confirm-dialog'
 import { useCan } from '@/app/guards/useCan'
 import { STAFF } from '@/routes/roles'
-type Attachment = components['schemas']['AttachmentViewDto']
+type Attachment = components['schemas']['AttachmentViewDto'] & { mime?: string }
+
+function looksLikeImage(row: Attachment) {
+  if (row.kind === 'photo') return true
+  const mime = row.mime ?? ''
+  if (mime.startsWith('image/')) return true
+  const name = `${row.label ?? ''} ${row.kind ?? ''}`
+  return /\.(png|jpe?g|gif|webp)$/i.test(name)
+}
+
 function AttachmentItem({
   row,
   canWrite,
@@ -22,10 +31,10 @@ function AttachmentItem({
   remove: () => void
 }) {
   const [preview, setPreview] = useState(false)
-  const [isImage, setIsImage] = useState(true)
+  const isImage = looksLikeImage(row)
   const url = useQuery({
-    queryKey: ['file-url', row.fileId],
-    queryFn: () => getFileUrl(row.fileId),
+    queryKey: ['file-url', row.fileId, isImage],
+    queryFn: () => getFileUrl(row.fileId, isImage),
     staleTime: 600000,
   })
   return (
@@ -40,7 +49,6 @@ function AttachmentItem({
             className="size-16 rounded object-cover"
             src={url.data.url}
             alt={row.label ?? row.kind}
-            onError={() => setIsImage(false)}
           />
         </button>
       )}

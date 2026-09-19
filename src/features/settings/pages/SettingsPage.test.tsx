@@ -35,6 +35,16 @@ beforeEach(() => {
   )
 })
 
+it('keeps the active tab in the URL', async () => {
+  const { router } = renderWithProviders(<Component />, {
+    path: '/admin/settings',
+    route: '/admin/settings',
+  })
+  await screen.findByDisplayValue('Bệnh viện Demo')
+  await userEvent.click(screen.getByRole('tab', { name: 'Đánh số' }))
+  expect(router.state.location.search).toContain('tab=numbering')
+})
+
 it('shows typed tabs and unknown settings as read-only JSON', async () => {
   renderWithProviders(<Component />)
   expect(await screen.findByDisplayValue('Bệnh viện Demo')).toBeVisible()

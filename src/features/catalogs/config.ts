@@ -60,7 +60,7 @@ export const catalogConfigs: Record<CatalogSlug, CatalogConfig> = {
         reference: 'departments',
       },
       { name: 'address', label: 'Địa chỉ/vị trí' },
-      { name: 'keeperUserId', label: 'Mã người phụ trách' },
+      { name: 'keeperUserId', label: 'Người phụ trách', type: 'user' },
     ],
   },
   'funding-sources': { title: 'Nguồn kinh phí', fields: [] },

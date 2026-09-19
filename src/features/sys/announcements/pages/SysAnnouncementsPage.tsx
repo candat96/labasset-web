@@ -9,6 +9,8 @@ import { PageHeader } from '@/components/page/PageHeader'
 import { Button } from '@/components/ui/button'
 import { FormDialog } from '@/components/form/FormDialog'
 import { TextField, SelectField } from '@/components/form/fields'
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { Textarea } from '@/components/ui/textarea'
 import { DatetimeField } from '@/components/form/datetime-field'
 import { useConfirm } from '@/components/confirm-dialog'
 import { applyServerErrors, messageFor } from '@/api/errors'
@@ -171,7 +173,19 @@ export function Component() {
         submitting={save.isPending}
       >
         <TextField control={form.control} name="title" label="Tiêu đề" />
-        <TextField control={form.control} name="body" label="Nội dung" />
+        <FormField
+          control={form.control}
+          name="body"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Nội dung</FormLabel>
+              <FormControl>
+                <Textarea rows={6} {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <SelectField
           control={form.control}
           name="level"

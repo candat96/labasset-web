@@ -11,21 +11,23 @@ import { applyServerErrors, messageFor } from '@/api/errors'
 import { useSysAuthStore } from '@/stores/sys-auth.store'
 import { sysLogin } from '../api'
 import { sysLoginSchema, type SysLoginValues } from '../schema'
+import { safeReturnTo } from '@/lib/return-to'
 
 export function Component() {
   const token = useSysAuthStore((s) => s.accessToken)
   const [sp] = useSearchParams()
   const navigate = useNavigate()
+  const returnTo = safeReturnTo(sp.get('returnTo'), '/sys/hospitals')
   const form = useForm<SysLoginValues>({
     resolver: zodResolver(sysLoginSchema),
     defaultValues: { username: '', password: '' },
   })
-  if (token) return <Navigate to={sp.get('returnTo') || '/sys/hospitals'} replace />
+  if (token) return <Navigate to={returnTo} replace />
   const onSubmit = (values: SysLoginValues) =>
     sysLogin(values)
       .then((result) => {
         useSysAuthStore.getState().setSession(result)
-        navigate(sp.get('returnTo') || '/sys/hospitals', { replace: true })
+        navigate(returnTo, { replace: true })
       })
       .catch((error: unknown) => {
         if (!applyServerErrors(form, error))

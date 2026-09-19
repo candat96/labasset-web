@@ -8,8 +8,8 @@ import { NumberField, SelectField, SwitchField, TextField } from '@/components/f
 import { AsyncSelect } from '@/components/form/async-select'
 import { FormField, FormItem, FormMessage } from '@/components/ui/form'
 import { applyServerErrors, messageFor } from '@/api/errors'
-import { departmentOptions } from '@/api/references'
-import { createCatalog, listCatalog, updateCatalog } from '../api'
+import { departmentOptions, resolveDepartment, resolveUser, userOptions } from '@/api/references'
+import { createCatalog, getCatalog, listCatalog, updateCatalog } from '../api'
 import { catalogSchema } from '../schema'
 import type { CatalogConfig, CatalogRow, CatalogSlug, CatalogValue } from '../types'
 
@@ -136,6 +136,26 @@ export function CatalogFormDialog({
               ] as const
             ).map(([value, label]) => ({ value, label }))}
           />
+        ) : field.type === 'user' ? (
+          <FormField
+            key={field.name}
+            control={form.control}
+            name={field.name}
+            render={({ field: input }) => (
+              <FormItem>
+                <AsyncSelect
+                  label={field.label}
+                  queryKey="users"
+                  loadOptions={userOptions}
+                  resolveOption={resolveUser}
+                  value={typeof input.value === 'string' ? input.value : null}
+                  onChange={input.onChange}
+                  clearable
+                />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         ) : field.type === 'reference' ? (
           <FormField
             key={field.name}
@@ -147,6 +167,14 @@ export function CatalogFormDialog({
                   label={field.label}
                   queryKey={field.reference === 'self' ? slug : 'departments'}
                   loadOptions={field.reference === 'self' ? selfOptions : departmentOptions}
+                  resolveOption={
+                    field.reference === 'self'
+                      ? async (id) => {
+                          const row = await getCatalog(slug, id)
+                          return { id: row.id, code: row.code, name: row.name }
+                        }
+                      : resolveDepartment
+                  }
                   value={typeof input.value === 'string' ? input.value : null}
                   onChange={input.onChange}
                   clearable

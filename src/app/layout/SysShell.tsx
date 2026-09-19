@@ -19,10 +19,12 @@ import {
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
 import { PageSkeleton } from './AppShell'
+import { useTranslation } from 'react-i18next'
 import { SYS_ITEMS } from '@/routes/menu'
 import { useSysAuthStore } from '@/stores/sys-auth.store'
 
 export function SysShell() {
+  const { t } = useTranslation()
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const user = useSysAuthStore((s) => s.user)
@@ -52,7 +54,7 @@ export function SysShell() {
             <SidebarGroupContent>
               <SidebarMenu>
                 {SYS_ITEMS.map((item) => {
-                  const label = item.label
+                  const label = t(item.labelKey)
                   return (
                     <SidebarMenuItem key={item.path}>
                       <SidebarMenuButton

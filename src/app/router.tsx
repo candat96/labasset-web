@@ -1,4 +1,4 @@
-import { createBrowserRouter, type RouteObject } from 'react-router'
+import { createBrowserRouter, Navigate, type RouteObject } from 'react-router'
 import { RequireAuth } from './guards/RequireAuth'
 import { RequirePasswordChanged } from './guards/RequirePasswordChanged'
 import { RequireRole } from './guards/RequireRole'
@@ -11,12 +11,17 @@ import { PlaceholderPage } from './pages/PlaceholderPage'
 import { MENU } from '@/routes/menu'
 import i18n from '@/lib/i18n'
 
+const showSys = import.meta.env.VITE_SHOW_SYS === 'true'
+
 /** Route đã có trang thật; mọi mục MENU còn lại tự sinh placeholder. */
 const implemented: RouteObject[] = [
   { path: 'admin/users', lazy: () => import('@/features/users/pages/UsersPage') },
   { path: 'admin/users/:id', lazy: () => import('@/features/users/pages/UserDetailPage') },
+  { path: 'admin/catalogs', lazy: () => import('@/features/catalogs/pages/CatalogsIndexPage') },
   { path: 'admin/catalogs/:name', lazy: () => import('@/features/catalogs/pages/CatalogPage') },
   { path: 'admin/settings', lazy: () => import('@/features/settings/pages/SettingsPage') },
+  { path: 'admin/numbering', element: <Navigate to="/admin/settings?tab=numbering" replace /> },
+  { path: 'admin/backup', lazy: () => import('@/features/settings/pages/BackupPage') },
   { path: 'admin/audit-logs', lazy: () => import('@/features/audit-logs/pages/AuditLogsPage') },
   {
     path: 'admin/departments/:id',
@@ -40,6 +45,7 @@ const implemented: RouteObject[] = [
   { path: 'equipment/new', lazy: () => import('@/features/equipment/pages/EquipmentFormPage') },
   { path: 'equipment/compare', lazy: () => import('@/features/equipment/pages/ComparePage') },
   { path: 'equipment/transfers', lazy: () => import('@/features/equipment/pages/TransfersPage') },
+  { path: 'equipment/qr-labels', lazy: () => import('@/features/equipment/pages/QrLabelsPage') },
   {
     path: 'equipment/by-qr/:token',
     lazy: () => import('@/features/equipment/pages/ByQrPage'),
@@ -116,11 +122,17 @@ const implemented: RouteObject[] = [
   { path: 'requests/:id/edit', lazy: () => import('@/features/requests/pages/RequestFormPage') },
   { path: 'requests/:id', lazy: () => import('@/features/requests/pages/RequestDetailPage') },
   { path: 'stocktakes', lazy: () => import('@/features/stocktakes/pages/StocktakesPage') },
+  {
+    path: 'stocktakes/:id/compare',
+    lazy: () => import('@/features/stocktakes/pages/StocktakeComparePage'),
+  },
   { path: 'stocktakes/:id', lazy: () => import('@/features/stocktakes/pages/StocktakeDetailPage') },
   { path: 'my-tasks', lazy: () => import('@/features/dashboard/pages/MyTasksPage') },
   { path: 'reports', lazy: () => import('@/features/reports/pages/ReportsPage') },
   { path: 'reports/builder', lazy: () => import('@/features/reports/pages/ReportBuilderPage') },
+  { path: 'reports/jobs', lazy: () => import('@/features/reports/pages/ReportJobsPage') },
   { path: 'assistant', lazy: () => import('@/features/assistant/pages/AssistantPage') },
+  { path: 'assistant/digest', lazy: () => import('@/features/assistant/pages/DigestPage') },
 ]
 
 const sysImplemented = [
@@ -190,9 +202,11 @@ export const router = createBrowserRouter([
       { path: '/reset-password', lazy: () => import('@/features/auth/pages/ResetPasswordPage') },
     ],
   },
-  { path: '/sys/login', lazy: () => import('@/features/sys/auth/pages/SysLoginPage') },
+  ...(showSys
+    ? [{ path: '/sys/login', lazy: () => import('@/features/sys/auth/pages/SysLoginPage') }]
+    : [{ path: '/sys/*', element: <NotFoundPage /> }]),
   {
-    element: <RequireSysAuth />,
+    element: showSys ? <RequireSysAuth /> : <NotFoundPage />,
     children: [
       {
         path: '/sys',

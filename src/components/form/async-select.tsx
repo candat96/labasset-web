@@ -20,6 +20,7 @@ export interface AsyncSelectProps {
   clearable?: boolean
   disabled?: boolean
   selectedOptions?: ReferenceOption[]
+  resolveOption?: (id: string) => Promise<ReferenceOption | null>
 }
 export function AsyncSelect({
   label,
@@ -31,6 +32,7 @@ export function AsyncSelect({
   clearable,
   disabled,
   selectedOptions = [],
+  resolveOption,
 }: AsyncSelectProps) {
   const id = useId()
   const [q, setQ] = useState('')
@@ -43,9 +45,29 @@ export function AsyncSelect({
   })
   const [chosen, setChosen] = useState<ReferenceOption[]>([])
   const ids = Array.isArray(value) ? value : value ? [value] : []
-  const options = new Map(
+  const known = new Map(
     [...selectedOptions, ...chosen, ...(query.data ?? [])].map((o) => [o.id, o]),
   )
+  const missing = ids.filter((key) => !known.has(key))
+  const resolved = useQuery({
+    queryKey: ['reference', queryKey, 'resolve', missing.join(',')],
+    enabled: missing.length > 0 && !disabled,
+    queryFn: async () => {
+      const found: ReferenceOption[] = []
+      for (const key of missing) {
+        if (resolveOption) {
+          const option = await resolveOption(key)
+          if (option) found.push(option)
+          continue
+        }
+        const list = await loadOptions('')
+        const match = list.find((item) => item.id === key)
+        if (match) found.push(match)
+      }
+      return found
+    },
+  })
+  const options = new Map([...known.values(), ...(resolved.data ?? [])].map((o) => [o.id, o]))
   return (
     <div className="space-y-2">
       <Label htmlFor={id}>{label}</Label>
