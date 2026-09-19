@@ -1,0 +1,126 @@
+import { Link } from 'react-router'
+import type { ColumnDef } from '@tanstack/react-table'
+import { DataTable, useServerTable } from '@/components/data-table'
+import { PageHeader } from '@/components/page/PageHeader'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { StatusBadge } from '@/components/status-badge'
+import { commonStatusMap } from '@/lib/status-maps'
+import { formatDateTime } from '@/lib/format/date'
+import { useHospitals } from '../hooks'
+import type { Hospital } from '../api'
+
+const statuses = ['provisioning', 'active', 'suspended', 'failed'] as const
+
+export function Component() {
+  const table = useServerTable({ filterKeys: ['status'] })
+  const status = table.params.filters.status
+  const params = {
+    page: table.params.page,
+    limit: table.params.limit,
+    q: table.params.q || undefined,
+    status: statuses.find((value) => value === status),
+  }
+  const list = useHospitals(params)
+  const columns: ColumnDef<Hospital>[] = [
+    {
+      accessorKey: 'code',
+      header: 'Mã',
+      cell: ({ row }) => (
+        <Link
+          className="text-primary font-mono text-xs hover:underline"
+          to={`/sys/hospitals/${row.original.id}`}
+        >
+          {row.original.code}
+        </Link>
+      ),
+    },
+    { accessorKey: 'name', header: 'Tên' },
+    {
+      accessorKey: 'status',
+      header: 'Trạng thái',
+      cell: ({ row }) => <StatusBadge value={row.original.status} map={commonStatusMap} />,
+    },
+    {
+      id: 'plan',
+      header: 'Gói / hết hạn',
+      cell: ({ row }) =>
+        `${row.original.plan}${row.original.licenseExpiresAt ? ` · ${formatDateTime(row.original.licenseExpiresAt)}` : ''}`,
+    },
+    {
+      id: 'migrations',
+      header: 'Migration',
+      cell: ({ row }) =>
+        row.original.migrations.error
+          ? row.original.migrations.error
+          : row.original.migrations.pending?.length
+            ? `${row.original.migrations.pending.length} chờ`
+            : 'Đã cập nhật',
+    },
+    {
+      accessorKey: 'createdAt',
+      header: 'Tạo lúc',
+      cell: ({ getValue }) => formatDateTime(getValue<string>()),
+    },
+  ]
+  return (
+    <>
+      <PageHeader
+        title="Bệnh viện"
+        actions={
+          <Button asChild>
+            <Link to="/sys/hospitals/new">Thêm bệnh viện</Link>
+          </Button>
+        }
+      />
+      <DataTable
+        tableId="sys-hospitals"
+        columns={columns}
+        data={list.data?.items}
+        total={list.data?.total ?? 0}
+        params={table.params}
+        onPageChange={table.setPage}
+        onLimitChange={table.setLimit}
+        isLoading={list.isPending}
+        error={list.error}
+        onRetry={() => void list.refetch()}
+        getRowId={(row) => row.id}
+        toolbarLeft={
+          <>
+            <Input
+              aria-label="Tìm bệnh viện"
+              placeholder="Tìm mã hoặc tên"
+              value={table.inputQ}
+              onChange={(event) => table.setQ(event.target.value)}
+            />
+            <Select
+              value={status ?? 'all'}
+              onValueChange={(value) =>
+                table.setFilter('status', value === 'all' ? undefined : value)
+              }
+            >
+              <SelectTrigger aria-label="Trạng thái" className="w-44">
+                <SelectValue placeholder="Trạng thái" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tất cả</SelectItem>
+                {statuses.map((value) => (
+                  <SelectItem key={value} value={value}>
+                    {commonStatusMap[value]?.label ?? value}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </>
+        }
+      />
+    </>
+  )
+}
