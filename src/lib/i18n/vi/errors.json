@@ -1,0 +1,22 @@
+{
+  "NETWORK_ERROR": "Không kết nối được máy chủ",
+  "UNAUTHORIZED": "Tài khoản hoặc mật khẩu không đúng",
+  "INVALID_CREDENTIALS": "Tài khoản hoặc mật khẩu không đúng",
+  "FORBIDDEN": "Bạn không có quyền thực hiện",
+  "NOT_FOUND": "Không tìm thấy dữ liệu",
+  "CONFLICT": "Dữ liệu bị trùng",
+  "VALIDATION_ERROR": "Dữ liệu không hợp lệ",
+  "TOO_MANY_REQUESTS": "Thao tác quá nhiều, vui lòng thử lại sau",
+  "TENANT_NOT_FOUND": "Mã bệnh viện không đúng",
+  "TENANT_SUSPENDED": "Bệnh viện đang bị tạm khoá",
+  "TENANT_MISMATCH": "Phiên không khớp bệnh viện, vui lòng đăng nhập lại",
+  "TENANT_UNAVAILABLE": "Hệ thống bệnh viện tạm không sẵn sàng",
+  "TENANT_HEADER_REQUIRED": "Thiếu thông tin bệnh viện, vui lòng đăng nhập lại",
+  "SESSION_EXPIRED": "Phiên đăng nhập đã hết hạn",
+  "USER_INACTIVE": "Tài khoản đã bị khoá",
+  "OTP_INVALID": "Mã OTP không đúng hoặc đã hết hạn",
+  "INTERNAL_ERROR": "Lỗi hệ thống, vui lòng thử lại",
+  "IMPORT_INVALID_FILE": "Tệp không đúng định dạng Excel",
+  "PAYLOAD_TOO_LARGE": "Tệp quá lớn",
+  "UNKNOWN": "Đã xảy ra lỗi"
+}

@@ -1,0 +1,52 @@
+{
+  "app": { "name": "LabAsset", "tagline": "Quản lý thiết bị & vật tư xét nghiệm" },
+  "actions": {
+    "save": "Lưu",
+    "cancel": "Huỷ",
+    "create": "Thêm mới",
+    "edit": "Sửa",
+    "delete": "Xoá",
+    "close": "Đóng",
+    "retry": "Thử lại",
+    "search": "Tìm kiếm",
+    "export": "Xuất Excel",
+    "import": "Nhập Excel",
+    "back": "Quay lại",
+    "home": "Về trang chủ",
+    "confirm": "Xác nhận",
+    "logout": "Đăng xuất",
+    "refresh": "Làm mới",
+    "more": "Thao tác",
+    "markAllRead": "Đánh dấu tất cả đã đọc",
+    "viewAll": "Xem tất cả"
+  },
+  "status": { "active": "Hoạt động", "inactive": "Ngừng", "all": "Tất cả" },
+  "table": {
+    "empty": "Chưa có dữ liệu",
+    "error": "Không tải được dữ liệu",
+    "showing": "Hiển thị {{from}}–{{to}} / {{total}}",
+    "rowsPerPage": "Số dòng",
+    "columns": "Cột",
+    "prev": "Trang trước",
+    "next": "Trang sau",
+    "sort": "Sắp xếp"
+  },
+  "page": {
+    "placeholder": "Đang phát triển",
+    "placeholderDesc": "Màn hình \"{{name}}\" sẽ được bổ sung ở module sau.",
+    "forbidden": "Bạn không có quyền truy cập",
+    "forbiddenDesc": "Tài khoản của bạn không được phân quyền vào trang này. Liên hệ quản trị viện nếu cần.",
+    "notFound": "Không tìm thấy trang",
+    "notFoundDesc": "Đường dẫn không tồn tại hoặc đã bị thay đổi.",
+    "loading": "Đang tải…"
+  },
+  "theme": { "label": "Giao diện", "light": "Sáng", "dark": "Tối", "system": "Theo hệ thống" },
+  "mock": "Dữ liệu mẫu",
+  "search": {
+    "placeholder": "Tìm kiếm…",
+    "hint": "Tìm mã máy, vật tư, số phiếu, serial",
+    "unavailable": "Tìm kiếm toàn cục sẽ khả dụng khi API sẵn sàng"
+  },
+  "breadcrumb": { "home": "Trang chủ" },
+  "form": { "required": "Bắt buộc", "invalid": "Giá trị không hợp lệ", "none": "— Không —" }
+}
