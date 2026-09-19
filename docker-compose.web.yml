@@ -10,6 +10,6 @@ services:
         VITE_TENANT_MODE: single
     environment:
       API_UPSTREAM: http://api:3000
-    ports: ["8080:80"]
+    ports: ['8080:80']
     depends_on: [api]
     restart: unless-stopped
