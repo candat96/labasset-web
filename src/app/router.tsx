@@ -49,6 +49,18 @@ const implemented: RouteObject[] = [
     lazy: () => import('@/features/equipment/pages/EquipmentFormPage'),
   },
   { path: 'equipment/:id', lazy: () => import('@/features/equipment/pages/EquipmentDetailPage') },
+  { path: 'faults', lazy: () => import('@/features/faults/pages/FaultsPage') },
+  { path: 'faults/new', lazy: () => import('@/features/faults/pages/FaultFormPage') },
+  {
+    path: 'faults/suggestions',
+    lazy: () => import('@/features/faults/pages/FaultSuggestionsPage'),
+  },
+  { path: 'faults/:id/edit', lazy: () => import('@/features/faults/pages/FaultFormPage') },
+  { path: 'faults/:id', lazy: () => import('@/features/faults/pages/FaultDetailPage') },
+  { path: 'repairs', lazy: () => import('@/features/repairs/pages/RepairsPage') },
+  { path: 'repairs/new', lazy: () => import('@/features/repairs/pages/RepairFormPage') },
+  { path: 'repairs/stats', lazy: () => import('@/features/repairs/pages/RepairStatsPage') },
+  { path: 'repairs/:id', lazy: () => import('@/features/repairs/pages/RepairDetailPage') },
 ]
 
 const sysImplemented = [

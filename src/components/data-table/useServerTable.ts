@@ -76,6 +76,10 @@ export function useServerTable(opts: ServerTableOptions = {}) {
     (key: string, value: string | undefined) => update({ [key]: value, page: 1 }),
     [update],
   )
+  const setFilters = useCallback(
+    (patch: Record<string, string | undefined>) => update({ ...patch, page: 1 }),
+    [update],
+  )
   const reset = useCallback(() => setSp(new URLSearchParams(), { replace: true }), [setSp])
 
   // q gõ liên tục → debounce trước khi đẩy lên URL.
@@ -114,6 +118,7 @@ export function useServerTable(opts: ServerTableOptions = {}) {
     setQ,
     setSort,
     setFilter,
+    setFilters,
     reset,
   }
 }
