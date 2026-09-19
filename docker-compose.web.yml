@@ -1,0 +1,15 @@
+# Ghép với docker-compose.onprem.yml của labasset-api (project `labasset-onprem`):
+#   docker compose -p labasset-onprem \
+#     -f ../labasset-api/docker-compose.onprem.yml -f docker-compose.web.yml up -d --build
+# Web nghe cổng 8080, proxy /v1 → api:3000 trong cùng network compose.
+services:
+  web:
+    build:
+      context: .
+      args:
+        VITE_TENANT_MODE: single
+    environment:
+      API_UPSTREAM: http://api:3000
+    ports: ["8080:80"]
+    depends_on: [api]
+    restart: unless-stopped
