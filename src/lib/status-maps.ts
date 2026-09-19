@@ -93,3 +93,90 @@ export const assignmentResponseMap: StatusMap = {
   accepted: { label: 'Đã nhận', tone: 'success' },
   declined: { label: 'Từ chối', tone: 'danger' },
 }
+
+export const taskStatusMap: StatusMap = {
+  scheduled: { label: 'Đã lên lịch', tone: 'muted' },
+  in_progress: { label: 'Đang làm', tone: 'info' },
+  done: { label: 'Xong', tone: 'success' },
+  skipped: { label: 'Bỏ qua', tone: 'muted' },
+  overdue: { label: 'Quá hạn', tone: 'danger' },
+}
+
+export const taskTypeMap: StatusMap = {
+  periodic: { label: 'Định kỳ', tone: 'info' },
+  adhoc: { label: 'Đột xuất', tone: 'warning' },
+  vendor_visit: { label: 'Nhà thầu', tone: 'muted' },
+}
+
+export const calibrationStatusMap: StatusMap = {
+  scheduled: { label: 'Đã lên lịch', tone: 'muted' },
+  done: { label: 'Xong', tone: 'success' },
+  cancelled: { label: 'Huỷ', tone: 'danger' },
+}
+
+export const calibrationResultMap: StatusMap = {
+  pass: { label: 'Đạt', tone: 'success' },
+  fail: { label: 'Không đạt', tone: 'danger' },
+  conditional: { label: 'Có điều kiện', tone: 'warning' },
+}
+
+export const calibrationTypeMap: StatusMap = {
+  inspection: { label: 'Kiểm định', tone: 'info' },
+  calibration: { label: 'Hiệu chuẩn', tone: 'info' },
+}
+
+export const stockDocStatusMap: StatusMap = {
+  draft: { label: 'Nháp', tone: 'muted' },
+  posted: { label: 'Đã ghi sổ', tone: 'success' },
+  cancelled: { label: 'Huỷ', tone: 'danger' },
+}
+
+export const lotStatusMap: StatusMap = {
+  available: { label: 'Khả dụng', tone: 'success' },
+  quarantine: { label: 'Cách ly', tone: 'warning' },
+  expired: { label: 'Hết hạn', tone: 'danger' },
+  disposed: { label: 'Huỷ', tone: 'muted' },
+}
+
+export const qcStatusMap: StatusMap = {
+  pending: { label: 'Chờ QC', tone: 'warning' },
+  passed: { label: 'Đạt', tone: 'success' },
+  failed: { label: 'Không đạt', tone: 'danger' },
+}
+
+export const alertTypeMap: StatusMap = {
+  low_stock: { label: 'Dưới tồn min', tone: 'warning' },
+  expiring: { label: 'Sắp hết hạn', tone: 'warning' },
+  expired: { label: 'Hết hạn', tone: 'danger' },
+  open_vial_expiring: { label: 'Lọ mở sắp hết', tone: 'warning' },
+  stale: { label: 'Tồn lâu', tone: 'muted' },
+}
+
+export const requestStatusMap: StatusMap = {
+  draft: { label: 'Nháp', tone: 'muted' },
+  submitted: { label: 'Đã gửi', tone: 'info' },
+  dept_approved: { label: 'Trưởng khoa đã duyệt', tone: 'info' },
+  approved: { label: 'Đã duyệt', tone: 'success' },
+  partially_approved: { label: 'Duyệt một phần', tone: 'warning' },
+  rejected: { label: 'Từ chối', tone: 'danger' },
+  issued: { label: 'Đã cấp phát', tone: 'success' },
+  received: { label: 'Đã nhận', tone: 'success' },
+  cancelled: { label: 'Huỷ', tone: 'muted' },
+  converted: { label: 'Đã chuyển sửa chữa', tone: 'info' },
+}
+
+export const stocktakeStatusMap: StatusMap = {
+  draft: { label: 'Nháp', tone: 'muted' },
+  open: { label: 'Đã chụp sổ', tone: 'info' },
+  counting: { label: 'Đang đếm', tone: 'info' },
+  review: { label: 'Rà soát', tone: 'warning' },
+  closed: { label: 'Đã chốt', tone: 'success' },
+  cancelled: { label: 'Huỷ', tone: 'danger' },
+}
+
+export const jobStatusMap: StatusMap = {
+  queued: { label: 'Chờ', tone: 'muted' },
+  running: { label: 'Đang chạy', tone: 'info' },
+  done: { label: 'Xong', tone: 'success' },
+  failed: { label: 'Lỗi', tone: 'danger' },
+}

@@ -1,0 +1,94 @@
+import { useMemo } from 'react'
+import { Link, useNavigate } from 'react-router'
+import type { ColumnDef } from '@tanstack/react-table'
+import { DataTable, useServerTable } from '@/components/data-table'
+import { PageHeader } from '@/components/page/PageHeader'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { StatusBadge } from '@/components/status-badge'
+import { commonStatusMap } from '@/lib/status-maps'
+import { useCan } from '@/app/guards/useCan'
+import { STAFF } from '@/routes/roles'
+import { useTemplates } from '../hooks'
+import type { Template } from '../types'
+
+export function Component() {
+  const canWrite = useCan(STAFF)
+  const navigate = useNavigate()
+  const table = useServerTable()
+  const list = useTemplates()
+  const q = table.params.q.toLowerCase()
+  const items = (list.data ?? []).filter(
+    (row) =>
+      !q || row.name.toLowerCase().includes(q) || (row.model ?? '').toLowerCase().includes(q),
+  )
+  const columns = useMemo<ColumnDef<Template>[]>(
+    () => [
+      {
+        accessorKey: 'name',
+        header: 'Tên',
+        cell: ({ row }) => (
+          <Link
+            className="text-primary hover:underline"
+            to={`/maintenance/templates/${row.original.id}/edit`}
+          >
+            {row.original.name}
+          </Link>
+        ),
+      },
+      { accessorKey: 'model', header: 'Model' },
+      {
+        id: 'items',
+        header: 'Số mục',
+        cell: ({ row }) => row.original.items.length,
+      },
+      { accessorKey: 'version', header: 'Version' },
+      {
+        accessorKey: 'isActive',
+        header: 'Trạng thái',
+        cell: ({ row }) => (
+          <StatusBadge
+            value={row.original.isActive ? 'active' : 'inactive'}
+            map={commonStatusMap}
+          />
+        ),
+      },
+    ],
+    [],
+  )
+  return (
+    <>
+      <PageHeader
+        title="Checklist mẫu"
+        actions={
+          canWrite && (
+            <Button asChild>
+              <Link to="/maintenance/templates/new">Thêm mẫu</Link>
+            </Button>
+          )
+        }
+      />
+      <DataTable
+        tableId="maint-templates"
+        columns={columns}
+        data={items}
+        total={items.length}
+        params={table.params}
+        onPageChange={table.setPage}
+        onLimitChange={table.setLimit}
+        isLoading={list.isPending}
+        error={list.error}
+        onRetry={() => void list.refetch()}
+        getRowId={(row) => row.id}
+        onRowClick={(row) => navigate(`/maintenance/templates/${row.id}/edit`)}
+        toolbarLeft={
+          <Input
+            aria-label="Tìm mẫu"
+            value={table.inputQ}
+            onChange={(e) => table.setQ(e.target.value)}
+          />
+        }
+      />
+    </>
+  )
+}

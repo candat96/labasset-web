@@ -22,37 +22,31 @@ function asOptions(result: Reference[] | { items: Reference[] } | undefined): Re
 }
 
 export async function catalogOptions(
-  slug: 'manufacturers' | 'equipment-groups' | 'fault-groups' | 'component-types' | 'suppliers',
+  slug:
+    | 'manufacturers'
+    | 'equipment-groups'
+    | 'fault-groups'
+    | 'component-types'
+    | 'suppliers'
+    | 'warehouses'
+    | 'units'
+    | 'supply-groups'
+    | 'calibration-agencies',
   q: string,
 ): Promise<Reference[]> {
   const query = { params: { query: pageQuery({ q, all: true, page: 1, limit: 50 }) } }
-  if (slug === 'manufacturers')
-    return asOptions(
-      await unwrapAs<Reference[] | { items: Reference[] }>(
-        api.GET('/v1/catalogs/manufacturers', query),
-      ),
-    )
-  if (slug === 'equipment-groups')
-    return asOptions(
-      await unwrapAs<Reference[] | { items: Reference[] }>(
-        api.GET('/v1/catalogs/equipment-groups', query),
-      ),
-    )
-  if (slug === 'fault-groups')
-    return asOptions(
-      await unwrapAs<Reference[] | { items: Reference[] }>(
-        api.GET('/v1/catalogs/fault-groups', query),
-      ),
-    )
-  if (slug === 'component-types')
-    return asOptions(
-      await unwrapAs<Reference[] | { items: Reference[] }>(
-        api.GET('/v1/catalogs/component-types', query),
-      ),
-    )
-  return asOptions(
-    await unwrapAs<Reference[] | { items: Reference[] }>(api.GET('/v1/catalogs/suppliers', query)),
-  )
+  const loaders = {
+    manufacturers: () => api.GET('/v1/catalogs/manufacturers', query),
+    'equipment-groups': () => api.GET('/v1/catalogs/equipment-groups', query),
+    'fault-groups': () => api.GET('/v1/catalogs/fault-groups', query),
+    'component-types': () => api.GET('/v1/catalogs/component-types', query),
+    suppliers: () => api.GET('/v1/catalogs/suppliers', query),
+    warehouses: () => api.GET('/v1/catalogs/warehouses', query),
+    units: () => api.GET('/v1/catalogs/units', query),
+    'supply-groups': () => api.GET('/v1/catalogs/supply-groups', query),
+    'calibration-agencies': () => api.GET('/v1/catalogs/calibration-agencies', query),
+  }
+  return asOptions(await unwrapAs<Reference[] | { items: Reference[] }>(loaders[slug]()))
 }
 
 export async function userOptions(
