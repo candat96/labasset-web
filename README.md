@@ -25,7 +25,7 @@ ESLint + Prettier · Vitest + Testing Library + msw · Playwright.
 ```bash
 npm ci
 cp .env.example .env        # để trống VITE_API_URL → đi qua proxy Vite (API chưa bật CORS)
-npm run dev                  # http://localhost:5178
+npm run dev                  # http://localhost:2905
 ```
 
 Vite proxy các path `/v1`, `/sys`, `/health`, `/openapi.json` tới `VITE_DEV_PROXY_TARGET`

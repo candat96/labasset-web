@@ -1,6 +1,6 @@
 import { defineConfig } from '@playwright/test'
 
-const port = 5178
+const port = 2905
 const baseURL = process.env.E2E_BASE_URL ?? `http://localhost:${port}`
 
 export default defineConfig({
