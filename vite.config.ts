@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react(), tailwindcss()],
     resolve: { alias: { '@': path.resolve(__dirname, 'src') } },
-    server: { port: 5173, proxy },
+    server: { port: 5178, proxy },
     build: { sourcemap: false },
     test: {
       environment: 'jsdom',
