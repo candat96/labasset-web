@@ -57,6 +57,23 @@ test('faults and repairs lists are reachable', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Phiếu sửa chữa' })).toBeVisible()
 })
 
+test('remaining modules are reachable', async ({ page }) => {
+  await page.goto('/login')
+  const hc = page.getByLabel('Mã bệnh viện')
+  if (await hc.isVisible().catch(() => false)) await hc.fill(code)
+  await page.getByLabel('Tài khoản').fill(user)
+  await page.getByLabel('Mật khẩu').fill(pass)
+  await page.getByRole('button', { name: 'Đăng nhập' }).click()
+  await page.goto('/maintenance/tasks')
+  await expect(page.getByRole('heading', { name: 'Công việc bảo dưỡng' })).toBeVisible()
+  await page.goto('/supplies')
+  await expect(page.getByRole('heading', { name: 'Danh mục vật tư' })).toBeVisible()
+  await page.goto('/requests')
+  await expect(page.getByRole('heading', { name: 'Phiếu yêu cầu' })).toBeVisible()
+  await page.goto('/stocktakes')
+  await expect(page.getByRole('heading', { name: 'Kiểm kê' })).toBeVisible()
+})
+
 test('equipment list is reachable', async ({ page }) => {
   await page.goto('/login')
   const hc = page.getByLabel('Mã bệnh viện')
