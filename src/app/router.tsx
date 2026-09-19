@@ -2,7 +2,9 @@ import { createBrowserRouter, type RouteObject } from 'react-router'
 import { RequireAuth } from './guards/RequireAuth'
 import { RequirePasswordChanged } from './guards/RequirePasswordChanged'
 import { RequireRole } from './guards/RequireRole'
+import { RequireSysAuth } from './guards/RequireSysAuth'
 import { AppShell } from './layout/AppShell'
+import { SysShell } from './layout/SysShell'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { ForbiddenPage } from './pages/ForbiddenPage'
 import { PlaceholderPage } from './pages/PlaceholderPage'
@@ -36,7 +38,19 @@ const implemented: RouteObject[] = [
   { path: 'sessions', lazy: () => import('@/features/auth/pages/SessionsPage') },
 ]
 
-const implementedPaths = new Set(implemented.map((r) => (r.index ? '/' : `/${r.path}`)))
+const sysImplemented = [
+  '/sys/login',
+  '/sys/hospitals',
+  '/sys/migrations',
+  '/sys/announcements',
+  '/sys/stats',
+  '/sys/jobs',
+]
+
+const implementedPaths = new Set([
+  ...implemented.map((r) => (r.index ? '/' : `/${r.path}`)),
+  ...sysImplemented,
+])
 
 const placeholders: RouteObject[] = MENU.flatMap((g) =>
   g.items
@@ -91,6 +105,41 @@ export const router = createBrowserRouter([
       { path: '/reset-password', lazy: () => import('@/features/auth/pages/ResetPasswordPage') },
     ],
   },
+  { path: '/sys/login', lazy: () => import('@/features/sys/auth/pages/SysLoginPage') },
+  {
+    element: <RequireSysAuth />,
+    children: [
+      {
+        path: '/sys',
+        element: <SysShell />,
+        children: [
+          { path: 'hospitals', lazy: () => import('@/features/sys/hospitals/pages/HospitalsPage') },
+          {
+            path: 'hospitals/new',
+            lazy: () => import('@/features/sys/hospitals/pages/HospitalFormPage'),
+          },
+          {
+            path: 'hospitals/:id/edit',
+            lazy: () => import('@/features/sys/hospitals/pages/HospitalFormPage'),
+          },
+          {
+            path: 'hospitals/:id',
+            lazy: () => import('@/features/sys/hospitals/pages/HospitalDetailPage'),
+          },
+          {
+            path: 'migrations',
+            lazy: () => import('@/features/sys/migrations/pages/MigrationsPage'),
+          },
+          {
+            path: 'announcements',
+            lazy: () => import('@/features/sys/announcements/pages/SysAnnouncementsPage'),
+          },
+          { path: 'stats', lazy: () => import('@/features/sys/stats/pages/SysStatsPage') },
+          { path: 'jobs', lazy: () => import('@/features/sys/jobs/pages/SysJobsPage') },
+        ],
+      },
+    ],
+  },
   {
     element: <RequireAuth />,
     children: [
@@ -113,5 +162,4 @@ export const router = createBrowserRouter([
   },
 ])
 
-// Đặt tiêu đề tab theo ứng dụng.
 document.title = i18n.t('app.name')
