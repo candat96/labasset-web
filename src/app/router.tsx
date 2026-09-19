@@ -13,6 +13,8 @@ import i18n from '@/lib/i18n'
 const implemented: RouteObject[] = [
   { path: 'admin/users', lazy: () => import('@/features/users/pages/UsersPage') },
   { path: 'admin/users/:id', lazy: () => import('@/features/users/pages/UserDetailPage') },
+  { path: 'admin/catalogs/:name', lazy: () => import('@/features/catalogs/pages/CatalogPage') },
+  { path: 'admin/settings', lazy: () => import('@/features/settings/pages/SettingsPage') },
   {
     path: 'admin/departments/:id',
     lazy: () => import('@/features/departments/pages/DepartmentDetailPage'),
@@ -100,14 +102,6 @@ export const router = createBrowserRouter([
             children: [
               ...implemented.map(guarded),
               ...placeholders,
-              {
-                path: 'admin/catalogs/:name',
-                element: (
-                  <RequireRole roles={['HOSPITAL_ADMIN']}>
-                    <PlaceholderPage nameKey="menu:items.catalogs" />
-                  </RequireRole>
-                ),
-              },
               { path: '403', element: <ForbiddenPage /> },
               { path: '*', element: <NotFoundPage /> },
             ],
