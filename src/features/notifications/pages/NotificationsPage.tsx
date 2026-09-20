@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { DataTable, useServerTable } from '@/components/data-table'
+import { FilterBar } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page/PageHeader'
 import { StatusBadge } from '@/components/page/StatusBadge'
 import { formatDateTime } from '@/lib/format/date'
@@ -118,8 +119,7 @@ export function Component() {
           if (path) navigate(path)
         }}
         toolbarLeft={
-          <div className="flex flex-wrap items-center gap-2">
-            <Label htmlFor="notification-type">Loại</Label>
+          <FilterBar>
             <Select
               value={table.params.filters.type ?? 'all'}
               onValueChange={(value) =>
@@ -144,7 +144,7 @@ export function Component() {
               onCheckedChange={(v) => table.setFilter('unread', v ? 'true' : undefined)}
             />
             <Label htmlFor="only-unread">{t('onlyUnread')}</Label>
-          </div>
+          </FilterBar>
         }
       />
     </>

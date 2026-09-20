@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import type { ColumnDef } from '@tanstack/react-table'
 import { toast } from 'sonner'
 import { DataTable, useServerTable } from '@/components/data-table'
+import { FilterBar } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -120,11 +121,14 @@ export function Component() {
         getRowId={(row) => row.id}
         onRowClick={(row) => navigate(`/maintenance/plans/${row.id}`)}
         toolbarLeft={
-          <Input
-            aria-label={t('searchPlan')}
-            value={table.inputQ}
-            onChange={(e) => table.setQ(e.target.value)}
-          />
+          <FilterBar>
+            <Input
+              aria-label={t('searchPlan')}
+              value={table.inputQ}
+              onChange={(e) => table.setQ(e.target.value)}
+              placeholder={t('searchPlan')}
+            />
+          </FilterBar>
         }
       />
       <FormDialog
@@ -254,6 +258,28 @@ export function Component() {
             { value: 'vendor_contract', label: t('sourceVendor') },
           ]}
         />
+        {form.watch('source') === 'vendor_contract' && (
+          <>
+            <FormField
+              control={form.control}
+              name="supplierId"
+              render={({ field }) => (
+                <FormItem>
+                  <AsyncSelect
+                    label={t('supplier')}
+                    queryKey="suppliers"
+                    loadOptions={(q) => catalogOptions('suppliers', q)}
+                    value={field.value}
+                    onChange={field.onChange}
+                    clearable
+                  />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <TextField control={form.control} name="contractNo" label={t('contractNo')} />
+          </>
+        )}
         <SwitchField control={form.control} name="isActive" label={t('isActive')} />
       </FormDialog>
     </>

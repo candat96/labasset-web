@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
-import { Link, useParams } from 'react-router'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { Link, useParams, useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 import { PageHeader } from '@/components/page/PageHeader'
 import { ErrorState } from '@/components/page/ErrorState'
@@ -17,6 +17,25 @@ import { ADM, STAFF } from '@/routes/roles'
 import { isApiError, messageFor } from '@/api/errors'
 import { useAuthStore } from '@/stores/auth.store'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { FileField } from '@/components/form/file-field'
+import { AsyncSelect } from '@/components/form/async-select'
+import { SignaturePad } from '@/components/signature-pad'
+import { staffUserOptions, supplyOptions } from '@/api/references'
+import { uploadFile } from '@/api/files'
 import * as api from '../api'
 import { useInvalidateTasks, useTask } from '../hooks'
 import type { ResultRow } from '../types'
@@ -32,17 +51,60 @@ export function Component() {
   const isStaff = useCan(STAFF)
   const userId = useAuthStore((s) => s.user?.id)
   const { confirm, dialog } = useConfirm()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [results, setResults] = useState<Record<string, ResultRow>>({})
+  const [finishOpen, setFinishOpen] = useState(false)
+  const [overallPass, setOverallPass] = useState<'pass' | 'fail'>('pass')
+  const [finishNotes, setFinishNotes] = useState('')
+  const [reassignOpen, setReassignOpen] = useState(false)
+  const [reassignUserId, setReassignUserId] = useState<string | null>(null)
+  const [signOpen, setSignOpen] = useState(false)
+  const [signatureFile, setSignatureFile] = useState<File | null>(null)
+  const [signerName, setSignerName] = useState('')
+  const [signatureRole, setSignatureRole] = useState<'technician' | 'department'>('technician')
+  const [suppliesUsed, setSuppliesUsed] = useState<
+    Array<{ supplyId: string; quantity: number; lotNo?: string }>
+  >([])
+  const [missingKeys, setMissingKeys] = useState<Set<string>>(new Set())
   const dirty = useRef(false)
+  const clientVersion = useRef(0)
+  const seededVersion = useRef<number | null>(null)
+  const resultsRef = useRef<Record<string, ResultRow>>({})
   useEffect(() => {
-    if (!detail.data) return
+    if (!detail.data || dirty.current || seededVersion.current === detail.data.clientVersion) return
     const next: Record<string, ResultRow> = {}
     for (const item of detail.data.templateItems) {
       const found = detail.data.results.find((row) => row.key === item.key)
       next[item.key] = found ?? { key: item.key }
     }
+    resultsRef.current = next
     setResults(next)
+    setSuppliesUsed(detail.data.suppliesUsed)
+    clientVersion.current = detail.data.clientVersion
+    seededVersion.current = detail.data.clientVersion
   }, [detail.data])
+  const refetchTask = detail.refetch
+  const save = useCallback(async () => {
+    try {
+      const saved = await api.saveResults(id, {
+        results: Object.values(resultsRef.current),
+        clientVersion: clientVersion.current + 1,
+      })
+      clientVersion.current = saved.clientVersion
+      seededVersion.current = saved.clientVersion
+      dirty.current = false
+      toast.success(t('resultsSaved'))
+      void invalidate()
+      return true
+    } catch (error) {
+      if (isApiError(error) && error.code === 'MAINT_STALE_VERSION') {
+        toast.error(messageFor(error))
+        dirty.current = false
+        void refetchTask()
+      } else toast.error(messageFor(error))
+      return false
+    }
+  }, [id, invalidate, refetchTask, t])
   useEffect(() => {
     if (!detail.data || detail.data.status !== 'in_progress') return
     const timer = setInterval(() => {
@@ -50,32 +112,20 @@ export function Component() {
       void save()
     }, 30000)
     return () => clearInterval(timer)
-  })
+  }, [detail.data, save])
   if (detail.isPending) return <p role="status">{t('loadingTask')}</p>
   if (detail.error) return <ErrorState error={detail.error} onRetry={() => void detail.refetch()} />
   const row = detail.data
   const assignee = isStaff || row.assigneeId === userId
   const canStart = ['scheduled', 'overdue'].includes(row.status) && assignee
   const canSave = row.status === 'in_progress' && assignee
-  const save = async () => {
-    try {
-      await api.saveResults(id, {
-        results: Object.values(results),
-        clientVersion: row.clientVersion,
-      })
-      dirty.current = false
-      toast.success(t('resultsSaved'))
-      void invalidate()
-    } catch (error) {
-      if (isApiError(error) && error.code === 'MAINT_STALE_VERSION') {
-        toast.error(messageFor(error))
-        void detail.refetch()
-      } else toast.error(messageFor(error))
-    }
-  }
   const patch = (key: string, over: Partial<ResultRow>) => {
     dirty.current = true
-    setResults((curr) => ({ ...curr, [key]: { ...curr[key], key, ...over } }))
+    setResults((curr) => {
+      const next = { ...curr, [key]: { ...curr[key], key, ...over } }
+      resultsRef.current = next
+      return next
+    })
   }
   return (
     <>
@@ -94,31 +144,31 @@ export function Component() {
             {canStart && (
               <Button
                 onClick={async () => {
-                  await api.startTask(id)
-                  toast.success(t('taskStarted'))
-                  void invalidate()
-                }}
-              >
-                {t('start')}
-              </Button>
-            )}
-            {canSave && <Button onClick={() => void save()}>{t('saveResults')}</Button>}
-            {canSave && (
-              <Button
-                onClick={async () => {
                   try {
-                    await api.finishTask(id, { overallPass: true })
-                    toast.success(t('taskFinished'))
+                    await api.startTask(id)
+                    toast.success(t('taskStarted'))
                     void invalidate()
                   } catch (error) {
                     toast.error(messageFor(error))
                   }
                 }}
               >
-                {t('finish')}
+                {t('start')}
               </Button>
             )}
-            {isAdm && row.status !== 'done' && (
+            {canSave && <Button onClick={() => void save()}>{t('saveResults')}</Button>}
+            {isStaff && row.status !== 'done' && row.status !== 'skipped' && (
+              <Button variant="outline" onClick={() => setReassignOpen(true)}>
+                {t('reassign')}
+              </Button>
+            )}
+            {['in_progress', 'done'].includes(row.status) && (
+              <Button variant="outline" onClick={() => setSignOpen(true)}>
+                {t('sign')}
+              </Button>
+            )}
+            {canSave && <Button onClick={() => setFinishOpen(true)}>{t('finish')}</Button>}
+            {isAdm && !['done', 'skipped'].includes(row.status) && (
               <Button
                 variant="outline"
                 onClick={async () => {
@@ -128,9 +178,13 @@ export function Component() {
                     destructive: true,
                   })
                   if (reason === false) return
-                  await api.skipTask(id, reason)
-                  toast.success(t('taskSkipped'))
-                  void invalidate()
+                  try {
+                    await api.skipTask(id, reason)
+                    toast.success(t('taskSkipped'))
+                    void invalidate()
+                  } catch (error) {
+                    toast.error(messageFor(error))
+                  }
                 }}
               >
                 {t('skip')}
@@ -166,7 +220,10 @@ export function Component() {
           {t('equipment')}
         </Link>
       </p>
-      <Tabs defaultValue="checklist">
+      <Tabs
+        value={searchParams.get('tab') ?? 'checklist'}
+        onValueChange={(tab) => setSearchParams(tab === 'checklist' ? {} : { tab })}
+      >
         <TabsList>
           <TabsTrigger value="checklist">Checklist</TabsTrigger>
           <TabsTrigger value="docs">{t('tabDocs')}</TabsTrigger>
@@ -182,7 +239,14 @@ export function Component() {
               (item.min == null || measure >= item.min) &&
               (item.max == null || measure <= item.max)
             return (
-              <div key={item.key} className="rounded border p-3">
+              <div
+                key={item.key}
+                className={
+                  missingKeys.has(item.key)
+                    ? 'rounded border border-destructive bg-destructive/5 p-3'
+                    : 'rounded border p-3'
+                }
+              >
                 <p className="font-medium">
                   {item.label}
                   {item.optional ? '' : ' *'}
@@ -241,9 +305,88 @@ export function Component() {
                   value={result.note ?? ''}
                   onChange={(e) => patch(item.key, { note: e.target.value })}
                 />
+                <FileField
+                  label={t('attachmentPhoto')}
+                  value={result.photoFileId ?? null}
+                  onChange={(photoFileId) =>
+                    patch(item.key, { photoFileId: photoFileId ?? undefined })
+                  }
+                />
               </div>
             )
           })}
+          <section className="space-y-2 rounded border p-3">
+            <h2 className="font-medium">{t('suppliesUsed')}</h2>
+            {suppliesUsed.map((supply, index) => (
+              <div key={`${supply.supplyId}-${index}`} className="grid gap-2 md:grid-cols-3">
+                <AsyncSelect
+                  label={t('supply')}
+                  queryKey="supplies"
+                  loadOptions={supplyOptions}
+                  value={supply.supplyId || null}
+                  onChange={(value) =>
+                    setSuppliesUsed((current) =>
+                      current.map((item, itemIndex) =>
+                        itemIndex === index
+                          ? { ...item, supplyId: typeof value === 'string' ? value : '' }
+                          : item,
+                      ),
+                    )
+                  }
+                />
+                <Input
+                  aria-label={t('quantity')}
+                  type="number"
+                  min="0"
+                  step="0.001"
+                  value={supply.quantity}
+                  onChange={(event) =>
+                    setSuppliesUsed((current) =>
+                      current.map((item, itemIndex) =>
+                        itemIndex === index
+                          ? { ...item, quantity: event.target.valueAsNumber || 0 }
+                          : item,
+                      ),
+                    )
+                  }
+                />
+                <div className="flex gap-2">
+                  <Input
+                    aria-label={t('lotNo')}
+                    placeholder={t('lotNo')}
+                    value={supply.lotNo ?? ''}
+                    onChange={(event) =>
+                      setSuppliesUsed((current) =>
+                        current.map((item, itemIndex) =>
+                          itemIndex === index ? { ...item, lotNo: event.target.value } : item,
+                        ),
+                      )
+                    }
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() =>
+                      setSuppliesUsed((current) =>
+                        current.filter((_, itemIndex) => itemIndex !== index),
+                      )
+                    }
+                  >
+                    {t('remove')}
+                  </Button>
+                </div>
+              </div>
+            ))}
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() =>
+                setSuppliesUsed((current) => [...current, { supplyId: '', quantity: 1 }])
+              }
+            >
+              {t('addSupply')}
+            </Button>
+          </section>
         </TabsContent>
         <TabsContent value="docs">
           <AttachmentsPanel
@@ -261,6 +404,141 @@ export function Component() {
           <AuditTrail entityType="maintenance_task" entityId={id} />
         </TabsContent>
       </Tabs>
+      <Dialog open={finishOpen} onOpenChange={setFinishOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('finish')}</DialogTitle>
+          </DialogHeader>
+          <Select
+            value={overallPass}
+            onValueChange={(value) => setOverallPass(value as 'pass' | 'fail')}
+          >
+            <SelectTrigger aria-label={t('result')}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="pass">{t('pass')}</SelectItem>
+              <SelectItem value="fail">{t('fail')}</SelectItem>
+            </SelectContent>
+          </Select>
+          <Textarea
+            placeholder={t('notes')}
+            value={finishNotes}
+            onChange={(event) => setFinishNotes(event.target.value)}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setFinishOpen(false)}>
+              {t('cancel')}
+            </Button>
+            <Button
+              onClick={async () => {
+                if (dirty.current && !(await save())) return
+                try {
+                  await api.finishTask(id, {
+                    overallPass: overallPass === 'pass',
+                    notes: finishNotes || undefined,
+                    suppliesUsed: suppliesUsed.filter((item) => item.supplyId && item.quantity > 0),
+                  })
+                  setMissingKeys(new Set())
+                  setFinishOpen(false)
+                  toast.success(t('taskFinished'))
+                  void invalidate()
+                } catch (error) {
+                  if (isApiError(error) && error.code === 'MAINT_RESULTS_INCOMPLETE') {
+                    const details = error.details as { key?: string; keys?: string[] } | undefined
+                    setMissingKeys(new Set(details?.keys ?? (details?.key ? [details.key] : [])))
+                  }
+                  toast.error(messageFor(error))
+                }
+              }}
+            >
+              {t('finish')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={reassignOpen} onOpenChange={setReassignOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('reassign')}</DialogTitle>
+          </DialogHeader>
+          <AsyncSelect
+            label={t('assignee')}
+            queryKey="staff-users"
+            loadOptions={staffUserOptions}
+            value={reassignUserId}
+            onChange={(value) => setReassignUserId(typeof value === 'string' ? value : null)}
+          />
+          <DialogFooter>
+            <Button
+              disabled={!reassignUserId}
+              onClick={async () => {
+                if (!reassignUserId) return
+                try {
+                  await api.reassignTask(id, reassignUserId)
+                  toast.success(t('reassigned'))
+                  setReassignOpen(false)
+                  void invalidate()
+                } catch (error) {
+                  toast.error(messageFor(error))
+                }
+              }}
+            >
+              {t('reassign')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={signOpen} onOpenChange={setSignOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('sign')}</DialogTitle>
+          </DialogHeader>
+          <Select
+            value={signatureRole}
+            onValueChange={(value) => setSignatureRole(value as 'technician' | 'department')}
+          >
+            <SelectTrigger aria-label={t('signatureRole')}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="technician">{t('technician')}</SelectItem>
+              <SelectItem value="department">{t('department')}</SelectItem>
+            </SelectContent>
+          </Select>
+          <Input
+            aria-label={t('signerName')}
+            placeholder={t('signerName')}
+            value={signerName}
+            onChange={(event) => setSignerName(event.target.value)}
+          />
+          <SignaturePad onFile={setSignatureFile} />
+          <DialogFooter>
+            <Button
+              disabled={!signatureFile || !signerName.trim()}
+              onClick={async () => {
+                if (!signatureFile || !signerName.trim()) return
+                try {
+                  const fileId = await uploadFile(signatureFile)
+                  await api.signTask(id, {
+                    role: signatureRole,
+                    fileId,
+                    signerName: signerName.trim(),
+                  })
+                  toast.success(t('signed'))
+                  setSignOpen(false)
+                  setSignatureFile(null)
+                  void invalidate()
+                } catch (error) {
+                  toast.error(messageFor(error))
+                }
+              }}
+            >
+              {t('sign')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

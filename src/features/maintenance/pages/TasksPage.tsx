@@ -5,9 +5,18 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import type { ColumnDef } from '@tanstack/react-table'
 import { toast } from 'sonner'
 import { DataTable, useServerTable } from '@/components/data-table'
+import { FilterBar, FilterPreset, MoreFilters } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page/PageHeader'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { MultiSelect } from '@/components/multi-select'
+import { DatePicker } from '@/components/date-picker'
 import { StatusBadge } from '@/components/status-badge'
 import { taskStatusMap, taskTypeMap } from '@/lib/status-maps'
 import { formatDateTime } from '@/lib/format/date'
@@ -34,16 +43,7 @@ export function Component() {
   const canWrite = useCan(STAFF)
   const navigate = useNavigate()
   const table = useServerTable({
-    filterKeys: [
-      'status',
-      'type',
-      'assigneeId',
-      'equipmentId',
-      'departmentId',
-      'from',
-      'to',
-      'planId',
-    ],
+    filterKeys: ['status', 'type', 'assigneeId', 'equipmentId', 'from', 'to', 'planId'],
   })
   const canListUsers = useCan(ADM)
   const myId = useAuthStore((s) => s.user?.id)
@@ -51,12 +51,10 @@ export function Component() {
   const params = {
     page: table.params.page,
     limit: table.params.limit,
-    q: table.params.q || undefined,
     status: f.status,
     type: f.type as Task['type'] | undefined,
     assigneeId: f.assigneeId,
     equipmentId: f.equipmentId,
-    departmentId: f.departmentId,
     ...dayRangeToIso(f.from, f.to),
     planId: f.planId,
   }
@@ -121,14 +119,7 @@ export function Component() {
     <>
       <PageHeader
         title={t('tasksTitle')}
-        actions={
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => table.setFilter('assigneeId', 'me')}>
-              {t('mine')}
-            </Button>
-            {canWrite && <Button onClick={() => setOpen(true)}>{t('createAdhoc')}</Button>}
-          </div>
-        }
+        actions={canWrite && <Button onClick={() => setOpen(true)}>{t('createAdhoc')}</Button>}
       />
       <DataTable
         tableId="maint-tasks"
@@ -144,11 +135,102 @@ export function Component() {
         getRowId={(row) => row.id}
         onRowClick={(row) => navigate(`/maintenance/tasks/${row.id}`)}
         toolbarLeft={
-          <Input
-            aria-label={t('searchTask')}
-            value={table.inputQ}
-            onChange={(e) => table.setQ(e.target.value)}
-          />
+          <FilterBar
+            presets={
+              <>
+                <FilterPreset
+                  active={f.assigneeId === 'me'}
+                  onClick={() =>
+                    table.setFilter('assigneeId', f.assigneeId === 'me' ? undefined : 'me')
+                  }
+                >
+                  {t('mine')}
+                </FilterPreset>
+                <FilterPreset
+                  active={f.status?.split(',').includes('overdue')}
+                  onClick={() =>
+                    table.setFilter(
+                      'status',
+                      f.status?.split(',').includes('overdue') ? undefined : 'overdue',
+                    )
+                  }
+                >
+                  {t('overdue')}
+                </FilterPreset>
+              </>
+            }
+            onClear={Object.values(f).some(Boolean) ? table.reset : undefined}
+          >
+            <MultiSelect
+              value={f.status?.split(',').filter(Boolean) ?? []}
+              onChange={(values) =>
+                table.setFilter('status', values.length ? values.join(',') : undefined)
+              }
+              placeholder={t('status')}
+              options={Object.entries(taskStatusMap).map(([value, option]) => ({
+                value,
+                label: option.label,
+              }))}
+            />
+            <Select
+              value={f.type ?? '__all__'}
+              onValueChange={(value) =>
+                table.setFilter('type', value === '__all__' ? undefined : value)
+              }
+            >
+              <SelectTrigger aria-label={t('type')}>
+                <SelectValue placeholder={t('type')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all__">{t('type')}</SelectItem>
+                {Object.entries(taskTypeMap).map(([value, option]) => (
+                  <SelectItem key={value} value={value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <AsyncSelect
+              label={t('filterEquipment')}
+              placeholder={t('equipment')}
+              showLabel={false}
+              queryKey="equipment"
+              loadOptions={equipmentOptions}
+              value={f.equipmentId ?? null}
+              clearable
+              onChange={(value) =>
+                table.setFilter('equipmentId', typeof value === 'string' ? value : undefined)
+              }
+            />
+            <DatePicker
+              ariaLabel={t('from')}
+              placeholder={t('from')}
+              value={f.from ?? ''}
+              onChange={(value) => table.setFilter('from', value)}
+            />
+            <DatePicker
+              ariaLabel={t('to')}
+              placeholder={t('to')}
+              value={f.to ?? ''}
+              onChange={(value) => table.setFilter('to', value)}
+            />
+            <MoreFilters>
+              {canListUsers && (
+                <AsyncSelect
+                  label={t('filterAssignee')}
+                  placeholder={t('assignee')}
+                  showLabel={false}
+                  queryKey="staff-users"
+                  loadOptions={staffUserOptions}
+                  value={f.assigneeId === 'me' ? null : (f.assigneeId ?? null)}
+                  clearable
+                  onChange={(value) =>
+                    table.setFilter('assigneeId', typeof value === 'string' ? value : undefined)
+                  }
+                />
+              )}
+            </MoreFilters>
+          </FilterBar>
         }
       />
       <FormDialog

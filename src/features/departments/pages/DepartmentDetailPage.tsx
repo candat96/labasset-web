@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { DetailLayout } from '@/components/detail-layout'
 import { DataTable, useServerTable } from '@/components/data-table'
+import { FilterBar } from '@/components/filter-bar'
 import { ErrorState } from '@/components/page/ErrorState'
 import { StatusBadge } from '@/components/status-badge'
 import { commonStatusMap } from '@/lib/status-maps'
@@ -70,6 +71,7 @@ export function Component() {
               data={users.data?.items}
               total={users.data?.total ?? 0}
               params={table.params}
+              toolbarLeft={<FilterBar>{null}</FilterBar>}
               onPageChange={table.setPage}
               onLimitChange={table.setLimit}
               isLoading={users.isPending}

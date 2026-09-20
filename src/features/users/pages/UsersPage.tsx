@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { DataTable, useServerTable } from '@/components/data-table'
+import { FilterBar } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -125,7 +126,7 @@ export function Component() {
         onRetry={() => void list.refetch()}
         getRowId={(r) => r.id}
         toolbarLeft={
-          <>
+          <FilterBar>
             <Input
               aria-label={t('search.label')}
               placeholder={t('search.placeholder')}
@@ -173,7 +174,7 @@ export function Component() {
                 <SelectItem value="false">{t('filter.locked')}</SelectItem>
               </SelectContent>
             </Select>
-          </>
+          </FilterBar>
         }
       />
       <UserFormDialog open={open} onOpenChange={setOpen} onPassword={setPassword} />

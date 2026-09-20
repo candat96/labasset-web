@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form'
 import type { ColumnDef } from '@tanstack/react-table'
 import { toast } from 'sonner'
 import { DataTable, useServerTable } from '@/components/data-table'
+import { FilterBar } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -106,11 +107,14 @@ export function Component() {
         getRowId={(row) => row.id}
         onRowClick={(row) => navigate(`/stocktakes/${row.id}`)}
         toolbarLeft={
-          <Input
-            aria-label={t('search')}
-            value={table.inputQ}
-            onChange={(e) => table.setQ(e.target.value)}
-          />
+          <FilterBar>
+            <Input
+              aria-label={t('search')}
+              value={table.inputQ}
+              onChange={(e) => table.setQ(e.target.value)}
+              placeholder={t('search')}
+            />
+          </FilterBar>
         }
       />
       <FormDialog

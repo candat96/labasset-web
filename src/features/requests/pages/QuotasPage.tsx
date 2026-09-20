@@ -6,6 +6,7 @@ import type { ColumnDef } from '@tanstack/react-table'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { DataTable, useServerTable } from '@/components/data-table'
+import { FilterBar } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page/PageHeader'
 import { Button } from '@/components/ui/button'
 import { FormDialog } from '@/components/form/FormDialog'
@@ -77,6 +78,7 @@ export function Component() {
         isLoading={list.isPending}
         error={list.error}
         onRetry={() => void list.refetch()}
+        toolbarLeft={<FilterBar>{null}</FilterBar>}
       />
       <FormDialog
         open={open}

@@ -2,7 +2,12 @@ import { z } from 'zod'
 import i18n from '@/lib/i18n'
 
 export const templateItemSchema = z.object({
-  key: z.string(),
+  key: z
+    .string()
+    .refine(
+      (value) => value === '' || /^[a-z0-9_]{1,32}$/.test(value),
+      i18n.t('maintenance:keyInvalid'),
+    ),
   label: z.string().trim().min(1, i18n.t('common:form.required')),
   type: z.enum(['check', 'measure', 'text']),
   unit: z.string(),

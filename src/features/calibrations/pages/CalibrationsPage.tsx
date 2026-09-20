@@ -5,9 +5,17 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { toast } from 'sonner'
 import { DataTable, useServerTable } from '@/components/data-table'
+import { FilterBar, FilterPreset } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page/PageHeader'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { DatePicker } from '@/components/date-picker'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { StatusBadge } from '@/components/status-badge'
 import { calibrationResultMap, calibrationStatusMap, calibrationTypeMap } from '@/lib/status-maps'
 import { formatDate, formatDateTime } from '@/lib/format/date'
@@ -18,12 +26,13 @@ import { DateField } from '@/components/form/date-field'
 import { DatetimeField } from '@/components/form/datetime-field'
 import { MoneyField } from '@/components/form/money-field'
 import { FormField, FormItem, FormMessage } from '@/components/ui/form'
+import { FileField } from '@/components/form/file-field'
 import { AsyncSelect } from '@/components/form/async-select'
 import { useCan } from '@/app/guards/useCan'
-import { STAFF } from '@/routes/roles'
+import { ADM, STAFF } from '@/routes/roles'
 import { applyServerErrors, messageFor } from '@/api/errors'
 import { apiBody } from '@/api/client'
-import { catalogOptions, equipmentOptions } from '@/api/references'
+import { catalogOptions, equipmentOptions, staffUserOptions } from '@/api/references'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { dayRangeToIso } from '@/lib/format/date-range'
@@ -42,9 +51,12 @@ const schema = z.object({
   performedAt: z.string(),
   result: z.enum(['pass', 'fail', 'conditional']),
   certificateNo: z.string(),
+  certificateFileId: z.string().nullable(),
+  findings: z.string(),
   cost: decimalString({ maxScale: 0, min: '0' }),
   cycleMonths: z.union([z.literal(''), z.number().int().min(1)]),
   agencyId: z.string().nullable(),
+  performedByUserId: z.string().nullable(),
   nextDueAt: z.string(),
 })
 type Form = z.infer<typeof schema>
@@ -53,26 +65,17 @@ export function Component() {
   const { t } = useTranslation('calibrations')
 
   const canWrite = useCan(STAFF)
+  const canListUsers = useCan(ADM)
   const navigate = useNavigate()
   const qc = useQueryClient()
   const table = useServerTable({
-    filterKeys: [
-      'equipmentId',
-      'departmentId',
-      'type',
-      'status',
-      'result',
-      'dueBefore',
-      'from',
-      'to',
-    ],
+    filterKeys: ['equipmentId', 'type', 'status', 'result', 'dueBefore', 'from', 'to'],
   })
   const f = table.params.filters
   const params = {
     page: table.params.page,
     limit: table.params.limit,
     equipmentId: f.equipmentId,
-    departmentId: f.departmentId,
     type: f.type,
     status: f.status,
     result: f.result,
@@ -95,9 +98,12 @@ export function Component() {
       performedAt: new Date().toISOString(),
       result: 'pass',
       certificateNo: '',
+      certificateFileId: null,
+      findings: '',
       cost: '',
       cycleMonths: '',
       agencyId: null,
+      performedByUserId: null,
       nextDueAt: '',
     },
   })
@@ -171,12 +177,6 @@ export function Component() {
         title={t('title')}
         actions={
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => table.setFilter('dueBefore', plus30.toISOString())}
-            >
-              {t('dueIn30')}
-            </Button>
             {canWrite && <Button onClick={() => setOpen(true)}>{t('create')}</Button>}
           </div>
         }
@@ -195,11 +195,93 @@ export function Component() {
         getRowId={(row) => row.id}
         onRowClick={(row) => navigate(`/calibrations/${row.id}`)}
         toolbarLeft={
-          <Input
-            aria-label={t('search')}
-            value={table.inputQ}
-            onChange={(e) => table.setQ(e.target.value)}
-          />
+          <FilterBar
+            presets={
+              <>
+                <FilterPreset
+                  active={f.dueBefore === plus30.toISOString().slice(0, 10)}
+                  onClick={() => table.setFilter('dueBefore', plus30.toISOString().slice(0, 10))}
+                >
+                  {t('dueIn30')}
+                </FilterPreset>
+                <FilterPreset
+                  active={f.dueBefore === new Date().toISOString().slice(0, 10)}
+                  onClick={() =>
+                    table.setFilter('dueBefore', new Date().toISOString().slice(0, 10))
+                  }
+                >
+                  {t('overdue')}
+                </FilterPreset>
+              </>
+            }
+            onClear={Object.values(f).some(Boolean) ? table.reset : undefined}
+          >
+            <AsyncSelect
+              label={t('filterEquipment')}
+              placeholder={t('equipment')}
+              showLabel={false}
+              queryKey="equipment"
+              loadOptions={equipmentOptions}
+              value={f.equipmentId ?? null}
+              clearable
+              onChange={(value) =>
+                table.setFilter('equipmentId', typeof value === 'string' ? value : undefined)
+              }
+            />
+            {[
+              [
+                'type',
+                t('type'),
+                [
+                  ['inspection', t('typeInspection')],
+                  ['calibration', t('typeCalibration')],
+                ],
+              ],
+              [
+                'status',
+                t('status'),
+                [
+                  ['scheduled', t('scheduled')],
+                  ['done', t('done')],
+                  ['cancelled', t('cancelled')],
+                ],
+              ],
+              [
+                'result',
+                t('result'),
+                [
+                  ['pass', t('pass')],
+                  ['fail', t('fail')],
+                  ['conditional', t('conditional')],
+                ],
+              ],
+            ].map(([key, label, options]) => (
+              <Select
+                key={key as string}
+                value={f[key as string] ?? '__all__'}
+                onValueChange={(value) =>
+                  table.setFilter(key as string, value === '__all__' ? undefined : value)
+                }
+              >
+                <SelectTrigger aria-label={label as string}>
+                  <SelectValue placeholder={label as string} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">{label as string}</SelectItem>
+                  {(options as string[][]).map(([value, text]) => (
+                    <SelectItem key={value} value={value!}>
+                      {text}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ))}
+            <DatePicker
+              ariaLabel={t('dueBefore')}
+              value={f.dueBefore ?? ''}
+              onChange={(value) => table.setFilter('dueBefore', value || undefined)}
+            />
+          </FilterBar>
         }
       />
       <FormDialog
@@ -218,9 +300,14 @@ export function Component() {
                 performedAt: values.mode === 'result' ? values.performedAt : undefined,
                 result: values.mode === 'result' ? values.result : undefined,
                 certificateNo: values.certificateNo || undefined,
+                certificateFileId: values.certificateFileId ?? undefined,
+                findings: values.findings || undefined,
                 cost: values.cost || undefined,
                 cycleMonths: values.cycleMonths === '' ? undefined : values.cycleMonths,
                 agencyId: values.agencyId ?? undefined,
+                performedByUserId: canListUsers
+                  ? (values.performedByUserId ?? undefined)
+                  : undefined,
                 nextDueAt: values.nextDueAt || undefined,
               }),
             )
@@ -283,7 +370,22 @@ export function Component() {
               ]}
             />
             <TextField control={form.control} name="certificateNo" label={t('certificateNo')} />
+            <FormField
+              control={form.control}
+              name="certificateFileId"
+              render={({ field }) => (
+                <FormItem>
+                  <FileField
+                    label={t('certificate')}
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <MoneyField control={form.control} name="cost" label={t('cost')} />
+            <TextField control={form.control} name="findings" label={t('findings')} />
           </>
         )}
         <NumberField control={form.control} name="cycleMonths" label={t('cycleMonths')} min={1} />
@@ -304,6 +406,25 @@ export function Component() {
             </FormItem>
           )}
         />
+        {canListUsers && (
+          <FormField
+            control={form.control}
+            name="performedByUserId"
+            render={({ field }) => (
+              <FormItem>
+                <AsyncSelect
+                  label={t('performedBy')}
+                  queryKey="staff-users"
+                  loadOptions={staffUserOptions}
+                  value={field.value}
+                  onChange={field.onChange}
+                  clearable
+                />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
         <DateField control={form.control} name="nextDueAt" label={t('nextDueHint')} />
       </FormDialog>
     </>

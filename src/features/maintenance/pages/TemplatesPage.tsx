@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { Link, useNavigate } from 'react-router'
 import type { ColumnDef } from '@tanstack/react-table'
 import { DataTable, useServerTable } from '@/components/data-table'
+import { FilterBar } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -85,11 +86,14 @@ export function Component() {
         getRowId={(row) => row.id}
         onRowClick={(row) => navigate(`/maintenance/templates/${row.id}/edit`)}
         toolbarLeft={
-          <Input
-            aria-label={t('searchTemplate')}
-            value={table.inputQ}
-            onChange={(e) => table.setQ(e.target.value)}
-          />
+          <FilterBar>
+            <Input
+              aria-label={t('searchTemplate')}
+              value={table.inputQ}
+              onChange={(e) => table.setQ(e.target.value)}
+              placeholder={t('searchTemplate')}
+            />
+          </FilterBar>
         }
       />
     </>

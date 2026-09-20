@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { DataTable, useServerTable } from '@/components/data-table'
+import { FilterBar } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page/PageHeader'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
@@ -74,7 +75,7 @@ export function Component() {
         error={list.error}
         onRetry={() => void list.refetch()}
         toolbarLeft={
-          <>
+          <FilterBar>
             <Input
               aria-label={t('searchBalance')}
               value={table.inputQ}
@@ -88,7 +89,7 @@ export function Component() {
               />
               <Label htmlFor="belowMin">{t('belowMin')}</Label>
             </div>
-          </>
+          </FilterBar>
         }
       />
     </>

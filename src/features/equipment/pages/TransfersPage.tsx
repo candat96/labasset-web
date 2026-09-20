@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { toast } from 'sonner'
 import { DataTable, useServerTable } from '@/components/data-table'
+import { FilterBar } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page/PageHeader'
 import { Button } from '@/components/ui/button'
 import {
@@ -123,7 +124,7 @@ export function Component() {
         onRowClick={setRow}
         emptyTitle={t('transfers.empty')}
         toolbarLeft={
-          <>
+          <FilterBar>
             <Select
               value={status ?? 'all'}
               onValueChange={(value) =>
@@ -155,7 +156,7 @@ export function Component() {
                 clearable
               />
             </div>
-          </>
+          </FilterBar>
         }
       />
       <Sheet open={!!row} onOpenChange={(open) => !open && setRow(null)}>

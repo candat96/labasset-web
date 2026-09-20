@@ -85,6 +85,14 @@ export function addRepairPart(id: string, body: components['schemas']['RepairPar
   return unwrap(api.POST('/v1/repairs/{id}/parts', { params: { path: { id } }, body }))
 }
 
+export function updateRepairPart(
+  id: string,
+  pid: string,
+  body: components['schemas']['UpdateRepairPartDto'],
+) {
+  return unwrap(api.PATCH('/v1/repairs/{id}/parts/{pid}', { params: { path: { id, pid } }, body }))
+}
+
 export function deleteRepairPart(id: string, pid: string) {
   return unwrap(api.DELETE('/v1/repairs/{id}/parts/{pid}', { params: { path: { id, pid } } }))
 }

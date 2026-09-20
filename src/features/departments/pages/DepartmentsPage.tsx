@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { DataTable, useServerTable } from '@/components/data-table'
+import { FilterBar } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page/PageHeader'
 import { ConfirmDialog } from '@/components/page/ConfirmDialog'
 import { useCan } from '@/app/guards/useCan'
@@ -115,7 +116,7 @@ export function Component() {
         emptyTitle={t('empty')}
         getRowId={(d) => d.id}
         toolbarLeft={
-          <>
+          <FilterBar>
             <div className="relative">
               <Search
                 className="text-muted-foreground absolute top-1/2 left-2 size-4 -translate-y-1/2"
@@ -142,7 +143,7 @@ export function Component() {
                 <SelectItem value="false">{tc('status.inactive')}</SelectItem>
               </SelectContent>
             </Select>
-          </>
+          </FilterBar>
         }
         toolbarRight={
           <Button variant="outline" size="sm" onClick={() => void doExport()} disabled={exporting}>

@@ -1,5 +1,9 @@
 import { Link, useParams } from 'react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import { toast } from 'sonner'
 import { PageHeader } from '@/components/page/PageHeader'
 import { ErrorState } from '@/components/page/ErrorState'
@@ -12,8 +16,50 @@ import { formatDate, formatDateTime } from '@/lib/format/date'
 import { formatVnd } from '@/lib/format/money'
 import { useCan } from '@/app/guards/useCan'
 import { ADM, STAFF } from '@/routes/roles'
-import { calibrationHistory, cancelCalibration, completeCalibration, getCalibration } from '../api'
+import { FormDialog } from '@/components/form/FormDialog'
+import { DateField } from '@/components/form/date-field'
+import { DatetimeField } from '@/components/form/datetime-field'
+import { FileField } from '@/components/form/file-field'
+import { MoneyField } from '@/components/form/money-field'
+import { NumberField, SelectField, TextField } from '@/components/form/fields'
+import { AsyncSelect } from '@/components/form/async-select'
+import { FormField, FormItem, FormMessage } from '@/components/ui/form'
+import { apiBody } from '@/api/client'
+import { applyServerErrors, messageFor } from '@/api/errors'
+import { decimalString } from '@/lib/validation/decimal'
+import { catalogOptions, staffUserOptions } from '@/api/references'
+import {
+  calibrationHistory,
+  cancelCalibration,
+  completeCalibration,
+  getCalibration,
+  updateCalibration,
+} from '../api'
 import { useTranslation } from 'react-i18next'
+
+const completeSchema = z.object({
+  performedAt: z.string().min(1),
+  result: z.enum(['pass', 'fail', 'conditional']),
+  certificateNo: z.string(),
+  certificateFileId: z.string().nullable(),
+  cost: decimalString({ maxScale: 0, min: '0' }),
+  findings: z.string(),
+  nextDueAt: z.string(),
+})
+type CompleteForm = z.infer<typeof completeSchema>
+const editSchema = z.object({
+  type: z.enum(['inspection', 'calibration']),
+  scheduledAt: z.string(),
+  agencyId: z.string().nullable(),
+  performedByUserId: z.string().nullable(),
+  cycleMonths: z.number().int().min(1),
+  certificateNo: z.string(),
+  certificateFileId: z.string().nullable(),
+  cost: decimalString({ maxScale: 0, min: '0' }),
+  findings: z.string(),
+  nextDueAt: z.string(),
+})
+type EditForm = z.infer<typeof editSchema>
 
 export function Component() {
   const { t } = useTranslation('calibrations')
@@ -31,6 +77,37 @@ export function Component() {
     void qc.invalidateQueries({ queryKey: ['calibrations'] })
   }
   const { confirm, dialog } = useConfirm()
+  const [completeOpen, setCompleteOpen] = useState(false)
+  const [editOpen, setEditOpen] = useState(false)
+  const form = useForm<CompleteForm>({
+    resolver: zodResolver(completeSchema),
+    defaultValues: {
+      performedAt: new Date().toISOString(),
+      result: 'pass',
+      certificateNo: '',
+      certificateFileId: null,
+      cost: '',
+      findings: '',
+      nextDueAt: '',
+    },
+  })
+  const editForm = useForm<EditForm>({ resolver: zodResolver(editSchema) })
+  useEffect(() => {
+    const row = detail.data
+    if (!row) return
+    editForm.reset({
+      type: row.type,
+      scheduledAt: row.scheduledAt ?? '',
+      agencyId: row.agencyId,
+      performedByUserId: row.performedByUserId,
+      cycleMonths: row.cycleMonths,
+      certificateNo: row.certificateNo ?? '',
+      certificateFileId: row.certificateFileId,
+      cost: row.cost,
+      findings: row.findings ?? '',
+      nextDueAt: row.nextDueAt ?? '',
+    })
+  }, [detail.data, editForm])
   const history = useQuery({
     queryKey: ['calibrations', 'history', detail.data?.equipmentId],
     queryFn: () => calibrationHistory(detail.data!.equipmentId),
@@ -53,19 +130,13 @@ export function Component() {
         }
         actions={
           <div className="flex gap-2">
-            {isStaff && row.status === 'scheduled' && (
-              <Button
-                onClick={async () => {
-                  await completeCalibration(id, {
-                    performedAt: new Date().toISOString(),
-                    result: 'pass',
-                  })
-                  toast.success(t('completed'))
-                  invalidate()
-                }}
-              >
-                {t('complete')}
+            {isStaff && (
+              <Button variant="outline" onClick={() => setEditOpen(true)}>
+                {t('edit')}
               </Button>
+            )}
+            {isStaff && row.status === 'scheduled' && (
+              <Button onClick={() => setCompleteOpen(true)}>{t('complete')}</Button>
             )}
             {isAdm && row.status === 'scheduled' && (
               <Button
@@ -131,6 +202,156 @@ export function Component() {
           title: `${item.code} · ${item.result ?? item.status}`,
         }))}
       />
+      <FormDialog
+        open={completeOpen}
+        onOpenChange={setCompleteOpen}
+        title={t('complete')}
+        form={form}
+        onSubmit={async (values) => {
+          try {
+            await completeCalibration(
+              id,
+              apiBody({
+                performedAt: values.performedAt,
+                result: values.result,
+                certificateNo: values.certificateNo || undefined,
+                certificateFileId: values.certificateFileId ?? undefined,
+                cost: values.cost || undefined,
+                findings: values.findings || undefined,
+                nextDueAt: values.nextDueAt || undefined,
+              }),
+            )
+            toast.success(t('completed'))
+            setCompleteOpen(false)
+            invalidate()
+          } catch (error) {
+            if (!applyServerErrors(form, error)) toast.error(messageFor(error))
+          }
+        }}
+      >
+        <DatetimeField control={form.control} name="performedAt" label={t('performedAt')} />
+        <SelectField
+          control={form.control}
+          name="result"
+          label={t('result')}
+          options={[
+            { value: 'pass', label: t('pass') },
+            { value: 'fail', label: t('fail') },
+            { value: 'conditional', label: t('conditional') },
+          ]}
+        />
+        <TextField control={form.control} name="certificateNo" label={t('certificateNo')} />
+        <FormField
+          control={form.control}
+          name="certificateFileId"
+          render={({ field }) => (
+            <FormItem>
+              <FileField label={t('certificate')} value={field.value} onChange={field.onChange} />
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <MoneyField control={form.control} name="cost" label={t('cost')} />
+        <TextField control={form.control} name="findings" label={t('findings')} />
+        <DateField control={form.control} name="nextDueAt" label={t('nextDue')} />
+      </FormDialog>
+      <FormDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        title={t('edit')}
+        form={editForm}
+        onSubmit={async (values) => {
+          try {
+            await updateCalibration(
+              id,
+              apiBody({
+                type: values.type,
+                scheduledAt: values.scheduledAt || undefined,
+                agencyId: values.agencyId,
+                performedByUserId: isAdm ? values.performedByUserId : undefined,
+                cycleMonths: values.cycleMonths,
+                certificateNo: values.certificateNo || null,
+                certificateFileId: values.certificateFileId,
+                cost: values.cost || undefined,
+                findings: values.findings || null,
+                nextDueAt: values.nextDueAt || undefined,
+              }),
+            )
+            toast.success(t('saved'))
+            setEditOpen(false)
+            invalidate()
+          } catch (error) {
+            if (!applyServerErrors(editForm, error)) toast.error(messageFor(error))
+          }
+        }}
+      >
+        <SelectField
+          control={editForm.control}
+          name="type"
+          label={t('type')}
+          options={[
+            { value: 'inspection', label: t('typeInspection') },
+            { value: 'calibration', label: t('typeCalibration') },
+          ]}
+        />
+        <DatetimeField control={editForm.control} name="scheduledAt" label={t('schedule')} />
+        <FormField
+          control={editForm.control}
+          name="agencyId"
+          render={({ field }) => (
+            <FormItem>
+              <AsyncSelect
+                label={t('agency')}
+                queryKey="calibration-agencies"
+                loadOptions={(q) => catalogOptions('calibration-agencies', q)}
+                value={field.value}
+                onChange={field.onChange}
+                clearable
+              />
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        {isAdm && (
+          <FormField
+            control={editForm.control}
+            name="performedByUserId"
+            render={({ field }) => (
+              <FormItem>
+                <AsyncSelect
+                  label={t('performedBy')}
+                  queryKey="staff-users"
+                  loadOptions={staffUserOptions}
+                  value={field.value}
+                  onChange={field.onChange}
+                  clearable
+                />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+        <NumberField
+          control={editForm.control}
+          name="cycleMonths"
+          label={t('cycleMonths')}
+          min={1}
+        />
+        <TextField control={editForm.control} name="certificateNo" label={t('certificateNo')} />
+        <FormField
+          control={editForm.control}
+          name="certificateFileId"
+          render={({ field }) => (
+            <FormItem>
+              <FileField label={t('certificate')} value={field.value} onChange={field.onChange} />
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <MoneyField control={editForm.control} name="cost" label={t('cost')} />
+        <TextField control={editForm.control} name="findings" label={t('findings')} />
+        <DateField control={editForm.control} name="nextDueAt" label={t('nextDue')} />
+      </FormDialog>
     </>
   )
 }

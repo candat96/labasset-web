@@ -91,8 +91,9 @@ import {
   type VendorForm,
 } from '../schema'
 import { COST_CATEGORIES, PART_SOURCES, RESOLUTION_TYPES } from '../types'
-import { SignaturePad } from '../components/SignaturePad'
+import { SignaturePad } from '@/components/signature-pad'
 import { StarRating } from '../components/StarRating'
+import type { components } from '@/api/schema'
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === 'object' ? (value as Record<string, unknown>) : null
@@ -115,6 +116,15 @@ export function Component() {
   const { confirm, dialog } = useConfirm()
   const [open, setOpen] = useState<
     RepairAction | 'log' | 'part' | 'vendor' | 'cost' | 'sign' | 'decline' | null
+  >(null)
+  const [editingPart, setEditingPart] = useState<
+    components['schemas']['RepairPartResponseDto'] | null
+  >(null)
+  const [editingVendor, setEditingVendor] = useState<
+    components['schemas']['RepairVendorResponseDto'] | null
+  >(null)
+  const [editingCost, setEditingCost] = useState<
+    components['schemas']['RepairCostResponseDto'] | null
   >(null)
   const requireAcceptance = settings.data?.['repair.requireAcceptance'] === true
   const row = detail.data
@@ -318,6 +328,10 @@ export function Component() {
                 parts={row.parts}
                 canWrite={canWriteParts}
                 onAdd={() => setOpen('part')}
+                onEdit={(part) => {
+                  setEditingPart(part)
+                  setOpen('part')
+                }}
                 onDelete={async (pid) => {
                   if (
                     (await confirm({
@@ -345,6 +359,10 @@ export function Component() {
                 vendors={row.vendors}
                 canWrite={canCosts}
                 onAdd={() => setOpen('vendor')}
+                onEdit={(vendor) => {
+                  setEditingVendor(vendor)
+                  setOpen('vendor')
+                }}
                 onDelete={async (vid) => {
                   if (
                     (await confirm({
@@ -375,6 +393,10 @@ export function Component() {
                 warning={row.costWarning}
                 canWrite={canCosts}
                 onAdd={() => setOpen('cost')}
+                onEdit={(cost) => {
+                  setEditingCost(cost)
+                  setOpen('cost')
+                }}
                 onDelete={async (cid) => {
                   if (
                     (await confirm({
@@ -488,15 +510,35 @@ export function Component() {
         <PartDialog
           id={id}
           equipmentId={row.equipmentId}
-          onClose={() => setOpen(null)}
+          editing={editingPart}
+          onClose={() => {
+            setOpen(null)
+            setEditingPart(null)
+          }}
           onDone={() => invalidate(id)}
         />
       )}
       {open === 'vendor' && (
-        <VendorDialog id={id} onClose={() => setOpen(null)} onDone={() => invalidate(id)} />
+        <VendorDialog
+          id={id}
+          editing={editingVendor}
+          onClose={() => {
+            setOpen(null)
+            setEditingVendor(null)
+          }}
+          onDone={() => invalidate(id)}
+        />
       )}
       {open === 'cost' && (
-        <CostDialog id={id} onClose={() => setOpen(null)} onDone={() => invalidate(id)} />
+        <CostDialog
+          id={id}
+          editing={editingCost}
+          onClose={() => {
+            setOpen(null)
+            setEditingCost(null)
+          }}
+          onDone={() => invalidate(id)}
+        />
       )}
       {open === 'sign' && (
         <SignDialog
@@ -692,11 +734,13 @@ function PartsTab({
   parts,
   canWrite,
   onAdd,
+  onEdit,
   onDelete,
 }: {
   parts: NonNullable<ReturnType<typeof useRepair>['data']>['parts']
   canWrite: boolean
   onAdd: () => void
+  onEdit: (part: components['schemas']['RepairPartResponseDto']) => void
   onDelete: (id: string) => void
 }) {
   const { t } = useTranslation('repairs')
@@ -733,9 +777,14 @@ function PartsTab({
               </td>
               <td>
                 {canWrite && (
-                  <Button size="sm" variant="ghost" onClick={() => onDelete(row.id)}>
-                    {t('detail.parts.delete')}
-                  </Button>
+                  <div className="flex gap-1">
+                    <Button size="sm" variant="ghost" onClick={() => onEdit(row)}>
+                      {t('detail.actions.edit')}
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => onDelete(row.id)}>
+                      {t('detail.parts.delete')}
+                    </Button>
+                  </div>
                 )}
               </td>
             </tr>
@@ -750,11 +799,13 @@ function VendorsTab({
   vendors,
   canWrite,
   onAdd,
+  onEdit,
   onDelete,
 }: {
   vendors: NonNullable<ReturnType<typeof useRepair>['data']>['vendors']
   canWrite: boolean
   onAdd: () => void
+  onEdit: (vendor: components['schemas']['RepairVendorResponseDto']) => void
   onDelete: (id: string) => void
 }) {
   const { t } = useTranslation('repairs')
@@ -781,9 +832,14 @@ function VendorsTab({
               <FileLink fileId={row.quotationFileId} label={t('detail.vendors.quotationFile')} />
             </p>
             {canWrite && (
-              <Button size="sm" variant="ghost" onClick={() => onDelete(row.id)}>
-                {t('detail.parts.delete')}
-              </Button>
+              <div className="flex gap-1">
+                <Button size="sm" variant="ghost" onClick={() => onEdit(row)}>
+                  {t('detail.actions.edit')}
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => onDelete(row.id)}>
+                  {t('detail.parts.delete')}
+                </Button>
+              </div>
             )}
           </li>
         ))}
@@ -845,6 +901,7 @@ function CostsTab({
   warning,
   canWrite,
   onAdd,
+  onEdit,
   onDelete,
 }: {
   equipmentId: string
@@ -853,6 +910,7 @@ function CostsTab({
   warning: boolean
   canWrite: boolean
   onAdd: () => void
+  onEdit: (cost: components['schemas']['RepairCostResponseDto']) => void
   onDelete: (id: string) => void
 }) {
   const { t } = useTranslation('repairs')
@@ -910,9 +968,14 @@ function CostsTab({
               </td>
               <td>
                 {canWrite && (
-                  <Button size="sm" variant="ghost" onClick={() => onDelete(row.id)}>
-                    {t('detail.parts.delete')}
-                  </Button>
+                  <div className="flex gap-1">
+                    <Button size="sm" variant="ghost" onClick={() => onEdit(row)}>
+                      {t('detail.actions.edit')}
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => onDelete(row.id)}>
+                      {t('detail.parts.delete')}
+                    </Button>
+                  </div>
                 )}
               </td>
             </tr>
@@ -1628,11 +1691,13 @@ function LogDialog({
 function PartDialog({
   id,
   equipmentId,
+  editing,
   onClose,
   onDone,
 }: {
   id: string
   equipmentId: string
+  editing: components['schemas']['RepairPartResponseDto'] | null
   onClose: () => void
   onDone: () => void
 }) {
@@ -1640,14 +1705,16 @@ function PartDialog({
   const form = useForm<PartForm>({
     resolver: zodResolver(partSchema),
     defaultValues: {
-      source: 'stock',
-      name: '',
-      quantity: '1',
-      unitCost: '',
-      supplyId: null,
-      stockLotId: null,
-      invoiceFileId: null,
-      componentId: null,
+      source: (PART_SOURCES.includes(editing?.source as (typeof PART_SOURCES)[number])
+        ? editing?.source
+        : 'stock') as PartForm['source'],
+      name: editing?.name ?? '',
+      quantity: editing?.quantity ?? '1',
+      unitCost: editing?.unitCost ?? '',
+      supplyId: editing?.supplyId ?? null,
+      stockLotId: editing?.stockLotId ?? null,
+      invoiceFileId: editing?.invoiceFileId ?? null,
+      componentId: editing?.componentId ?? null,
       newSerial: '',
       note: '',
       reason: '',
@@ -1676,20 +1743,30 @@ function PartDialog({
       form={form}
       onSubmit={async (values) => {
         try {
-          await api.addRepairPart(id, {
-            source: values.source,
-            name: values.name || t('detail.parts.defaultName'),
-            quantity: values.quantity,
-            unitCost: values.unitCost || undefined,
-            supplyId: values.supplyId ?? undefined,
-            stockLotId: values.stockLotId ?? undefined,
-            invoiceFileId: values.invoiceFileId ?? undefined,
-            componentId: values.componentId ?? undefined,
-            newSerial: values.newSerial || undefined,
-            note: values.note || undefined,
-            reason: values.reason || undefined,
-            cost: values.cost || undefined,
-          })
+          if (editing) {
+            await api.updateRepairPart(id, editing.id, {
+              name: values.name || t('detail.parts.defaultName'),
+              quantity: values.quantity,
+              unitCost: values.unitCost || undefined,
+              invoiceFileId: values.invoiceFileId ?? undefined,
+              note: values.note || undefined,
+            })
+          } else {
+            await api.addRepairPart(id, {
+              source: values.source,
+              name: values.name || t('detail.parts.defaultName'),
+              quantity: values.quantity,
+              unitCost: values.unitCost || undefined,
+              supplyId: values.supplyId ?? undefined,
+              stockLotId: values.stockLotId ?? undefined,
+              invoiceFileId: values.invoiceFileId ?? undefined,
+              componentId: values.componentId ?? undefined,
+              newSerial: values.newSerial || undefined,
+              note: values.note || undefined,
+              reason: values.reason || undefined,
+              cost: values.cost || undefined,
+            })
+          }
           toast.success(t('detail.parts.created'))
           onDone()
           onClose()
@@ -1799,10 +1876,12 @@ function PartDialog({
 
 function VendorDialog({
   id,
+  editing,
   onClose,
   onDone,
 }: {
   id: string
+  editing: components['schemas']['RepairVendorResponseDto'] | null
   onClose: () => void
   onDone: () => void
 }) {
@@ -1810,14 +1889,14 @@ function VendorDialog({
   const form = useForm<VendorForm>({
     resolver: zodResolver(vendorSchema),
     defaultValues: {
-      supplierId: '',
-      engineerName: '',
-      engineerPhone: '',
-      quotationAmount: '',
-      quotationFileId: null,
-      contractNo: '',
-      visitAt: '',
-      note: '',
+      supplierId: editing?.supplierId ?? '',
+      engineerName: editing?.engineerName ?? '',
+      engineerPhone: editing?.engineerPhone ?? '',
+      quotationAmount: editing?.quotationAmount ?? '',
+      quotationFileId: editing?.quotationFileId ?? null,
+      contractNo: editing?.contractNo ?? '',
+      visitAt: editing?.visitAt ?? '',
+      note: editing?.note ?? '',
     },
   })
   return (
@@ -1828,7 +1907,7 @@ function VendorDialog({
       form={form}
       onSubmit={async (values) => {
         try {
-          await api.addRepairVendor(id, {
+          const body = {
             supplierId: values.supplierId,
             engineerName: values.engineerName || undefined,
             engineerPhone: values.engineerPhone || undefined,
@@ -1837,7 +1916,9 @@ function VendorDialog({
             contractNo: values.contractNo || undefined,
             visitAt: values.visitAt || undefined,
             note: values.note || undefined,
-          })
+          }
+          if (editing) await api.updateRepairVendor(id, editing.id, body)
+          else await api.addRepairVendor(id, body)
           toast.success(t('detail.vendors.created'))
           onDone()
           onClose()
@@ -1893,10 +1974,12 @@ function VendorDialog({
 
 function CostDialog({
   id,
+  editing,
   onClose,
   onDone,
 }: {
   id: string
+  editing: components['schemas']['RepairCostResponseDto'] | null
   onClose: () => void
   onDone: () => void
 }) {
@@ -1904,12 +1987,12 @@ function CostDialog({
   const form = useForm<CostForm>({
     resolver: zodResolver(costSchema),
     defaultValues: {
-      category: 'parts',
-      description: '',
-      amount: '',
-      invoiceNo: '',
-      invoiceDate: '',
-      paidAt: '',
+      category: (editing?.category ?? 'parts') as CostForm['category'],
+      description: editing?.description ?? '',
+      amount: editing?.amount ?? '',
+      invoiceNo: editing?.invoiceNo ?? '',
+      invoiceDate: editing?.invoiceDate ?? '',
+      paidAt: editing?.paidAt ?? '',
     },
   })
   return (
@@ -1920,14 +2003,16 @@ function CostDialog({
       form={form}
       onSubmit={async (values) => {
         try {
-          await api.addRepairCost(id, {
+          const body = {
             category: values.category,
             description: values.description,
             amount: values.amount,
             invoiceNo: values.invoiceNo || undefined,
             invoiceDate: values.invoiceDate || undefined,
             paidAt: values.paidAt || undefined,
-          })
+          }
+          if (editing) await api.updateRepairCost(id, editing.id, body)
+          else await api.addRepairCost(id, body)
           toast.success(t('detail.costs.created'))
           onDone()
           onClose()

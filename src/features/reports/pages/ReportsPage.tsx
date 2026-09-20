@@ -5,6 +5,7 @@ import type { ColumnDef } from '@tanstack/react-table'
 import { toast } from 'sonner'
 import { isApiError, messageFor } from '@/api/errors'
 import { DataTable, useServerTable } from '@/components/data-table'
+import { FilterBar } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page/PageHeader'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -253,6 +254,7 @@ export function Component() {
                   onRetry={() => void view.refetch()}
                   getRowId={(row) => String(row._rid)}
                   emptyTitle={t('emptyRows')}
+                  toolbarLeft={<FilterBar>{null}</FilterBar>}
                 />
               )}
             </div>

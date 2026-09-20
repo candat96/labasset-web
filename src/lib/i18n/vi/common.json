@@ -43,6 +43,8 @@
   },
   "theme": { "label": "Giao diện", "light": "Sáng", "dark": "Tối", "system": "Theo hệ thống" },
   "mock": "Dữ liệu mẫu",
+  "clearFilters": "Xoá lọc",
+  "moreFilters": "Lọc thêm",
   "search": {
     "placeholder": "Tìm kiếm…",
     "hint": "Tìm mã máy, vật tư, số phiếu, serial",

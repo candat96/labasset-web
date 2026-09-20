@@ -3,6 +3,7 @@ import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import type { ColumnDef } from '@tanstack/react-table'
 import { DataTable, useServerTable } from '@/components/data-table'
+import { FilterBar } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page/PageHeader'
 import { Input } from '@/components/ui/input'
 import { AsyncSelect } from '@/components/form/async-select'
@@ -109,7 +110,7 @@ export function Component() {
         onRowClick={setSelected}
         getRowId={(row) => row.id}
         toolbarLeft={
-          <>
+          <FilterBar>
             <DatePicker
               ariaLabel={t('filter.from')}
               value={filters.from ?? ''}
@@ -143,7 +144,7 @@ export function Component() {
               value={filters.entityType ?? ''}
               onChange={(event) => table.setFilter('entityType', event.target.value || undefined)}
             />
-          </>
+          </FilterBar>
         }
       />
       <Sheet open={!!selected} onOpenChange={(open) => !open && setSelected(null)}>

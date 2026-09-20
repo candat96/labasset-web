@@ -8,6 +8,9 @@ export function listCalibrations(params: Record<string, unknown>) {
 export function getCalibration(id: string) {
   return unwrap(api.GET('/v1/calibrations/{id}', { params: { path: { id } } }))
 }
+export function updateCalibration(id: string, body: components['schemas']['UpdateCalibrationDto']) {
+  return unwrap(api.PATCH('/v1/calibrations/{id}', { params: { path: { id } }, body }))
+}
 export function createCalibration(body: components['schemas']['CreateCalibrationDto']) {
   return unwrap(api.POST('/v1/calibrations', { body }))
 }

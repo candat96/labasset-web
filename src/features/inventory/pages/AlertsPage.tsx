@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { toast } from 'sonner'
 import { DataTable, useServerTable } from '@/components/data-table'
+import { FilterBar } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page/PageHeader'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/status-badge'
@@ -112,6 +113,7 @@ export function Component() {
         error={list.error}
         onRetry={() => void list.refetch()}
         getRowId={(row) => row.id}
+        toolbarLeft={<FilterBar>{null}</FilterBar>}
       />
     </>
   )

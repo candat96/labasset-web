@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { DataTable, useServerTable } from '@/components/data-table'
+import { FilterBar } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page/PageHeader'
 import { formatDateTime } from '@/lib/format/date'
 import { listRecurring } from '../api'
@@ -45,6 +46,7 @@ export function Component() {
         isLoading={list.isPending}
         error={list.error}
         onRetry={() => void list.refetch()}
+        toolbarLeft={<FilterBar>{null}</FilterBar>}
       />
     </>
   )

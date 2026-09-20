@@ -26,8 +26,9 @@ function slugify(label: string) {
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_|_$/g, '')
+    .slice(0, 32)
 }
 
 const empty: TemplateForm = {
@@ -82,8 +83,13 @@ export function Component() {
       model: values.model || null,
       isActive: values.isActive,
       items: values.items.map((item, index) => {
-        let key = item.key || slugify(item.label) || `item-${index + 1}`
-        while (used.has(key)) key = `${key}-${index + 1}`
+        const base = (item.key || slugify(item.label) || `item_${index + 1}`).slice(0, 32)
+        let key = base
+        let suffix = 2
+        while (used.has(key)) {
+          const end = `_${suffix++}`
+          key = `${base.slice(0, 32 - end.length)}${end}`
+        }
         used.add(key)
         return {
           key,

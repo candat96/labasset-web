@@ -103,13 +103,22 @@ export const MENU: MenuGroup[] = [
   {
     key: 'maintenance',
     labelKey: 'menu:groups.maintenance',
-    roles: STAFF,
     items: [
       { path: '/maintenance/calendar', labelKey: 'menu:items.calendar', icon: Calendar },
-      { path: '/maintenance/plans', labelKey: 'menu:items.plans', icon: ClipboardList },
+      {
+        path: '/maintenance/plans',
+        labelKey: 'menu:items.plans',
+        icon: ClipboardList,
+        roles: STAFF,
+      },
       { path: '/maintenance/tasks', labelKey: 'menu:items.tasks', icon: ListTodo },
       { path: '/calibrations', labelKey: 'menu:items.calibrations', icon: Gauge },
-      { path: '/maintenance/templates', labelKey: 'menu:items.templates', icon: FileCheck },
+      {
+        path: '/maintenance/templates',
+        labelKey: 'menu:items.templates',
+        icon: FileCheck,
+        roles: STAFF,
+      },
     ],
   },
   {

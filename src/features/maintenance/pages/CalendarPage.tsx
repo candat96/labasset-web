@@ -1,10 +1,13 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import FullCalendar from '@fullcalendar/react'
+import dayGridPlugin from '@fullcalendar/daygrid'
+import timeGridPlugin from '@fullcalendar/timegrid'
+import interactionPlugin from '@fullcalendar/interaction'
+import type { DatesSetArg, EventClickArg, EventDropArg, EventInput } from '@fullcalendar/core'
 import { toast } from 'sonner'
-import { addMonths, format, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns'
 import { PageHeader } from '@/components/page/PageHeader'
-import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { ErrorState } from '@/components/page/ErrorState'
 import { messageFor } from '@/api/errors'
@@ -12,74 +15,81 @@ import { listCalendar, moveCalendar } from '../api'
 import type { CalendarItem } from '../types'
 import { useTranslation } from 'react-i18next'
 
-const TYPE_CLASS: Record<string, string> = {
-  maintenance: 'bg-sky-100 text-sky-800',
-  calibration: 'bg-violet-100 text-violet-800',
-  repair: 'bg-red-100 text-red-800',
-}
-
-const hrefFor = (item: CalendarItem) =>
+const hrefFor = (item: Pick<CalendarItem, 'type' | 'id'>) =>
   item.type === 'maintenance'
     ? `/maintenance/tasks/${item.id}`
     : item.type === 'calibration'
       ? `/calibrations/${item.id}`
       : `/repairs/${item.id}`
 
+const EVENT_CLASS: Record<string, string[]> = {
+  maintenance: ['!border-primary', '!bg-primary', '!text-primary-foreground'],
+  calibration: ['!border-warning', '!bg-warning', '!text-warning-foreground'],
+  repair: ['!border-destructive', '!bg-destructive', '!text-destructive-foreground'],
+}
+
 export function Component() {
   const { t } = useTranslation('maintenance')
-
   const navigate = useNavigate()
   const qc = useQueryClient()
-  const [month, setMonth] = useState(() => startOfMonth(new Date()))
+  const [range, setRange] = useState(() => {
+    const now = new Date()
+    return {
+      from: new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString(),
+      to: new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1)).toISOString(),
+    }
+  })
   const [types, setTypes] = useState(['maintenance', 'calibration', 'repair'])
   const [mine, setMine] = useState(false)
-  const from = startOfMonth(month).toISOString()
-  const to = endOfMonth(month).toISOString()
   const list = useQuery({
-    queryKey: ['calendar', from, to, types, mine],
+    queryKey: ['calendar', range, types, mine],
     queryFn: () =>
       listCalendar({
-        from,
-        to,
+        ...range,
         types: types.join(','),
         assigneeId: mine ? 'me' : undefined,
       }),
   })
-  const days = eachDayOfInterval({ start: startOfMonth(month), end: endOfMonth(month) })
-  const byDay = useMemo(() => {
-    const map = new Map<string, CalendarItem[]>()
-    for (const item of list.data?.items ?? []) {
-      const key = (item.start ?? '').slice(0, 10)
-      map.set(key, [...(map.get(key) ?? []), item])
-    }
-    return map
-  }, [list.data])
   const toggle = (type: string, on: boolean) =>
-    setTypes((curr) => (on ? [...curr, type] : curr.filter((item) => item !== type)))
+    setTypes((curr) => (on ? [...new Set([...curr, type])] : curr.filter((item) => item !== type)))
+  const events: EventInput[] = (list.data?.items ?? []).map((item) => ({
+    id: `${item.type}:${item.id}`,
+    title: item.title,
+    start: item.start,
+    editable: item.movable,
+    classNames: EVENT_CLASS[item.type] ?? [],
+    extendedProps: { item },
+  }))
+  const onDatesSet = (info: DatesSetArg) =>
+    setRange({ from: info.start.toISOString(), to: info.end.toISOString() })
+  const onEventClick = (info: EventClickArg) => {
+    const item = info.event.extendedProps.item as CalendarItem
+    navigate(hrefFor(item))
+  }
+  const onEventDrop = async (info: EventDropArg) => {
+    const item = info.event.extendedProps.item as CalendarItem
+    if (!item.movable || !info.event.start) return info.revert()
+    try {
+      await moveCalendar(item.type, item.id, info.event.start.toISOString())
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ['calendar'] }),
+        qc.invalidateQueries({ queryKey: ['maintenance', 'tasks'] }),
+        qc.invalidateQueries({ queryKey: ['calibrations'] }),
+      ])
+    } catch (error) {
+      info.revert()
+      toast.error(messageFor(error))
+    }
+  }
   return (
     <>
-      <PageHeader
-        title={t('schedule')}
-        actions={
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setMonth((d) => addMonths(d, -1))}>
-              {t('prevMonth')}
-            </Button>
-            <Button variant="outline" onClick={() => setMonth(startOfMonth(new Date()))}>
-              {format(month, 'MM/yyyy')}
-            </Button>
-            <Button variant="outline" onClick={() => setMonth((d) => addMonths(d, 1))}>
-              {t('nextMonth')}
-            </Button>
-          </div>
-        }
-      />
+      <PageHeader title={t('schedule')} />
       <div className="mb-3 flex flex-wrap gap-4 text-sm">
         {(['maintenance', 'calibration', 'repair'] as const).map((type) => (
           <label key={type} className="flex items-center gap-2">
             <Checkbox
               checked={types.includes(type)}
-              onCheckedChange={(v) => toggle(type, v === true)}
+              onCheckedChange={(value) => toggle(type, value === true)}
             />
             {type === 'maintenance'
               ? t('typeMaintenance')
@@ -89,59 +99,32 @@ export function Component() {
           </label>
         ))}
         <label className="flex items-center gap-2">
-          <Checkbox checked={mine} onCheckedChange={(v) => setMine(v === true)} />
+          <Checkbox checked={mine} onCheckedChange={(value) => setMine(value === true)} />
           {t('mine')}
         </label>
       </div>
       {list.error && <ErrorState error={list.error} onRetry={() => void list.refetch()} />}
-      <div className="grid grid-cols-7 gap-2">
-        {days.map((day) => {
-          const key = format(day, 'yyyy-MM-dd')
-          return (
-            <section key={key} className="min-h-28 rounded border p-2">
-              <h2 className="text-muted-foreground mb-1 text-xs">{format(day, 'dd/MM')}</h2>
-              <ul className="space-y-1">
-                {(byDay.get(key) ?? []).map((item) => (
-                  <li key={`${item.type}-${item.id}`}>
-                    <button
-                      type="button"
-                      className={`w-full truncate rounded px-1 py-0.5 text-left text-xs ${TYPE_CLASS[item.type] ?? ''}`}
-                      title={`${item.title} · ${item.status} · ${item.assigneeName ?? ''}`}
-                      onClick={() => navigate(hrefFor(item))}
-                      onKeyDown={async (event) => {
-                        if (event.key !== 'Enter' || !item.movable) return
-                      }}
-                    >
-                      {item.title}
-                    </button>
-                    {item.movable && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-6 px-1 text-[10px]"
-                        onClick={async () => {
-                          try {
-                            await moveCalendar(
-                              item.type,
-                              item.id,
-                              new Date(day.setHours(9, 0, 0, 0)).toISOString(),
-                            )
-                            void qc.invalidateQueries({ queryKey: ['calendar'] })
-                            void qc.invalidateQueries({ queryKey: ['maintenance', 'tasks'] })
-                          } catch (error) {
-                            toast.error(messageFor(error))
-                          }
-                        }}
-                      >
-                        {t('moveDate')}
-                      </Button>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )
-        })}
+      <div className="rounded-lg border bg-card p-3">
+        <FullCalendar
+          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+          initialView="dayGridMonth"
+          headerToolbar={{
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek',
+          }}
+          locale="vi"
+          height="auto"
+          events={events}
+          editable
+          datesSet={onDatesSet}
+          eventClick={onEventClick}
+          eventDrop={(info) => void onEventDrop(info)}
+          eventDidMount={(info) => {
+            const item = info.event.extendedProps.item as CalendarItem
+            info.el.title = `${item.title} · ${item.status} · ${item.assigneeName ?? ''}`
+          }}
+        />
       </div>
     </>
   )

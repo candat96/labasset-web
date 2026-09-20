@@ -5,6 +5,7 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { DataTable, useServerTable } from '@/components/data-table'
+import { FilterBar } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page/PageHeader'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/status-badge'
@@ -160,6 +161,7 @@ export function Component() {
         onRetry={() => void list.refetch()}
         getRowId={(row) => row.id}
         onRowClick={(row) => setOpenId(row.id)}
+        toolbarLeft={<FilterBar>{null}</FilterBar>}
       />
       <Sheet open={!!openId} onOpenChange={(open) => !open && setOpenId(null)}>
         <SheetContent className="overflow-y-auto sm:max-w-lg">

@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { DataTable, useServerTable } from '@/components/data-table'
+import { FilterBar } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page/PageHeader'
 import { StatusBadge } from '@/components/status-badge'
 import { commonStatusMap } from '@/lib/status-maps'
@@ -183,7 +184,7 @@ export function CatalogPage({ slug }: { slug: CatalogSlug }) {
         onRetry={() => void list.refetch()}
         getRowId={(row) => row.id}
         toolbarLeft={
-          <>
+          <FilterBar>
             <Input
               aria-label={t('search.label')}
               value={table.inputQ}
@@ -206,7 +207,7 @@ export function CatalogPage({ slug }: { slug: CatalogSlug }) {
                 <SelectItem value="false">{t('filter.inactive')}</SelectItem>
               </SelectContent>
             </Select>
-          </>
+          </FilterBar>
         }
         toolbarRight={
           <Button
