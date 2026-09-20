@@ -53,15 +53,18 @@ export function Component() {
   const columns = useMemo<ColumnDef<Lot>[]>(
     () => [
       { accessorKey: 'supplyName', header: t('supply') },
+      { accessorKey: 'warehouseName', header: t('warehouse') },
       { accessorKey: 'lotNo', header: t('lot') },
       {
         accessorKey: 'expiresAt',
         header: t('expiry'),
         cell: ({ row }) => {
           const exp = row.original.expiresAt
-          const overdue = !!exp && exp < new Date().toISOString()
+          const expiry = exp ? new Date(exp).getTime() : Number.POSITIVE_INFINITY
+          const days = (expiry - Date.now()) / 86_400_000
+          const overdue = days < 0
           return (
-            <span className={overdue ? 'text-destructive' : undefined}>
+            <span className={overdue ? 'text-destructive' : days < 30 ? 'text-warning' : undefined}>
               {formatDate(exp) || '—'}
             </span>
           )
@@ -108,9 +111,17 @@ export function Component() {
       <PageHeader
         title={t('lotsTitle')}
         actions={
-          <Button variant="outline" onClick={() => table.setFilter('expiringWithinDays', '30')}>
-            {t('expiring30')}
-          </Button>
+          <div className="flex gap-2">
+            {[30, 60, 90].map((days) => (
+              <Button
+                key={days}
+                variant={f.expiringWithinDays === String(days) ? 'default' : 'outline'}
+                onClick={() => table.setFilter('expiringWithinDays', String(days))}
+              >
+                {days} {t('days')}
+              </Button>
+            ))}
+          </div>
         }
       />
       <DataTable

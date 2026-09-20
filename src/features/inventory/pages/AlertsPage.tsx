@@ -20,6 +20,10 @@ type AlertRow = {
   type: string
   message?: string
   supplyId?: string
+  supplyName?: string
+  warehouseName?: string
+  lotNo?: string
+  severity?: string
   createdAt?: string
   resolvedAt?: string | null
 }
@@ -50,6 +54,10 @@ export function Component() {
         header: t('type'),
         cell: ({ row }) => <StatusBadge value={row.original.type} map={alertTypeMap} />,
       },
+      { accessorKey: 'supplyName', header: t('supply') },
+      { accessorKey: 'warehouseName', header: t('warehouse') },
+      { accessorKey: 'lotNo', header: t('lot') },
+      { accessorKey: 'severity', header: t('severity') },
       { accessorKey: 'message', header: t('message') },
       {
         accessorKey: 'createdAt',

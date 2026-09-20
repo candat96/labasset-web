@@ -107,11 +107,16 @@ const implemented: RouteObject[] = [
   { path: 'stock/receipts', lazy: () => import('@/features/inventory/pages/ReceiptsPage') },
   { path: 'stock/receipts/new', lazy: () => import('@/features/inventory/pages/ReceiptFormPage') },
   {
+    path: 'stock/receipts/:id/edit',
+    lazy: () => import('@/features/inventory/pages/ReceiptFormPage'),
+  },
+  {
     path: 'stock/receipts/:id',
     lazy: () => import('@/features/inventory/pages/ReceiptDetailPage'),
   },
   { path: 'stock/issues', lazy: () => import('@/features/inventory/pages/IssuesPage') },
   { path: 'stock/issues/new', lazy: () => import('@/features/inventory/pages/IssueFormPage') },
+  { path: 'stock/issues/:id/edit', lazy: () => import('@/features/inventory/pages/IssueFormPage') },
   { path: 'stock/issues/:id', lazy: () => import('@/features/inventory/pages/IssueDetailPage') },
   { path: 'stock/transfers', lazy: () => import('@/features/inventory/pages/TransfersPage') },
   { path: 'stock/alerts', lazy: () => import('@/features/inventory/pages/AlertsPage') },

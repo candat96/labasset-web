@@ -25,14 +25,22 @@ const schema = z.object({
   code: z.string(),
   name: z.string().trim().min(1, i18n.t('common:form.required')),
   groupId: z.string().nullable(),
-  unitId: z.string().nullable(),
+  unitId: z.string().min(1, i18n.t('common:form.required')),
   packaging: z.string(),
+  manufacturerCode: z.string(),
   manufacturerId: z.string().nullable(),
+  defaultSupplierId: z.string().nullable(),
   refPrice: decimalString({ maxScale: 0, min: '0' }),
   trackLot: z.boolean(),
   trackExpiry: z.boolean(),
   minStock: decimalString({ maxScale: 3, min: '0' }),
   maxStock: decimalString({ maxScale: 3, min: '0' }),
+  openVialDays: z
+    .string()
+    .refine((value) => value === '' || (/^\d+$/.test(value) && Number(value) > 0), {
+      message: i18n.t('common:form.invalid'),
+    }),
+  storageCondition: z.string(),
   isActive: z.boolean(),
   notes: z.string(),
 })
@@ -41,14 +49,18 @@ const empty: FormValues = {
   code: '',
   name: '',
   groupId: null,
-  unitId: null,
+  unitId: '',
   packaging: '',
+  manufacturerCode: '',
   manufacturerId: null,
+  defaultSupplierId: null,
   refPrice: '',
   trackLot: false,
   trackExpiry: false,
   minStock: '',
   maxStock: '',
+  openVialDays: '',
+  storageCondition: '',
   isActive: true,
   notes: '',
 }
@@ -66,20 +78,28 @@ export function Component() {
     enabled: editing,
   })
   const form = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: empty })
+  const trackLot = form.watch('trackLot')
+  useEffect(() => {
+    if (!trackLot) form.setValue('trackExpiry', false)
+  }, [form, trackLot])
   useEffect(() => {
     if (!detail.data) return
     form.reset({
       code: detail.data.code,
       name: detail.data.name,
       groupId: detail.data.groupId,
-      unitId: detail.data.unitId,
+      unitId: detail.data.unitId ?? '',
       packaging: detail.data.packaging ?? '',
+      manufacturerCode: detail.data.manufacturerCode ?? '',
       manufacturerId: detail.data.manufacturerId,
+      defaultSupplierId: detail.data.defaultSupplierId,
       refPrice: detail.data.refPrice ?? '',
       trackLot: detail.data.trackLot,
       trackExpiry: detail.data.trackExpiry,
       minStock: detail.data.minStock ?? '',
       maxStock: detail.data.maxStock ?? '',
+      openVialDays: detail.data.openVialDays == null ? '' : String(detail.data.openVialDays),
+      storageCondition: detail.data.storageCondition ?? '',
       isActive: detail.data.isActive,
       notes: detail.data.notes ?? '',
     })
@@ -92,9 +112,13 @@ export function Component() {
       ...values,
       code: values.code.toUpperCase() || undefined,
       packaging: values.packaging || null,
+      manufacturerCode: values.manufacturerCode || null,
+      defaultSupplierId: values.defaultSupplierId,
       refPrice: values.refPrice || null,
       minStock: values.minStock || null,
       maxStock: values.maxStock || null,
+      openVialDays: values.openVialDays ? Number(values.openVialDays) : null,
+      storageCondition: values.storageCondition || null,
       notes: values.notes || null,
     }
     try {
@@ -125,6 +149,8 @@ export function Component() {
             transform={(v) => v.toUpperCase()}
           />
           <TextField control={form.control} name="name" label={t('name')} />
+          <TextField control={form.control} name="packaging" label={t('packaging')} />
+          <TextField control={form.control} name="manufacturerCode" label={t('manufacturerCode')} />
           <FormField
             control={form.control}
             name="groupId"
@@ -161,11 +187,59 @@ export function Component() {
               </FormItem>
             )}
           />
+          <FormField
+            control={form.control}
+            name="manufacturerId"
+            render={({ field }) => (
+              <FormItem>
+                <AsyncSelect
+                  label={t('manufacturer')}
+                  queryKey="manufacturers"
+                  loadOptions={(q) => catalogOptions('manufacturers', q)}
+                  resolveOption={(value) => resolveCatalogItem('manufacturers', value)}
+                  value={field.value}
+                  onChange={field.onChange}
+                  clearable
+                />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="defaultSupplierId"
+            render={({ field }) => (
+              <FormItem>
+                <AsyncSelect
+                  label={t('defaultSupplier')}
+                  queryKey="suppliers"
+                  loadOptions={(q) => catalogOptions('suppliers', q)}
+                  resolveOption={(value) => resolveCatalogItem('suppliers', value)}
+                  value={field.value}
+                  onChange={field.onChange}
+                  clearable
+                />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           <MoneyField control={form.control} name="refPrice" label={t('refPrice')} />
           <SwitchField control={form.control} name="trackLot" label={t('trackLotField')} />
-          <SwitchField control={form.control} name="trackExpiry" label={t('trackExpiry')} />
+          <SwitchField
+            control={form.control}
+            name="trackExpiry"
+            label={t('trackExpiry')}
+            disabled={!trackLot}
+          />
           <QtyField control={form.control} name="minStock" label={t('minStock')} />
           <QtyField control={form.control} name="maxStock" label={t('maxStock')} />
+          <TextField
+            control={form.control}
+            name="openVialDays"
+            label={t('openVialDays')}
+            type="number"
+          />
+          <TextField control={form.control} name="storageCondition" label={t('storageCondition')} />
           <SwitchField control={form.control} name="isActive" label={t('isActive')} />
           <TextField control={form.control} name="notes" label={t('notes')} />
           <Button type="submit">{t('save')}</Button>

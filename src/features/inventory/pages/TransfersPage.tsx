@@ -16,17 +16,21 @@ import { applyServerErrors, messageFor } from '@/api/errors'
 import { catalogOptions } from '@/api/references'
 import { decimalString } from '@/lib/validation/decimal'
 import { Component as IssuesPage } from './IssuesPage'
-import { createTransfer } from '../api'
+import { createTransfer, listLots } from '../api'
 import { useTranslation } from 'react-i18next'
 import i18n from '@/lib/i18n'
 
-const schema = z.object({
-  fromWarehouseId: z.string().min(1, i18n.t('common:form.required')),
-  toWarehouseId: z.string().min(1, i18n.t('common:form.required')),
-  // TODO(api): chọn lô từ kho nguồn (lượt C) — hiện gửi lotId trống như cũ.
-  lotId: z.string(),
-  quantity: decimalString({ maxScale: 3, min: '0.001' }),
-})
+const schema = z
+  .object({
+    fromWarehouseId: z.string().min(1, i18n.t('common:form.required')),
+    toWarehouseId: z.string().min(1, i18n.t('common:form.required')),
+    lotId: z.string().min(1, i18n.t('common:form.required')),
+    quantity: decimalString({ maxScale: 3, min: '0.001' }),
+  })
+  .refine((value) => value.fromWarehouseId !== value.toWarehouseId, {
+    path: ['toWarehouseId'],
+    message: i18n.t('inventory:warehouseSame'),
+  })
 type FormValues = z.infer<typeof schema>
 
 export function Component() {
@@ -95,6 +99,34 @@ export function Component() {
                 loadOptions={(q) => catalogOptions('warehouses', q)}
                 value={field.value || null}
                 onChange={(v) => field.onChange(typeof v === 'string' ? v : '')}
+              />
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="lotId"
+          render={({ field }) => (
+            <FormItem>
+              <AsyncSelect
+                label={t('lot')}
+                queryKey={`transfer-lots-${form.watch('fromWarehouseId')}`}
+                loadOptions={async (q) => {
+                  const data = await listLots({
+                    warehouseId: form.getValues('fromWarehouseId'),
+                    q,
+                    page: 1,
+                    limit: 50,
+                  })
+                  return data.items.map((lot) => ({
+                    id: lot.id,
+                    code: lot.lotNo,
+                    name: `${lot.supplyId} · ${t('available')}: ${lot.available}`,
+                  }))
+                }}
+                value={field.value || null}
+                onChange={(value) => field.onChange(typeof value === 'string' ? value : '')}
               />
               <FormMessage />
             </FormItem>

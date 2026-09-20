@@ -14,6 +14,20 @@ export function listSupplies(params: Record<string, unknown>) {
 export function getSupply(id: string) {
   return unwrapAs<Supply>(api.GET('/v1/supplies/{id}', { params: { path: { id } } }))
 }
+export function getSupplyStock(id: string) {
+  return unwrapAs<{
+    balances?: Record<string, unknown>[]
+    lots?: Array<{
+      id: string
+      lotNo?: string
+      warehouseId?: string
+      status?: string
+      available?: string
+      qtyOnHand?: string
+      qtyReserved?: string
+    }>
+  }>(api.GET('/v1/supplies/{id}/stock', { params: { path: { id } } }))
+}
 export function createSupply(body: Record<string, unknown>) {
   return unwrapAs<Supply>(api.POST('/v1/supplies', { body: apiBody(body) }))
 }
@@ -48,8 +62,16 @@ export function listReceipts(params: Record<string, unknown>) {
 export function getReceipt(id: string) {
   return unwrap(api.GET('/v1/stock/receipts/{id}', { params: { path: { id } } }))
 }
-export function createReceipt(body: components['schemas']['CreateReceiptDto']) {
-  return unwrap(api.POST('/v1/stock/receipts', { body }))
+export function createReceipt(body: Record<string, unknown>) {
+  return unwrap(api.POST('/v1/stock/receipts', { body: apiBody(body) }))
+}
+export function updateReceipt(id: string, body: Record<string, unknown>) {
+  return unwrap(
+    api.PATCH('/v1/stock/receipts/{id}', { params: { path: { id } }, body: apiBody(body) }),
+  )
+}
+export function deleteReceipt(id: string) {
+  return unwrap(api.DELETE('/v1/stock/receipts/{id}', { params: { path: { id } } }))
 }
 export function postReceipt(id: string) {
   return unwrap(api.POST('/v1/stock/receipts/{id}/post', { params: { path: { id } } }))
@@ -69,8 +91,16 @@ export function listIssues(params: Record<string, unknown>) {
 export function getIssue(id: string) {
   return unwrap(api.GET('/v1/stock/issues/{id}', { params: { path: { id } } }))
 }
-export function createIssue(body: components['schemas']['CreateIssueDto']) {
-  return unwrap(api.POST('/v1/stock/issues', { body }))
+export function createIssue(body: Record<string, unknown>) {
+  return unwrap(api.POST('/v1/stock/issues', { body: apiBody(body) }))
+}
+export function updateIssue(id: string, body: Record<string, unknown>) {
+  return unwrap(
+    api.PATCH('/v1/stock/issues/{id}', { params: { path: { id } }, body: apiBody(body) }),
+  )
+}
+export function deleteIssue(id: string) {
+  return unwrap(api.DELETE('/v1/stock/issues/{id}', { params: { path: { id } } }))
 }
 export function postIssue(id: string) {
   return unwrap(api.POST('/v1/stock/issues/{id}/post', { params: { path: { id } } }))

@@ -54,8 +54,8 @@ export function Component() {
     [t],
   )
   const totalValue =
-    value.data && typeof value.data === 'object' && 'total' in value.data
-      ? String((value.data as { total?: string }).total ?? '')
+    value.data && typeof value.data === 'object' && 'value' in value.data
+      ? String((value.data as { value?: string }).value ?? '')
       : ''
   return (
     <>

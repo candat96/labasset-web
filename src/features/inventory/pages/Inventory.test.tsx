@@ -61,12 +61,15 @@ it('lists supplies', async () => {
 it('validates supply name', async () => {
   renderWithProviders(<SupplyFormPage />, { path: '/supplies/new', route: '/supplies/new' })
   await userEvent.click(screen.getByRole('button', { name: 'Lưu' }))
-  expect(await screen.findByText('Bắt buộc')).toBeVisible()
+  expect((await screen.findAllByText('Bắt buộc')).length).toBeGreaterThanOrEqual(2)
 })
 
 it('creates a supply', async () => {
   const saved: unknown[] = []
   server.use(
+    http.get('/v1/catalogs/units', () =>
+      HttpResponse.json([{ id: 'u1', code: 'ML', name: 'Mililit' }]),
+    ),
     http.post('/v1/supplies', async ({ request }) => {
       const body = (await request.json()) as { name?: string }
       // Handler kiểm tra field bắt buộc như backend để không che lỗi 400 thật.
@@ -86,6 +89,8 @@ it('creates a supply', async () => {
     routes: [{ path: '/supplies/:id', element: <div>DETAIL</div> }],
   })
   await userEvent.type(screen.getByLabelText('Tên'), 'Huyết thanh mới')
+  await userEvent.type(screen.getByLabelText('ĐVT'), 'Mil')
+  await userEvent.click(await screen.findByRole('option', { name: /Mililit/ }))
   await userEvent.click(screen.getByRole('button', { name: 'Lưu' }))
   await waitFor(() => expect(saved[0]).toMatchObject({ name: 'Huyết thanh mới' }))
 })
@@ -152,12 +157,24 @@ it('creates a receipt with a body validated like the API', async () => {
     http.get('/v1/catalogs/warehouses', () =>
       HttpResponse.json([{ id: 'w1', code: 'K1', name: 'Kho chính' }]),
     ),
+    http.get('/v1/catalogs/suppliers', () =>
+      HttpResponse.json([{ id: 'sp1', code: 'NCC1', name: 'Nhà cung cấp 1' }]),
+    ),
     http.get('/v1/supplies', () =>
       HttpResponse.json({
         items: [{ id: 's1', code: 'HC-01', name: 'Huyết thanh' }],
         total: 1,
         page: 1,
         limit: 20,
+      }),
+    ),
+    http.get('/v1/supplies/s1', () =>
+      HttpResponse.json({
+        id: 's1',
+        code: 'HC-01',
+        name: 'Huyết thanh',
+        trackLot: false,
+        trackExpiry: false,
       }),
     ),
     http.post('/v1/stock/receipts', async ({ request }) => {
@@ -182,6 +199,8 @@ it('creates a receipt with a body validated like the API', async () => {
   })
   await userEvent.type(screen.getByLabelText('Kho'), 'Kho')
   await userEvent.click(await screen.findByRole('option', { name: /Kho chính/ }))
+  await userEvent.type(screen.getByLabelText('Nhà cung cấp'), 'Nhà')
+  await userEvent.click(await screen.findByRole('option', { name: /Nhà cung cấp 1/ }))
   await userEvent.type(screen.getByLabelText('Vật tư'), 'Huyết')
   await userEvent.click(await screen.findByRole('option', { name: /Huyết thanh/ }))
   await userEvent.click(screen.getByRole('button', { name: 'Lưu nháp' }))

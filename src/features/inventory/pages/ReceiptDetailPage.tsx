@@ -1,4 +1,4 @@
-import { Link, useParams } from 'react-router'
+import { Link, useNavigate, useParams } from 'react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { PageHeader } from '@/components/page/PageHeader'
@@ -13,13 +13,15 @@ import { formatVnd } from '@/lib/format/money'
 import { useCan } from '@/app/guards/useCan'
 import { ADM, STAFF } from '@/routes/roles'
 import { messageFor } from '@/api/errors'
-import { cancelReceipt, getReceipt, postReceipt, qcReceipt } from '../api'
+import { downloadFile } from '@/api/download'
+import { cancelReceipt, deleteReceipt, getReceipt, postReceipt, qcReceipt } from '../api'
 import { useTranslation } from 'react-i18next'
 
 export function Component() {
   const { t } = useTranslation('inventory')
 
   const { id = '' } = useParams()
+  const navigate = useNavigate()
   const detail = useQuery({
     queryKey: ['stock', 'receipts', id],
     queryFn: () => getReceipt(id),
@@ -51,16 +53,41 @@ export function Component() {
         actions={
           <div className="flex gap-2">
             {canWrite && row.status === 'draft' && (
-              <Button
-                onClick={async () => {
-                  if ((await confirm({ title: t('postConfirm') })) === false) return
-                  await postReceipt(id)
-                  toast.success(t('posted'))
-                  invalidate()
-                }}
-              >
-                {t('post')}
-              </Button>
+              <>
+                <Button asChild variant="outline">
+                  <Link to={`/stock/receipts/${id}/edit`}>{t('edit')}</Link>
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={async () => {
+                    if ((await confirm({ title: t('deleteConfirm'), destructive: true })) === false)
+                      return
+                    try {
+                      await deleteReceipt(id)
+                      invalidate()
+                      navigate('/stock/receipts')
+                    } catch (error) {
+                      toast.error(messageFor(error))
+                    }
+                  }}
+                >
+                  {t('delete')}
+                </Button>
+                <Button
+                  onClick={async () => {
+                    if ((await confirm({ title: t('postConfirm') })) === false) return
+                    try {
+                      await postReceipt(id)
+                      toast.success(t('posted'))
+                      invalidate()
+                    } catch (error) {
+                      toast.error(messageFor(error))
+                    }
+                  }}
+                >
+                  {t('post')}
+                </Button>
+              </>
             )}
             {isAdm && row.status === 'posted' && (
               <Button
@@ -81,17 +108,51 @@ export function Component() {
               </Button>
             )}
             {canWrite && row.status === 'posted' && row.qcStatus === 'pending' && (
-              <Button
-                variant="outline"
-                onClick={async () => {
-                  await qcReceipt(id, { status: 'passed' })
-                  toast.success(t('qcPassed'))
-                  invalidate()
-                }}
-              >
-                {t('qcPassed')}
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  onClick={async () => {
+                    try {
+                      await qcReceipt(id, { status: 'passed' })
+                      toast.success(t('qcPassed'))
+                      invalidate()
+                    } catch (error) {
+                      toast.error(messageFor(error))
+                    }
+                  }}
+                >
+                  {t('qcPassed')}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={async () => {
+                    const note = await confirm({ title: t('qcFailed'), requireReason: true })
+                    if (note === false) return
+                    try {
+                      await qcReceipt(id, { status: 'failed', note })
+                      toast.success(t('qcFailed'))
+                      invalidate()
+                    } catch (error) {
+                      toast.error(messageFor(error))
+                    }
+                  }}
+                >
+                  {t('qcFailed')}
+                </Button>
+              </>
             )}
+            <Button
+              variant="outline"
+              onClick={() =>
+                void downloadFile(
+                  `/v1/stock/receipts/${id}/print.pdf`,
+                  {},
+                  `${row.code}.pdf`,
+                ).catch((error) => toast.error(messageFor(error)))
+              }
+            >
+              {t('print')}
+            </Button>
           </div>
         }
       />
