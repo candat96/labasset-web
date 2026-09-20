@@ -39,6 +39,22 @@ export function updateSupply(id: string, body: Record<string, unknown>) {
 export function exportSupplies() {
   return downloadFile('/v1/supplies/export', {}, 'vat-tu.xlsx')
 }
+export function downloadSupplyTemplate() {
+  return downloadFile('/v1/supplies/template', {}, 'vat-tu-mau.xlsx')
+}
+export function importSupplies(file: File) {
+  const body = new FormData()
+  body.append('file', file)
+  return unwrapAs<components['schemas']['CatalogImportResultDto']>(
+    api.POST('/v1/supplies/import', {
+      body: body as unknown as { file: string },
+      bodySerializer: (value) => value as unknown as BodyInit,
+    }),
+  )
+}
+export function exportSupplyCard(id: string) {
+  return downloadFile(`/v1/supplies/${id}/card`, { export: 'xlsx' }, 'the-kho.xlsx')
+}
 
 export function listBalances(params: Record<string, unknown>) {
   return unwrap(api.GET('/v1/stock/balances', { params: { query: pageQuery(params) } }))

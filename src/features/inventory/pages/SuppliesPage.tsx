@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
@@ -14,7 +14,13 @@ import { formatVnd } from '@/lib/format/money'
 import { useCan } from '@/app/guards/useCan'
 import { STAFF } from '@/routes/roles'
 import { messageFor } from '@/api/errors'
-import { asSupplyPage, exportSupplies, listSupplies } from '../api'
+import {
+  asSupplyPage,
+  downloadSupplyTemplate,
+  exportSupplies,
+  importSupplies,
+  listSupplies,
+} from '../api'
 import type { Supply } from '../types'
 import { useTranslation } from 'react-i18next'
 
@@ -22,6 +28,8 @@ export function Component() {
   const { t } = useTranslation('inventory')
 
   const canWrite = useCan(STAFF)
+  const [importing, setImporting] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
   const navigate = useNavigate()
   const table = useServerTable({
     filterKeys: ['groupId', 'manufacturerId', 'isActive', 'trackLot'],
@@ -86,6 +94,47 @@ export function Component() {
         title={t('suppliesTitle')}
         actions={
           <div className="flex gap-2">
+            {canWrite && (
+              <>
+                <input
+                  ref={fileRef}
+                  className="hidden"
+                  type="file"
+                  accept=".xlsx"
+                  aria-label={t('importExcel')}
+                  onChange={async (event) => {
+                    const file = event.target.files?.[0]
+                    event.target.value = ''
+                    if (!file) return
+                    setImporting(true)
+                    try {
+                      const result = await importSupplies(file)
+                      toast.success(
+                        t('importResult', { created: result.created, updated: result.updated }),
+                      )
+                      void list.refetch()
+                    } catch (error) {
+                      toast.error(messageFor(error))
+                    } finally {
+                      setImporting(false)
+                    }
+                  }}
+                />
+                <Button
+                  variant="outline"
+                  onClick={() => downloadSupplyTemplate().catch((e) => toast.error(messageFor(e)))}
+                >
+                  {t('downloadTemplate')}
+                </Button>
+                <Button
+                  variant="outline"
+                  disabled={importing}
+                  onClick={() => fileRef.current?.click()}
+                >
+                  {importing ? t('importing') : t('importExcel')}
+                </Button>
+              </>
+            )}
             <Button
               variant="outline"
               onClick={() => exportSupplies().catch((e) => toast.error(messageFor(e)))}

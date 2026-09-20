@@ -1,5 +1,9 @@
+import { useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import { toast } from 'sonner'
 import { PageHeader } from '@/components/page/PageHeader'
 import { ErrorState } from '@/components/page/ErrorState'
@@ -9,12 +13,18 @@ import { commonStatusMap, lotStatusMap } from '@/lib/status-maps'
 import { formatVnd } from '@/lib/format/money'
 import { formatDate } from '@/lib/format/date'
 import { useCan } from '@/app/guards/useCan'
-import { STAFF } from '@/routes/roles'
+import { ADM, STAFF } from '@/routes/roles'
 import { api, unwrap, unwrapAs } from '@/api/client'
-import { messageFor } from '@/api/errors'
+import { applyServerErrors, messageFor } from '@/api/errors'
+import { FormDialog } from '@/components/form/FormDialog'
+import { QtyField } from '@/components/form/qty-field'
+import { TextField } from '@/components/form/fields'
+import { catalogOptions } from '@/api/references'
+import { decimalString } from '@/lib/validation/decimal'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { getSupply, getSupplyStock, openLot } from '../api'
+import { adjustStock, exportSupplyCard, getSupply, getSupplyStock, openLot } from '../api'
 import { useTranslation } from 'react-i18next'
+import i18n from '@/lib/i18n'
 
 interface CardRow {
   id?: string
@@ -28,10 +38,23 @@ interface CardRow {
   unitCost?: string
 }
 
+const adjustSchema = z.object({
+  lotId: z.string().min(1),
+  newQty: decimalString({ maxScale: 3, min: '0' }),
+  reason: z.string().trim().min(1, i18n.t('common:form.required')).max(2000),
+})
+type AdjustValues = z.infer<typeof adjustSchema>
+
 export function Component() {
   const { t } = useTranslation('inventory')
   const { id = '' } = useParams()
   const canWrite = useCan(STAFF)
+  const isAdm = useCan(ADM)
+  const [adjusting, setAdjusting] = useState(false)
+  const adjustForm = useForm<AdjustValues>({
+    resolver: zodResolver(adjustSchema),
+    defaultValues: { lotId: '', newQty: '0', reason: '' },
+  })
   const qc = useQueryClient()
   const detail = useQuery({
     queryKey: ['supplies', id],
@@ -61,6 +84,11 @@ export function Component() {
     queryFn: () => unwrap(api.GET('/v1/stock/forecast', { params: { query: { supplyId: id } } })),
     enabled: !!id,
   })
+  const warehouses = useQuery({
+    queryKey: ['catalog-options', 'warehouses'],
+    queryFn: () => catalogOptions('warehouses', ''),
+  })
+  const warehouseNames = new Map((warehouses.data ?? []).map((option) => [option.id, option.name]))
   if (detail.isPending) return <p role="status">{t('loadingSupply')}</p>
   if (detail.error) return <ErrorState error={detail.error} onRetry={() => void detail.refetch()} />
   const row = detail.data
@@ -80,6 +108,28 @@ export function Component() {
           )
         }
       />
+      <FormDialog
+        open={adjusting}
+        onOpenChange={setAdjusting}
+        title={t('adjustStock')}
+        form={adjustForm}
+        onSubmit={async (values) => {
+          try {
+            await adjustStock(values)
+            toast.success(t('stockAdjusted'))
+            setAdjusting(false)
+            void qc.invalidateQueries({ queryKey: ['supplies', id, 'stock'] })
+            void qc.invalidateQueries({ queryKey: ['supplies', id, 'card'] })
+            void qc.invalidateQueries({ queryKey: ['stock', 'balances'] })
+            void qc.invalidateQueries({ queryKey: ['stock', 'lots'] })
+          } catch (error) {
+            if (!applyServerErrors(adjustForm, error)) toast.error(messageFor(error))
+          }
+        }}
+      >
+        <QtyField control={adjustForm.control} name="newQty" label={t('newQty')} />
+        <TextField control={adjustForm.control} name="reason" label={t('reason')} />
+      </FormDialog>
       <dl className="mb-4 grid gap-2 text-sm sm:grid-cols-3">
         <div>
           <dt className="text-muted-foreground">{t('refPrice')}</dt>
@@ -123,7 +173,11 @@ export function Component() {
                 <tbody>
                   {lots.map((lot) => (
                     <tr key={lot.id}>
-                      <td>{lot.warehouseId ?? '—'}</td>
+                      <td>
+                        {lot.warehouseId
+                          ? (warehouseNames.get(lot.warehouseId) ?? lot.warehouseId.slice(0, 8))
+                          : '—'}
+                      </td>
                       <td>{lot.lotNo ?? '—'}</td>
                       <td>{lot.qtyOnHand ?? '0'}</td>
                       <td>{lot.qtyReserved ?? '0'}</td>
@@ -149,6 +203,22 @@ export function Component() {
                             {t('openLot')}
                           </Button>
                         )}
+                        {isAdm && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              adjustForm.reset({
+                                lotId: lot.id,
+                                newQty: lot.qtyOnHand ?? '0',
+                                reason: '',
+                              })
+                              setAdjusting(true)
+                            }}
+                          >
+                            {t('adjust')}
+                          </Button>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -163,10 +233,21 @@ export function Component() {
             <ErrorState error={card.error} onRetry={() => void card.refetch()} />
           ) : (
             <>
-              <p className="mb-2 text-sm">
-                {t('openingBalance')}: {card.data?.opening ?? '0'} · {t('closingBalance')}:{' '}
-                {card.data?.closing ?? '0'}
-              </p>
+              <div className="mb-2 flex items-center justify-between gap-2 text-sm">
+                <p>
+                  {t('openingBalance')}: {card.data?.opening ?? '0'} · {t('closingBalance')}:{' '}
+                  {card.data?.closing ?? '0'}
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    exportSupplyCard(id).catch((error) => toast.error(messageFor(error)))
+                  }
+                >
+                  {t('exportExcel')}
+                </Button>
+              </div>
               <div className="overflow-x-auto rounded border">
                 <table className="w-full text-sm">
                   <thead>

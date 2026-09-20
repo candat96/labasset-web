@@ -186,6 +186,13 @@ export function Component() {
             toast.success(t('issued'))
             invalidate()
             setQuick(false)
+            form.reset({
+              type: 'to_department',
+              warehouseId: '',
+              toDepartmentId: '',
+              supplyId: '',
+              quantity: '1',
+            })
             navigate(`/stock/issues/${created.id}`)
           } catch (error) {
             if (!applyServerErrors(form, error)) toast.error(messageFor(error))

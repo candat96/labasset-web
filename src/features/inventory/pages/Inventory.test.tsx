@@ -9,6 +9,7 @@ import { Component as SupplyFormPage } from './SupplyFormPage'
 import { Component as ReceiptsPage } from './ReceiptsPage'
 import { Component as ReceiptFormPage } from './ReceiptFormPage'
 import { Component as IssueFormPage } from './IssueFormPage'
+import { Component as TransfersPage } from './TransfersPage'
 
 beforeEach(() => {
   useAuthStore.getState().setSession(fakeSession())
@@ -56,6 +57,32 @@ beforeEach(() => {
 it('lists supplies', async () => {
   renderWithProviders(<SuppliesPage />)
   expect(await screen.findByRole('link', { name: 'HC-01' })).toHaveAttribute('href', '/supplies/s1')
+})
+
+it('imports supplies with multipart body validated by msw', async () => {
+  let imported = false
+  server.use(
+    http.post('/v1/supplies/import', async ({ request }) => {
+      const contentType = request.headers.get('content-type') ?? ''
+      if (!contentType.includes('multipart/form-data')) {
+        return HttpResponse.json(
+          { code: 'VALIDATION_ERROR', message: 'Tệp Excel không hợp lệ' },
+          { status: 400 },
+        )
+      }
+      imported = true
+      return HttpResponse.json({ created: 1, updated: 0, errors: [] })
+    }),
+  )
+  renderWithProviders(<SuppliesPage />)
+  await userEvent.upload(
+    screen.getByLabelText('Nhập Excel'),
+    new File(['xlsx'], 'vat-tu.xlsx', {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    }),
+  )
+  await waitFor(() => expect(imported).toBe(true))
+  expect(await screen.findByText('Đã tạo 1, cập nhật 0 vật tư')).toBeInTheDocument()
 })
 
 it('validates supply name', async () => {
@@ -205,4 +232,65 @@ it('creates a receipt with a body validated like the API', async () => {
   await userEvent.click(await screen.findByRole('option', { name: /Huyết thanh/ }))
   await userEvent.click(screen.getByRole('button', { name: 'Lưu nháp' }))
   await waitFor(() => expect(saved[0]).toMatchObject({ warehouseId: 'w1' }))
+})
+
+it('creates a transfer with multiple validated lot lines', async () => {
+  const saved: unknown[] = []
+  server.use(
+    http.get('/v1/stock/issues', () =>
+      HttpResponse.json({ items: [], total: 0, page: 1, limit: 20 }),
+    ),
+    http.get('/v1/catalogs/warehouses', () =>
+      HttpResponse.json([
+        { id: 'w1', code: 'K1', name: 'Kho nguồn' },
+        { id: 'w2', code: 'K2', name: 'Kho đích' },
+      ]),
+    ),
+    http.get('/v1/stock/lots', () =>
+      HttpResponse.json({
+        items: [
+          { id: 'l1', lotNo: 'L01', supplyId: 'supply-1', available: '10' },
+          { id: 'l2', lotNo: 'L02', supplyId: 'supply-2', available: '8' },
+        ],
+        total: 2,
+        page: 1,
+        limit: 50,
+      }),
+    ),
+    http.post('/v1/stock/transfers', async ({ request }) => {
+      const body = (await request.json()) as {
+        fromWarehouseId?: string
+        toWarehouseId?: string
+        items?: Array<{ lotId?: string; quantity?: string }>
+      }
+      if (
+        !body.fromWarehouseId ||
+        !body.toWarehouseId ||
+        body.fromWarehouseId === body.toWarehouseId ||
+        body.items?.length !== 2 ||
+        body.items.some((item) => !item.lotId || !item.quantity)
+      ) {
+        return HttpResponse.json(
+          { code: 'VALIDATION_ERROR', message: 'Phiếu chuyển kho không hợp lệ' },
+          { status: 400 },
+        )
+      }
+      saved.push(body)
+      return HttpResponse.json({ id: 'transfer-1', code: 'CK-1' }, { status: 201 })
+    }),
+  )
+  renderWithProviders(<TransfersPage />)
+  await userEvent.click(screen.getByRole('button', { name: 'Tạo chuyển kho' }))
+  await userEvent.type(screen.getByLabelText('Kho nguồn'), 'nguồn')
+  await userEvent.click(await screen.findByRole('option', { name: /Kho nguồn/ }))
+  await userEvent.type(screen.getByLabelText('Kho đích'), 'đích')
+  await userEvent.click(await screen.findByRole('option', { name: /Kho đích/ }))
+  await userEvent.type(screen.getByLabelText('Lô'), 'L01')
+  await userEvent.click(await screen.findByRole('option', { name: /L01/ }))
+  await userEvent.click(screen.getByRole('button', { name: 'Thêm dòng' }))
+  const lotInputs = screen.getAllByLabelText('Lô')
+  await userEvent.type(lotInputs[1]!, 'L02')
+  await userEvent.click(await screen.findByRole('option', { name: /L02/ }))
+  await userEvent.click(screen.getByRole('button', { name: 'Lưu' }))
+  await waitFor(() => expect(saved).toHaveLength(1))
 })

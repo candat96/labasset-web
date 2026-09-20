@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import Big from 'big.js'
 import { toast } from 'sonner'
 import { PageHeader } from '@/components/page/PageHeader'
 import { Button } from '@/components/ui/button'
@@ -13,7 +14,7 @@ import { DateField } from '@/components/form/date-field'
 import { QtyField } from '@/components/form/qty-field'
 import { FormField, FormItem, FormMessage } from '@/components/ui/form'
 import { AsyncSelect } from '@/components/form/async-select'
-import { applyServerErrors, messageFor } from '@/api/errors'
+import { applyServerErrors, isApiError, messageFor } from '@/api/errors'
 import { apiBody } from '@/api/client'
 import {
   catalogOptions,
@@ -63,7 +64,8 @@ export function Component() {
   const { id = '' } = useParams()
   const editing = !!id
   const qc = useQueryClient()
-  const [suggestedLots, setSuggestedLots] = useState<Record<string, string>>({})
+  const [suggestedLots, setSuggestedLots] = useState<Record<string, string[]>>({})
+  const [lotAvailable, setLotAvailable] = useState<Record<string, string>>({})
   const detail = useQuery({
     queryKey: ['stock', 'issues', id],
     queryFn: () => getIssue(id),
@@ -122,6 +124,13 @@ export function Component() {
               form.setError('reason', { message: t('requiredReason') })
               return
             }
+            for (const [index, item] of values.items.entries()) {
+              const available = item.lotId ? lotAvailable[item.lotId] : undefined
+              if (available && new Big(item.quantity).gt(available)) {
+                form.setError(`items.${index}.quantity`, { message: t('quantityExceedsAvailable') })
+                return
+              }
+            }
             try {
               const body = apiBody({
                 type: values.type,
@@ -146,6 +155,16 @@ export function Component() {
               void qc.invalidateQueries({ queryKey: ['stock', 'lots'] })
               navigate(`/stock/issues/${editing ? id : saved.id}`)
             } catch (error) {
+              if (isApiError(error) && error.code === 'STOCK_INSUFFICIENT') {
+                const details = error.details as { lotId?: string; supplyId?: string } | undefined
+                const index = values.items.findIndex(
+                  (item) => item.lotId === details?.lotId || item.supplyId === details?.supplyId,
+                )
+                if (index >= 0) {
+                  form.setError(`items.${index}.quantity`, { message: messageFor(error) })
+                  return
+                }
+              }
               if (!applyServerErrors(form, error)) toast.error(messageFor(error))
             }
           })}
@@ -272,6 +291,13 @@ export function Component() {
                         const allowRestricted = ['dispose', 'return_to_supplier'].includes(
                           form.getValues('type'),
                         )
+                        const availableByLot = Object.fromEntries(
+                          (stock.lots ?? []).map((lot) => [
+                            lot.id,
+                            lot.available ?? lot.qtyOnHand ?? '0',
+                          ]),
+                        )
+                        setLotAvailable((current) => ({ ...current, ...availableByLot }))
                         return (stock.lots ?? [])
                           .filter(
                             (lot) =>
@@ -293,10 +319,10 @@ export function Component() {
                   </FormItem>
                 )}
               />
-              {suggestedLots[field.id] &&
-                form.watch(`items.${index}.lotId`) !== suggestedLots[field.id] && (
-                  <p className="text-warning text-sm">{t('nonFefoWarning')}</p>
-                )}
+              {suggestedLots[form.watch(`items.${index}.supplyId`)] &&
+                !suggestedLots[form.watch(`items.${index}.supplyId`)]?.includes(
+                  form.watch(`items.${index}.lotId`) ?? '',
+                ) && <p className="text-warning text-sm">{t('nonFefoWarning')}</p>}
               <Button
                 type="button"
                 variant="outline"
@@ -306,12 +332,28 @@ export function Component() {
                   const quantity = form.getValues(`items.${index}.quantity`)
                   if (!supplyId || !warehouseId) return
                   const lots = await suggestLots({ supplyId, warehouseId, quantity })
-                  const first = Array.isArray(lots)
-                    ? lots[0]
-                    : (lots as { items?: { lotId?: string }[] }).items?.[0]
-                  if (first && 'lotId' in first && first.lotId) {
-                    form.setValue(`items.${index}.lotId`, first.lotId)
-                    setSuggestedLots((current) => ({ ...current, [field.id]: first.lotId! }))
+                  const suggestions = (
+                    Array.isArray(lots)
+                      ? lots
+                      : ((lots as { items?: Array<{ lotId?: string; quantity?: string }> }).items ??
+                        [])
+                  ) as Array<{ lotId?: string; quantity?: string }>
+                  const valid = suggestions.filter(
+                    (item): item is { lotId: string; quantity?: string } => !!item.lotId,
+                  )
+                  if (valid.length) {
+                    items.remove(index)
+                    valid.reverse().forEach((item) =>
+                      items.insert(index, {
+                        supplyId,
+                        quantity: item.quantity ?? quantity,
+                        lotId: item.lotId,
+                      }),
+                    )
+                    setSuggestedLots((current) => ({
+                      ...current,
+                      [supplyId]: valid.map((item) => item.lotId),
+                    }))
                   }
                   toast.success(t('suggestedLot'))
                 }}

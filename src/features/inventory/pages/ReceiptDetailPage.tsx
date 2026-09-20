@@ -13,6 +13,8 @@ import { formatVnd } from '@/lib/format/money'
 import { useCan } from '@/app/guards/useCan'
 import { ADM, STAFF } from '@/routes/roles'
 import { messageFor } from '@/api/errors'
+import { api, unwrapAs } from '@/api/client'
+import { supplyOptions } from '@/api/references'
 import { downloadFile } from '@/api/download'
 import { cancelReceipt, deleteReceipt, getReceipt, postReceipt, qcReceipt } from '../api'
 import { useTranslation } from 'react-i18next'
@@ -22,13 +24,22 @@ export function Component() {
 
   const { id = '' } = useParams()
   const navigate = useNavigate()
+  const canWrite = useCan(STAFF)
+  const isAdm = useCan(ADM)
   const detail = useQuery({
     queryKey: ['stock', 'receipts', id],
     queryFn: () => getReceipt(id),
     enabled: !!id,
   })
-  const canWrite = useCan(STAFF)
-  const isAdm = useCan(ADM)
+  const supplies = useQuery({
+    queryKey: ['supply-options', 'receipt', id],
+    queryFn: () => supplyOptions(''),
+  })
+  const settings = useQuery({
+    queryKey: ['settings', 'stock-cancel-window'],
+    queryFn: () => unwrapAs<Record<string, unknown>>(api.GET('/v1/settings')),
+    enabled: isAdm,
+  })
   const qc = useQueryClient()
   const invalidate = () => {
     void qc.invalidateQueries({ queryKey: ['stock', 'receipts'] })
@@ -39,6 +50,22 @@ export function Component() {
   if (detail.isPending) return <p role="status">{t('loadingReceipt')}</p>
   if (detail.error) return <ErrorState error={detail.error} onRetry={() => void detail.refetch()} />
   const row = detail.data
+  const extended = row as typeof row & {
+    warnings?: string[]
+  }
+  const receiptItems = row.items as Array<
+    (typeof row.items)[number] & { lotId?: string; supplyName?: string }
+  >
+  const supplyNames = new Map((supplies.data ?? []).map((option) => [option.id, option.name]))
+  const windowDays = Number(settings.data?.['stock.cancelWindowDays'] ?? 30)
+  const daysRemaining = row.postedAt
+    ? Math.max(
+        0,
+        Math.ceil(
+          (new Date(row.postedAt).getTime() + windowDays * 86_400_000 - Date.now()) / 86_400_000,
+        ),
+      )
+    : 0
   return (
     <>
       {dialog}
@@ -104,7 +131,7 @@ export function Component() {
                   }
                 }}
               >
-                {t('cancel')}
+                {t('cancelWithDays', { days: daysRemaining })}
               </Button>
             )}
             {canWrite && row.status === 'posted' && row.qcStatus === 'pending' && (
@@ -159,10 +186,32 @@ export function Component() {
       <p className="mb-2 font-medium">
         {t('total')} {formatVnd(row.totalAmount)}
       </p>
+      {!!extended.warnings?.length && (
+        <div className="border-warning bg-warning/10 mb-3 rounded border p-3 text-sm" role="alert">
+          <p className="font-medium">{t('receiptWarnings')}</p>
+          <ul className="list-disc pl-5">
+            {extended.warnings.map((warning) => (
+              <li key={warning}>{warning}</li>
+            ))}
+          </ul>
+        </div>
+      )}
       <ul className="mb-4 text-sm">
-        {row.items.map((item, index) => (
+        {receiptItems.map((item, index) => (
           <li key={index}>
-            {item.supplyId} · {item.quantity} × {formatVnd(item.unitCost)}
+            {item.supplyName ?? supplyNames.get(item.supplyId) ?? item.supplyId.slice(0, 8)} ·{' '}
+            {item.quantity} × {formatVnd(item.unitCost)}
+            {item.lotId && (
+              <>
+                {' · '}
+                <Link
+                  className="text-primary hover:underline"
+                  to={`/stock/lots?lotId=${item.lotId}`}
+                >
+                  {item.lotNo ?? t('lot')}
+                </Link>
+              </>
+            )}
           </li>
         ))}
       </ul>

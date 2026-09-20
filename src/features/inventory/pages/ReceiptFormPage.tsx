@@ -151,6 +151,8 @@ export function Component() {
       })
       const saved = editing ? await updateReceipt(id, body) : await createReceipt(body)
       toast.success(editing ? t('receiptSaved') : t('receiptCreated'))
+      const warnings = (saved as typeof saved & { warnings?: string[] }).warnings
+      if (warnings?.length) toast.warning(warnings.join('\n'))
       void qc.invalidateQueries({ queryKey: ['stock', 'receipts'] })
       void qc.invalidateQueries({ queryKey: ['stock', 'balances'] })
       void qc.invalidateQueries({ queryKey: ['stock', 'lots'] })
