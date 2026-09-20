@@ -1,4 +1,8 @@
 import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import Big from 'big.js'
 import { Link, useNavigate, useParams } from 'react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -6,6 +10,12 @@ import { PageHeader } from '@/components/page/PageHeader'
 import { ErrorState } from '@/components/page/ErrorState'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import { FormDialog } from '@/components/form/FormDialog'
+import { QtyField } from '@/components/form/qty-field'
+import { TextField } from '@/components/form/fields'
+import { FormField, FormItem, FormMessage } from '@/components/ui/form'
+import { AsyncSelect } from '@/components/form/async-select'
+import { catalogOptions } from '@/api/references'
 import { StatusBadge } from '@/components/status-badge'
 import { AuditTrail } from '@/components/audit-trail'
 import { useConfirm } from '@/components/confirm-dialog'
@@ -13,12 +23,20 @@ import { requestStatusMap } from '@/lib/status-maps'
 import { formatDateTime } from '@/lib/format/date'
 import { formatQty } from '@/lib/format/number'
 import { useCan } from '@/app/guards/useCan'
-import { ADM, STAFF } from '@/routes/roles'
+import { ADM, HEADS, STAFF } from '@/routes/roles'
 import { useAuthStore } from '@/stores/auth.store'
 import { messageFor } from '@/api/errors'
 import { apiBody } from '@/api/client'
 import * as api from '../api'
 import { useTranslation } from 'react-i18next'
+
+const approvalSchema = z.object({
+  items: z.array(z.object({ id: z.string(), qtyApproved: z.string(), approverNote: z.string() })),
+})
+const issueSchema = z.object({
+  warehouseId: z.string().min(1, 'Bắt buộc'),
+  items: z.array(z.object({ id: z.string(), quantity: z.string() })),
+})
 
 export function Component() {
   const { t } = useTranslation('requests')
@@ -32,6 +50,7 @@ export function Component() {
   })
   const isStaff = useCan(STAFF)
   const isAdm = useCan(ADM)
+  const isHead = useCan(HEADS)
   const userId = useAuthStore((s) => s.user?.id)
   const qc = useQueryClient()
   const invalidate = () => {
@@ -39,6 +58,16 @@ export function Component() {
   }
   const { confirm, dialog } = useConfirm()
   const [comment, setComment] = useState('')
+  const [approvalOpen, setApprovalOpen] = useState(false)
+  const [issueOpen, setIssueOpen] = useState(false)
+  const approvalForm = useForm<z.infer<typeof approvalSchema>>({
+    resolver: zodResolver(approvalSchema),
+    defaultValues: { items: [] },
+  })
+  const issueForm = useForm<z.infer<typeof issueSchema>>({
+    resolver: zodResolver(issueSchema),
+    defaultValues: { warehouseId: '', items: [] },
+  })
   if (detail.isPending) return <p role="status">{t('loading')}</p>
   if (detail.error) return <ErrorState error={detail.error} onRetry={() => void detail.refetch()} />
   const row = detail.data
@@ -53,9 +82,145 @@ export function Component() {
       toast.error(messageFor(error))
     }
   }
+  const sendComment = async () => {
+    if (!comment.trim()) return
+    try {
+      await api.addComment(id, comment)
+      setComment('')
+      invalidate()
+    } catch (error) {
+      toast.error(messageFor(error))
+    }
+  }
   return (
     <>
       {dialog}
+      <FormDialog
+        open={approvalOpen}
+        onOpenChange={setApprovalOpen}
+        title={t('approve')}
+        form={approvalForm}
+        onSubmit={async (values) => {
+          let invalid = false
+          values.items.forEach((item, index) => {
+            const requested = row.items.find((source) => source.id === item.id)?.qtyRequested ?? '0'
+            if (new Big(item.qtyApproved || '0').gt(requested)) {
+              approvalForm.setError(`items.${index}.qtyApproved`, { message: t('approveExceeds') })
+              invalid = true
+            }
+            if (item.qtyApproved === '0' && !item.approverNote.trim()) {
+              approvalForm.setError(`items.${index}.approverNote`, { message: t('zeroNeedsNote') })
+              invalid = true
+            }
+          })
+          if (invalid) return
+          try {
+            await api.approveRequest(
+              id,
+              apiBody({
+                items: values.items.map((item) => ({
+                  id: item.id,
+                  qtyApproved: item.qtyApproved,
+                  approverNote: item.approverNote || undefined,
+                })),
+              }),
+            )
+            toast.success(t('updated'))
+            setApprovalOpen(false)
+            invalidate()
+          } catch (error) {
+            toast.error(messageFor(error))
+          }
+        }}
+      >
+        {approvalForm.watch('items').map((item, index) => {
+          const source = row.items.find((candidate) => candidate.id === item.id)
+          return (
+            <div key={item.id} className="space-y-2 rounded border p-3">
+              <p className="text-sm font-medium">
+                {source?.supply?.name ?? source?.supplyId} · {t('qtyRequested')}:{' '}
+                {formatQty(source?.qtyRequested)} {source?.quotaExceeded ? '⚠' : ''}
+              </p>
+              <QtyField
+                control={approvalForm.control}
+                name={`items.${index}.qtyApproved`}
+                label={t('approve')}
+              />
+              <TextField
+                control={approvalForm.control}
+                name={`items.${index}.approverNote`}
+                label={t('notes')}
+              />
+            </div>
+          )
+        })}
+        <p className="text-sm font-medium">
+          {t('approvalSummary', {
+            approved: approvalForm.watch('items').filter((item) => item.qtyApproved !== '0').length,
+            rejected: approvalForm.watch('items').filter((item) => item.qtyApproved === '0').length,
+          })}
+        </p>
+      </FormDialog>
+      <FormDialog
+        open={issueOpen}
+        onOpenChange={setIssueOpen}
+        title={t('issue')}
+        form={issueForm}
+        onSubmit={async (values) => {
+          let invalid = false
+          values.items.forEach((item, index) => {
+            const source = row.items.find((candidate) => candidate.id === item.id)
+            const remaining = new Big(source?.qtyApproved ?? '0').minus(source?.qtyIssued ?? '0')
+            if (new Big(item.quantity || '0').gt(remaining)) {
+              issueForm.setError(`items.${index}.quantity`, { message: t('issueExceeds') })
+              invalid = true
+            }
+          })
+          if (invalid) return
+          try {
+            const result = await api.issueRequest(id, values)
+            toast.success(t('updated'))
+            setIssueOpen(false)
+            invalidate()
+            const issueId =
+              (result as { issueId?: string; id?: string }).issueId ??
+              (result as { id?: string }).id
+            if (issueId) navigate(`/stock/issues/${issueId}`)
+          } catch (error) {
+            toast.error(messageFor(error))
+          }
+        }}
+      >
+        <FormField
+          control={issueForm.control}
+          name="warehouseId"
+          render={({ field }) => (
+            <FormItem>
+              <AsyncSelect
+                label={t('warehouse')}
+                queryKey="request-warehouses"
+                loadOptions={(q) => catalogOptions('warehouses', q)}
+                value={field.value || null}
+                onChange={(value) => field.onChange(typeof value === 'string' ? value : '')}
+              />
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        {issueForm.watch('items').map((item, index) => {
+          const source = row.items.find((candidate) => candidate.id === item.id)
+          return (
+            <div key={item.id} className="space-y-2 rounded border p-3">
+              <p className="text-sm font-medium">{source?.supply?.name ?? source?.supplyId}</p>
+              <QtyField
+                control={issueForm.control}
+                name={`items.${index}.quantity`}
+                label={t('quantity')}
+              />
+            </div>
+          )
+        })}
+      </FormDialog>
       <PageHeader
         title={row.code}
         badge={
@@ -87,34 +252,32 @@ export function Component() {
                 {t('submit')}
               </Button>
             )}
-            {['draft', 'submitted', 'dept_approved'].includes(row.status) && (owner || isAdm) && (
-              <Button
-                variant="outline"
-                onClick={() => void run(t('cancelConfirm'), () => api.cancelRequest(id))}
-              >
-                {t('cancel')}
-              </Button>
-            )}
-            {row.status === 'submitted' && row.approvalLevels === 2 && (
+            {['draft', 'submitted', 'dept_approved'].includes(row.status) &&
+              (owner || isAdm || isHead) && (
+                <Button
+                  variant="outline"
+                  onClick={() => void run(t('cancelConfirm'), () => api.cancelRequest(id))}
+                >
+                  {t('cancel')}
+                </Button>
+              )}
+            {row.status === 'submitted' && row.approvalLevels === 2 && (isHead || isAdm) && (
               <Button onClick={() => void run(t('deptApproveConfirm'), () => api.deptApprove(id))}>
                 {t('deptApprove')}
               </Button>
             )}
             {isStaff && (row.status === 'submitted' || row.status === 'dept_approved') && (
               <Button
-                onClick={() =>
-                  void run(t('approveConfirm'), () =>
-                    api.approveRequest(
-                      id,
-                      apiBody({
-                        items: row.items.map((item) => ({
-                          id: item.id,
-                          qtyApproved: item.qtyRequested,
-                        })),
-                      }),
-                    ),
-                  )
-                }
+                onClick={() => {
+                  approvalForm.reset({
+                    items: row.items.map((item) => ({
+                      id: item.id,
+                      qtyApproved: item.qtyRequested,
+                      approverNote: '',
+                    })),
+                  })
+                  setApprovalOpen(true)
+                }}
               >
                 {t('approve')}
               </Button>
@@ -129,16 +292,35 @@ export function Component() {
                     destructive: true,
                   })
                   if (reason === false) return
-                  await api.rejectRequest(id, reason)
-                  toast.success(t('rejected'))
-                  invalidate()
+                  try {
+                    await api.rejectRequest(id, reason)
+                    toast.success(t('rejected'))
+                    invalidate()
+                  } catch (error) {
+                    toast.error(messageFor(error))
+                  }
                 }}
               >
                 {t('reject')}
               </Button>
             )}
             {isStaff && (row.status === 'approved' || row.status === 'partially_approved') && (
-              <Button onClick={() => void run(t('issueConfirm'), () => api.issueRequest(id, {}))}>
+              <Button
+                onClick={() => {
+                  issueForm.reset({
+                    warehouseId: '',
+                    items: row.items
+                      .filter((item) => new Big(item.qtyApproved ?? '0').gt(item.qtyIssued ?? '0'))
+                      .map((item) => ({
+                        id: item.id,
+                        quantity: new Big(item.qtyApproved ?? '0')
+                          .minus(item.qtyIssued ?? '0')
+                          .toString(),
+                      })),
+                  })
+                  setIssueOpen(true)
+                }}
+              >
                 {t('issue')}
               </Button>
             )}
@@ -151,9 +333,13 @@ export function Component() {
               <Button
                 variant="outline"
                 onClick={async () => {
-                  const cloned = await api.cloneRequest(id)
-                  invalidate()
-                  navigate(`/requests/${cloned.id}/edit`)
+                  try {
+                    const cloned = await api.cloneRequest(id)
+                    invalidate()
+                    navigate(`/requests/${cloned.id}/edit`)
+                  } catch (error) {
+                    toast.error(messageFor(error))
+                  }
                 }}
               >
                 {t('clone')}
@@ -204,16 +390,14 @@ export function Component() {
         onChange={(e) => setComment(e.target.value)}
         maxLength={2000}
         aria-label={t('comments')}
-      />
-      <Button
-        className="mt-2"
-        onClick={async () => {
-          if (!comment.trim()) return
-          await api.addComment(id, comment)
-          setComment('')
-          invalidate()
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+            event.preventDefault()
+            void sendComment()
+          }
         }}
-      >
+      />
+      <Button className="mt-2" onClick={() => void sendComment()}>
         {t('send')}
       </Button>
       <div className="mt-6">

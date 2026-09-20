@@ -6,6 +6,7 @@ import { renderWithProviders, fakeSession } from '@/test/utils'
 import { useAuthStore } from '@/stores/auth.store'
 import { Component as RequestsPage } from './RequestsPage'
 import { Component as RequestFormPage } from './RequestFormPage'
+import { Component as RecurringPage } from './RecurringPage'
 
 const row = {
   id: 'q1',
@@ -83,4 +84,63 @@ it('creates a draft request', async () => {
       items: [{ supplyId: 's1', qtyRequested: '1' }],
     }),
   )
+})
+
+it('edits a draft request and validates the PATCH body', async () => {
+  const patched: unknown[] = []
+  server.use(
+    http.get('/v1/requests/q1', () =>
+      HttpResponse.json({
+        ...row,
+        departmentId: null,
+        equipmentId: null,
+        reason: null,
+        items: [{ id: 'ri1', supplyId: 's1', qtyRequested: '1', note: null }],
+      }),
+    ),
+    http.patch('/v1/requests/q1', async ({ request }) => {
+      const body = (await request.json()) as { priority?: string; items?: unknown[] }
+      if (body.priority !== 'urgent' || !body.items?.length)
+        return HttpResponse.json({ code: 'VALIDATION_ERROR', message: 'Body sai' }, { status: 400 })
+      patched.push(body)
+      return HttpResponse.json({ ...row, priority: 'urgent' })
+    }),
+  )
+  renderWithProviders(<RequestFormPage />, {
+    path: '/requests/:id/edit',
+    route: '/requests/q1/edit',
+    routes: [{ path: '/requests/:id', element: <div>DETAIL</div> }],
+  })
+  await userEvent.click(await screen.findByLabelText('Ưu tiên'))
+  await userEvent.click(await screen.findByRole('option', { name: 'Khẩn' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Lưu nháp' }))
+  await waitFor(() => expect(patched).toHaveLength(1))
+})
+
+it('creates a recurring request with validated items', async () => {
+  const saved: unknown[] = []
+  server.use(
+    http.get('/v1/requests/recurring', () =>
+      HttpResponse.json({ items: [], total: 0, page: 1, limit: 20 }),
+    ),
+    http.post('/v1/requests/recurring', async ({ request }) => {
+      const body = (await request.json()) as {
+        dayOfMonth?: number
+        items?: Array<{ supplyId?: string; qty?: string }>
+      }
+      if (!body.dayOfMonth || !body.items?.[0]?.supplyId || !body.items[0].qty)
+        return HttpResponse.json(
+          { code: 'VALIDATION_ERROR', message: 'Thiếu dòng' },
+          { status: 400 },
+        )
+      saved.push(body)
+      return HttpResponse.json({ id: 'rec1', ...body, isActive: true })
+    }),
+  )
+  renderWithProviders(<RecurringPage />)
+  await userEvent.click(await screen.findByRole('button', { name: 'Tạo định kỳ' }))
+  await userEvent.type(screen.getByLabelText('Vật tư'), 'Huyết')
+  await userEvent.click(await screen.findByRole('option', { name: /Huyết thanh/ }))
+  await userEvent.click(screen.getByRole('button', { name: 'Lưu' }))
+  await waitFor(() => expect(saved).toHaveLength(1))
 })

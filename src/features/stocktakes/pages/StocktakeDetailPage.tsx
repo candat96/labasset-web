@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router'
+import { useNavigate, useParams } from 'react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { PageHeader } from '@/components/page/PageHeader'
 import { ErrorState } from '@/components/page/ErrorState'
@@ -11,12 +12,18 @@ import { StatusBadge } from '@/components/status-badge'
 import { AuditTrail } from '@/components/audit-trail'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useConfirm } from '@/components/confirm-dialog'
+import { FormDialog } from '@/components/form/FormDialog'
+import { TextField } from '@/components/form/fields'
+import { FormField, FormItem, FormMessage } from '@/components/ui/form'
+import { AsyncSelect } from '@/components/form/async-select'
+import { staffUserOptions, catalogOptions } from '@/api/references'
 import { stocktakeStatusMap } from '@/lib/status-maps'
 import { formatQty } from '@/lib/format/number'
 import { decimalString } from '@/lib/validation/decimal'
 import { useCan } from '@/app/guards/useCan'
+import { useAuthStore } from '@/stores/auth.store'
 import { ADM, STAFF } from '@/routes/roles'
-import { messageFor } from '@/api/errors'
+import { isApiError, messageFor } from '@/api/errors'
 import * as api from '../api'
 import type { StocktakeCountsResult, StocktakePackageItem } from '../api'
 import { addBatch, clearBatch, loadBatch } from '../batch'
@@ -46,7 +53,9 @@ function findPackageItem(items: StocktakePackageItem[], scan: string) {
   const q = scan.trim().toLowerCase()
   if (!q) return undefined
   return items.find((item) =>
-    [item.code, item.qrToken, item.lotNo, item.id].some((value) => value?.toLowerCase() === q),
+    [item.code, item.supplyCode, item.manufacturerCode, item.qrToken, item.lotNo, item.id].some(
+      (value) => value?.toLowerCase() === q,
+    ),
   )
 }
 
@@ -86,6 +95,8 @@ function CountPanel({
     const found = findPackageItem(items, code)
     addBatch(sessionId, {
       code,
+      itemId: found?.id,
+      lotId: found?.lotId,
       countedQty: parsedQty.data,
       countedStatus: status.trim() || undefined,
       countedLocation: location.trim() || undefined,
@@ -105,7 +116,6 @@ function CountPanel({
       const posted = await api.postCounts(
         sessionId,
         lines.map((line) => {
-          const found = findPackageItem(items, line.code)
           const body: Record<string, unknown> = {
             clientId: line.clientId,
             countedQty: line.countedQty,
@@ -113,8 +123,9 @@ function CountPanel({
           }
           if (line.countedStatus) body.countedStatus = line.countedStatus
           if (line.countedLocation) body.countedLocation = line.countedLocation
-          if (found?.id) body.itemId = found.id
+          if (line.itemId) body.itemId = line.itemId
           else body.qrToken = line.code
+          if (line.lotId) body.lotId = line.lotId
           return body
         }),
       )
@@ -243,6 +254,7 @@ export function Component() {
   const { t } = useTranslation('stocktakes')
 
   const { id = '' } = useParams()
+  const navigate = useNavigate()
   const qc = useQueryClient()
   const invalidateSession = () => {
     void qc.invalidateQueries({ queryKey: ['stocktakes'] })
@@ -276,10 +288,22 @@ export function Component() {
   })
   const isStaff = useCan(STAFF)
   const isAdm = useCan(ADM)
+  const userId = useAuthStore((state) => state.user?.id)
+  const [tab, setTab] = useState('progress')
+  const [assignOpen, setAssignOpen] = useState(false)
+  const [extraToLink, setExtraToLink] = useState<string | null>(null)
+  const [compareOpen, setCompareOpen] = useState(false)
+  const assignForm = useForm({
+    defaultValues: { userId: '', locations: '', warehouseIds: [] as string[] },
+  })
+  const extraForm = useForm({ defaultValues: { itemId: '' } })
+  const compareForm = useForm({ defaultValues: { withSessionId: '' } })
   const { confirm, dialog } = useConfirm()
   if (detail.isPending) return <p role="status">{t('loading')}</p>
   if (detail.error) return <ErrorState error={detail.error} onRetry={() => void detail.refetch()} />
   const row = detail.data
+  const assignments = row.assignments as Array<{ userId?: string }>
+  const canCount = isAdm || assignments.some((assignment) => assignment.userId === userId)
   const run = async (title: string, action: () => Promise<unknown>) => {
     if ((await confirm({ title })) === false) return
     try {
@@ -302,12 +326,179 @@ export function Component() {
   return (
     <>
       {dialog}
+      <FormDialog
+        open={assignOpen}
+        onOpenChange={setAssignOpen}
+        title={t('assign')}
+        form={assignForm}
+        onSubmit={async (values) => {
+          try {
+            await api.assignStocktake(id, {
+              assignments: [
+                {
+                  userId: values.userId,
+                  subScope:
+                    row.type === 'equipment'
+                      ? {
+                          locations: values.locations
+                            .split(',')
+                            .map((value) => value.trim())
+                            .filter(Boolean),
+                        }
+                      : { warehouseIds: values.warehouseIds },
+                },
+              ],
+            })
+            toast.success(t('updated'))
+            setAssignOpen(false)
+            invalidateSession()
+          } catch (error) {
+            toast.error(messageFor(error))
+          }
+        }}
+      >
+        <FormField
+          control={assignForm.control}
+          name="userId"
+          render={({ field }) => (
+            <FormItem>
+              <AsyncSelect
+                label={t('assignee')}
+                queryKey="stocktake-users"
+                loadOptions={staffUserOptions}
+                value={field.value || null}
+                onChange={(value) => field.onChange(typeof value === 'string' ? value : '')}
+              />
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        {row.type === 'equipment' ? (
+          <TextField control={assignForm.control} name="locations" label={t('locations')} />
+        ) : (
+          <FormField
+            control={assignForm.control}
+            name="warehouseIds"
+            render={({ field }) => (
+              <FormItem>
+                <AsyncSelect
+                  multiple
+                  label={t('warehouses')}
+                  queryKey="stocktake-warehouses"
+                  loadOptions={(q) => catalogOptions('warehouses', q)}
+                  value={field.value}
+                  onChange={(value) => field.onChange(Array.isArray(value) ? value : [])}
+                />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+      </FormDialog>
+      <FormDialog
+        open={!!extraToLink}
+        onOpenChange={(open) => !open && setExtraToLink(null)}
+        title={t('linkItem')}
+        form={extraForm}
+        onSubmit={async (values) => {
+          if (!extraToLink) return
+          await resolve(extraToLink, { itemId: values.itemId })
+          setExtraToLink(null)
+        }}
+      >
+        <FormField
+          control={extraForm.control}
+          name="itemId"
+          render={({ field }) => (
+            <FormItem>
+              <AsyncSelect
+                label={t('items')}
+                queryKey={`stocktake-items-${id}`}
+                loadOptions={async (q) => {
+                  const rows =
+                    (
+                      items.data as
+                        { items?: Array<{ id: string; code?: string; name?: string }> } | undefined
+                    )?.items ?? []
+                  return rows
+                    .filter((item) =>
+                      `${item.code ?? ''} ${item.name ?? ''}`
+                        .toLowerCase()
+                        .includes(q.toLowerCase()),
+                    )
+                    .map((item) => ({
+                      id: item.id,
+                      code: item.code ?? item.id.slice(0, 8),
+                      name: item.name ?? '',
+                    }))
+                }}
+                value={field.value || null}
+                onChange={(value) => field.onChange(typeof value === 'string' ? value : '')}
+              />
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </FormDialog>
+      <FormDialog
+        open={compareOpen}
+        onOpenChange={setCompareOpen}
+        title={t('compare')}
+        form={compareForm}
+        onSubmit={(values) => {
+          setCompareOpen(false)
+          navigate(`/stocktakes/${id}/compare?withSessionId=${values.withSessionId}`)
+        }}
+      >
+        <FormField
+          control={compareForm.control}
+          name="withSessionId"
+          render={({ field }) => (
+            <FormItem>
+              <AsyncSelect
+                label={t('compareSession')}
+                queryKey={`stocktake-compare-${id}`}
+                loadOptions={async () => {
+                  const result = await api.listStocktakes({
+                    type: row.type,
+                    status: 'closed',
+                    page: 1,
+                    limit: 100,
+                  })
+                  return result.items
+                    .filter(
+                      (item) =>
+                        item.id !== id &&
+                        item.scopeType === row.scopeType &&
+                        item.scopeId === row.scopeId,
+                    )
+                    .map((item) => ({ id: item.id, code: item.code, name: item.name }))
+                }}
+                value={field.value || null}
+                onChange={(value) => field.onChange(typeof value === 'string' ? value : '')}
+              />
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </FormDialog>
       <PageHeader
         title={row.name}
         description={row.code}
         badge={<StatusBadge value={row.status} map={stocktakeStatusMap} />}
         actions={
           <div className="flex flex-wrap gap-2">
+            {isStaff && ['draft', 'open'].includes(row.status) && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  assignForm.reset({ userId: '', locations: '', warehouseIds: [] })
+                  setAssignOpen(true)
+                }}
+              >
+                {t('assign')}
+              </Button>
+            )}
             {isStaff && row.status === 'draft' && (
               <Button onClick={() => void run(t('openConfirm'), () => api.openStocktake(id))}>
                 {t('open')}
@@ -324,7 +515,21 @@ export function Component() {
               </Button>
             )}
             {isAdm && row.status === 'review' && (
-              <Button onClick={() => void run(t('closeConfirm'), () => api.closeStocktake(id))}>
+              <Button
+                onClick={async () => {
+                  try {
+                    await api.closeStocktake(id)
+                    toast.success(t('updated'))
+                    invalidateSession()
+                  } catch (error) {
+                    if (isApiError(error) && error.code === 'STOCKTAKE_UNRESOLVED_DIFFS')
+                      setTab('items')
+                    if (isApiError(error) && error.code === 'STOCKTAKE_EXTRAS_UNRESOLVED')
+                      setTab('extras')
+                    toast.error(messageFor(error))
+                  }
+                }}
+              >
                 {t('close')}
               </Button>
             )}
@@ -336,19 +541,48 @@ export function Component() {
                 {t('cancel')}
               </Button>
             )}
+            {['review', 'closed'].includes(row.status) && (
+              <Button
+                variant="outline"
+                onClick={() =>
+                  api.downloadStocktakeReport(id).catch((error) => toast.error(messageFor(error)))
+                }
+              >
+                {t('report')}
+              </Button>
+            )}
             {row.status === 'closed' && (
-              <Button variant="outline" asChild>
-                <Link to={`/stocktakes/${id}/compare`}>{t('compare')}</Link>
+              <Button variant="outline" onClick={() => setCompareOpen(true)}>
+                {t('compare')}
               </Button>
             )}
           </div>
         }
       />
-      <Tabs defaultValue="progress">
+      <dl className="mb-4 grid gap-2 text-sm sm:grid-cols-4">
+        <div>
+          <dt className="text-muted-foreground">{t('scope')}</dt>
+          <dd>
+            {row.scopeType}
+            {row.scopeId ? ` · ${row.scopeId.slice(0, 8)}` : ''}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-muted-foreground">{t('snapshotAt')}</dt>
+          <dd>{row.snapshotAt ?? '—'}</dd>
+        </div>
+        <div>
+          <dt className="text-muted-foreground">{t('createdBy')}</dt>
+          <dd>{row.createdBy?.slice(0, 8) ?? '—'}</dd>
+        </div>
+      </dl>
+      <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="flex-wrap">
           <TabsTrigger value="progress">{t('progress')}</TabsTrigger>
           <TabsTrigger value="items">{t('items')}</TabsTrigger>
-          {row.status === 'counting' && <TabsTrigger value="count">{t('countWeb')}</TabsTrigger>}
+          {row.status === 'counting' && canCount && (
+            <TabsTrigger value="count">{t('countWeb')}</TabsTrigger>
+          )}
           <TabsTrigger value="extras">{t('extras')}</TabsTrigger>
           <TabsTrigger value="audit">{t('history')}</TabsTrigger>
         </TabsList>
@@ -357,6 +591,57 @@ export function Component() {
             {t('countedOf')} {progress.data?.counted ?? 0}/{progress.data?.total ?? 0} (
             {progress.data?.percent ?? 0}%)
           </p>
+          <table className="mt-3 w-full text-sm">
+            <thead>
+              <tr className="text-left">
+                <th>{t('assignee')}</th>
+                <th>{t('total')}</th>
+                <th>{t('counted')}</th>
+                <th>%</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(
+                (
+                  progress.data as
+                    | {
+                        byAssignee?: Array<{
+                          userId?: string
+                          fullName?: string
+                          total?: number
+                          counted?: number
+                          percent?: number
+                        }>
+                        unassigned?: { total?: number; counted?: number; percent?: number }
+                      }
+                    | undefined
+                )?.byAssignee ?? []
+              ).map((entry) => (
+                <tr key={entry.userId} className="border-t">
+                  <td>{entry.fullName ?? entry.userId?.slice(0, 8)}</td>
+                  <td>{entry.total ?? 0}</td>
+                  <td>{entry.counted ?? 0}</td>
+                  <td>{entry.percent ?? 0}%</td>
+                </tr>
+              ))}
+              {!!(progress.data as { unassigned?: { total?: number } } | undefined)?.unassigned
+                ?.total && (
+                <tr className="border-t">
+                  <td>{t('unassigned')}</td>
+                  <td>{(progress.data as { unassigned: { total: number } }).unassigned.total}</td>
+                  <td>
+                    {(progress.data as { unassigned: { counted?: number } }).unassigned.counted ??
+                      0}
+                  </td>
+                  <td>
+                    {(progress.data as { unassigned: { percent?: number } }).unassigned.percent ??
+                      0}
+                    %
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </TabsContent>
         <TabsContent value="items">
           <table className="w-full text-sm">
@@ -365,6 +650,10 @@ export function Component() {
                 <th>{t('code')}</th>
                 <th>{t('book')}</th>
                 <th>{t('count')}</th>
+                <th>{t('diff')}</th>
+                <th>{t('moved')}</th>
+                <th>{t('countedBy')}</th>
+                <th>{t('reasonResolution')}</th>
               </tr>
             </thead>
             <tbody>
@@ -377,6 +666,12 @@ export function Component() {
                           code?: string
                           bookQty?: string
                           countedQty?: string | null
+                          diffQty?: string
+                          movedDuringSession?: boolean
+                          countedBy?: string | null
+                          countedAt?: string | null
+                          diffReason?: string | null
+                          resolution?: string | null
                         }[]
                       }
                     | undefined
@@ -386,14 +681,39 @@ export function Component() {
                   <td>{item.code ?? item.id}</td>
                   <td>{formatQty(item.bookQty)}</td>
                   <td>{item.countedQty == null ? t('notCounted') : formatQty(item.countedQty)}</td>
+                  <td
+                    className={
+                      item.diffQty?.startsWith('-')
+                        ? 'text-destructive'
+                        : item.diffQty && item.diffQty !== '0.000'
+                          ? 'text-success'
+                          : undefined
+                    }
+                  >
+                    {item.countedQty == null ? t('notCounted') : formatQty(item.diffQty)}
+                  </td>
+                  <td title={item.movedDuringSession ? t('movedHint') : undefined}>
+                    {item.movedDuringSession ? '⚠' : ''}
+                  </td>
+                  <td>
+                    {item.countedBy?.slice(0, 8) ?? '—'}
+                    {item.countedAt ? ` · ${item.countedAt}` : ''}
+                  </td>
+                  <td>
+                    {item.diffReason ?? '—'} / {item.resolution ?? '—'}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </TabsContent>
-        {row.status === 'counting' && (
+        {row.status === 'counting' && canCount && (
           <TabsContent value="count">
-            <CountPanel sessionId={id} items={pkg.data?.items ?? []} onSent={invalidateSession} />
+            {pkg.isSuccess ? (
+              <CountPanel sessionId={id} items={pkg.data.items} onSent={invalidateSession} />
+            ) : (
+              <p role="status">{t('loadingPackage')}</p>
+            )}
           </TabsContent>
         )}
         <TabsContent value="extras">
@@ -412,9 +732,8 @@ export function Component() {
                       size="sm"
                       variant="outline"
                       onClick={() => {
-                        const itemId = window.prompt(t('itemIdPrompt'))?.trim()
-                        if (!itemId) return
-                        void resolve(item.id, { itemId })
+                        extraForm.reset({ itemId: '' })
+                        setExtraToLink(item.id)
                       }}
                     >
                       {t('linkItem')}

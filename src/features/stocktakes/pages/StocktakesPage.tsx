@@ -15,6 +15,17 @@ import { formatDateTime } from '@/lib/format/date'
 import { FormDialog } from '@/components/form/FormDialog'
 import { TextField, SelectField } from '@/components/form/fields'
 import { DateField } from '@/components/form/date-field'
+import { FormField, FormItem, FormMessage } from '@/components/ui/form'
+import { AsyncSelect } from '@/components/form/async-select'
+import { catalogOptions, departmentOptions } from '@/api/references'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { DatePicker } from '@/components/date-picker'
 import { useCan } from '@/app/guards/useCan'
 import { STAFF } from '@/routes/roles'
 import { applyServerErrors, messageFor } from '@/api/errors'
@@ -48,15 +59,25 @@ export function Component() {
     placeholderData: (p) => p,
   })
   const [open, setOpen] = useState(false)
-  const form = useForm({
+  const form = useForm<{
+    name: string
+    type: 'supply' | 'equipment'
+    scopeType: 'all' | 'department' | 'warehouse'
+    scopeId: string | null
+    notes: string
+    plannedAt: string
+  }>({
     defaultValues: {
       name: '',
       type: 'supply' as const,
       scopeType: 'all' as const,
+      scopeId: null as string | null,
       notes: '',
       plannedAt: '',
     },
   })
+  const scopeType = form.watch('scopeType')
+  const type = form.watch('type')
   const columns = useMemo<ColumnDef<Row>[]>(
     () => [
       {
@@ -74,6 +95,7 @@ export function Component() {
       { accessorKey: 'name', header: t('name') },
       { accessorKey: 'type', header: t('type') },
       { accessorKey: 'scopeType', header: t('scope') },
+      { accessorKey: 'createdBy', header: t('createdBy') },
       {
         accessorKey: 'status',
         header: t('status'),
@@ -82,6 +104,11 @@ export function Component() {
       {
         accessorKey: 'plannedAt',
         header: t('plannedAt'),
+        cell: ({ getValue }) => formatDateTime(getValue<string | null>()),
+      },
+      {
+        accessorKey: 'closedAt',
+        header: t('closedAt'),
         cell: ({ getValue }) => formatDateTime(getValue<string | null>()),
       },
     ],
@@ -114,6 +141,51 @@ export function Component() {
               onChange={(e) => table.setQ(e.target.value)}
               placeholder={t('search')}
             />
+            <Select
+              value={f.status ?? 'all'}
+              onValueChange={(value) =>
+                table.setFilter('status', value === 'all' ? undefined : value)
+              }
+            >
+              <SelectTrigger aria-label={t('status')}>
+                <SelectValue placeholder={t('status')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('all')}</SelectItem>
+                {Object.entries(stocktakeStatusMap).map(([value, meta]) => (
+                  <SelectItem key={value} value={value}>
+                    {meta.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
+              value={f.type ?? 'all'}
+              onValueChange={(value) =>
+                table.setFilter('type', value === 'all' ? undefined : value)
+              }
+            >
+              <SelectTrigger aria-label={t('type')}>
+                <SelectValue placeholder={t('type')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('all')}</SelectItem>
+                <SelectItem value="supply">{t('typeSupply')}</SelectItem>
+                <SelectItem value="equipment">{t('typeEquipment')}</SelectItem>
+              </SelectContent>
+            </Select>
+            <DatePicker
+              ariaLabel={t('from')}
+              value={f.from}
+              onChange={(value) => table.setFilter('from', value)}
+              placeholder={t('from')}
+            />
+            <DatePicker
+              ariaLabel={t('to')}
+              value={f.to}
+              onChange={(value) => table.setFilter('to', value)}
+              placeholder={t('to')}
+            />
           </FilterBar>
         }
       />
@@ -129,6 +201,7 @@ export function Component() {
                 name: values.name,
                 type: values.type,
                 scopeType: values.scopeType,
+                scopeId: values.scopeType === 'all' ? undefined : (values.scopeId ?? undefined),
                 notes: values.notes || undefined,
                 plannedAt: values.plannedAt || undefined,
               }),
@@ -158,10 +231,33 @@ export function Component() {
           label={t('scope')}
           options={[
             { value: 'all', label: t('scopeAll') },
-            { value: 'department', label: 'Khoa' },
-            { value: 'warehouse', label: 'Kho' },
+            ...(type === 'equipment'
+              ? [{ value: 'department', label: 'Khoa' }]
+              : [{ value: 'warehouse', label: 'Kho' }]),
           ]}
         />
+        {scopeType !== 'all' && (
+          <FormField
+            control={form.control}
+            name="scopeId"
+            render={({ field }) => (
+              <FormItem>
+                <AsyncSelect
+                  label={scopeType === 'department' ? 'Khoa' : 'Kho'}
+                  queryKey={`stocktake-scope-${scopeType}`}
+                  loadOptions={
+                    scopeType === 'department'
+                      ? departmentOptions
+                      : (q) => catalogOptions('warehouses', q)
+                  }
+                  value={field.value}
+                  onChange={field.onChange}
+                />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
         <DateField control={form.control} name="plannedAt" label={t('plannedAt')} />
       </FormDialog>
     </>

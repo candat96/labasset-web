@@ -10,6 +10,7 @@ import { FilterBar } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page/PageHeader'
 import { Button } from '@/components/ui/button'
 import { FormDialog } from '@/components/form/FormDialog'
+import { SwitchField } from '@/components/form/fields'
 import { QtyField } from '@/components/form/qty-field'
 import { FormField, FormItem, FormMessage } from '@/components/ui/form'
 import { AsyncSelect } from '@/components/form/async-select'
@@ -18,7 +19,7 @@ import { ADM } from '@/routes/roles'
 import { applyServerErrors, messageFor } from '@/api/errors'
 import { departmentOptions, supplyOptions } from '@/api/references'
 import { decimalString } from '@/lib/validation/decimal'
-import { createQuota, listQuotas } from '../api'
+import { createQuota, deleteQuota, listQuotas, updateQuota } from '../api'
 import type { components } from '@/api/schema'
 import { useTranslation } from 'react-i18next'
 import i18n from '@/lib/i18n'
@@ -29,6 +30,7 @@ const schema = z.object({
   departmentId: z.string().min(1, i18n.t('common:form.required')),
   supplyId: z.string().min(1, i18n.t('common:form.required')),
   monthlyQty: decimalString({ maxScale: 3, min: '0' }),
+  isActive: z.boolean(),
 })
 type FormValues = z.infer<typeof schema>
 
@@ -49,23 +51,81 @@ export function Component() {
       }),
   })
   const [open, setOpen] = useState(false)
+  const [editing, setEditing] = useState<Row | null>(null)
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { departmentId: '', supplyId: '', monthlyQty: '0' },
+    defaultValues: { departmentId: '', supplyId: '', monthlyQty: '0', isActive: true },
   })
   const columns = useMemo<ColumnDef<Row>[]>(
     () => [
       { accessorKey: 'departmentId', header: 'Khoa' },
       { accessorKey: 'supplyId', header: t('supply') },
       { accessorKey: 'monthlyQty', header: t('monthlyQty') },
+      {
+        accessorKey: 'isActive',
+        header: t('status'),
+        cell: ({ row }) => (row.original.isActive ? t('active') : t('inactive')),
+      },
+      {
+        id: 'actions',
+        header: '',
+        cell: ({ row }) =>
+          canWrite ? (
+            <div className="flex gap-1">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setEditing(row.original)
+                  form.reset({
+                    departmentId: row.original.departmentId,
+                    supplyId: row.original.supplyId,
+                    monthlyQty: row.original.monthlyQty,
+                    isActive: row.original.isActive,
+                  })
+                  setOpen(true)
+                }}
+              >
+                {t('edit')}
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={async () => {
+                  try {
+                    await deleteQuota(row.original.id)
+                    toast.success(t('deleted'))
+                    void qc.invalidateQueries({ queryKey: ['requests', 'quotas'] })
+                  } catch (error) {
+                    toast.error(messageFor(error))
+                  }
+                }}
+              >
+                {t('delete')}
+              </Button>
+            </div>
+          ) : null,
+      },
     ],
-    [t],
+    [canWrite, form, qc, t],
   )
   return (
     <>
       <PageHeader
         title={t('quotasTitle')}
-        actions={canWrite && <Button onClick={() => setOpen(true)}>{t('createQuota')}</Button>}
+        actions={
+          canWrite && (
+            <Button
+              onClick={() => {
+                setEditing(null)
+                form.reset({ departmentId: '', supplyId: '', monthlyQty: '0', isActive: true })
+                setOpen(true)
+              }}
+            >
+              {t('createQuota')}
+            </Button>
+          )
+        }
       />
       <DataTable
         tableId="quotas"
@@ -83,12 +143,17 @@ export function Component() {
       <FormDialog
         open={open}
         onOpenChange={setOpen}
-        title={t('createQuota')}
+        title={editing ? t('editQuota') : t('createQuota')}
         form={form}
         onSubmit={async (values) => {
           try {
-            await createQuota(values)
-            toast.success(t('quotaCreated'))
+            if (editing)
+              await updateQuota(editing.id, {
+                monthlyQty: values.monthlyQty,
+                isActive: values.isActive,
+              })
+            else await createQuota(values)
+            toast.success(editing ? t('saved') : t('quotaCreated'))
             setOpen(false)
             void qc.invalidateQueries({ queryKey: ['requests', 'quotas'] })
           } catch (error) {
@@ -129,6 +194,7 @@ export function Component() {
           )}
         />
         <QtyField control={form.control} name="monthlyQty" label={t('monthlyQty')} />
+        {editing && <SwitchField control={form.control} name="isActive" label={t('active')} />}
       </FormDialog>
     </>
   )

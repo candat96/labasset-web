@@ -146,6 +146,45 @@ it('posts counts with clientId after Ghi and Gửi', async () => {
   expect(body.counts[0]?.clientId.length).toBeGreaterThan(0)
 })
 
+it('assigns a supply stocktake with a validated warehouse scope', async () => {
+  const assigned: unknown[] = []
+  server.use(
+    http.get('/v1/stocktakes/k1', () => HttpResponse.json({ ...session, status: 'draft' })),
+    http.get('/v1/users', () =>
+      HttpResponse.json({
+        items: [{ id: 'u2', username: 'staff', fullName: 'Nhân viên VT' }],
+        total: 1,
+      }),
+    ),
+    http.get('/v1/catalogs/warehouses', () =>
+      HttpResponse.json([{ id: 'w1', code: 'K1', name: 'Kho chính' }]),
+    ),
+    http.post('/v1/stocktakes/k1/assign', async ({ request }) => {
+      const body = (await request.json()) as {
+        assignments?: Array<{ userId?: string; subScope?: { warehouseIds?: string[] } }>
+      }
+      if (
+        !body.assignments?.[0]?.userId ||
+        body.assignments[0].subScope?.warehouseIds?.[0] !== 'w1'
+      )
+        return HttpResponse.json(
+          { code: 'VALIDATION_ERROR', message: 'Phân công sai' },
+          { status: 400 },
+        )
+      assigned.push(body)
+      return HttpResponse.json({ ...session, status: 'draft' })
+    }),
+  )
+  renderWithProviders(<StocktakeDetailPage />, { path: '/stocktakes/:id', route: '/stocktakes/k1' })
+  await userEvent.click(await screen.findByRole('button', { name: 'Phân công' }))
+  await userEvent.type(screen.getByLabelText('Người kiểm kê'), 'Nhân')
+  await userEvent.click(await screen.findByRole('option', { name: /Nhân viên VT/ }))
+  await userEvent.type(screen.getByLabelText('Kho phụ trách'), 'Kho')
+  await userEvent.click(await screen.findByRole('option', { name: /Kho chính/ }))
+  await userEvent.click(screen.getByRole('button', { name: 'Lưu' }))
+  await waitFor(() => expect(assigned).toHaveLength(1))
+})
+
 it('compare page renders repeated column', async () => {
   server.use(
     http.get('/v1/stocktakes/:id/compare', () =>

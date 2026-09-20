@@ -1,6 +1,8 @@
 export type StocktakeCountLine = {
   clientId: string
   code: string
+  itemId?: string
+  lotId?: string
   countedQty: string
   countedStatus?: string
   countedLocation?: string
@@ -50,6 +52,8 @@ export function addBatch(
     countedQty: string
     countedStatus?: string
     countedLocation?: string
+    itemId?: string
+    lotId?: string
     extra?: boolean
   },
 ): StocktakeCountLine {

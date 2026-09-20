@@ -12,6 +12,9 @@ export function getStocktake(id: string) {
 export function createStocktake(body: components['schemas']['CreateStocktakeDto']) {
   return unwrap(api.POST('/v1/stocktakes', { body }))
 }
+export function updateStocktake(id: string, body: components['schemas']['UpdateStocktakeDto']) {
+  return unwrap(api.PATCH('/v1/stocktakes/{id}', { params: { path: { id } }, body }))
+}
 export function assignStocktake(id: string, body: components['schemas']['AssignStocktakeDto']) {
   return unwrap(api.POST('/v1/stocktakes/{id}/assign', { params: { path: { id } }, body }))
 }
@@ -51,8 +54,11 @@ export function patchStocktakeItem(id: string, itemId: string, body: Record<stri
 
 export type StocktakePackageItem = {
   id: string
+  lotId?: string
   code: string
   name: string
+  supplyCode?: string
+  manufacturerCode?: string
   qrToken?: string
   lotNo?: string
   bookQty?: string
@@ -63,8 +69,11 @@ type PackageRaw = {
   items?: Array<{
     id?: string
     itemId?: string
+    lotId?: string | null
     code?: string
     name?: string
+    supplyCode?: string | null
+    manufacturerCode?: string | null
     qrToken?: string | null
     lotNo?: string | null
     bookQty?: string | null
@@ -78,8 +87,11 @@ export function stocktakePackage(id: string) {
   ).then((data) => ({
     items: (data.items ?? []).map((item) => ({
       id: item.id ?? item.itemId ?? '',
+      lotId: item.lotId ?? undefined,
       code: item.code ?? '',
       name: item.name ?? '',
+      supplyCode: item.supplyCode ?? undefined,
+      manufacturerCode: item.manufacturerCode ?? undefined,
       qrToken: item.qrToken ?? undefined,
       lotNo: item.lotNo ?? undefined,
       bookQty: item.bookQty ?? undefined,

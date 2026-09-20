@@ -145,7 +145,6 @@ export const MENU: MenuGroup[] = [
   {
     key: 'stocktake',
     labelKey: 'menu:groups.stocktake',
-    roles: STAFF,
     items: [{ path: '/stocktakes', labelKey: 'menu:items.stocktakes', icon: ClipboardCheck }],
   },
   {

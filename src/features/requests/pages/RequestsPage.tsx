@@ -16,6 +16,18 @@ import { dayRangeToIso } from '@/lib/format/date-range'
 import { useCan } from '@/app/guards/useCan'
 import { HEADS, STAFF } from '@/routes/roles'
 import { useConfirm } from '@/components/confirm-dialog'
+import { useAuthStore } from '@/stores/auth.store'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { DatePicker } from '@/components/date-picker'
+import { AsyncSelect } from '@/components/form/async-select'
+import { departmentOptions } from '@/api/references'
+import { messageFor } from '@/api/errors'
 import { approveBulk, listRequests } from '../api'
 import type { components } from '@/api/schema'
 import { useTranslation } from 'react-i18next'
@@ -27,6 +39,7 @@ export function Component() {
 
   const canStaff = useCan(STAFF)
   const canHead = useCan(HEADS)
+  const userId = useAuthStore((state) => state.user?.id)
   const navigate = useNavigate()
   const table = useServerTable({
     filterKeys: [
@@ -48,7 +61,7 @@ export function Component() {
     status: f.status,
     type: f.type,
     pendingFor: f.pendingFor === 'me' ? 'me' : undefined,
-    requesterId: f.requesterId,
+    requesterId: f.requesterId === 'mine' ? userId : f.requesterId,
     priority: f.priority,
     departmentId: f.departmentId,
     ...dayRangeToIso(f.from, f.to),
@@ -78,6 +91,7 @@ export function Component() {
           <Checkbox
             aria-label={t('selectRequest', { code: row.original.code })}
             checked={selected.includes(row.original.id)}
+            disabled={!['submitted', 'dept_approved'].includes(row.original.status)}
             onClick={(e) => e.stopPropagation()}
             onCheckedChange={(on) =>
               setSelected((curr) =>
@@ -102,6 +116,7 @@ export function Component() {
         ),
       },
       { accessorKey: 'type', header: t('type') },
+      { accessorKey: 'equipmentId', header: t('equipment') },
       { accessorKey: 'departmentName', header: 'Khoa' },
       { accessorKey: 'requesterName', header: t('requester') },
       {
@@ -130,12 +145,21 @@ export function Component() {
         ),
       },
       {
+        accessorKey: 'itemCount',
+        header: t('itemCount'),
+      },
+      {
+        accessorKey: 'createdAt',
+        header: t('createdAt'),
+        cell: ({ getValue }) => formatDate(getValue<string>()),
+      },
+      {
         accessorKey: 'status',
         header: t('status'),
         cell: ({ row }) => (
           <span className="inline-flex items-center gap-1">
             <StatusBadge value={row.original.status} map={requestStatusMap} />
-            {row.original.quotaExceeded && '⚠'}
+            {(row.original.quotaExceeded || row.original.partiallyIssued) && '⚠'}
           </span>
         ),
       },
@@ -159,15 +183,27 @@ export function Component() {
                     })) === false
                   )
                     return
-                  const result = await approveBulk(selected)
-                  const approved = (result as { approved?: unknown }).approved
-                  toast.success(
-                    t('approvedCount', {
-                      count: Array.isArray(approved) ? approved.length : selected.length,
-                    }),
-                  )
-                  setSelected([])
-                  invalidateList()
+                  try {
+                    const result = await approveBulk(selected)
+                    const response = result as {
+                      approved?: unknown[]
+                      skipped?: Array<{ code?: string; message?: string }>
+                    }
+                    toast.success(
+                      t('approvedCount', { count: response.approved?.length ?? selected.length }),
+                    )
+                    if (response.skipped?.length) {
+                      toast.warning(
+                        response.skipped
+                          .map((item) => `${item.code ?? '—'}: ${item.message ?? '—'}`)
+                          .join('\n'),
+                      )
+                    }
+                    setSelected([])
+                    invalidateList()
+                  } catch (error) {
+                    toast.error(messageFor(error))
+                  }
                 }}
               >
                 {t('bulkApprove')}
@@ -201,8 +237,8 @@ export function Component() {
         )}
         <Button
           size="sm"
-          variant={f.requesterId === 'me' ? 'default' : 'outline'}
-          onClick={() => table.setFilters({ requesterId: 'me', pendingFor: undefined })}
+          variant={f.requesterId === 'mine' ? 'default' : 'outline'}
+          onClick={() => table.setFilters({ requesterId: 'mine', pendingFor: undefined })}
         >
           {t('mine')}
         </Button>
@@ -247,6 +283,71 @@ export function Component() {
               value={table.inputQ}
               onChange={(e) => table.setQ(e.target.value)}
               placeholder={t('searchRequest')}
+            />
+            <Select
+              value={f.status ?? 'all'}
+              onValueChange={(value) =>
+                table.setFilter('status', value === 'all' ? undefined : value)
+              }
+            >
+              <SelectTrigger aria-label={t('status')}>
+                <SelectValue placeholder={t('status')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('all')}</SelectItem>
+                {[
+                  'draft',
+                  'submitted',
+                  'dept_approved',
+                  'approved',
+                  'partially_approved',
+                  'issued',
+                  'received',
+                  'rejected',
+                  'cancelled',
+                ].map((status) => (
+                  <SelectItem key={status} value={status}>
+                    {requestStatusMap[status]?.label ?? status}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
+              value={f.type ?? 'all'}
+              onValueChange={(value) =>
+                table.setFilter('type', value === 'all' ? undefined : value)
+              }
+            >
+              <SelectTrigger aria-label={t('type')}>
+                <SelectValue placeholder={t('type')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('all')}</SelectItem>
+                <SelectItem value="supply">{t('typeSupply')}</SelectItem>
+                <SelectItem value="repair">{t('typeRepair')}</SelectItem>
+              </SelectContent>
+            </Select>
+            <AsyncSelect
+              label="Khoa"
+              queryKey="request-departments"
+              loadOptions={departmentOptions}
+              value={f.departmentId ?? null}
+              onChange={(value) =>
+                table.setFilter('departmentId', typeof value === 'string' ? value : undefined)
+              }
+              clearable
+            />
+            <DatePicker
+              ariaLabel={t('from')}
+              value={f.from}
+              onChange={(value) => table.setFilter('from', value)}
+              placeholder={t('from')}
+            />
+            <DatePicker
+              ariaLabel={t('to')}
+              value={f.to}
+              onChange={(value) => table.setFilter('to', value)}
+              placeholder={t('to')}
             />
           </FilterBar>
         }

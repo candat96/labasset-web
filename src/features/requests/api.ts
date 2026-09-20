@@ -61,6 +61,26 @@ export function listQuotas(params: Record<string, unknown>) {
 export function createQuota(body: components['schemas']['CreateQuotaDto']) {
   return unwrap(api.POST('/v1/requests/quotas', { body }))
 }
+export function updateQuota(id: string, body: components['schemas']['UpdateQuotaDto']) {
+  return unwrap(api.PATCH('/v1/requests/quotas/{id}', { params: { path: { id } }, body }))
+}
+export function deleteQuota(id: string) {
+  return unwrap(api.DELETE('/v1/requests/quotas/{id}', { params: { path: { id } } }))
+}
 export function listRecurring(params: Record<string, unknown>) {
   return unwrap(api.GET('/v1/requests/recurring', { params: { query: pageQuery(params) } }))
+}
+export function createRecurring(body: Record<string, unknown>) {
+  return unwrap(api.POST('/v1/requests/recurring', { body: apiBody(body) }))
+}
+export function updateRecurring(id: string, body: Record<string, unknown>) {
+  return unwrap(
+    api.PATCH('/v1/requests/recurring/{id}', {
+      params: { path: { id } },
+      body: apiBody(body),
+    }),
+  )
+}
+export function deleteRecurring(id: string) {
+  return unwrap(api.DELETE('/v1/requests/recurring/{id}', { params: { path: { id } } }))
 }

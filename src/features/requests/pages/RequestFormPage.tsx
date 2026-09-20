@@ -1,5 +1,6 @@
-import { useNavigate } from 'react-router'
-import { useQueryClient } from '@tanstack/react-query'
+import { useEffect } from 'react'
+import { useNavigate, useParams } from 'react-router'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -19,24 +20,37 @@ import { departmentOptions, equipmentOptions, supplyOptions } from '@/api/refere
 import { useCan } from '@/app/guards/useCan'
 import { STAFF } from '@/routes/roles'
 import { decimalString } from '@/lib/validation/decimal'
-import { createRequest, submitRequest } from '../api'
+import { createRequest, getRequest, submitRequest, updateRequest } from '../api'
 import { useTranslation } from 'react-i18next'
+import type { components } from '@/api/schema'
 
-const schema = z.object({
-  type: z.enum(['supply', 'repair']),
-  departmentId: z.string().nullable(),
-  equipmentId: z.string().nullable(),
-  priority: z.enum(['normal', 'urgent']),
-  reason: z.string(),
-  neededBy: z.string(),
-  items: z.array(
-    z.object({
-      supplyId: z.string(),
-      qtyRequested: decimalString({ maxScale: 3, min: '0.001' }),
-      note: z.string(),
-    }),
-  ),
-})
+const schema = z
+  .object({
+    type: z.enum(['supply', 'repair']),
+    departmentId: z.string().nullable(),
+    equipmentId: z.string().nullable(),
+    priority: z.enum(['normal', 'urgent']),
+    reason: z.string(),
+    neededBy: z.string(),
+    items: z.array(
+      z.object({
+        supplyId: z.string(),
+        qtyRequested: decimalString({ maxScale: 3, min: '0.001' }),
+        note: z.string(),
+      }),
+    ),
+  })
+  .superRefine((value, ctx) => {
+    if (value.type === 'repair') {
+      if (!value.equipmentId)
+        ctx.addIssue({ code: 'custom', path: ['equipmentId'], message: 'Bắt buộc' })
+      if (!value.reason.trim())
+        ctx.addIssue({ code: 'custom', path: ['reason'], message: 'Bắt buộc' })
+    }
+    if (value.type === 'supply' && !value.items.some((item) => item.supplyId)) {
+      ctx.addIssue({ code: 'custom', path: ['items'], message: 'Cần ít nhất một vật tư' })
+    }
+  })
 type FormValues = z.infer<typeof schema>
 
 export function Component() {
@@ -44,7 +58,14 @@ export function Component() {
 
   const canPickDept = useCan(STAFF)
   const navigate = useNavigate()
+  const { id = '' } = useParams()
+  const editing = !!id
   const qc = useQueryClient()
+  const detail = useQuery({
+    queryKey: ['requests', id],
+    queryFn: () => getRequest(id),
+    enabled: editing,
+  })
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -58,40 +79,55 @@ export function Component() {
     },
   })
   const items = useFieldArray({ control: form.control, name: 'items' })
+  useEffect(() => {
+    if (!detail.data) return
+    form.reset({
+      type: detail.data.type,
+      departmentId: detail.data.departmentId,
+      equipmentId: detail.data.equipmentId,
+      priority: detail.data.priority,
+      reason: detail.data.reason ?? '',
+      neededBy: detail.data.neededBy ?? '',
+      items: detail.data.items.map((item) => ({
+        supplyId: item.supplyId,
+        qtyRequested: item.qtyRequested,
+        note: item.note ?? '',
+      })),
+    })
+  }, [detail.data, form])
   const type = form.watch('type')
   const save = async (values: FormValues, send: boolean) => {
     try {
-      const created = await createRequest(
-        apiBody({
-          type: values.type,
-          departmentId: canPickDept ? (values.departmentId ?? undefined) : undefined,
-          equipmentId: values.equipmentId ?? undefined,
-          priority: values.priority,
-          reason: values.reason || undefined,
-          neededBy: values.neededBy || undefined,
-          items:
-            values.type === 'supply'
-              ? values.items
-                  .filter((item) => item.supplyId)
-                  .map((item) => ({
-                    supplyId: item.supplyId,
-                    qtyRequested: item.qtyRequested,
-                    note: item.note || undefined,
-                  }))
-              : undefined,
-        }),
-      )
-      if (send) await submitRequest(created.id)
+      const body = apiBody<components['schemas']['CreateRequestDto']>({
+        type: values.type,
+        departmentId: canPickDept ? (values.departmentId ?? undefined) : undefined,
+        equipmentId: values.equipmentId ?? undefined,
+        priority: values.priority,
+        reason: values.reason || undefined,
+        neededBy: values.neededBy || undefined,
+        items:
+          values.type === 'supply'
+            ? values.items
+                .filter((item) => item.supplyId)
+                .map((item) => ({
+                  supplyId: item.supplyId,
+                  qtyRequested: item.qtyRequested,
+                  note: item.note || undefined,
+                }))
+            : undefined,
+      })
+      const saved = editing ? await updateRequest(id, body) : await createRequest(body)
+      if (send) await submitRequest(editing ? id : saved.id)
       toast.success(send ? t('submitted') : t('draftSaved'))
       void qc.invalidateQueries({ queryKey: ['requests'] })
-      navigate(`/requests/${created.id}`)
+      navigate(`/requests/${editing ? id : saved.id}`)
     } catch (error) {
       if (!applyServerErrors(form, error)) toast.error(messageFor(error))
     }
   }
   return (
     <>
-      <PageHeader title={t('createTitle')} />
+      <PageHeader title={editing ? t('editTitle') : t('createTitle')} />
       <Form {...form}>
         <form className="max-w-2xl space-y-4" noValidate>
           <div className="grid grid-cols-2 gap-3">
@@ -194,6 +230,9 @@ export function Component() {
                   label={t('quantity')}
                 />
                 <TextField control={form.control} name={`items.${index}.note`} label={t('notes')} />
+                <Button type="button" variant="ghost" onClick={() => items.remove(index)}>
+                  {t('removeLine')}
+                </Button>
               </div>
             ))}
           {type === 'supply' && (
