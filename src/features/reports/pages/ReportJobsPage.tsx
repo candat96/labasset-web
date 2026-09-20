@@ -25,6 +25,10 @@ export function Component() {
     },
   })
   const download = async (job: ReportJob) => {
+    if (job.downloadUrl) {
+      window.open(job.downloadUrl, '_blank', 'noopener')
+      return
+    }
     if (!job.fileId) return
     const url = await getFileUrl(job.fileId)
     window.open(url.url, '_blank', 'noopener')
@@ -39,6 +43,7 @@ export function Component() {
             <th>{t('report')}</th>
             <th>{t('format')}</th>
             <th>{t('status')}</th>
+            <th>Số dòng</th>
             <th>{t('createdAt')}</th>
             <th>{t('finishedAt')}</th>
             <th></th>
@@ -52,10 +57,11 @@ export function Component() {
               <td>
                 <StatusBadge value={job.status} map={jobStatusMap} />
               </td>
+              <td>{job.rowCount ?? '—'}</td>
               <td>{formatDateTime(job.createdAt)}</td>
               <td>{job.finishedAt ? formatDateTime(job.finishedAt) : '—'}</td>
               <td>
-                {job.status === 'done' && job.fileId && (
+                {job.status === 'done' && (job.fileId || job.downloadUrl) && (
                   <Button size="sm" variant="outline" onClick={() => void download(job)}>
                     {t('download')}
                   </Button>

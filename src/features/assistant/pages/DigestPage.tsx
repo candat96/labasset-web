@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import ReactMarkdown from 'react-markdown'
 import { PageHeader } from '@/components/page/PageHeader'
 import { DatePicker } from '@/components/date-picker'
 import { Label } from '@/components/ui/label'
 import { getWeeklyDigest } from '../api'
+import { isApiError, messageFor } from '@/api/errors'
 
 function startOfIsoWeek(date = new Date()) {
   const copy = new Date(date)
@@ -33,7 +35,13 @@ export function Component() {
         />
       </div>
       {digest.isPending && <p role="status">{t('digestLoading')}</p>}
-      {digest.error && <p role="alert">{t('digestEmpty')}</p>}
+      {digest.error && (
+        <p role="alert">
+          {isApiError(digest.error) && digest.error.code === 'AI_DIGEST_NOT_FOUND'
+            ? t('digestEmpty')
+            : messageFor(digest.error)}
+        </p>
+      )}
       {digest.data && (
         <>
           <ul className="mb-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-5 text-sm">
@@ -45,9 +53,9 @@ export function Component() {
             ))}
           </ul>
           {digest.data.content ? (
-            <pre className="bg-muted overflow-auto rounded p-3 whitespace-pre-wrap text-sm">
-              {digest.data.content}
-            </pre>
+            <div className="prose bg-muted max-w-none overflow-auto rounded p-3 text-sm">
+              <ReactMarkdown>{digest.data.content}</ReactMarkdown>
+            </div>
           ) : (
             <p className="text-muted-foreground text-sm">{t('notConfigured')}</p>
           )}

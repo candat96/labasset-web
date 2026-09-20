@@ -65,7 +65,7 @@ export const SYS_ITEMS = [
   { path: '/sys/jobs', labelKey: 'menu:items.sysJobs', icon: Cog },
 ] as const
 
-/** Nguồn duy nhất cho sidebar, breadcrumb, route placeholder và guard. */
+/** Nguồn duy nhất cho sidebar, breadcrumb, route và guard. */
 export const MENU: MenuGroup[] = [
   {
     key: 'overview',

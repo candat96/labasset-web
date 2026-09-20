@@ -9,6 +9,7 @@ import { FilterBar } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page/PageHeader'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { formatDate, formatDateTime } from '@/lib/format/date'
 import { formatVnd } from '@/lib/format/money'
 import { formatQty } from '@/lib/format/number'
@@ -132,6 +133,7 @@ export function Component() {
     const params = readParams()
     if (table.params.page !== 1) table.setPage(1)
     setSubmitted(params)
+    setSp({ key: selected!.key, params: JSON.stringify(params) }, { replace: true })
   }
 
   const columns = useMemo<ColumnDef<Record<string, unknown>>[]>(() => {
@@ -152,6 +154,7 @@ export function Component() {
     <>
       <PageHeader
         title={t('report')}
+        badge={reportsQuery.data?.isMock && <Badge variant="outline">Dữ liệu mẫu</Badge>}
         actions={
           <div className="flex flex-wrap gap-2">
             <Button asChild variant="outline">
@@ -205,7 +208,7 @@ export function Component() {
                 <Button
                   type="button"
                   variant="outline"
-                  disabled={!selected || exportReport.isPending}
+                  disabled={!selected || exportReport.isPending || reportsQuery.data?.isMock}
                   onClick={() => exportReport.mutate('xlsx')}
                 >
                   {t('exportExcel')}
@@ -213,7 +216,7 @@ export function Component() {
                 <Button
                   type="button"
                   variant="outline"
-                  disabled={!selected || exportReport.isPending}
+                  disabled={!selected || exportReport.isPending || reportsQuery.data?.isMock}
                   onClick={() => exportReport.mutate('pdf')}
                 >
                   {t('exportPdf')}

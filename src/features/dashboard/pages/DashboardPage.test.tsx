@@ -17,11 +17,13 @@ beforeEach(() => {
     http.get('/v1/stock/alerts', () =>
       HttpResponse.json({ items: [], total: 5, page: 1, limit: 1 }),
     ),
+    http.get('/v1/stock/value', () => HttpResponse.json({ totalValue: '1000000' })),
+    http.get('/v1/repairs/stats', () => HttpResponse.json({ totalCost: '250000' })),
   )
 })
 
 it('renders KPI cards from live list totals', async () => {
   renderWithProviders(<DashboardPage />)
-  expect(await screen.findAllByTestId('kpi-card')).toHaveLength(7)
+  expect(await screen.findAllByTestId('kpi-card')).toHaveLength(15)
   expect(screen.queryByText('Dữ liệu mẫu')).not.toBeInTheDocument()
 })

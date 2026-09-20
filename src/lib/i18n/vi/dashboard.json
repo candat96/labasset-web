@@ -5,11 +5,19 @@
   "kpi": {
     "equipmentActive": "Máy đang hoạt động",
     "equipmentBroken": "Máy hỏng",
+    "equipmentAwaitingParts": "Máy chờ linh kiện",
     "maintenanceDue": "Đến hạn bảo dưỡng",
     "calibrationDue": "Đến hạn kiểm định",
     "suppliesLow": "Hoá chất sắp hết / hết hạn",
     "requestsPending": "Phiếu chờ duyệt",
-    "repairsOpen": "Sửa chữa đang mở"
+    "repairsOpen": "Sửa chữa đang mở",
+    "repairsOverdue": "Sửa chữa quá hạn",
+    "maintenanceOverdue": "Bảo dưỡng quá hạn",
+    "calibrationOverdue": "Kiểm định quá hạn",
+    "suppliesExpiring": "Vật tư sắp hết hạn",
+    "suppliesExpired": "Vật tư hết hạn",
+    "stockValue": "Giá trị tồn kho",
+    "repairCostMonth": "Chi phí sửa chữa tháng"
   },
   "myTasksTitle": "Việc của tôi",
   "repairsMine": "Sửa chữa của tôi",

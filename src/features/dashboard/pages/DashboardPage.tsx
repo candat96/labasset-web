@@ -17,6 +17,18 @@ import { PageHeader } from '@/components/page/PageHeader'
 import type { StatusTone } from '@/components/page/StatusBadge'
 import { formatNumber } from '@/lib/format/number'
 import { cn } from '@/lib/utils'
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts'
 import { useDashboard } from '../hooks'
 
 const ICONS: Record<string, LucideIcon> = {
@@ -84,6 +96,73 @@ export function Component() {
               )
             })}
       </div>
+      {!q.isPending && q.data && (
+        <>
+          <div className="mt-4 grid gap-4 lg:grid-cols-2">
+            <Card>
+              <CardContent className="h-72 p-4">
+                <h2 className="mb-2 font-medium">Sửa chữa 6 tháng</h2>
+                <ResponsiveContainer width="100%" height="90%">
+                  <BarChart
+                    data={q.data.kpis
+                      .filter((row) => row.key.startsWith('repair'))
+                      .map((row) => ({ name: t(`kpi.${row.key}`), value: row.value }))}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" hide />
+                    <YAxis allowDecimals={false} />
+                    <Tooltip />
+                    <Bar dataKey="value" fill="var(--color-primary)" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="h-72 p-4">
+                <h2 className="mb-2 font-medium">Cảnh báo kho theo loại</h2>
+                <ResponsiveContainer width="100%" height="90%">
+                  <PieChart>
+                    <Pie
+                      data={q.data.kpis
+                        .filter((row) => row.key.startsWith('supplies'))
+                        .map((row) => ({ name: t(`kpi.${row.key}`), value: row.value }))}
+                      dataKey="value"
+                      nameKey="name"
+                      outerRadius={80}
+                    >
+                      {['#f59e0b', '#f97316', '#dc2626'].map((color) => (
+                        <Cell key={color} fill={color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </div>
+          <div className="mt-4 grid gap-4 lg:grid-cols-3">
+            {[
+              { title: 'Việc của tôi', to: '/my-tasks', text: '5 việc ưu tiên' },
+              {
+                title: 'Sắp đến hạn 7 ngày',
+                to: '/maintenance/calendar',
+                text: 'Xem lịch được phân công',
+              },
+              { title: 'Thông báo chưa đọc', to: '/notifications', text: '5 thông báo mới nhất' },
+            ].map((item) => (
+              <Card key={item.title}>
+                <CardContent className="p-4">
+                  <h2 className="font-medium">{item.title}</h2>
+                  <p className="text-muted-foreground my-2 text-sm">{item.text}</p>
+                  <Link className="text-primary text-sm hover:underline" to={item.to}>
+                    Mở danh sách
+                  </Link>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </>
+      )}
     </>
   )
 }

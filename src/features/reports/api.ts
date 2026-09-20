@@ -51,6 +51,7 @@ export interface ReportRunResult {
   total: number
   page: number
   limit: number
+  isMock?: boolean
 }
 
 export interface CustomReport {
@@ -122,14 +123,21 @@ export interface ReportSource {
   fields: Record<string, ReportSourceField>
 }
 
+export function opsForType(type: ReportSourceField['type']): string[] {
+  if (type === 'string') return ['eq', 'ne', 'like', 'in', 'isNull', 'notNull']
+  if (type === 'boolean') return ['eq', 'isNull', 'notNull']
+  if (type === 'enum' || type === 'uuid') return ['eq', 'ne', 'in', 'isNull', 'notNull']
+  return ['eq', 'ne', 'gt', 'gte', 'lt', 'lte', 'between', 'isNull', 'notNull']
+}
+
 const dateFromTo: JsonObjectSchema['properties'] = {
   from: { type: 'string', format: 'date', title: 'Từ ngày' },
   to: { type: 'string', format: 'date', title: 'Đến ngày' },
 }
 
-export const REPORTS: ReportMeta[] = [
+const CORE_REPORTS: ReportMeta[] = [
   {
-    key: 'equipment_status',
+    key: 'equipment.byStatus',
     title: 'Hiện trạng thiết bị',
     group: 'Thiết bị',
     params: {
@@ -158,7 +166,7 @@ export const REPORTS: ReportMeta[] = [
     ],
   },
   {
-    key: 'repair_cost',
+    key: 'repair.cost',
     title: 'Chi phí sửa chữa',
     group: 'Sửa chữa',
     params: {
@@ -185,7 +193,7 @@ export const REPORTS: ReportMeta[] = [
     ],
   },
   {
-    key: 'stock_summary',
+    key: 'stock.summary',
     title: 'Tồn kho',
     group: 'Vật tư',
     params: {
@@ -215,7 +223,7 @@ export const REPORTS: ReportMeta[] = [
     ],
   },
   {
-    key: 'stocktake_diffs',
+    key: 'stocktake.diffs',
     title: 'Chênh lệch kiểm kê',
     group: 'Kiểm kê',
     params: {
@@ -239,6 +247,37 @@ export const REPORTS: ReportMeta[] = [
       { key: 'diff', title: 'Chênh', type: 'number' },
     ],
   },
+]
+
+const CONTRACT_REPORTS: Array<[string, string, string]> = [
+  ['equipment.byDepartment', 'Thiết bị theo khoa', 'Thiết bị'],
+  ['equipment.byAge', 'Tuổi thiết bị', 'Thiết bị'],
+  ['equipment.utilization', 'Mức sử dụng thiết bị', 'Thiết bị'],
+  ['equipment.calibrationDue', 'Thiết bị đến hạn kiểm định', 'Thiết bị'],
+  ['equipment.lifecycleCost', 'Chi phí vòng đời thiết bị', 'Thiết bị'],
+  ['repair.frequency', 'Tần suất sửa chữa', 'Sửa chữa'],
+  ['repair.mtbfMttr', 'MTBF / MTTR', 'Sửa chữa'],
+  ['repair.vendorVsInternal', 'Nhà cung cấp / nội bộ', 'Sửa chữa'],
+  ['repair.byStaff', 'Sửa chữa theo nhân viên', 'Sửa chữa'],
+  ['stock.consumptionByEquipment', 'Tiêu hao theo thiết bị', 'Vật tư'],
+  ['stock.consumptionByDepartment', 'Tiêu hao theo khoa', 'Vật tư'],
+  ['stock.costPerTest', 'Chi phí trên xét nghiệm', 'Vật tư'],
+  ['stock.forecast', 'Dự báo tồn kho', 'Vật tư'],
+  ['stock.expiring', 'Lô sắp hết hạn', 'Vật tư'],
+]
+
+export const REPORTS: ReportMeta[] = [
+  ...CORE_REPORTS,
+  ...CONTRACT_REPORTS.map(([key, title, group]) => ({
+    key,
+    title,
+    group,
+    params: { type: 'object' as const, properties: { ...dateFromTo } },
+    columns: [
+      { key: 'name', title: 'Tên' },
+      { key: 'value', title: 'Giá trị', type: 'number' as const },
+    ],
+  })),
 ]
 
 export const REPORT_SOURCES: ReportSource[] = [
@@ -304,15 +343,15 @@ export const REPORT_SOURCES: ReportSource[] = [
 ]
 
 const MOCK_ROWS: Record<string, Record<string, unknown>[]> = {
-  equipment_status: [
+  'equipment.byStatus': [
     { id: 'e1', code: 'TB-001', name: 'Máy huyết học', status: 'active' },
     { id: 'e2', code: 'TB-002', name: 'Máy sinh hoá', status: 'broken' },
   ],
-  repair_cost: [
+  'repair.cost': [
     { id: 'r1', code: 'SC-001', totalCost: '1500000' },
     { id: 'r2', code: 'SC-002', totalCost: '230000' },
   ],
-  stock_summary: [
+  'stock.summary': [
     {
       id: 's1',
       supplyCode: 'HC-01',
@@ -322,7 +361,7 @@ const MOCK_ROWS: Record<string, Record<string, unknown>[]> = {
     },
     { id: 's2', supplyCode: 'HC-02', supplyName: 'Kit PCR', qty: '3.000', value: '9000000' },
   ],
-  stocktake_diffs: [
+  'stocktake.diffs': [
     {
       id: 'd1',
       code: 'HC-01',
@@ -359,7 +398,7 @@ function isMissingReportApi(error: unknown): boolean {
       error.code === 'REPORT_NOT_FOUND'
     )
   }
-  return true
+  return false
 }
 
 export function toReportQuery(
@@ -399,6 +438,7 @@ function paginateRows(key: string, page: number, limit: number): ReportRunResult
     total: all.length,
     page,
     limit,
+    isMock: true,
   }
 }
 
@@ -430,14 +470,22 @@ function clipPreview(result: ReportPreview): ReportPreview {
   }
 }
 
-export async function listReportsSafe(): Promise<ReportMeta[]> {
+export type ReportMetaList = ReportMeta[] & { isMock?: boolean }
+
+function mockReportList(): ReportMetaList {
+  const rows = [...REPORTS] as ReportMetaList
+  rows.isMock = true
+  return rows
+}
+
+export async function listReportsSafe(): Promise<ReportMetaList> {
   try {
     const data = await unwrapAs<ReportMeta[] | { items?: ReportMeta[] }>(get('/v1/reports'))
     const items = asList(data).filter((row) => row && typeof row.key === 'string')
-    return items.length > 0 ? items : REPORTS
+    return items as ReportMetaList
   } catch (error) {
     if (!isMissingReportApi(error)) throw error
-    return REPORTS
+    return mockReportList()
   }
 }
 
