@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router'
+import { useTranslation } from 'react-i18next'
 import type { ColumnDef } from '@tanstack/react-table'
 import { toast } from 'sonner'
 import { DataTable, useServerTable } from '@/components/data-table'
@@ -15,6 +16,7 @@ import { useEquipmentList } from '../hooks'
 import type { Equipment } from '../types'
 
 export function Component() {
+  const { t } = useTranslation('equipment')
   const table = useServerTable()
   const list = useEquipmentList({
     page: table.params.page,
@@ -27,9 +29,10 @@ export function Component() {
       {
         id: 'select',
         header: '',
+        enableSorting: false,
         cell: ({ row }) => (
           <Checkbox
-            aria-label={`Chọn ${row.original.code}`}
+            aria-label={t('filters.selectRow', { code: row.original.code })}
             checked={selected.includes(row.original.id)}
             onCheckedChange={(value) =>
               setSelected((current) =>
@@ -43,27 +46,27 @@ export function Component() {
       },
       {
         accessorKey: 'code',
-        header: 'Mã',
+        header: t('fields.code'),
         cell: ({ row }) => (
           <Link className="text-primary hover:underline" to={`/equipment/${row.original.id}`}>
             {row.original.code}
           </Link>
         ),
       },
-      { accessorKey: 'name', header: 'Tên' },
+      { accessorKey: 'name', header: t('fields.name') },
       {
         accessorKey: 'status',
-        header: 'Trạng thái',
+        header: t('fields.status'),
         cell: ({ row }) => <StatusBadge value={row.original.status} map={equipmentStatusMap} />,
       },
     ],
-    [selected],
+    [selected, t],
   )
   return (
     <>
       <PageHeader
-        title="Tem QR"
-        description="Chọn máy rồi in tem PDF."
+        title={t('qrLabels.title')}
+        description={t('qrLabels.description')}
         actions={
           <Button
             disabled={selected.length === 0}
@@ -75,7 +78,7 @@ export function Component() {
               }
             }}
           >
-            In tem ({selected.length})
+            {t('qrLabels.print', { count: selected.length })}
           </Button>
         }
       />
@@ -85,19 +88,25 @@ export function Component() {
         data={list.data?.items}
         total={list.data?.total ?? 0}
         params={table.params}
-        onPageChange={table.setPage}
-        onLimitChange={table.setLimit}
+        onPageChange={(page) => {
+          setSelected([])
+          table.setPage(page)
+        }}
+        onLimitChange={(limit) => {
+          setSelected([])
+          table.setLimit(limit)
+        }}
         isLoading={list.isPending}
         error={list.error}
         onRetry={() => void list.refetch()}
         getRowId={(row) => row.id}
         toolbarLeft={
           <Input
-            aria-label="Tìm máy"
+            aria-label={t('qrLabels.search')}
             className="w-64"
             value={table.inputQ}
             onChange={(event) => table.setQ(event.target.value)}
-            placeholder="Mã, tên, serial"
+            placeholder={t('qrLabels.searchPlaceholder')}
           />
         }
       />

@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import { toast } from 'sonner'
+import { useQueryClient } from '@tanstack/react-query'
 import { PageHeader } from '@/components/page/PageHeader'
 import { Button } from '@/components/ui/button'
 import { FormDialog } from '@/components/form/FormDialog'
@@ -11,27 +14,43 @@ import { useCan } from '@/app/guards/useCan'
 import { STAFF } from '@/routes/roles'
 import { applyServerErrors, messageFor } from '@/api/errors'
 import { catalogOptions } from '@/api/references'
+import { decimalString } from '@/lib/validation/decimal'
 import { Component as IssuesPage } from './IssuesPage'
 import { createTransfer } from '../api'
+import { useTranslation } from 'react-i18next'
+import i18n from '@/lib/i18n'
+
+const schema = z.object({
+  fromWarehouseId: z.string().min(1, i18n.t('common:form.required')),
+  toWarehouseId: z.string().min(1, i18n.t('common:form.required')),
+  // TODO(api): chọn lô từ kho nguồn (lượt C) — hiện gửi lotId trống như cũ.
+  lotId: z.string(),
+  quantity: decimalString({ maxScale: 3, min: '0.001' }),
+})
+type FormValues = z.infer<typeof schema>
 
 export function Component() {
+  const { t } = useTranslation('inventory')
+
   const canWrite = useCan(STAFF)
+  const qc = useQueryClient()
   const [open, setOpen] = useState(false)
-  const form = useForm({
+  const form = useForm<FormValues>({
+    resolver: zodResolver(schema),
     defaultValues: { fromWarehouseId: '', toWarehouseId: '', lotId: '', quantity: '1' },
   })
   return (
     <>
       <PageHeader
-        title="Chuyển kho"
-        actions={canWrite && <Button onClick={() => setOpen(true)}>Tạo chuyển kho</Button>}
+        title={t('transferTitle')}
+        actions={canWrite && <Button onClick={() => setOpen(true)}>{t('createTransfer')}</Button>}
       />
-      <p className="text-muted-foreground mb-3 text-sm">Danh sách phiếu xuất loại chuyển kho.</p>
+      <p className="text-muted-foreground mb-3 text-sm">{t('transfersDesc')}</p>
       <IssuesPage />
       <FormDialog
         open={open}
         onOpenChange={setOpen}
-        title="Tạo chuyển kho"
+        title={t('createTransfer')}
         form={form}
         onSubmit={async (values) => {
           try {
@@ -40,8 +59,10 @@ export function Component() {
               toWarehouseId: values.toWarehouseId,
               items: [{ lotId: values.lotId, quantity: values.quantity }],
             })
-            toast.success('Đã tạo chuyển kho')
+            toast.success(t('transferCreated'))
             setOpen(false)
+            void qc.invalidateQueries({ queryKey: ['stock', 'issues'] })
+            void qc.invalidateQueries({ queryKey: ['stock', 'lots'] })
           } catch (error) {
             if (!applyServerErrors(form, error)) toast.error(messageFor(error))
           }
@@ -53,7 +74,7 @@ export function Component() {
           render={({ field }) => (
             <FormItem>
               <AsyncSelect
-                label="Kho nguồn"
+                label={t('fromWarehouse')}
                 queryKey="warehouses-from"
                 loadOptions={(q) => catalogOptions('warehouses', q)}
                 value={field.value || null}
@@ -69,7 +90,7 @@ export function Component() {
           render={({ field }) => (
             <FormItem>
               <AsyncSelect
-                label="Kho đích"
+                label={t('toWarehouse')}
                 queryKey="warehouses-to"
                 loadOptions={(q) => catalogOptions('warehouses', q)}
                 value={field.value || null}
@@ -79,7 +100,7 @@ export function Component() {
             </FormItem>
           )}
         />
-        <QtyField control={form.control} name="quantity" label="Số lượng" />
+        <QtyField control={form.control} name="quantity" label={t('quantity')} />
       </FormDialog>
     </>
   )

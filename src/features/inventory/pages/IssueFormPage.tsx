@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router'
+import { useQueryClient } from '@tanstack/react-query'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -11,8 +12,12 @@ import { QtyField } from '@/components/form/qty-field'
 import { FormField, FormItem, FormMessage } from '@/components/ui/form'
 import { AsyncSelect } from '@/components/form/async-select'
 import { applyServerErrors, messageFor } from '@/api/errors'
+import { apiBody } from '@/api/client'
 import { catalogOptions, departmentOptions, supplyOptions } from '@/api/references'
+import { decimalString } from '@/lib/validation/decimal'
 import { createIssue, suggestLots } from '../api'
+import { useTranslation } from 'react-i18next'
+import i18n from '@/lib/i18n'
 
 const schema = z.object({
   type: z.enum([
@@ -23,14 +28,14 @@ const schema = z.object({
     'return_to_supplier',
     'adjust_out',
   ]),
-  warehouseId: z.string().min(1, 'Bắt buộc'),
+  warehouseId: z.string().min(1, i18n.t('common:form.required')),
   toDepartmentId: z.string().nullable(),
   reason: z.string(),
   items: z
     .array(
       z.object({
-        supplyId: z.string().min(1),
-        quantity: z.string().min(1),
+        supplyId: z.string().min(1, i18n.t('common:form.required')),
+        quantity: decimalString({ maxScale: 3, min: '0.001' }),
         lotId: z.string().nullable(),
       }),
     )
@@ -39,7 +44,10 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>
 
 export function Component() {
+  const { t } = useTranslation('inventory')
+
   const navigate = useNavigate()
+  const qc = useQueryClient()
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -53,26 +61,30 @@ export function Component() {
   const items = useFieldArray({ control: form.control, name: 'items' })
   return (
     <>
-      <PageHeader title="Tạo phiếu xuất" />
+      <PageHeader title={t('createIssue')} />
       <Form {...form}>
         <form
           className="max-w-3xl space-y-4"
           noValidate
           onSubmit={form.handleSubmit(async (values) => {
             try {
-              const created = await createIssue({
-                type: values.type,
-                warehouseId: values.warehouseId,
-                toDepartmentId: values.toDepartmentId ?? undefined,
-                reason: values.reason || undefined,
-                items: values.items.map((item) => ({
-                  supplyId: item.supplyId,
-                  quantity: item.quantity,
-                  name: 'Vật tư',
-                  lotId: item.lotId ?? undefined,
-                })),
-              } as never)
-              toast.success('Đã tạo phiếu xuất')
+              const created = await createIssue(
+                apiBody({
+                  type: values.type,
+                  warehouseId: values.warehouseId,
+                  toDepartmentId: values.toDepartmentId ?? undefined,
+                  reason: values.reason || undefined,
+                  items: values.items.map((item) => ({
+                    supplyId: item.supplyId,
+                    quantity: item.quantity,
+                    lotId: item.lotId ?? undefined,
+                  })),
+                }),
+              )
+              toast.success(t('issueCreated'))
+              void qc.invalidateQueries({ queryKey: ['stock', 'issues'] })
+              void qc.invalidateQueries({ queryKey: ['stock', 'balances'] })
+              void qc.invalidateQueries({ queryKey: ['stock', 'lots'] })
               navigate(`/stock/issues/${created.id}`)
             } catch (error) {
               if (!applyServerErrors(form, error)) toast.error(messageFor(error))
@@ -82,11 +94,11 @@ export function Component() {
           <SelectField
             control={form.control}
             name="type"
-            label="Loại"
+            label={t('type')}
             options={[
-              { value: 'to_department', label: 'Cấp cho khoa' },
-              { value: 'for_repair', label: 'Sửa chữa' },
-              { value: 'dispose', label: 'Huỷ' },
+              { value: 'to_department', label: t('issueTypeToDepartment') },
+              { value: 'for_repair', label: t('issueTypeRepair') },
+              { value: 'dispose', label: t('cancel') },
             ]}
           />
           <FormField
@@ -95,7 +107,7 @@ export function Component() {
             render={({ field }) => (
               <FormItem>
                 <AsyncSelect
-                  label="Kho"
+                  label={t('warehouse')}
                   queryKey="warehouses"
                   loadOptions={(q) => catalogOptions('warehouses', q)}
                   value={field.value || null}
@@ -111,7 +123,7 @@ export function Component() {
             render={({ field }) => (
               <FormItem>
                 <AsyncSelect
-                  label="Khoa nhận"
+                  label={t('toDepartment')}
                   queryKey="departments"
                   loadOptions={departmentOptions}
                   value={field.value}
@@ -130,7 +142,7 @@ export function Component() {
                 render={({ field: f }) => (
                   <FormItem>
                     <AsyncSelect
-                      label="Vật tư"
+                      label={t('supply')}
                       queryKey="supplies"
                       loadOptions={supplyOptions}
                       value={f.value || null}
@@ -140,7 +152,11 @@ export function Component() {
                   </FormItem>
                 )}
               />
-              <QtyField control={form.control} name={`items.${index}.quantity`} label="Số lượng" />
+              <QtyField
+                control={form.control}
+                name={`items.${index}.quantity`}
+                label={t('quantity')}
+              />
               <Button
                 type="button"
                 variant="outline"
@@ -155,14 +171,14 @@ export function Component() {
                     : (lots as { items?: { lotId?: string }[] }).items?.[0]
                   if (first && 'lotId' in first && first.lotId)
                     form.setValue(`items.${index}.lotId`, first.lotId)
-                  toast.success('Đã gợi ý lô FEFO')
+                  toast.success(t('suggestedLot'))
                 }}
               >
-                Gợi ý lô (FEFO)
+                {t('suggestLotFefo')}
               </Button>
             </div>
           ))}
-          <Button type="submit">Lưu nháp</Button>
+          <Button type="submit">{t('saveDraft')}</Button>
         </form>
       </Form>
     </>

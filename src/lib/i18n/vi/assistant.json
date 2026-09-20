@@ -1,0 +1,15 @@
+{
+  "title": "Trợ lý AI",
+  "checking": "Đang kiểm tra trợ lý AI…",
+  "disabled": "Chưa bật — liên hệ quản trị.",
+  "digest": "Tóm tắt tuần",
+  "weekStart": "Tuần bắt đầu",
+  "digestLoading": "Đang tải tóm tắt…",
+  "digestEmpty": "Chưa có tóm tắt tuần này.",
+  "notConfigured": "Chưa cấu hình AI.",
+  "new": "Mới",
+  "question": "Câu hỏi",
+  "send": "Gửi",
+  "equipmentContext": "Ngữ cảnh máy {{id}}",
+  "selectContext": "Chọn ngữ cảnh máy khi tạo hội thoại."
+}

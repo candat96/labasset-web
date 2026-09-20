@@ -57,33 +57,3 @@ export function changedKeys(before: unknown, after: unknown): Set<string> {
     if (JSON.stringify(left[key]) !== JSON.stringify(right[key])) changed.add(key)
   return changed
 }
-
-export function matchesAuditQuery(
-  item: {
-    action: string
-    entityType: string
-    entityId: string | null
-    userId: string | null
-    ip: string | null
-    before: unknown
-    after: unknown
-  },
-  action?: string,
-  q?: string,
-) {
-  if (action && item.action !== action) return false
-  if (!q) return true
-  const needle = q.toLowerCase()
-  const hay = [
-    item.action,
-    item.entityType,
-    item.entityId ?? '',
-    item.userId ?? '',
-    item.ip ?? '',
-    JSON.stringify(item.before ?? ''),
-    JSON.stringify(item.after ?? ''),
-  ]
-    .join(' ')
-    .toLowerCase()
-  return hay.includes(needle)
-}

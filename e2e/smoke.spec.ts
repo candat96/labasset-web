@@ -1,19 +1,10 @@
 import { test, expect } from '@playwright/test'
+import { e2ePass, login } from './helpers'
 
-const code = process.env.E2E_HOSPITAL_CODE ?? 'BVDEMO'
-const user = process.env.E2E_USERNAME ?? 'admin'
-const pass = process.env.E2E_PASSWORD ?? ''
-
-test.skip(!pass, 'E2E_PASSWORD chưa đặt — xem README mục Smoke test')
+test.skip(!e2ePass, 'E2E_PASSWORD chưa đặt — xem README mục Smoke test')
 
 test('login → dashboard → departments CRUD', async ({ page }) => {
-  await page.goto('/login')
-  const hc = page.getByLabel('Mã bệnh viện')
-  if (await hc.isVisible().catch(() => false)) await hc.fill(code)
-  await page.getByLabel('Tài khoản').fill(user)
-  await page.getByLabel('Mật khẩu').fill(pass)
-  await page.getByRole('button', { name: 'Đăng nhập' }).click()
-  await expect(page.getByRole('heading', { name: 'Tổng quan' })).toBeVisible()
+  await login(page)
 
   await page.goto('/admin/departments')
   await expect(page.getByRole('heading', { name: 'Khoa/phòng' })).toBeVisible()
@@ -26,7 +17,7 @@ test('login → dashboard → departments CRUD', async ({ page }) => {
   await dialog.getByRole('button', { name: 'Lưu' }).click()
   await expect(dialog).toBeHidden()
 
-  await page.getByLabel('Tìm kiếm').fill(dept)
+  await page.getByRole('textbox', { name: 'Tìm kiếm' }).fill(dept)
   const row = page.getByRole('row', { name: new RegExp(dept) })
   await expect(row).toBeVisible()
 
@@ -45,12 +36,7 @@ test('login → dashboard → departments CRUD', async ({ page }) => {
 })
 
 test('faults and repairs lists are reachable', async ({ page }) => {
-  await page.goto('/login')
-  const hc = page.getByLabel('Mã bệnh viện')
-  if (await hc.isVisible().catch(() => false)) await hc.fill(code)
-  await page.getByLabel('Tài khoản').fill(user)
-  await page.getByLabel('Mật khẩu').fill(pass)
-  await page.getByRole('button', { name: 'Đăng nhập' }).click()
+  await login(page)
   await page.goto('/faults')
   await expect(page.getByRole('heading', { name: 'Thư viện lỗi' })).toBeVisible()
   await page.goto('/repairs')
@@ -58,12 +44,7 @@ test('faults and repairs lists are reachable', async ({ page }) => {
 })
 
 test('remaining modules are reachable', async ({ page }) => {
-  await page.goto('/login')
-  const hc = page.getByLabel('Mã bệnh viện')
-  if (await hc.isVisible().catch(() => false)) await hc.fill(code)
-  await page.getByLabel('Tài khoản').fill(user)
-  await page.getByLabel('Mật khẩu').fill(pass)
-  await page.getByRole('button', { name: 'Đăng nhập' }).click()
+  await login(page)
   await page.goto('/maintenance/tasks')
   await expect(page.getByRole('heading', { name: 'Công việc bảo dưỡng' })).toBeVisible()
   await page.goto('/supplies')
@@ -75,12 +56,7 @@ test('remaining modules are reachable', async ({ page }) => {
 })
 
 test('equipment list is reachable', async ({ page }) => {
-  await page.goto('/login')
-  const hc = page.getByLabel('Mã bệnh viện')
-  if (await hc.isVisible().catch(() => false)) await hc.fill(code)
-  await page.getByLabel('Tài khoản').fill(user)
-  await page.getByLabel('Mật khẩu').fill(pass)
-  await page.getByRole('button', { name: 'Đăng nhập' }).click()
+  await login(page)
   await page.goto('/equipment')
   await expect(page.getByRole('heading', { name: 'Hồ sơ thiết bị' })).toBeVisible()
 })

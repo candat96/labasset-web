@@ -1,4 +1,5 @@
-import { screen } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { server } from '@/test/msw/server'
 import { renderWithProviders, fakeSession } from '@/test/utils'
@@ -39,4 +40,39 @@ it('lists calibrations', async () => {
     'href',
     '/calibrations/c1',
   )
+})
+
+it('creates a calibration with a body validated like the API', async () => {
+  const saved: unknown[] = []
+  server.use(
+    http.get('/v1/equipment', () =>
+      HttpResponse.json({
+        items: [{ id: 'e1', code: 'TB-1', name: 'Máy XN' }],
+        total: 1,
+        page: 1,
+        limit: 20,
+      }),
+    ),
+    http.post('/v1/calibrations', async ({ request }) => {
+      const body = (await request.json()) as { equipmentId?: string; type?: string }
+      if (!body.equipmentId || !body.type) {
+        return HttpResponse.json(
+          { code: 'VALIDATION_ERROR', message: 'Thiếu máy/loại' },
+          { status: 400 },
+        )
+      }
+      saved.push(body)
+      return HttpResponse.json({ id: 'c2', code: 'KD-2' }, { status: 201 })
+    }),
+  )
+  renderWithProviders(<Component />, {
+    path: '/calibrations',
+    route: '/calibrations',
+    routes: [{ path: '/calibrations/:id', element: <div>DETAIL</div> }],
+  })
+  await userEvent.click(await screen.findByRole('button', { name: 'Lên lịch / Ghi kết quả' }))
+  await userEvent.type(await screen.findByLabelText('Máy'), 'TB-1')
+  await userEvent.click(await screen.findByRole('option', { name: /Máy XN/ }))
+  await userEvent.click(screen.getByRole('button', { name: 'Lưu' }))
+  await waitFor(() => expect(saved[0]).toMatchObject({ equipmentId: 'e1', type: 'inspection' }))
 })

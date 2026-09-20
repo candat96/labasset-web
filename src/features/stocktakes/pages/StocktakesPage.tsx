@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import type { ColumnDef } from '@tanstack/react-table'
 import { toast } from 'sonner'
@@ -17,14 +17,20 @@ import { DateField } from '@/components/form/date-field'
 import { useCan } from '@/app/guards/useCan'
 import { STAFF } from '@/routes/roles'
 import { applyServerErrors, messageFor } from '@/api/errors'
+import { apiBody } from '@/api/client'
+import { dayRangeToIso } from '@/lib/format/date-range'
 import { createStocktake, listStocktakes } from '../api'
 import type { components } from '@/api/schema'
+import { useTranslation } from 'react-i18next'
 
 type Row = components['schemas']['StocktakeSessionResponseDto']
 
 export function Component() {
+  const { t } = useTranslation('stocktakes')
+
   const canWrite = useCan(STAFF)
   const navigate = useNavigate()
+  const qc = useQueryClient()
   const table = useServerTable({ filterKeys: ['status', 'type', 'from', 'to'] })
   const f = table.params.filters
   const list = useQuery({
@@ -33,10 +39,10 @@ export function Component() {
       listStocktakes({
         page: table.params.page,
         limit: table.params.limit,
+        q: table.params.q || undefined,
         status: f.status,
         type: f.type,
-        from: f.from,
-        to: f.to,
+        ...dayRangeToIso(f.from, f.to),
       }),
     placeholderData: (p) => p,
   })
@@ -54,7 +60,7 @@ export function Component() {
     () => [
       {
         accessorKey: 'code',
-        header: 'Mã',
+        header: t('code'),
         cell: ({ row }) => (
           <Link
             className="text-primary font-mono text-xs hover:underline"
@@ -64,27 +70,27 @@ export function Component() {
           </Link>
         ),
       },
-      { accessorKey: 'name', header: 'Tên' },
-      { accessorKey: 'type', header: 'Loại' },
-      { accessorKey: 'scopeType', header: 'Phạm vi' },
+      { accessorKey: 'name', header: t('name') },
+      { accessorKey: 'type', header: t('type') },
+      { accessorKey: 'scopeType', header: t('scope') },
       {
         accessorKey: 'status',
-        header: 'Trạng thái',
+        header: t('status'),
         cell: ({ row }) => <StatusBadge value={row.original.status} map={stocktakeStatusMap} />,
       },
       {
         accessorKey: 'plannedAt',
-        header: 'Kế hoạch',
+        header: t('plannedAt'),
         cell: ({ getValue }) => formatDateTime(getValue<string | null>()),
       },
     ],
-    [],
+    [t],
   )
   return (
     <>
       <PageHeader
-        title="Kiểm kê"
-        actions={canWrite && <Button onClick={() => setOpen(true)}>Tạo đợt</Button>}
+        title={t('title')}
+        actions={canWrite && <Button onClick={() => setOpen(true)}>{t('create')}</Button>}
       />
       <DataTable
         tableId="stocktakes"
@@ -101,7 +107,7 @@ export function Component() {
         onRowClick={(row) => navigate(`/stocktakes/${row.id}`)}
         toolbarLeft={
           <Input
-            aria-label="Tìm đợt"
+            aria-label={t('search')}
             value={table.inputQ}
             onChange={(e) => table.setQ(e.target.value)}
           />
@@ -110,46 +116,49 @@ export function Component() {
       <FormDialog
         open={open}
         onOpenChange={setOpen}
-        title="Tạo đợt kiểm kê"
+        title={t('createTitle')}
         form={form}
         onSubmit={async (values) => {
           try {
-            const created = await createStocktake({
-              name: values.name,
-              type: values.type,
-              scopeType: values.scopeType,
-              notes: values.notes || undefined,
-              plannedAt: values.plannedAt || undefined,
-            } as never)
-            toast.success('Đã tạo đợt')
+            const created = await createStocktake(
+              apiBody({
+                name: values.name,
+                type: values.type,
+                scopeType: values.scopeType,
+                notes: values.notes || undefined,
+                plannedAt: values.plannedAt || undefined,
+              }),
+            )
+            toast.success(t('created'))
             setOpen(false)
+            void qc.invalidateQueries({ queryKey: ['stocktakes'] })
             navigate(`/stocktakes/${created.id}`)
           } catch (error) {
             if (!applyServerErrors(form, error)) toast.error(messageFor(error))
           }
         }}
       >
-        <TextField control={form.control} name="name" label="Tên" />
+        <TextField control={form.control} name="name" label={t('name')} />
         <SelectField
           control={form.control}
           name="type"
-          label="Loại"
+          label={t('type')}
           options={[
-            { value: 'supply', label: 'Vật tư' },
-            { value: 'equipment', label: 'Thiết bị' },
+            { value: 'supply', label: t('typeSupply') },
+            { value: 'equipment', label: t('typeEquipment') },
           ]}
         />
         <SelectField
           control={form.control}
           name="scopeType"
-          label="Phạm vi"
+          label={t('scope')}
           options={[
-            { value: 'all', label: 'Toàn viện' },
+            { value: 'all', label: t('scopeAll') },
             { value: 'department', label: 'Khoa' },
             { value: 'warehouse', label: 'Kho' },
           ]}
         />
-        <DateField control={form.control} name="plannedAt" label="Kế hoạch" />
+        <DateField control={form.control} name="plannedAt" label={t('plannedAt')} />
       </FormDialog>
     </>
   )

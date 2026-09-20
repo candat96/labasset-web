@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { PageHeader } from '@/components/page/PageHeader'
 import { Button } from '@/components/ui/button'
@@ -22,6 +23,8 @@ import { repairCreateSchema, type RepairCreateForm } from '../schema'
 import { REPAIR_SEVERITIES } from '../types'
 
 export function Component() {
+  const { t } = useTranslation('repairs')
+  const { t: tc } = useTranslation()
   const navigate = useNavigate()
   const canPickDept = useCan(STAFF)
   const settings = usePublicRepairSettings()
@@ -56,7 +59,7 @@ export function Component() {
         equipmentDown: values.equipmentDown,
         reportedDepartmentId: canPickDept ? (values.reportedDepartmentId ?? undefined) : undefined,
       })
-      toast.success('Đã tạo phiếu sửa chữa')
+      toast.success(t('form.created'))
       navigate(`/repairs/${created.id}`, { state: { faultId: values.faultId } })
     } catch (error) {
       if (!applyServerErrors(form, error)) toast.error(messageFor(error))
@@ -64,7 +67,7 @@ export function Component() {
   }
   return (
     <>
-      <PageHeader title="Báo hỏng" />
+      <PageHeader title={t('form.title')} />
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         <Form {...form}>
           <form className="max-w-xl space-y-4" noValidate onSubmit={form.handleSubmit(submit)}>
@@ -74,7 +77,7 @@ export function Component() {
               render={({ field }) => (
                 <FormItem>
                   <AsyncSelect
-                    label="Máy"
+                    label={t('form.equipment')}
                     queryKey="equipment"
                     loadOptions={equipmentOptions}
                     value={field.value || null}
@@ -89,7 +92,7 @@ export function Component() {
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Mô tả</FormLabel>
+                  <FormLabel>{t('form.description')}</FormLabel>
                   <FormControl>
                     <Textarea {...field} />
                   </FormControl>
@@ -97,22 +100,24 @@ export function Component() {
                 </FormItem>
               )}
             />
-            <TextField control={form.control} name="errorCode" label="Mã lỗi" />
+            <TextField control={form.control} name="errorCode" label={t('form.errorCode')} />
             <SelectField
               control={form.control}
               name="severity"
-              label="Mức khẩn"
-              description={
-                Number.isFinite(slaHours)
-                  ? `SLA: ${slaHours} giờ`
-                  : 'SLA lấy từ cấu hình viện nếu có'
-              }
+              label={t('form.severity')}
               options={REPAIR_SEVERITIES.map((item) => ({
                 value: item,
                 label: faultSeverityMap[item]?.label ?? item,
               }))}
             />
-            <SwitchField control={form.control} name="equipmentDown" label="Máy ngừng hoạt động" />
+            <p className="text-muted-foreground -mt-2 text-sm">
+              {Number.isFinite(slaHours) ? t('form.sla', { hours: slaHours }) : t('form.slaHint')}
+            </p>
+            <SwitchField
+              control={form.control}
+              name="equipmentDown"
+              label={t('form.equipmentDown')}
+            />
             {canPickDept && (
               <FormField
                 control={form.control}
@@ -120,7 +125,7 @@ export function Component() {
                 render={({ field }) => (
                   <FormItem>
                     <AsyncSelect
-                      label="Khoa báo hỏng"
+                      label={t('form.reportedDepartment')}
                       queryKey="departments"
                       loadOptions={departmentOptions}
                       value={field.value}
@@ -134,14 +139,14 @@ export function Component() {
             )}
             <div className="flex gap-2">
               <Button type="button" variant="outline" onClick={() => navigate(-1)}>
-                Huỷ
+                {tc('actions.cancel')}
               </Button>
-              <Button type="submit">Tạo phiếu</Button>
+              <Button type="submit">{t('form.create')}</Button>
             </div>
           </form>
         </Form>
         <aside className="rounded-lg border p-3">
-          <h2 className="mb-2 font-medium">Gợi ý lỗi</h2>
+          <h2 className="mb-2 font-medium">{t('form.suggestions')}</h2>
           <FaultSuggestBox
             equipmentId={equipmentId || undefined}
             errorCode={errorCode || undefined}

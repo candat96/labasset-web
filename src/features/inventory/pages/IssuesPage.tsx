@@ -1,7 +1,9 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import type { ColumnDef } from '@tanstack/react-table'
 import { toast } from 'sonner'
 import { DataTable, useServerTable } from '@/components/data-table'
@@ -18,13 +20,35 @@ import { AsyncSelect } from '@/components/form/async-select'
 import { useCan } from '@/app/guards/useCan'
 import { STAFF } from '@/routes/roles'
 import { applyServerErrors, messageFor } from '@/api/errors'
+import { apiBody } from '@/api/client'
 import { catalogOptions, departmentOptions, supplyOptions } from '@/api/references'
+import { dayRangeToIso } from '@/lib/format/date-range'
+import { decimalString } from '@/lib/validation/decimal'
 import { listIssues, postIssue, quickIssue } from '../api'
 import type { Issue } from '../types'
+import { useTranslation } from 'react-i18next'
+import i18n from '@/lib/i18n'
+
+const quickSchema = z.object({
+  type: z.enum(['to_department']),
+  warehouseId: z.string().min(1, i18n.t('common:form.required')),
+  toDepartmentId: z.string().min(1, i18n.t('common:form.required')),
+  supplyId: z.string().min(1, i18n.t('common:form.required')),
+  quantity: decimalString({ maxScale: 3, min: '0.001' }),
+})
+type QuickForm = z.infer<typeof quickSchema>
 
 export function Component() {
+  const { t } = useTranslation('inventory')
+
   const canWrite = useCan(STAFF)
   const navigate = useNavigate()
+  const qc = useQueryClient()
+  const invalidate = useCallback(() => {
+    void qc.invalidateQueries({ queryKey: ['stock', 'issues'] })
+    void qc.invalidateQueries({ queryKey: ['stock', 'balances'] })
+    void qc.invalidateQueries({ queryKey: ['stock', 'lots'] })
+  }, [qc])
   const table = useServerTable({ filterKeys: ['status', 'type', 'warehouseId', 'from', 'to'] })
   const f = table.params.filters
   const params = {
@@ -33,6 +57,8 @@ export function Component() {
     q: table.params.q || undefined,
     status: f.status,
     type: f.type,
+    warehouseId: f.warehouseId,
+    ...dayRangeToIso(f.from, f.to),
   }
   const list = useQuery({
     queryKey: ['stock', 'issues', params],
@@ -40,9 +66,10 @@ export function Component() {
     placeholderData: (p) => p,
   })
   const [quick, setQuick] = useState(false)
-  const form = useForm({
+  const form = useForm<QuickForm>({
+    resolver: zodResolver(quickSchema),
     defaultValues: {
-      type: 'to_department' as const,
+      type: 'to_department',
       warehouseId: '',
       toDepartmentId: '',
       supplyId: '',
@@ -53,7 +80,7 @@ export function Component() {
     () => [
       {
         accessorKey: 'code',
-        header: 'Mã',
+        header: t('code'),
         cell: ({ row }) => (
           <Link
             className="text-primary font-mono text-xs hover:underline"
@@ -63,10 +90,10 @@ export function Component() {
           </Link>
         ),
       },
-      { accessorKey: 'type', header: 'Loại' },
+      { accessorKey: 'type', header: t('type') },
       {
         accessorKey: 'status',
-        header: 'Trạng thái',
+        header: t('status'),
         cell: ({ row }) => <StatusBadge value={row.original.status} map={stockDocStatusMap} />,
       },
       {
@@ -85,32 +112,32 @@ export function Component() {
                 event.stopPropagation()
                 try {
                   await postIssue(row.original.id)
-                  toast.success('Đã ghi sổ')
-                  void list.refetch()
+                  toast.success(t('posted'))
+                  invalidate()
                 } catch (error) {
                   toast.error(messageFor(error))
                 }
               }}
             >
-              Ghi sổ
+              {t('post')}
             </Button>
           ) : null,
       },
     ],
-    [canWrite, list],
+    [canWrite, invalidate, t],
   )
   return (
     <>
       <PageHeader
-        title="Phiếu xuất"
+        title={t('issuesTitle')}
         actions={
           canWrite && (
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => setQuick(true)}>
-                Xuất nhanh
+                {t('quickIssue')}
               </Button>
               <Button asChild>
-                <Link to="/stock/issues/new">Tạo phiếu xuất</Link>
+                <Link to="/stock/issues/new">{t('createIssue')}</Link>
               </Button>
             </div>
           )
@@ -131,7 +158,7 @@ export function Component() {
         onRowClick={(row) => navigate(`/stock/issues/${row.id}`)}
         toolbarLeft={
           <Input
-            aria-label="Tìm phiếu xuất"
+            aria-label={t('searchIssue')}
             value={table.inputQ}
             onChange={(e) => table.setQ(e.target.value)}
           />
@@ -140,17 +167,20 @@ export function Component() {
       <FormDialog
         open={quick}
         onOpenChange={setQuick}
-        title="Xuất nhanh"
+        title={t('quickIssue')}
         form={form}
         onSubmit={async (values) => {
           try {
-            const created = await quickIssue({
-              type: values.type,
-              warehouseId: values.warehouseId,
-              toDepartmentId: values.toDepartmentId || undefined,
-              items: [{ supplyId: values.supplyId, quantity: values.quantity, name: 'Vật tư' }],
-            } as never)
-            toast.success('Đã xuất')
+            const created = await quickIssue(
+              apiBody({
+                type: values.type,
+                warehouseId: values.warehouseId,
+                toDepartmentId: values.toDepartmentId || undefined,
+                items: [{ supplyId: values.supplyId, quantity: values.quantity }],
+              }),
+            )
+            toast.success(t('issued'))
+            invalidate()
             setQuick(false)
             navigate(`/stock/issues/${created.id}`)
           } catch (error) {
@@ -161,8 +191,8 @@ export function Component() {
         <SelectField
           control={form.control}
           name="type"
-          label="Loại"
-          options={[{ value: 'to_department', label: 'Cấp cho khoa' }]}
+          label={t('type')}
+          options={[{ value: 'to_department', label: t('issueTypeToDepartment') }]}
         />
         <FormField
           control={form.control}
@@ -170,7 +200,7 @@ export function Component() {
           render={({ field }) => (
             <FormItem>
               <AsyncSelect
-                label="Kho"
+                label={t('warehouse')}
                 queryKey="warehouses"
                 loadOptions={(q) => catalogOptions('warehouses', q)}
                 value={field.value || null}
@@ -186,7 +216,7 @@ export function Component() {
           render={({ field }) => (
             <FormItem>
               <AsyncSelect
-                label="Khoa nhận"
+                label={t('toDepartment')}
                 queryKey="departments"
                 loadOptions={departmentOptions}
                 value={field.value || null}
@@ -202,7 +232,7 @@ export function Component() {
           render={({ field }) => (
             <FormItem>
               <AsyncSelect
-                label="Vật tư"
+                label={t('supply')}
                 queryKey="supplies"
                 loadOptions={supplyOptions}
                 value={field.value || null}
@@ -212,7 +242,7 @@ export function Component() {
             </FormItem>
           )}
         />
-        <QtyField control={form.control} name="quantity" label="Số lượng" />
+        <QtyField control={form.control} name="quantity" label={t('quantity')} />
       </FormDialog>
     </>
   )

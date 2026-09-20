@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { PageHeader } from '@/components/page/PageHeader'
 import { ErrorState } from '@/components/page/ErrorState'
@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useConfirm } from '@/components/confirm-dialog'
 import { stocktakeStatusMap } from '@/lib/status-maps'
 import { formatQty } from '@/lib/format/number'
+import { decimalString } from '@/lib/validation/decimal'
 import { useCan } from '@/app/guards/useCan'
 import { ADM, STAFF } from '@/routes/roles'
 import { messageFor } from '@/api/errors'
@@ -20,6 +21,7 @@ import * as api from '../api'
 import type { StocktakeCountsResult, StocktakePackageItem } from '../api'
 import { addBatch, clearBatch, loadBatch } from '../batch'
 import type { StocktakeCountLine } from '../batch'
+import { useTranslation } from 'react-i18next'
 
 type ExtraRow = {
   id: string
@@ -38,6 +40,8 @@ function extraRows(data: unknown): ExtraRow[] {
   return []
 }
 
+const countQtySchema = decimalString({ maxScale: 3, min: '0' })
+
 function findPackageItem(items: StocktakePackageItem[], scan: string) {
   const q = scan.trim().toLowerCase()
   if (!q) return undefined
@@ -55,6 +59,8 @@ function CountPanel({
   items: StocktakePackageItem[]
   onSent: () => void
 }) {
+  const { t } = useTranslation('stocktakes')
+
   const [scan, setScan] = useState('')
   const [qty, setQty] = useState('1')
   const [status, setStatus] = useState('')
@@ -69,13 +75,18 @@ function CountPanel({
   const ghi = () => {
     const code = scan.trim()
     if (!code) {
-      toast.error('Nhập mã hoặc QR')
+      toast.error(t('scanRequired'))
+      return
+    }
+    const parsedQty = countQtySchema.safeParse(qty.trim() || '1')
+    if (!parsedQty.success) {
+      toast.error(t('countQtyInvalid'))
       return
     }
     const found = findPackageItem(items, code)
     addBatch(sessionId, {
       code,
-      countedQty: qty.trim() || '1',
+      countedQty: parsedQty.data,
       countedStatus: status.trim() || undefined,
       countedLocation: location.trim() || undefined,
       extra: !found,
@@ -110,7 +121,7 @@ function CountPanel({
       setResult(posted)
       clearBatch(sessionId)
       setBatch([])
-      toast.success('Đã gửi số đếm')
+      toast.success(t('countsSent'))
       onSent()
     } catch (error) {
       toast.error(messageFor(error))
@@ -128,7 +139,7 @@ function CountPanel({
         }}
       >
         <div className="space-y-1">
-          <Label htmlFor="stocktake-scan">Quét / nhập mã</Label>
+          <Label htmlFor="stocktake-scan">{t('scanLabel')}</Label>
           <Input
             id="stocktake-scan"
             value={scan}
@@ -137,7 +148,7 @@ function CountPanel({
           />
         </div>
         <div className="space-y-1">
-          <Label htmlFor="stocktake-qty">Số đếm</Label>
+          <Label htmlFor="stocktake-qty">{t('countedQty')}</Label>
           <Input
             id="stocktake-qty"
             value={qty}
@@ -147,7 +158,7 @@ function CountPanel({
           />
         </div>
         <div className="space-y-1">
-          <Label htmlFor="stocktake-status">Trạng thái đếm</Label>
+          <Label htmlFor="stocktake-status">{t('countedStatus')}</Label>
           <Input
             id="stocktake-status"
             value={status}
@@ -156,7 +167,7 @@ function CountPanel({
           />
         </div>
         <div className="space-y-1">
-          <Label htmlFor="stocktake-location">Vị trí đếm</Label>
+          <Label htmlFor="stocktake-location">{t('countedLocation')}</Label>
           <Input
             id="stocktake-location"
             value={location}
@@ -172,18 +183,19 @@ function CountPanel({
             disabled={!batch.length || sending}
             onClick={() => void gui()}
           >
-            Gửi ({batch.length})
+            {t('sendPrefix')}
+            {batch.length})
           </Button>
         </div>
       </form>
       {scan.trim() ? (
         match ? (
           <p>
-            {match.code} · {match.name} · Sổ {formatQty(match.bookQty)}
+            {match.code} · {match.name} {t('bookSuffix')} {formatQty(match.bookQty)}
             {match.location ? ` · ${match.location}` : ''}
           </p>
         ) : (
-          <p className="text-muted-foreground">Không có trong sổ — sẽ ghi ngoài sổ</p>
+          <p className="text-muted-foreground">{t('notInBook')}</p>
         )
       ) : null}
       {batch.length > 0 && (
@@ -191,7 +203,7 @@ function CountPanel({
           {batch.map((line) => (
             <li key={line.clientId}>
               {line.code} · {formatQty(line.countedQty)}
-              {line.extra ? ' · ngoài sổ' : ''}
+              {line.extra ? t('extraSuffix') : ''}
             </li>
           ))}
         </ul>
@@ -199,15 +211,16 @@ function CountPanel({
       {result && (
         <div className="space-y-2">
           <p>
-            Đã nhận {result.accepted} · Trùng {result.duplicated} · Xung đột{' '}
-            {result.conflicts.length} · Ngoài sổ {result.extras.length}
+            {t('accepted')} {result.accepted} {t('duplicatedSuffix')} {result.duplicated}{' '}
+            {t('conflictsSuffix')} {result.conflicts.length} {t('extrasSuffix')}{' '}
+            {result.extras.length}
           </p>
           {result.conflicts.length > 0 && (
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left">
                   <th>clientId</th>
-                  <th>Đã có người đếm mới hơn</th>
+                  <th>{t('newerCount')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -227,7 +240,13 @@ function CountPanel({
 }
 
 export function Component() {
+  const { t } = useTranslation('stocktakes')
+
   const { id = '' } = useParams()
+  const qc = useQueryClient()
+  const invalidateSession = () => {
+    void qc.invalidateQueries({ queryKey: ['stocktakes'] })
+  }
   const detail = useQuery({
     queryKey: ['stocktakes', id],
     queryFn: () => api.getStocktake(id),
@@ -258,15 +277,15 @@ export function Component() {
   const isStaff = useCan(STAFF)
   const isAdm = useCan(ADM)
   const { confirm, dialog } = useConfirm()
-  if (detail.isPending) return <p role="status">Đang tải đợt kiểm kê…</p>
+  if (detail.isPending) return <p role="status">{t('loading')}</p>
   if (detail.error) return <ErrorState error={detail.error} onRetry={() => void detail.refetch()} />
   const row = detail.data
   const run = async (title: string, action: () => Promise<unknown>) => {
     if ((await confirm({ title })) === false) return
     try {
       await action()
-      toast.success('Đã cập nhật đợt')
-      void detail.refetch()
+      toast.success(t('updated'))
+      invalidateSession()
     } catch (error) {
       toast.error(messageFor(error))
     }
@@ -274,9 +293,8 @@ export function Component() {
   const resolve = async (extraId: string, body: { itemId?: string; ignore?: boolean }) => {
     try {
       await api.resolveExtra(id, extraId, body)
-      toast.success('Đã xử lý dòng ngoài sổ')
-      void extras.refetch()
-      void items.refetch()
+      toast.success(t('extraResolved'))
+      invalidateSession()
     } catch (error) {
       toast.error(messageFor(error))
     }
@@ -291,36 +309,36 @@ export function Component() {
         actions={
           <div className="flex flex-wrap gap-2">
             {isStaff && row.status === 'draft' && (
-              <Button onClick={() => void run('Chụp sổ?', () => api.openStocktake(id))}>
-                Chụp sổ
+              <Button onClick={() => void run(t('openConfirm'), () => api.openStocktake(id))}>
+                {t('open')}
               </Button>
             )}
             {isStaff && row.status === 'open' && (
-              <Button onClick={() => void run('Bắt đầu đếm?', () => api.startCounting(id))}>
-                Bắt đầu đếm
+              <Button onClick={() => void run(t('startCountConfirm'), () => api.startCounting(id))}>
+                {t('startCount')}
               </Button>
             )}
             {isStaff && row.status === 'counting' && (
-              <Button onClick={() => void run('Chuyển rà soát?', () => api.reviewStocktake(id))}>
-                Chuyển rà soát
+              <Button onClick={() => void run(t('reviewConfirm'), () => api.reviewStocktake(id))}>
+                {t('review')}
               </Button>
             )}
             {isAdm && row.status === 'review' && (
-              <Button onClick={() => void run('Chốt đợt?', () => api.closeStocktake(id))}>
-                Chốt
+              <Button onClick={() => void run(t('closeConfirm'), () => api.closeStocktake(id))}>
+                {t('close')}
               </Button>
             )}
             {isStaff && row.status !== 'closed' && row.status !== 'cancelled' && (
               <Button
                 variant="outline"
-                onClick={() => void run('Huỷ đợt?', () => api.cancelStocktake(id))}
+                onClick={() => void run(t('cancelConfirm'), () => api.cancelStocktake(id))}
               >
-                Huỷ
+                {t('cancel')}
               </Button>
             )}
             {row.status === 'closed' && (
               <Button variant="outline" asChild>
-                <Link to={`/stocktakes/${id}/compare`}>So sánh</Link>
+                <Link to={`/stocktakes/${id}/compare`}>{t('compare')}</Link>
               </Button>
             )}
           </div>
@@ -328,15 +346,15 @@ export function Component() {
       />
       <Tabs defaultValue="progress">
         <TabsList className="flex-wrap">
-          <TabsTrigger value="progress">Tiến độ</TabsTrigger>
-          <TabsTrigger value="items">Danh sách kiểm</TabsTrigger>
-          {row.status === 'counting' && <TabsTrigger value="count">Đếm trên web</TabsTrigger>}
-          <TabsTrigger value="extras">Ngoài sổ</TabsTrigger>
-          <TabsTrigger value="audit">Lịch sử</TabsTrigger>
+          <TabsTrigger value="progress">{t('progress')}</TabsTrigger>
+          <TabsTrigger value="items">{t('items')}</TabsTrigger>
+          {row.status === 'counting' && <TabsTrigger value="count">{t('countWeb')}</TabsTrigger>}
+          <TabsTrigger value="extras">{t('extras')}</TabsTrigger>
+          <TabsTrigger value="audit">{t('history')}</TabsTrigger>
         </TabsList>
         <TabsContent value="progress">
           <p className="text-sm">
-            Đã đếm {progress.data?.counted ?? 0}/{progress.data?.total ?? 0} (
+            {t('countedOf')} {progress.data?.counted ?? 0}/{progress.data?.total ?? 0} (
             {progress.data?.percent ?? 0}%)
           </p>
         </TabsContent>
@@ -344,9 +362,9 @@ export function Component() {
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left">
-                <th>Mã</th>
-                <th>Sổ</th>
-                <th>Đếm</th>
+                <th>{t('code')}</th>
+                <th>{t('book')}</th>
+                <th>{t('count')}</th>
               </tr>
             </thead>
             <tbody>
@@ -367,7 +385,7 @@ export function Component() {
                 <tr key={item.id} className="border-t">
                   <td>{item.code ?? item.id}</td>
                   <td>{formatQty(item.bookQty)}</td>
-                  <td>{item.countedQty == null ? 'chưa đếm' : formatQty(item.countedQty)}</td>
+                  <td>{item.countedQty == null ? t('notCounted') : formatQty(item.countedQty)}</td>
                 </tr>
               ))}
             </tbody>
@@ -375,15 +393,7 @@ export function Component() {
         </TabsContent>
         {row.status === 'counting' && (
           <TabsContent value="count">
-            <CountPanel
-              sessionId={id}
-              items={pkg.data?.items ?? []}
-              onSent={() => {
-                void progress.refetch()
-                void items.refetch()
-                void extras.refetch()
-              }}
-            />
+            <CountPanel sessionId={id} items={pkg.data?.items ?? []} onSent={invalidateSession} />
           </TabsContent>
         )}
         <TabsContent value="extras">
@@ -402,12 +412,12 @@ export function Component() {
                       size="sm"
                       variant="outline"
                       onClick={() => {
-                        const itemId = window.prompt('Mã dòng kiểm (itemId)')?.trim()
+                        const itemId = window.prompt(t('itemIdPrompt'))?.trim()
                         if (!itemId) return
                         void resolve(item.id, { itemId })
                       }}
                     >
-                      Gắn vào dòng
+                      {t('linkItem')}
                     </Button>
                     <Button
                       type="button"
@@ -415,7 +425,7 @@ export function Component() {
                       variant="outline"
                       onClick={() => void resolve(item.id, { ignore: true })}
                     >
-                      Bỏ qua
+                      {t('ignore')}
                     </Button>
                   </>
                 )}

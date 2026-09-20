@@ -110,6 +110,61 @@ api.use(authMiddleware)
 
 type FetchResult<T> = { data?: T; error?: unknown; response: Response }
 
+type UntypedInit = {
+  params?: { query?: Record<string, unknown>; path?: Record<string, string> }
+  body?: unknown
+}
+
+async function untypedRequest(
+  method: string,
+  path: string,
+  init?: UntypedInit,
+): Promise<FetchResult<unknown>> {
+  let resolvedPath = path
+  for (const [key, value] of Object.entries(init?.params?.path ?? {}))
+    resolvedPath = resolvedPath.replace(`{${key}}`, encodeURIComponent(value))
+  const url = new URL(
+    `${baseUrl}${resolvedPath}`,
+    typeof window === 'undefined' ? 'http://local.invalid' : window.location.origin,
+  )
+  for (const [key, value] of Object.entries(init?.params?.query ?? {})) {
+    if (value !== undefined && value !== null && value !== '')
+      url.searchParams.set(key, String(value))
+  }
+  const send = () =>
+    fetch(url.pathname + url.search, {
+      method,
+      headers: {
+        ...authHeaders(url.toString()),
+        ...(init?.body === undefined ? {} : { 'Content-Type': 'application/json' }),
+      },
+      body: init?.body === undefined ? undefined : JSON.stringify(init.body),
+    })
+  let response = await send()
+  if (
+    response.status === 401 &&
+    !isPublicPath(url.pathname) &&
+    !isSysPath(url.pathname) &&
+    (await refreshTokens())
+  )
+    response = await send()
+  const data =
+    response.status === 204
+      ? undefined
+      : await response
+          .clone()
+          .json()
+          .catch(() => undefined)
+  return response.ok ? { data, response } : { error: data, response }
+}
+
+/** Endpoint chưa có trong OpenAPI (reports/AI); giữ auth/refresh giống client typed. */
+export const untypedApi = {
+  GET: (path: string, init?: UntypedInit) => untypedRequest('GET', path, init),
+  POST: (path: string, init?: UntypedInit) => untypedRequest('POST', path, init),
+  PATCH: (path: string, init?: UntypedInit) => untypedRequest('PATCH', path, init),
+}
+
 /** Trả `data` hoặc ném `ApiError`. Lỗi tenant → logout. */
 export async function unwrap<T>(p: Promise<FetchResult<T>>): Promise<T> {
   const { data, error, response } = await p
@@ -129,4 +184,13 @@ export async function unwrap<T>(p: Promise<FetchResult<T>>): Promise<T> {
  */
 export async function unwrapAs<T>(p: Promise<FetchResult<unknown>>): Promise<T> {
   return (await unwrap(p)) as T
+}
+
+/**
+ * Một số DTO trong OpenAPI còn khai field quan hệ/số là `Object` (`Record<string, never>`) —
+ * xem README mục "API còn thiếu". Bọc body qua helper này để call site không phải rải
+ * `as never`/cast; khi backend sửa swagger thì gỡ dần các chỗ dùng.
+ */
+export function apiBody<T>(body: unknown): NonNullable<T> {
+  return body as NonNullable<T>
 }

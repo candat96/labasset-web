@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { messageFor } from '@/api/errors'
@@ -16,6 +17,7 @@ import type { components } from '@/api/schema'
 type JobRun = components['schemas']['JobRunViewDto']
 
 export function Component() {
+  const { t } = useTranslation('sys')
   const table = useServerTable()
   const list = useQuery({
     queryKey: ['sys-jobs', table.params.page, table.params.limit],
@@ -34,37 +36,37 @@ export function Component() {
       unwrap(api.POST('/sys/jobs/{name}/run', { params: { path: { name } } })),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['sys-jobs'] })
-      toast.success('Đã chạy tác vụ')
+      toast.success(t('job.ran'))
     },
     onError: (error) => toast.error(messageFor(error)),
   })
   const columns: ColumnDef<JobRun>[] = [
-    { accessorKey: 'name', header: 'Tác vụ' },
+    { accessorKey: 'name', header: t('job.columns.name') },
     {
       accessorKey: 'status',
-      header: 'Trạng thái',
+      header: t('job.columns.status'),
       cell: ({ row }) => <StatusBadge value={row.original.status} map={commonStatusMap} />,
     },
     {
       accessorKey: 'startedAt',
-      header: 'Bắt đầu',
+      header: t('job.columns.startedAt'),
       cell: ({ getValue }) => formatDateTime(getValue<string>()),
     },
     {
       accessorKey: 'finishedAt',
-      header: 'Kết thúc',
+      header: t('job.columns.finishedAt'),
       cell: ({ getValue }) => formatDateTime(getValue<string | null>()) || '—',
     },
     {
       accessorKey: 'error',
-      header: 'Kết quả',
+      header: t('job.columns.result'),
       cell: ({ row }) => row.original.error ?? (row.original.status === 'success' ? 'OK' : '—'),
     },
   ]
   return (
     <>
       {dialog}
-      <PageHeader title="Tác vụ nền" />
+      <PageHeader title={t('job.title')} />
       <div className="mb-4 flex flex-wrap gap-2">
         {(list.data?.jobs ?? []).map((name) => (
           <Button
@@ -72,10 +74,11 @@ export function Component() {
             variant="outline"
             disabled={list.data?.running.includes(name) || run.isPending}
             onClick={async () => {
-              if ((await confirm({ title: `Chạy ngay ${name}?` })) !== false) run.mutate(name)
+              if ((await confirm({ title: t('job.confirmRun', { name }) })) !== false)
+                run.mutate(name)
             }}
           >
-            Chạy {name}
+            {t('job.run', { name })}
           </Button>
         ))}
       </div>

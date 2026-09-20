@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { PageHeader } from '@/components/page/PageHeader'
-import { Input } from '@/components/ui/input'
+import { DatePicker } from '@/components/date-picker'
 import { Label } from '@/components/ui/label'
 import { getWeeklyDigest } from '../api'
 
@@ -13,6 +14,7 @@ function startOfIsoWeek(date = new Date()) {
 }
 
 export function Component() {
+  const { t } = useTranslation('assistant')
   const [weekStart, setWeekStart] = useState(startOfIsoWeek())
   const digest = useQuery({
     queryKey: ['ai-digest', weekStart],
@@ -21,18 +23,17 @@ export function Component() {
   const stats = useMemo(() => digest.data?.stats ?? {}, [digest.data])
   return (
     <>
-      <PageHeader title="Tóm tắt tuần" />
+      <PageHeader title={t('digest')} />
       <div className="mb-4 max-w-xs space-y-1">
-        <Label htmlFor="week-start">Tuần bắt đầu</Label>
-        <Input
-          id="week-start"
-          type="date"
+        <Label htmlFor="week-start">{t('weekStart')}</Label>
+        <DatePicker
+          ariaLabel={t('weekStart')}
           value={weekStart}
-          onChange={(event) => setWeekStart(event.target.value)}
+          onChange={(value) => value && setWeekStart(value)}
         />
       </div>
-      {digest.isPending && <p role="status">Đang tải tóm tắt…</p>}
-      {digest.error && <p role="alert">Chưa có tóm tắt tuần này.</p>}
+      {digest.isPending && <p role="status">{t('digestLoading')}</p>}
+      {digest.error && <p role="alert">{t('digestEmpty')}</p>}
       {digest.data && (
         <>
           <ul className="mb-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-5 text-sm">
@@ -48,7 +49,7 @@ export function Component() {
               {digest.data.content}
             </pre>
           ) : (
-            <p className="text-muted-foreground text-sm">Chưa cấu hình AI.</p>
+            <p className="text-muted-foreground text-sm">{t('notConfigured')}</p>
           )}
         </>
       )}

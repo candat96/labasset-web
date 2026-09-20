@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { toast } from 'sonner'
 import { DataTable, useServerTable } from '@/components/data-table'
@@ -11,15 +11,19 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { StatusBadge } from '@/components/status-badge'
 import { requestStatusMap } from '@/lib/status-maps'
 import { formatDate } from '@/lib/format/date'
+import { dayRangeToIso } from '@/lib/format/date-range'
 import { useCan } from '@/app/guards/useCan'
 import { HEADS, STAFF } from '@/routes/roles'
 import { useConfirm } from '@/components/confirm-dialog'
 import { approveBulk, listRequests } from '../api'
 import type { components } from '@/api/schema'
+import { useTranslation } from 'react-i18next'
 
 type Row = components['schemas']['RequestResponseDto']
 
 export function Component() {
+  const { t } = useTranslation('requests')
+
   const canStaff = useCan(STAFF)
   const canHead = useCan(HEADS)
   const navigate = useNavigate()
@@ -45,12 +49,18 @@ export function Component() {
     pendingFor: f.pendingFor === 'me' ? 'me' : undefined,
     requesterId: f.requesterId,
     priority: f.priority,
+    departmentId: f.departmentId,
+    ...dayRangeToIso(f.from, f.to),
   }
   const list = useQuery({
     queryKey: ['requests', params],
     queryFn: () => listRequests(params),
     placeholderData: (p) => p,
   })
+  const qc = useQueryClient()
+  const invalidateList = () => {
+    void qc.invalidateQueries({ queryKey: ['requests'] })
+  }
   const pending = useQuery({
     queryKey: ['requests', 'pending-count'],
     queryFn: () => listRequests({ pendingFor: 'me', page: 1, limit: 1 }),
@@ -65,7 +75,7 @@ export function Component() {
         header: '',
         cell: ({ row }) => (
           <Checkbox
-            aria-label={`Chọn ${row.original.code}`}
+            aria-label={t('selectRequest', { code: row.original.code })}
             checked={selected.includes(row.original.id)}
             onClick={(e) => e.stopPropagation()}
             onCheckedChange={(on) =>
@@ -80,7 +90,7 @@ export function Component() {
       },
       {
         accessorKey: 'code',
-        header: 'Mã',
+        header: t('code'),
         cell: ({ row }) => (
           <Link
             className="text-primary font-mono text-xs hover:underline"
@@ -90,22 +100,22 @@ export function Component() {
           </Link>
         ),
       },
-      { accessorKey: 'type', header: 'Loại' },
+      { accessorKey: 'type', header: t('type') },
       { accessorKey: 'departmentName', header: 'Khoa' },
-      { accessorKey: 'requesterName', header: 'Người yêu cầu' },
+      { accessorKey: 'requesterName', header: t('requester') },
       {
         accessorKey: 'priority',
-        header: 'Ưu tiên',
+        header: t('priority'),
         cell: ({ row }) =>
           row.original.priority === 'urgent' ? (
-            <StatusBadge value="urgent" map={{ urgent: { label: 'Khẩn', tone: 'danger' } }} />
+            <StatusBadge value="urgent" map={{ urgent: { label: t('urgent'), tone: 'danger' } }} />
           ) : (
-            'Thường'
+            t('normal')
           ),
       },
       {
         accessorKey: 'neededBy',
-        header: 'Cần trước',
+        header: t('neededBy'),
         cell: ({ row }) => (
           <span
             className={
@@ -120,7 +130,7 @@ export function Component() {
       },
       {
         accessorKey: 'status',
-        header: 'Trạng thái',
+        header: t('status'),
         cell: ({ row }) => (
           <span className="inline-flex items-center gap-1">
             <StatusBadge value={row.original.status} map={requestStatusMap} />
@@ -129,35 +139,41 @@ export function Component() {
         ),
       },
     ],
-    [selected],
+    [selected, t],
   )
   return (
     <>
       {dialog}
       <PageHeader
-        title="Phiếu yêu cầu"
+        title={t('title')}
         actions={
           <div className="flex gap-2">
             {canStaff && selected.length > 0 && (
               <Button
                 variant="outline"
                 onClick={async () => {
-                  if ((await confirm({ title: `Duyệt ${selected.length} phiếu?` })) === false)
+                  if (
+                    (await confirm({
+                      title: t('approveBulkConfirm', { count: selected.length }),
+                    })) === false
+                  )
                     return
                   const result = await approveBulk(selected)
                   const approved = (result as { approved?: unknown }).approved
                   toast.success(
-                    `Đã duyệt ${Array.isArray(approved) ? approved.length : selected.length}`,
+                    t('approvedCount', {
+                      count: Array.isArray(approved) ? approved.length : selected.length,
+                    }),
                   )
                   setSelected([])
-                  void list.refetch()
+                  invalidateList()
                 }}
               >
-                Duyệt hàng loạt
+                {t('bulkApprove')}
               </Button>
             )}
             <Button asChild>
-              <Link to="/requests/new">Tạo phiếu</Link>
+              <Link to="/requests/new">{t('createRequest')}</Link>
             </Button>
           </div>
         }
@@ -170,7 +186,7 @@ export function Component() {
             table.setFilters({ pendingFor: undefined, status: undefined, requesterId: undefined })
           }
         >
-          Tất cả
+          {t('all')}
         </Button>
         {canHead && (
           <Button
@@ -178,7 +194,8 @@ export function Component() {
             variant={f.pendingFor === 'me' ? 'default' : 'outline'}
             onClick={() => table.setFilters({ pendingFor: 'me', status: undefined })}
           >
-            Chờ tôi duyệt{pending.data?.total ? ` (${pending.data.total})` : ''}
+            {t('pendingMine')}
+            {pending.data?.total ? ` (${pending.data.total})` : ''}
           </Button>
         )}
         <Button
@@ -186,27 +203,27 @@ export function Component() {
           variant={f.requesterId === 'me' ? 'default' : 'outline'}
           onClick={() => table.setFilters({ requesterId: 'me', pendingFor: undefined })}
         >
-          Của tôi
+          {t('mine')}
         </Button>
         <Button
           size="sm"
           variant={f.status === 'approved,partially_approved' ? 'default' : 'outline'}
           onClick={() => table.setFilter('status', 'approved,partially_approved')}
         >
-          Chờ cấp phát
+          {t('awaitingIssue')}
         </Button>
         <Button
           size="sm"
           variant={f.status === 'issued' ? 'default' : 'outline'}
           onClick={() => table.setFilter('status', 'issued')}
         >
-          Chờ nhận
+          {t('awaitingReceive')}
         </Button>
         <Button size="sm" variant="outline" asChild>
-          <Link to="/requests/quotas">Định mức</Link>
+          <Link to="/requests/quotas">{t('quotas')}</Link>
         </Button>
         <Button size="sm" variant="outline" asChild>
-          <Link to="/requests/recurring">Phiếu định kỳ</Link>
+          <Link to="/requests/recurring">{t('recurring')}</Link>
         </Button>
       </div>
       <DataTable
@@ -224,7 +241,7 @@ export function Component() {
         onRowClick={(row) => navigate(`/requests/${row.id}`)}
         toolbarLeft={
           <Input
-            aria-label="Tìm phiếu"
+            aria-label={t('searchRequest')}
             value={table.inputQ}
             onChange={(e) => table.setQ(e.target.value)}
           />

@@ -85,9 +85,58 @@ it('admin can publish a draft', async () => {
 })
 
 it('sends helpful feedback', async () => {
-  stub()
+  stub({ status: 'published' })
   useAuthStore.getState().setSession(fakeSession())
   renderWithProviders(<Component />, { path: '/faults/:id', route: '/faults/f1' })
   await userEvent.click(await screen.findByRole('button', { name: '👍 Hữu ích' }))
   expect(await screen.findByText('Đã gửi phản hồi')).toBeVisible()
+})
+
+it('ẩn Sửa khi lỗi đã lưu trữ và ẩn phản hồi khi còn nháp', async () => {
+  stub({ status: 'archived' })
+  useAuthStore.getState().setSession(fakeSession())
+  renderWithProviders(<Component />, { path: '/faults/:id', route: '/faults/f1' })
+  await screen.findByRole('heading', { name: 'Không hút mẫu' })
+  expect(screen.queryByRole('link', { name: 'Sửa' })).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: '👍 Hữu ích' })).not.toBeInTheDocument()
+  expect(screen.getByText('Chỉ gửi phản hồi cho lỗi đã ban hành')).toBeVisible()
+})
+
+it('xem được phiên bản lỗi trong lịch sử', async () => {
+  stub()
+  useAuthStore.getState().setSession(fakeSession())
+  server.use(
+    http.get('/v1/faults/f1/versions', () =>
+      HttpResponse.json([
+        {
+          id: 'ver1',
+          faultId: 'f1',
+          version: 1,
+          changedBy: 'u1',
+          changedAt: '2026-09-18T00:00:00Z',
+        },
+      ]),
+    ),
+    http.get('/v1/faults/f1/versions/1', () =>
+      HttpResponse.json({
+        id: 'ver1',
+        faultId: 'f1',
+        version: 1,
+        changedBy: 'u1',
+        changedAt: '2026-09-18T00:00:00Z',
+        snapshot: {
+          ...fault,
+          title: 'Không hút mẫu (bản cũ)',
+          symptoms: 'Triệu chứng cũ',
+          steps: [],
+          parts: [],
+        },
+      }),
+    ),
+  )
+  renderWithProviders(<Component />, { path: '/faults/:id', route: '/faults/f1' })
+  await screen.findByRole('heading', { name: 'Không hút mẫu' })
+  await userEvent.click(screen.getByLabelText('Phiên bản'))
+  await userEvent.click(await screen.findByRole('option', { name: /^v1/ }))
+  expect(await screen.findByText('Triệu chứng cũ')).toBeVisible()
 })

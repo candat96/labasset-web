@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router'
+import { useTranslation } from 'react-i18next'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { toast } from 'sonner'
@@ -31,6 +32,8 @@ export function Component() {
 }
 
 export function CatalogPage({ slug }: { slug: CatalogSlug }) {
+  const { t } = useTranslation('catalogs')
+  const { t: tc } = useTranslation()
   const config = catalogConfigs[slug]
   const table = useServerTable({ filterKeys: ['isActive'] })
   const active = table.params.filters.isActive
@@ -60,7 +63,7 @@ export function CatalogPage({ slug }: { slug: CatalogSlug }) {
     mutationFn: (id: string) => deleteCatalog(slug, id),
     onSuccess: (result) => {
       void queryClient.invalidateQueries({ queryKey: ['catalogs', slug] })
-      toast.success(result.deactivated ? 'Đã ngừng hoạt động danh mục' : 'Đã xoá danh mục')
+      toast.success(result.deactivated ? t('deactivated') : t('deleted'))
     },
     onError: (error) => toast.error(messageFor(error)),
   })
@@ -68,27 +71,27 @@ export function CatalogPage({ slug }: { slug: CatalogSlug }) {
     () => [
       {
         accessorKey: 'code',
-        header: 'Mã',
+        header: t('fields.code'),
         cell: ({ getValue }) => <code className="font-mono text-xs">{getValue<string>()}</code>,
       },
       {
         accessorKey: 'name',
-        header: 'Tên',
+        header: t('fields.name'),
         cell: ({ getValue }) => <span className="font-medium">{getValue<string>()}</span>,
       },
       ...config.fields.map((field) => ({
         accessorKey: field.name,
-        header: field.label,
+        header: t(`catalogFields.${slug}.${field.name}`),
         cell: ({ row }: { row: { original: CatalogRow } }) =>
           field.type === 'boolean'
             ? row.original[field.name]
-              ? 'Có'
-              : 'Không'
+              ? t('boolean.yes')
+              : t('boolean.no')
             : String(row.original[field.name] ?? '—'),
       })),
       {
         accessorKey: 'isActive',
-        header: 'Trạng thái',
+        header: t('fields.status'),
         cell: ({ row }) => (
           <StatusBadge
             value={row.original.isActive ? 'active' : 'inactive'}
@@ -98,7 +101,7 @@ export function CatalogPage({ slug }: { slug: CatalogSlug }) {
       },
       {
         id: 'actions',
-        header: 'Thao tác',
+        header: tc('actions.more'),
         cell: ({ row }) => (
           <div className="flex gap-1">
             <Button
@@ -109,7 +112,7 @@ export function CatalogPage({ slug }: { slug: CatalogSlug }) {
                 setFormOpen(true)
               }}
             >
-              Sửa
+              {tc('actions.edit')}
             </Button>
             <Button
               variant="ghost"
@@ -117,31 +120,30 @@ export function CatalogPage({ slug }: { slug: CatalogSlug }) {
               onClick={async () => {
                 if (
                   (await confirm({
-                    title: `Xoá ${row.original.name}?`,
-                    description:
-                      'Nếu danh mục đang được dùng, hệ thống sẽ yêu cầu ngưng hoạt động.',
+                    title: t('deleteTitle', { name: row.original.name }),
+                    description: t('deleteDesc'),
                     destructive: true,
                   })) !== false
                 )
                   remove.mutate(row.original.id)
               }}
             >
-              Xoá
+              {tc('actions.delete')}
             </Button>
           </div>
         ),
       },
     ],
-    [config.fields, confirm, remove],
+    [config.fields, confirm, remove, slug, t, tc],
   )
   return (
     <>
       <PageHeader
-        title={config.title}
+        title={t(`titles.${slug}`)}
         actions={
           <>
             <Button variant="outline" onClick={() => setImportOpen(true)}>
-              Nhập Excel
+              {tc('actions.import')}
             </Button>
             <Button
               onClick={() => {
@@ -149,20 +151,20 @@ export function CatalogPage({ slug }: { slug: CatalogSlug }) {
                 setFormOpen(true)
               }}
             >
-              Thêm mới
+              {t('add')}
             </Button>
           </>
         }
       />
       <div className="mb-3 max-w-sm">
         <Select value={slug} onValueChange={(value) => navigate(`/admin/catalogs/${value}`)}>
-          <SelectTrigger aria-label="Chọn danh mục">
+          <SelectTrigger aria-label={t('filter.select')}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             {catalogSlugs.map((item) => (
               <SelectItem key={item} value={item}>
-                {catalogConfigs[item].title}
+                {t(`titles.${item}`)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -183,10 +185,10 @@ export function CatalogPage({ slug }: { slug: CatalogSlug }) {
         toolbarLeft={
           <>
             <Input
-              aria-label="Tìm danh mục"
+              aria-label={t('search.label')}
               value={table.inputQ}
               onChange={(event) => table.setQ(event.target.value)}
-              placeholder="Tìm mã hoặc tên"
+              placeholder={t('search.placeholder')}
               className="w-64"
             />
             <Select
@@ -195,13 +197,13 @@ export function CatalogPage({ slug }: { slug: CatalogSlug }) {
                 table.setFilter('isActive', value === 'all' ? undefined : value)
               }
             >
-              <SelectTrigger aria-label="Lọc trạng thái">
+              <SelectTrigger aria-label={t('filter.status')}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Mọi trạng thái</SelectItem>
-                <SelectItem value="true">Hoạt động</SelectItem>
-                <SelectItem value="false">Ngưng hoạt động</SelectItem>
+                <SelectItem value="all">{t('filter.allStatuses')}</SelectItem>
+                <SelectItem value="true">{t('filter.active')}</SelectItem>
+                <SelectItem value="false">{t('filter.inactive')}</SelectItem>
               </SelectContent>
             </Select>
           </>
@@ -211,7 +213,7 @@ export function CatalogPage({ slug }: { slug: CatalogSlug }) {
             variant="outline"
             onClick={() => void exportCatalog(slug, { q: params.q, isActive: params.isActive })}
           >
-            Xuất Excel
+            {tc('actions.export')}
           </Button>
         }
       />

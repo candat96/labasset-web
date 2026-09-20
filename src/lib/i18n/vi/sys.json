@@ -3,5 +3,124 @@
   "migrations": "Migration",
   "announcements": "Thông báo hệ thống",
   "stats": "Thống kê",
-  "jobs": "Tác vụ nền"
+  "jobs": "Tác vụ nền",
+  "login": {
+    "brand": "LabAsset · Hệ thống",
+    "title": "Đăng nhập quản trị hệ thống",
+    "description": "Tài khoản System Admin, không gắn bệnh viện.",
+    "username": "Tài khoản",
+    "password": "Mật khẩu",
+    "submit": "Đăng nhập",
+    "hospitalLogin": "Đăng nhập bệnh viện"
+  },
+  "hospital": {
+    "title": "Bệnh viện",
+    "add": "Thêm bệnh viện",
+    "edit": "Sửa bệnh viện",
+    "loading": "Đang tải bệnh viện…",
+    "searchLabel": "Tìm bệnh viện",
+    "searchPlaceholder": "Tìm mã hoặc tên",
+    "pending": "{{pending}} chờ",
+    "updated": "Đã cập nhật",
+    "noJobs": "Chưa có job",
+    "provision": "Khởi tạo",
+    "usage": "Sử dụng",
+    "usageLoading": "Đang tải usage…",
+    "noUsage": "Chưa có số liệu",
+    "saved": "Đã lưu bệnh viện",
+    "created": "Đã tạo bệnh viện. Mật khẩu admin tạm lấy bằng Reset admin khi viện active.",
+    "tempPassword": "Mật khẩu tạm cho {{username}}",
+    "done": "Đã thực hiện",
+    "errors": {
+      "code": "Mã 2–32 ký tự A–Z, số hoặc _",
+      "email": "Email không hợp lệ"
+    },
+    "fields": {
+      "code": "Mã",
+      "name": "Tên",
+      "status": "Trạng thái",
+      "planExpires": "Gói / hết hạn",
+      "plan": "Gói",
+      "expires": "Hết hạn",
+      "contact": "Liên hệ",
+      "migrations": "Migration",
+      "createdAt": "Tạo lúc",
+      "maxUsers": "Số user tối đa",
+      "licenseExpiresAt": "Hết hạn giấy phép",
+      "contactName": "Người liên hệ",
+      "contactEmail": "Email liên hệ",
+      "contactPhone": "Điện thoại",
+      "notes": "Ghi chú"
+    },
+    "actions": {
+      "suspend": "Tạm khoá",
+      "resume": "Mở lại",
+      "retryProvision": "Thử khởi tạo lại",
+      "migrate": "Migration",
+      "resetAdmin": "Reset admin"
+    },
+    "confirm": {
+      "suspend": "Tạm khoá {{name}}?",
+      "resume": "Mở lại {{name}}?",
+      "retryProvision": "Chạy lại khởi tạo {{name}}?",
+      "migrate": "Chạy migration {{name}}?",
+      "resetAdmin": "Reset admin {{name}}?"
+    }
+  },
+  "migration": {
+    "title": "Migration",
+    "runAll": "Chạy tất cả",
+    "confirmRunAll": "Chạy migration tất cả viện?",
+    "success": "Đã chạy migration tất cả viện",
+    "partial": "Xong, {{failed}} viện lỗi",
+    "none": "Không",
+    "columns": {
+      "code": "Mã viện",
+      "pending": "Chờ chạy"
+    }
+  },
+  "announcement": {
+    "title": "Thông báo hệ thống",
+    "add": "Thêm thông báo",
+    "edit": "Sửa thông báo",
+    "saved": "Đã lưu thông báo",
+    "deleted": "Đã xoá thông báo",
+    "deleteTitle": "Xoá {{name}}?",
+    "fields": {
+      "title": "Tiêu đề",
+      "body": "Nội dung",
+      "level": "Mức",
+      "startsAt": "Bắt đầu",
+      "endsAt": "Kết thúc"
+    },
+    "levels": {
+      "info": "Thông tin",
+      "warning": "Cảnh báo"
+    },
+    "errors": {
+      "required": "Bắt buộc"
+    }
+  },
+  "stat": {
+    "title": "Thống kê hệ thống",
+    "loading": "Đang tải thống kê…",
+    "hospitals": "Bệnh viện",
+    "users": "Người dùng",
+    "storage": "Dung lượng (byte)",
+    "sampled": "Viện có số liệu",
+    "byStatus": "Theo trạng thái"
+  },
+  "job": {
+    "title": "Tác vụ nền",
+    "run": "Chạy {{name}}",
+    "confirmRun": "Chạy ngay {{name}}?",
+    "ran": "Đã chạy tác vụ",
+    "columns": {
+      "name": "Tác vụ",
+      "status": "Trạng thái",
+      "startedAt": "Bắt đầu",
+      "finishedAt": "Kết thúc",
+      "result": "Kết quả"
+    }
+  }
 }

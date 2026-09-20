@@ -96,7 +96,8 @@ export const MENU: MenuGroup[] = [
     labelKey: 'menu:groups.repairs',
     items: [
       { path: '/repairs', labelKey: 'menu:items.repairs', icon: Wrench },
-      { path: '/repairs/stats', labelKey: 'menu:items.repairStats', icon: BarChart3, roles: HEADS },
+      // API `/v1/repairs/stats` chỉ ADM/VT (workload chỉ ADM) → menu theo đúng quyền API.
+      { path: '/repairs/stats', labelKey: 'menu:items.repairStats', icon: BarChart3, roles: STAFF },
     ],
   },
   {

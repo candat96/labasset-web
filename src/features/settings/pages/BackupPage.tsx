@@ -1,13 +1,14 @@
+import { useTranslation } from 'react-i18next'
 import { PageHeader } from '@/components/page/PageHeader'
 
 export function Component() {
+  const { t } = useTranslation('settings')
   return (
     <>
-      <PageHeader title="Sao lưu & khôi phục" />
+      <PageHeader title={t('backup.title')} />
       <p className="text-muted-foreground max-w-xl text-sm">
         {/* TODO(api): Tenant API chưa có endpoint backup/restore. Sao lưu do SYS vận hành. */}
-        API viện không có màn sao lưu. Sao lưu CSDL do quản trị hệ thống (SYS) thực hiện trên máy
-        chủ. Liên hệ SYS nếu cần xuất/khôi phục dữ liệu viện.
+        {t('backup.description')}
       </p>
     </>
   )

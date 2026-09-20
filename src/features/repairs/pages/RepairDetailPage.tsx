@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router'
-import { useForm } from 'react-hook-form'
+import { useForm, useFieldArray, useFormState, type Control } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
+import Big from 'big.js'
 import { toast } from 'sonner'
 import { DetailLayout } from '@/components/detail-layout'
 import { ErrorState } from '@/components/page/ErrorState'
@@ -34,50 +36,70 @@ import { formatDate, formatDateTime } from '@/lib/format/date'
 import { formatVnd } from '@/lib/format/money'
 import { formatQty } from '@/lib/format/number'
 import { useCan } from '@/app/guards/useCan'
-import { ADM, STAFF } from '@/routes/roles'
+import { ADM } from '@/routes/roles'
 import { applyServerErrors, messageFor } from '@/api/errors'
-import { catalogOptions, staffUserOptions, supplyOptions } from '@/api/references'
+import {
+  catalogOptions,
+  resolveCatalogItem,
+  staffUserOptions,
+  supplyOptions,
+} from '@/api/references'
 import { uploadFile } from '@/api/files'
+import { getFileUrl } from '@/api/files'
 import { useAuthStore } from '@/stores/auth.store'
 import { assistantPath } from '@/lib/ai-link'
 import * as api from '../api'
-import { usePublicRepairSettings, useRepair, useInvalidateRepairs } from '../hooks'
-import { visibleRepairActions, type RepairAction } from '../actions'
+import {
+  useDepartmentNames,
+  usePublicRepairSettings,
+  useRepair,
+  useInvalidateRepair,
+  useStockLotNames,
+  useSupplierNames,
+  useUserNames,
+} from '../hooks'
+import {
+  availableStatuses,
+  canWriteRepair,
+  visibleRepairActions,
+  type RepairAction,
+} from '../actions'
 import {
   acceptanceSchema,
   assignSchema,
   completeSchema,
   costSchema,
+  declineSchema,
   diagnosisSchema,
   editRepairSchema,
   logSchema,
   partSchema,
+  signSchema,
+  statusSchema,
   vendorSchema,
   type AcceptanceForm,
   type AssignForm,
   type CompleteForm,
   type CostForm,
+  type DeclineForm,
   type DiagnosisForm,
   type EditRepairForm,
   type LogForm,
   type PartForm,
+  type SignForm,
+  type StatusForm,
   type VendorForm,
 } from '../schema'
-import { COST_CATEGORIES, PART_SOURCES, RESOLUTION_TYPES, WORK_STATUSES } from '../types'
+import { COST_CATEGORIES, PART_SOURCES, RESOLUTION_TYPES } from '../types'
 import { SignaturePad } from '../components/SignaturePad'
-
-const RESOLUTION_LABEL: Record<(typeof RESOLUTION_TYPES)[number], string> = {
-  internal: 'Nội bộ',
-  vendor: 'Thuê ngoài',
-  warranty: 'Bảo hành',
-  spare_equipment: 'Máy dự phòng',
-}
+import { StarRating } from '../components/StarRating'
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === 'object' ? (value as Record<string, unknown>) : null
 }
 
 export function Component() {
+  const { t } = useTranslation('repairs')
   const { id = '' } = useParams()
   const location = useLocation()
   const prefillFault =
@@ -86,14 +108,13 @@ export function Component() {
       : null
   const detail = useRepair(id)
   const settings = usePublicRepairSettings()
-  const invalidate = useInvalidateRepairs()
+  const invalidate = useInvalidateRepair()
   const isAdm = useCan(ADM)
-  const isVt = useCan(STAFF)
   const userId = useAuthStore((s) => s.user?.id) ?? ''
   const roles = useAuthStore((s) => s.user?.roles)
   const { confirm, dialog } = useConfirm()
   const [open, setOpen] = useState<
-    RepairAction | 'log' | 'part' | 'vendor' | 'cost' | 'sign' | null
+    RepairAction | 'log' | 'part' | 'vendor' | 'cost' | 'sign' | 'decline' | null
   >(null)
   const requireAcceptance = settings.data?.['repair.requireAcceptance'] === true
   const row = detail.data
@@ -110,25 +131,32 @@ export function Component() {
         : [],
     [row, roles, userId, requireAcceptance],
   )
+  const rolesList = roles ?? []
+  const isDeptScoped = rolesList.includes('DEPT_HEAD') || rolesList.includes('DEPT_USER')
   const closed = row?.status === 'closed' || row?.status === 'cancelled'
   const afterComplete = ['completed', 'acceptance', 'closed', 'cancelled'].includes(
     row?.status ?? '',
   )
-  const canWork = actions.includes('diagnosis') || (!afterComplete && isAdm)
+  const canWork = !!row && canWriteRepair(userId, rolesList, row.assignments)
+  const canWriteParts = canWork && !afterComplete
   const canCosts = (canWork || isAdm) && !closed
+  const canAttach = !closed && (canWork || isDeptScoped)
+  const canSignTechnician = canWork && !closed
+  const canSignDepartment =
+    (isAdm || isDeptScoped) && ['completed', 'acceptance'].includes(row?.status ?? '')
 
   const run = async (title: string, action: () => Promise<unknown>, destructive = false) => {
     if ((await confirm({ title, destructive })) === false) return
     try {
       await action()
-      toast.success('Đã cập nhật phiếu')
-      void invalidate()
+      toast.success(t('detail.actions.updated'))
+      invalidate(id)
     } catch (error) {
       toast.error(messageFor(error))
     }
   }
 
-  if (detail.isPending) return <p role="status">Đang tải phiếu sửa chữa…</p>
+  if (detail.isPending) return <p role="status">{t('detail.loading')}</p>
   if (detail.error) return <ErrorState error={detail.error} onRetry={() => void detail.refetch()} />
   if (!row) return null
 
@@ -148,13 +176,13 @@ export function Component() {
             {row.isOverdue && (
               <StatusBadge
                 value="overdue"
-                map={{ overdue: { label: 'Quá hạn', tone: 'danger' } }}
+                map={{ overdue: { label: t('detail.overdue'), tone: 'danger' } }}
               />
             )}
             {row.costWarning && (
               <StatusBadge
                 value="cost"
-                map={{ cost: { label: 'Cảnh báo chi phí', tone: 'danger' } }}
+                map={{ cost: { label: t('detail.costWarning'), tone: 'danger' } }}
               />
             )}
           </div>
@@ -164,65 +192,66 @@ export function Component() {
             {row.equipment?.id && (
               <Button asChild variant="outline">
                 <Link to={assistantPath({ equipmentId: row.equipment.id, repairId: id })}>
-                  Hỏi AI về máy này
+                  {t('detail.actions.askAi')}
                 </Link>
               </Button>
             )}
             {actions.includes('accept') && (
-              <Button onClick={() => void run('Tiếp nhận phiếu?', () => api.acceptRepair(id))}>
-                Tiếp nhận
+              <Button
+                onClick={() =>
+                  void run(t('detail.actions.acceptConfirm'), () => api.acceptRepair(id))
+                }
+              >
+                {t('detail.actions.accept')}
               </Button>
             )}
             {actions.includes('assign') && (
               <Button variant="outline" onClick={() => setOpen('assign')}>
-                Phân công
+                {t('detail.actions.assign')}
               </Button>
             )}
             {actions.includes('respond') && (
               <>
                 <Button
                   onClick={() =>
-                    void run('Nhận việc?', () =>
+                    void run(t('detail.respond.acceptConfirm'), () =>
                       api.respondAssignment(id, { response: 'accepted' }),
                     )
                   }
                 >
-                  Nhận việc
+                  {t('detail.respond.accept')}
                 </Button>
-                <Button
-                  variant="outline"
-                  onClick={() =>
-                    void run('Từ chối việc?', () =>
-                      api.respondAssignment(id, { response: 'declined' }),
-                    )
-                  }
-                >
-                  Từ chối
+                <Button variant="outline" onClick={() => setOpen('decline')}>
+                  {t('detail.respond.decline')}
                 </Button>
               </>
             )}
             {actions.includes('diagnosis') && (
               <Button variant="outline" onClick={() => setOpen('diagnosis')}>
-                Chẩn đoán
+                {t('detail.actions.diagnosis')}
               </Button>
             )}
             {actions.includes('status') && (
               <Button variant="outline" onClick={() => setOpen('status')}>
-                Đổi trạng thái
+                {t('detail.actions.status')}
               </Button>
             )}
             {actions.includes('complete') && (
-              <Button onClick={() => setOpen('complete')}>Hoàn thành</Button>
+              <Button onClick={() => setOpen('complete')}>{t('detail.actions.complete')}</Button>
             )}
             {actions.includes('acceptance') && (
-              <Button onClick={() => setOpen('acceptance')}>Nghiệm thu</Button>
+              <Button onClick={() => setOpen('acceptance')}>
+                {t('detail.actions.acceptance')}
+              </Button>
             )}
             {actions.includes('close') && (
               <Button
                 variant="outline"
-                onClick={() => void run('Đóng phiếu?', () => api.closeRepair(id))}
+                onClick={() =>
+                  void run(t('detail.actions.closeConfirm'), () => api.closeRepair(id))
+                }
               >
-                Đóng
+                {t('detail.actions.close')}
               </Button>
             )}
             {actions.includes('cancel') && (
@@ -230,27 +259,27 @@ export function Component() {
                 variant="outline"
                 onClick={async () => {
                   const reason = await confirm({
-                    title: 'Huỷ phiếu?',
+                    title: t('detail.actions.cancelConfirm'),
                     requireReason: true,
                     destructive: true,
-                    confirmLabel: 'Huỷ phiếu',
+                    confirmLabel: t('detail.actions.cancelConfirmLabel'),
                   })
                   if (reason === false) return
                   try {
                     await api.cancelRepair(id, reason)
-                    toast.success('Đã huỷ phiếu')
-                    void invalidate()
+                    toast.success(t('detail.actions.cancelled'))
+                    invalidate(id)
                   } catch (error) {
                     toast.error(messageFor(error))
                   }
                 }}
               >
-                Huỷ
+                {t('detail.actions.cancel')}
               </Button>
             )}
             {actions.includes('edit') && (
               <Button variant="outline" onClick={() => setOpen('edit')}>
-                Sửa
+                {t('detail.actions.edit')}
               </Button>
             )}
             {actions.includes('print') && (
@@ -262,75 +291,45 @@ export function Component() {
                     .catch((e) => toast.error(messageFor(e)))
                 }
               >
-                In biên bản
+                {t('detail.actions.print')}
               </Button>
             )}
           </div>
         }
-        information={
-          <dl className="space-y-2 text-sm">
-            <div>
-              <dt className="text-muted-foreground">Máy</dt>
-              <dd>
-                {row.equipment ? (
-                  <Link
-                    className="text-primary hover:underline"
-                    to={`/equipment/${row.equipmentId}`}
-                  >
-                    {row.equipment.code} – {row.equipment.name}
-                  </Link>
-                ) : (
-                  row.equipmentId
-                )}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Người xử lý</dt>
-              <dd>{row.assignee?.fullName ?? '—'}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Hạn</dt>
-              <dd>{formatDateTime(row.dueAt) || '—'}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Chi phí</dt>
-              <dd>{formatVnd(row.totalCost) || '—'}</dd>
-            </div>
-          </dl>
-        }
+        information={<RepairInformation row={row} />}
         tabs={[
           {
             value: 'overview',
-            label: 'Tổng quan',
+            label: t('detail.tabs.overview'),
             content: <OverviewTab row={row} faultTitle={faultTitle} />,
           },
           {
             value: 'logs',
-            label: 'Nhật ký',
+            label: t('detail.tabs.logs'),
             content: (
-              <LogsTab
-                id={id}
-                logs={row.logs}
-                canWrite={canWork && !afterComplete}
-                onAdd={() => setOpen('log')}
-              />
+              <LogsTab logs={row.logs} canWrite={canWriteParts} onAdd={() => setOpen('log')} />
             ),
           },
           {
             value: 'parts',
-            label: 'Linh kiện/vật tư',
+            label: t('detail.tabs.parts'),
             content: (
               <PartsTab
                 parts={row.parts}
-                canWrite={canWork && !afterComplete}
+                canWrite={canWriteParts}
                 onAdd={() => setOpen('part')}
                 onDelete={async (pid) => {
-                  if ((await confirm({ title: 'Xoá linh kiện?', destructive: true })) === false)
+                  if (
+                    (await confirm({
+                      title: t('detail.parts.deleteConfirm'),
+                      destructive: true,
+                    })) === false
+                  )
                     return
                   try {
                     await api.deleteRepairPart(id, pid)
-                    toast.success('Đã xoá')
-                    void invalidate()
+                    toast.success(t('detail.actions.deleted'))
+                    invalidate(id)
                   } catch (error) {
                     toast.error(messageFor(error))
                   }
@@ -340,19 +339,24 @@ export function Component() {
           },
           {
             value: 'vendors',
-            label: 'Thuê ngoài',
+            label: t('detail.tabs.vendors'),
             content: (
               <VendorsTab
                 vendors={row.vendors}
                 canWrite={canCosts}
                 onAdd={() => setOpen('vendor')}
                 onDelete={async (vid) => {
-                  if ((await confirm({ title: 'Xoá thuê ngoài?', destructive: true })) === false)
+                  if (
+                    (await confirm({
+                      title: t('detail.vendors.deleteConfirm'),
+                      destructive: true,
+                    })) === false
+                  )
                     return
                   try {
                     await api.deleteRepairVendor(id, vid)
-                    toast.success('Đã xoá')
-                    void invalidate()
+                    toast.success(t('detail.actions.deleted'))
+                    invalidate(id)
                   } catch (error) {
                     toast.error(messageFor(error))
                   }
@@ -362,22 +366,27 @@ export function Component() {
           },
           {
             value: 'costs',
-            label: 'Chi phí',
+            label: t('detail.tabs.costs'),
             content: (
               <CostsTab
-                id={id}
+                equipmentId={row.equipmentId}
                 costs={row.costs}
                 total={row.totalCost}
                 warning={row.costWarning}
                 canWrite={canCosts}
                 onAdd={() => setOpen('cost')}
                 onDelete={async (cid) => {
-                  if ((await confirm({ title: 'Xoá chi phí?', destructive: true })) === false)
+                  if (
+                    (await confirm({
+                      title: t('detail.costs.deleteConfirm'),
+                      destructive: true,
+                    })) === false
+                  )
                     return
                   try {
                     await api.deleteRepairCost(id, cid)
-                    toast.success('Đã xoá')
-                    void invalidate()
+                    toast.success(t('detail.actions.deleted'))
+                    invalidate(id)
                   } catch (error) {
                     toast.error(messageFor(error))
                   }
@@ -387,21 +396,29 @@ export function Component() {
           },
           {
             value: 'docs',
-            label: 'Tài liệu & chữ ký',
+            label: t('detail.tabs.docs'),
             content: (
               <div className="space-y-3">
-                {canCosts && <Button onClick={() => setOpen('sign')}>Ký</Button>}
+                {(canSignTechnician || canSignDepartment) && (
+                  <Button onClick={() => setOpen('sign')}>{t('detail.docs.sign')}</Button>
+                )}
                 <AttachmentsPanel
                   entityType="repair_ticket"
                   entityId={id}
-                  canWrite={!closed && (isVt || canWork)}
+                  canWrite={canAttach}
                   kinds={[
-                    { value: 'photo', label: 'Ảnh' },
-                    { value: 'video', label: 'Video' },
-                    { value: 'signature_technician', label: 'Chữ ký kỹ thuật' },
-                    { value: 'signature_department', label: 'Chữ ký khoa' },
-                    { value: 'report', label: 'Biên bản' },
-                    { value: 'other', label: 'Khác' },
+                    { value: 'photo', label: t('detail.attachments.photo') },
+                    { value: 'video', label: t('detail.attachments.video') },
+                    {
+                      value: 'signature_technician',
+                      label: t('detail.attachments.signatureTechnician'),
+                    },
+                    {
+                      value: 'signature_department',
+                      label: t('detail.attachments.signatureDepartment'),
+                    },
+                    { value: 'report', label: t('detail.attachments.report') },
+                    { value: 'other', label: t('detail.attachments.other') },
                   ]}
                 />
               </div>
@@ -409,7 +426,7 @@ export function Component() {
           },
           {
             value: 'audit',
-            label: 'Lịch sử thay đổi',
+            label: t('detail.tabs.audit'),
             content: <AuditTrail entityType="repair_ticket" entityId={id} />,
           },
         ]}
@@ -419,7 +436,7 @@ export function Component() {
           id={id}
           equipmentId={row.equipmentId}
           onClose={() => setOpen(null)}
-          onDone={invalidate}
+          onDone={() => invalidate(id)}
         />
       )}
       {open === 'diagnosis' && (
@@ -430,17 +447,25 @@ export function Component() {
           description={row.description}
           defaultFaultId={row.faultId ?? prefillFault}
           onClose={() => setOpen(null)}
-          onDone={invalidate}
+          onDone={() => invalidate(id)}
         />
       )}
       {open === 'status' && (
-        <StatusDialog id={id} onClose={() => setOpen(null)} onDone={invalidate} />
+        <StatusDialog
+          id={id}
+          status={row.status}
+          onClose={() => setOpen(null)}
+          onDone={() => invalidate(id)}
+        />
+      )}
+      {open === 'decline' && (
+        <DeclineDialog id={id} onClose={() => setOpen(null)} onDone={() => invalidate(id)} />
       )}
       {open === 'complete' && (
-        <CompleteDialog id={id} onClose={() => setOpen(null)} onDone={invalidate} />
+        <CompleteDialog id={id} onClose={() => setOpen(null)} onDone={() => invalidate(id)} />
       )}
       {open === 'acceptance' && (
-        <AcceptanceDialog id={id} onClose={() => setOpen(null)} onDone={invalidate} />
+        <AcceptanceDialog id={id} onClose={() => setOpen(null)} onDone={() => invalidate(id)} />
       )}
       {open === 'edit' && (
         <EditDialog
@@ -453,24 +478,73 @@ export function Component() {
             equipmentDown: row.equipmentDown,
           }}
           onClose={() => setOpen(null)}
-          onDone={invalidate}
+          onDone={() => invalidate(id)}
         />
       )}
-      {open === 'log' && <LogDialog id={id} onClose={() => setOpen(null)} onDone={invalidate} />}
+      {open === 'log' && (
+        <LogDialog id={id} onClose={() => setOpen(null)} onDone={() => invalidate(id)} />
+      )}
       {open === 'part' && (
         <PartDialog
           id={id}
           equipmentId={row.equipmentId}
           onClose={() => setOpen(null)}
-          onDone={invalidate}
+          onDone={() => invalidate(id)}
         />
       )}
       {open === 'vendor' && (
-        <VendorDialog id={id} onClose={() => setOpen(null)} onDone={invalidate} />
+        <VendorDialog id={id} onClose={() => setOpen(null)} onDone={() => invalidate(id)} />
       )}
-      {open === 'cost' && <CostDialog id={id} onClose={() => setOpen(null)} onDone={invalidate} />}
-      {open === 'sign' && <SignDialog id={id} onClose={() => setOpen(null)} onDone={invalidate} />}
+      {open === 'cost' && (
+        <CostDialog id={id} onClose={() => setOpen(null)} onDone={() => invalidate(id)} />
+      )}
+      {open === 'sign' && (
+        <SignDialog
+          id={id}
+          canTechnician={canSignTechnician}
+          canDepartment={canSignDepartment}
+          onClose={() => setOpen(null)}
+          onDone={() => invalidate(id)}
+        />
+      )}
     </>
+  )
+}
+
+function RepairInformation({ row }: { row: NonNullable<ReturnType<typeof useRepair>['data']> }) {
+  const { t } = useTranslation('repairs')
+  const departmentName = useDepartmentNames()
+  return (
+    <dl className="space-y-2 text-sm">
+      <div>
+        <dt className="text-muted-foreground">{t('detail.equipment')}</dt>
+        <dd>
+          {row.equipment ? (
+            <Link className="text-primary hover:underline" to={`/equipment/${row.equipmentId}`}>
+              {row.equipment.code} – {row.equipment.name}
+            </Link>
+          ) : (
+            row.equipmentId
+          )}
+        </dd>
+      </div>
+      <div>
+        <dt className="text-muted-foreground">{t('detail.overview.department')}</dt>
+        <dd>{departmentName(row.reportedDepartmentId)}</dd>
+      </div>
+      <div>
+        <dt className="text-muted-foreground">{t('detail.assignee')}</dt>
+        <dd>{row.assignee?.fullName ?? '—'}</dd>
+      </div>
+      <div>
+        <dt className="text-muted-foreground">{t('detail.dueAt')}</dt>
+        <dd>{formatDateTime(row.dueAt) || '—'}</dd>
+      </div>
+      <div>
+        <dt className="text-muted-foreground">{t('detail.cost')}</dt>
+        <dd>{formatVnd(row.totalCost) || '—'}</dd>
+      </div>
+    </dl>
   )
 }
 
@@ -481,18 +555,20 @@ function OverviewTab({
   row: NonNullable<ReturnType<typeof useRepair>['data']>
   faultTitle: string | null
 }) {
+  const { t } = useTranslation('repairs')
+  const userName = useUserNames()
   return (
-    <dl className="grid gap-3 sm:grid-cols-2 text-sm">
+    <dl className="grid gap-3 text-sm sm:grid-cols-2">
       <div className="sm:col-span-2">
-        <dt className="text-muted-foreground">Mô tả</dt>
+        <dt className="text-muted-foreground">{t('detail.overview.description')}</dt>
         <dd className="whitespace-pre-wrap">{row.description}</dd>
       </div>
       <div>
-        <dt className="text-muted-foreground">Mã lỗi</dt>
+        <dt className="text-muted-foreground">{t('detail.overview.errorCode')}</dt>
         <dd>{row.errorCode ?? '—'}</dd>
       </div>
       <div>
-        <dt className="text-muted-foreground">Lỗi thư viện</dt>
+        <dt className="text-muted-foreground">{t('detail.overview.fault')}</dt>
         <dd>
           {row.faultId ? (
             <Link className="text-primary hover:underline" to={`/faults/${row.faultId}`}>
@@ -504,59 +580,67 @@ function OverviewTab({
         </dd>
       </div>
       <div className="sm:col-span-2">
-        <dt className="text-muted-foreground">Chẩn đoán</dt>
+        <dt className="text-muted-foreground">{t('detail.overview.diagnosis')}</dt>
         <dd className="whitespace-pre-wrap">{row.diagnosis ?? '—'}</dd>
       </div>
       <div>
-        <dt className="text-muted-foreground">Phương án</dt>
+        <dt className="text-muted-foreground">{t('detail.overview.resolutionType')}</dt>
         <dd>
-          {row.resolutionType && row.resolutionType in RESOLUTION_LABEL
-            ? RESOLUTION_LABEL[row.resolutionType as keyof typeof RESOLUTION_LABEL]
+          {row.resolutionType &&
+          (RESOLUTION_TYPES as readonly string[]).includes(row.resolutionType)
+            ? t(`detail.resolution.${row.resolutionType}`)
             : (row.resolutionType ?? '—')}
         </dd>
       </div>
       <div>
-        <dt className="text-muted-foreground">Tóm tắt xử lý</dt>
+        <dt className="text-muted-foreground">{t('detail.overview.resolutionSummary')}</dt>
         <dd>{row.resolutionSummary ?? '—'}</dd>
       </div>
       <div>
-        <dt className="text-muted-foreground">Bảo hành sau sửa</dt>
+        <dt className="text-muted-foreground">{t('detail.overview.warranty')}</dt>
         <dd>{formatDate(row.postRepairWarrantyUntil) || '—'}</dd>
       </div>
       <div>
-        <dt className="text-muted-foreground">Kiểm định yêu cầu</dt>
+        <dt className="text-muted-foreground">{t('detail.overview.calibration')}</dt>
         <dd>
           {row.calibrationRequired ? (
-            <StatusBadge value="yes" map={{ yes: { label: 'Có', tone: 'warning' } }} />
+            <StatusBadge
+              value="yes"
+              map={{ yes: { label: t('detail.overview.yes'), tone: 'warning' } }}
+            />
           ) : (
-            'Không'
+            t('detail.overview.no')
           )}
         </dd>
       </div>
       <div>
-        <dt className="text-muted-foreground">Nghiệm thu</dt>
+        <dt className="text-muted-foreground">{t('detail.overview.acceptance')}</dt>
         <dd>
           {row.rating != null ? `${row.rating}/5` : '—'}
           {row.ratingNote ? ` — ${row.ratingNote}` : ''}
         </dd>
       </div>
       <div className="sm:col-span-2">
-        <dt className="text-muted-foreground mb-1">Phân công</dt>
+        <dt className="text-muted-foreground mb-1">{t('detail.overview.assignments')}</dt>
         <dd>
           <table className="w-full">
             <thead>
               <tr className="text-left">
-                <th>Người</th>
-                <th>Vai trò</th>
-                <th>Phản hồi</th>
-                <th>Ghi chú</th>
+                <th>{t('detail.overview.person')}</th>
+                <th>{t('detail.overview.role')}</th>
+                <th>{t('detail.overview.response')}</th>
+                <th>{t('detail.overview.note')}</th>
               </tr>
             </thead>
             <tbody>
               {row.assignments.map((item) => (
                 <tr key={item.id} className="border-t">
-                  <td>{item.userId ?? '—'}</td>
-                  <td>{item.role === 'primary' ? 'Chính' : 'Phụ'}</td>
+                  <td>{userName(item.userId)}</td>
+                  <td>
+                    {item.role === 'primary'
+                      ? t('detail.overview.primary')
+                      : t('detail.overview.assistant')}
+                  </td>
                   <td>
                     <StatusBadge value={item.response} map={assignmentResponseMap} />
                   </td>
@@ -576,22 +660,28 @@ function LogsTab({
   canWrite,
   onAdd,
 }: {
-  id: string
   logs: NonNullable<ReturnType<typeof useRepair>['data']>['logs']
   canWrite: boolean
   onAdd: () => void
 }) {
+  const { t } = useTranslation('repairs')
+  const userName = useUserNames()
   return (
     <div className="space-y-3">
-      {canWrite && <Button onClick={onAdd}>Thêm nhật ký</Button>}
+      {canWrite && <Button onClick={onAdd}>{t('detail.logs.add')}</Button>}
       <Timeline
         events={logs.map((item) => ({
           at: item.at,
           title: item.action,
-          summary: [item.note, item.durationMinutes != null ? `${item.durationMinutes} phút` : null]
+          summary: [
+            item.note,
+            item.durationMinutes != null
+              ? t('detail.logs.minutes', { n: item.durationMinutes })
+              : null,
+          ]
             .filter(Boolean)
             .join(' · '),
-          by: item.byUserId,
+          by: userName(item.byUserId),
         }))}
       />
     </div>
@@ -609,18 +699,21 @@ function PartsTab({
   onAdd: () => void
   onDelete: (id: string) => void
 }) {
+  const { t } = useTranslation('repairs')
+  const lotName = useStockLotNames(parts)
   return (
     <div className="space-y-3">
-      {canWrite && <Button onClick={onAdd}>Thêm linh kiện</Button>}
+      {canWrite && <Button onClick={onAdd}>{t('detail.parts.add')}</Button>}
       <table className="w-full text-sm">
         <thead>
           <tr className="text-left">
-            <th>Nguồn</th>
-            <th>Tên</th>
-            <th>SL</th>
-            <th>Đơn giá</th>
-            <th>Thành tiền</th>
-            <th>Lô</th>
+            <th>{t('detail.parts.source')}</th>
+            <th>{t('detail.parts.name')}</th>
+            <th>{t('detail.parts.quantity')}</th>
+            <th>{t('detail.parts.unitCost')}</th>
+            <th>{t('detail.parts.total')}</th>
+            <th>{t('detail.parts.lot')}</th>
+            <th>{t('detail.parts.invoice')}</th>
             <th></th>
           </tr>
         </thead>
@@ -634,11 +727,14 @@ function PartsTab({
               <td>{formatQty(row.quantity)}</td>
               <td>{formatVnd(row.unitCost)}</td>
               <td>{formatVnd(row.totalCost)}</td>
-              <td>{row.stockLotId ?? '—'}</td>
+              <td>{lotName(row.stockLotId)}</td>
+              <td>
+                <FileLink fileId={row.invoiceFileId} label={t('detail.parts.invoice')} />
+              </td>
               <td>
                 {canWrite && (
                   <Button size="sm" variant="ghost" onClick={() => onDelete(row.id)}>
-                    Xoá
+                    {t('detail.parts.delete')}
                   </Button>
                 )}
               </td>
@@ -661,21 +757,32 @@ function VendorsTab({
   onAdd: () => void
   onDelete: (id: string) => void
 }) {
+  const { t } = useTranslation('repairs')
+  const supplierName = useSupplierNames(vendors.map((row) => row.supplierId))
   return (
     <div className="space-y-3">
-      {canWrite && <Button onClick={onAdd}>Thêm thuê ngoài</Button>}
+      {canWrite && <Button onClick={onAdd}>{t('detail.vendors.add')}</Button>}
       <ul className="space-y-2 text-sm">
         {vendors.map((row) => (
           <li key={row.id} className="rounded border p-3">
-            <p>NCC: {row.supplierId ?? '—'}</p>
+            <p>
+              {t('detail.vendors.supplier')}: {supplierName(row.supplierId)}
+            </p>
             <p>
               {row.engineerName} {row.engineerPhone}
             </p>
-            <p>Báo giá: {formatVnd(row.quotationAmount) || '—'}</p>
-            <p>HĐ: {row.contractNo ?? '—'}</p>
+            <p>
+              {t('detail.vendors.quotation')}: {formatVnd(row.quotationAmount) || '—'}
+            </p>
+            <p>
+              {t('detail.vendors.contract')}: {row.contractNo ?? '—'}
+            </p>
+            <p>
+              <FileLink fileId={row.quotationFileId} label={t('detail.vendors.quotationFile')} />
+            </p>
             {canWrite && (
               <Button size="sm" variant="ghost" onClick={() => onDelete(row.id)}>
-                Xoá
+                {t('detail.parts.delete')}
               </Button>
             )}
           </li>
@@ -685,8 +792,54 @@ function VendorsTab({
   )
 }
 
+/** Link xem file đã tải (hoá đơn, báo giá…). */
+function FileLink({ fileId, label }: { fileId: string | null; label: string }) {
+  const url = useQuery({
+    queryKey: ['file-url', fileId, false],
+    queryFn: () => getFileUrl(fileId!, false),
+    enabled: !!fileId,
+    staleTime: 600_000,
+  })
+  if (!fileId) return <span>—</span>
+  if (!url.data) return <span className="text-muted-foreground">…</span>
+  return (
+    <a
+      className="text-primary hover:underline"
+      href={url.data.url}
+      target="_blank"
+      rel="noreferrer"
+    >
+      {label}
+    </a>
+  )
+}
+
+function CostAttachments({ costId, canWrite }: { costId: string; canWrite: boolean }) {
+  const { t } = useTranslation('repairs')
+  const [open, setOpen] = useState(false)
+  return (
+    <div>
+      <Button type="button" size="sm" variant="ghost" onClick={() => setOpen((value) => !value)}>
+        {open ? t('detail.costs.hideInvoice') : t('detail.costs.invoice')}
+      </Button>
+      {open && (
+        <AttachmentsPanel
+          entityType="repair_cost"
+          entityId={costId}
+          canWrite={canWrite}
+          kinds={[
+            { value: 'invoice', label: t('detail.costs.invoice') },
+            { value: 'quotation', label: t('detail.costs.quotation') },
+            { value: 'receipt', label: t('detail.costs.receipt') },
+          ]}
+        />
+      )}
+    </div>
+  )
+}
+
 function CostsTab({
-  id,
+  equipmentId,
   costs,
   total,
   warning,
@@ -694,7 +847,7 @@ function CostsTab({
   onAdd,
   onDelete,
 }: {
-  id: string
+  equipmentId: string
   costs: NonNullable<ReturnType<typeof useRepair>['data']>['costs']
   total: string
   warning: boolean
@@ -702,19 +855,45 @@ function CostsTab({
   onAdd: () => void
   onDelete: (id: string) => void
 }) {
+  const { t } = useTranslation('repairs')
+  const equipment = useQuery({
+    queryKey: ['repairs', 'equipment-brief', equipmentId],
+    queryFn: () => api.equipmentBrief(equipmentId),
+    enabled: warning && !!equipmentId,
+    staleTime: 300_000,
+  })
+  const originalValue = equipment.data?.originalValue ?? null
+  let percent: string | null = null
+  if (originalValue) {
+    try {
+      if (new Big(originalValue).gt(0))
+        percent = new Big(total || '0').div(originalValue).times(100).toFixed(1)
+    } catch {
+      percent = null
+    }
+  }
   return (
     <div className="space-y-3">
-      {canWrite && <Button onClick={onAdd}>Thêm chi phí</Button>}
-      {warning && (
-        <p className="text-destructive text-sm">Chi phí vượt ngưỡng cảnh báo so với nguyên giá.</p>
-      )}
+      {canWrite && <Button onClick={onAdd}>{t('detail.costs.add')}</Button>}
+      {warning &&
+        (percent && originalValue ? (
+          <p className="text-destructive text-sm">
+            {t('detail.costOverThreshold', {
+              total: formatVnd(total) || total,
+              original: formatVnd(originalValue) || originalValue,
+              pct: percent,
+            })}
+          </p>
+        ) : (
+          <p className="text-destructive text-sm">{t('detail.costOverThresholdGeneric')}</p>
+        ))}
       <table className="w-full text-sm">
         <thead>
           <tr className="text-left">
-            <th>Loại</th>
-            <th>Mô tả</th>
-            <th>Số tiền</th>
-            <th>HĐ</th>
+            <th>{t('detail.costs.category')}</th>
+            <th>{t('detail.costs.description')}</th>
+            <th>{t('detail.costs.amount')}</th>
+            <th>{t('detail.costs.invoiceNo')}</th>
             <th></th>
           </tr>
         </thead>
@@ -726,11 +905,13 @@ function CostsTab({
               </td>
               <td>{row.description}</td>
               <td>{formatVnd(row.amount)}</td>
-              <td>{row.invoiceNo ?? '—'}</td>
+              <td>
+                <CostAttachments costId={row.id} canWrite={canWrite} />
+              </td>
               <td>
                 {canWrite && (
                   <Button size="sm" variant="ghost" onClick={() => onDelete(row.id)}>
-                    Xoá
+                    {t('detail.parts.delete')}
                   </Button>
                 )}
               </td>
@@ -738,13 +919,9 @@ function CostsTab({
           ))}
         </tbody>
       </table>
-      <p className="font-medium">Tổng: {formatVnd(total) || '0 ₫'}</p>
-      <AttachmentsPanel
-        entityType="repair_cost"
-        entityId={id}
-        canWrite={canWrite}
-        kinds={[{ value: 'invoice', label: 'Hoá đơn' }]}
-      />
+      <p className="font-medium">
+        {t('detail.costs.total', { amount: formatVnd(total) || '0 ₫' })}
+      </p>
     </div>
   )
 }
@@ -760,6 +937,7 @@ function AssignDialog({
   onClose: () => void
   onDone: () => void
 }) {
+  const { t } = useTranslation('repairs')
   const form = useForm<AssignForm>({
     resolver: zodResolver(assignSchema),
     defaultValues: { primaryUserId: '', assistantIds: [], dueAt: '' },
@@ -772,7 +950,7 @@ function AssignDialog({
     <FormDialog
       open
       onOpenChange={(v) => !v && onClose()}
-      title="Phân công"
+      title={t('detail.assign.title')}
       form={form}
       onSubmit={async (values) => {
         try {
@@ -781,7 +959,7 @@ function AssignDialog({
             assistantIds: values.assistantIds,
             dueAt: values.dueAt || undefined,
           })
-          toast.success('Đã phân công')
+          toast.success(t('detail.assign.saved'))
           onDone()
           onClose()
         } catch (error) {
@@ -798,7 +976,7 @@ function AssignDialog({
                 className="text-primary hover:underline"
                 onClick={() => form.setValue('primaryUserId', row.id)}
               >
-                {row.fullName} ({row.openTickets} phiếu mở)
+                {row.fullName} ({row.openTickets} {t('stats.openTickets').toLowerCase()})
               </button>
             </li>
           ))}
@@ -810,7 +988,7 @@ function AssignDialog({
         render={({ field }) => (
           <FormItem>
             <AsyncSelect
-              label="Người xử lý chính"
+              label={t('detail.assign.primary')}
               queryKey="staff-users"
               loadOptions={staffUserOptions}
               value={field.value || null}
@@ -826,7 +1004,7 @@ function AssignDialog({
         render={({ field }) => (
           <FormItem>
             <AsyncSelect
-              label="Người phụ"
+              label={t('detail.assign.assistant')}
               queryKey="staff-assist"
               loadOptions={staffUserOptions}
               multiple
@@ -838,7 +1016,7 @@ function AssignDialog({
           </FormItem>
         )}
       />
-      <DatetimeField control={form.control} name="dueAt" label="Hạn (tuỳ chọn)" />
+      <DatetimeField control={form.control} name="dueAt" label={t('detail.assign.dueAt')} />
     </FormDialog>
   )
 }
@@ -860,6 +1038,7 @@ function DiagnosisDialog({
   onClose: () => void
   onDone: () => void
 }) {
+  const { t } = useTranslation('repairs')
   const form = useForm<DiagnosisForm>({
     resolver: zodResolver(diagnosisSchema),
     defaultValues: {
@@ -873,7 +1052,7 @@ function DiagnosisDialog({
     <FormDialog
       open
       onOpenChange={(v) => !v && onClose()}
-      title="Chẩn đoán"
+      title={t('detail.diagnosis.title')}
       width="lg"
       form={form}
       onSubmit={async (values) => {
@@ -884,7 +1063,7 @@ function DiagnosisDialog({
             faultGroupId: values.faultGroupId,
             resolutionType: values.resolutionType,
           })
-          toast.success('Đã lưu chẩn đoán')
+          toast.success(t('detail.diagnosis.saved'))
           onDone()
           onClose()
         } catch (error) {
@@ -897,7 +1076,7 @@ function DiagnosisDialog({
         name="diagnosis"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Chẩn đoán</FormLabel>
+            <FormLabel>{t('detail.diagnosis.label')}</FormLabel>
             <FormControl>
               <Textarea {...field} />
             </FormControl>
@@ -918,9 +1097,10 @@ function DiagnosisDialog({
         render={({ field }) => (
           <FormItem>
             <AsyncSelect
-              label="Nhóm lỗi"
+              label={t('detail.diagnosis.faultGroup')}
               queryKey="fault-groups"
               loadOptions={(q) => catalogOptions('fault-groups', q)}
+              resolveOption={(id) => resolveCatalogItem('fault-groups', id)}
               value={field.value}
               onChange={field.onChange}
               clearable
@@ -932,9 +1112,12 @@ function DiagnosisDialog({
       <SelectField
         control={form.control}
         name="resolutionType"
-        label="Phương án"
-        emptyLabel="Chưa chọn"
-        options={RESOLUTION_TYPES.map((item) => ({ value: item, label: RESOLUTION_LABEL[item] }))}
+        label={t('detail.diagnosis.resolutionType')}
+        emptyLabel={t('detail.diagnosis.empty')}
+        options={RESOLUTION_TYPES.map((item) => ({
+          value: item,
+          label: t(`detail.resolution.${item}`),
+        }))}
       />
     </FormDialog>
   )
@@ -942,26 +1125,31 @@ function DiagnosisDialog({
 
 function StatusDialog({
   id,
+  status,
   onClose,
   onDone,
 }: {
   id: string
+  status: string
   onClose: () => void
   onDone: () => void
 }) {
-  const form = useForm<{ status: (typeof WORK_STATUSES)[number]; note: string }>({
-    defaultValues: { status: 'in_progress', note: '' },
+  const { t } = useTranslation('repairs')
+  const options = availableStatuses(status)
+  const form = useForm<StatusForm>({
+    resolver: zodResolver(statusSchema),
+    defaultValues: { status: options[0] ?? 'in_progress', note: '' },
   })
   return (
     <FormDialog
       open
       onOpenChange={(v) => !v && onClose()}
-      title="Đổi trạng thái"
+      title={t('detail.status.title')}
       form={form}
       onSubmit={async (values) => {
         try {
-          await api.changeRepairStatus(id, { status: values.status, note: values.note || ' ' })
-          toast.success('Đã đổi trạng thái')
+          await api.changeRepairStatus(id, { status: values.status, note: values.note })
+          toast.success(t('detail.status.saved'))
           onDone()
           onClose()
         } catch (error) {
@@ -972,14 +1160,166 @@ function StatusDialog({
       <SelectField
         control={form.control}
         name="status"
-        label="Trạng thái"
-        options={WORK_STATUSES.map((item) => ({
+        label={t('detail.status.label')}
+        options={options.map((item) => ({
           value: item,
           label: repairStatusMap[item]?.label ?? item,
         }))}
       />
-      <TextField control={form.control} name="note" label="Ghi chú" />
+      <FormField
+        control={form.control}
+        name="note"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>{t('detail.status.note')}</FormLabel>
+            <FormControl>
+              <Textarea {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
     </FormDialog>
+  )
+}
+
+function DeclineDialog({
+  id,
+  onClose,
+  onDone,
+}: {
+  id: string
+  onClose: () => void
+  onDone: () => void
+}) {
+  const { t } = useTranslation('repairs')
+  const form = useForm<DeclineForm>({
+    resolver: zodResolver(declineSchema),
+    defaultValues: { note: '' },
+  })
+  return (
+    <FormDialog
+      open
+      onOpenChange={(v) => !v && onClose()}
+      title={t('detail.respond.declineTitle')}
+      form={form}
+      submitLabel={t('detail.respond.decline')}
+      onSubmit={async (values) => {
+        try {
+          await api.respondAssignment(id, { response: 'declined', note: values.note })
+          toast.success(t('detail.actions.updated'))
+          onDone()
+          onClose()
+        } catch (error) {
+          if (!applyServerErrors(form, error)) toast.error(messageFor(error))
+        }
+      }}
+    >
+      <FormField
+        control={form.control}
+        name="note"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>{t('detail.respond.declineReason')}</FormLabel>
+            <FormControl>
+              <Textarea {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    </FormDialog>
+  )
+}
+
+function ProposeFields({ control }: { control: Control<CompleteForm> }) {
+  const { t } = useTranslation('repairs')
+  const { t: tc } = useTranslation()
+  const steps = useFieldArray({ control, name: 'proposeSteps' })
+  const parts = useFieldArray({ control, name: 'proposeParts' })
+  const { errors } = useFormState({ control, name: 'proposeSteps' })
+  return (
+    <>
+      <TextField control={control} name="proposeTitle" label={t('detail.complete.proposeTitle')} />
+      <FormField
+        control={control}
+        name="proposeSymptoms"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>{t('detail.complete.proposeSymptoms')}</FormLabel>
+            <FormControl>
+              <Textarea {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <div className="space-y-2">
+        <p className="text-sm font-medium">{t('detail.complete.proposeSteps')}</p>
+        {steps.fields.map((field, index) => (
+          <div key={field.id} className="space-y-2 rounded border p-2">
+            <div className="flex items-center justify-between">
+              <p className="text-sm">{t('detail.complete.step', { n: index + 1 })}</p>
+              <Button type="button" size="sm" variant="ghost" onClick={() => steps.remove(index)}>
+                {tc('actions.delete')}
+              </Button>
+            </div>
+            <TextField
+              control={control}
+              name={`proposeSteps.${index}.instruction`}
+              label={t('detail.complete.instruction')}
+            />
+          </div>
+        ))}
+        {errors.proposeSteps?.message && (
+          <p role="alert" className="text-destructive text-sm">
+            {errors.proposeSteps.message}
+          </p>
+        )}
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={() => steps.append({ instruction: '', expectedResult: '', cautions: '' })}
+        >
+          {t('detail.complete.addStep')}
+        </Button>
+      </div>
+      <div className="space-y-2">
+        <p className="text-sm font-medium">{t('detail.complete.proposeParts')}</p>
+        {parts.fields.map((field, index) => (
+          <div key={field.id} className="flex items-end gap-2">
+            <div className="flex-1">
+              <TextField
+                control={control}
+                name={`proposeParts.${index}.name`}
+                label={t('detail.complete.partName')}
+              />
+            </div>
+            <div className="w-28">
+              <NumberField
+                control={control}
+                name={`proposeParts.${index}.quantity`}
+                label={t('detail.complete.quantity')}
+                min={1}
+                step={1}
+              />
+            </div>
+            <Button type="button" size="sm" variant="ghost" onClick={() => parts.remove(index)}>
+              {tc('actions.delete')}
+            </Button>
+          </div>
+        ))}
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={() => parts.append({ name: '', quantity: 1, note: '' })}
+        >
+          {t('detail.complete.addPart')}
+        </Button>
+      </div>
+    </>
   )
 }
 
@@ -992,6 +1332,7 @@ function CompleteDialog({
   onClose: () => void
   onDone: () => void
 }) {
+  const { t } = useTranslation('repairs')
   const form = useForm<CompleteForm>({
     resolver: zodResolver(completeSchema),
     defaultValues: {
@@ -1000,7 +1341,9 @@ function CompleteDialog({
       calibrationRequired: false,
       propose: false,
       proposeTitle: '',
-      proposeInstruction: '',
+      proposeSymptoms: '',
+      proposeSteps: [],
+      proposeParts: [],
     },
   })
   const propose = form.watch('propose')
@@ -1008,7 +1351,7 @@ function CompleteDialog({
     <FormDialog
       open
       onOpenChange={(v) => !v && onClose()}
-      title="Hoàn thành"
+      title={t('detail.complete.title')}
       width="lg"
       form={form}
       onSubmit={async (values) => {
@@ -1020,13 +1363,22 @@ function CompleteDialog({
             proposeFault: values.propose
               ? {
                   title: values.proposeTitle,
-                  steps: values.proposeInstruction
-                    ? [{ order: 1, instruction: values.proposeInstruction }]
-                    : [],
+                  symptoms: values.proposeSymptoms || null,
+                  steps: values.proposeSteps.map((step, index) => ({
+                    order: index + 1,
+                    instruction: step.instruction,
+                    expectedResult: step.expectedResult || null,
+                    cautions: step.cautions || null,
+                  })),
+                  parts: values.proposeParts.map((part) => ({
+                    name: part.name,
+                    quantity: part.quantity,
+                    note: part.note || null,
+                  })),
                 }
               : undefined,
           })
-          toast.success('Đã hoàn thành phiếu')
+          toast.success(t('detail.complete.saved'))
           onDone()
           onClose()
         } catch (error) {
@@ -1039,7 +1391,7 @@ function CompleteDialog({
         name="resolutionSummary"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Tóm tắt xử lý</FormLabel>
+            <FormLabel>{t('detail.complete.summary')}</FormLabel>
             <FormControl>
               <Textarea {...field} />
             </FormControl>
@@ -1047,15 +1399,18 @@ function CompleteDialog({
           </FormItem>
         )}
       />
-      <DateField control={form.control} name="postRepairWarrantyUntil" label="Bảo hành đến" />
-      <SwitchField control={form.control} name="calibrationRequired" label="Yêu cầu kiểm định" />
-      <SwitchField control={form.control} name="propose" label="Đề xuất vào thư viện lỗi" />
-      {propose && (
-        <>
-          <TextField control={form.control} name="proposeTitle" label="Tiêu đề lỗi" />
-          <TextField control={form.control} name="proposeInstruction" label="Bước xử lý" />
-        </>
-      )}
+      <DateField
+        control={form.control}
+        name="postRepairWarrantyUntil"
+        label={t('detail.complete.warranty')}
+      />
+      <SwitchField
+        control={form.control}
+        name="calibrationRequired"
+        label={t('detail.complete.calibration')}
+      />
+      <SwitchField control={form.control} name="propose" label={t('detail.complete.propose')} />
+      {propose && <ProposeFields control={form.control} />}
     </FormDialog>
   )
 }
@@ -1069,6 +1424,7 @@ function AcceptanceDialog({
   onClose: () => void
   onDone: () => void
 }) {
+  const { t } = useTranslation('repairs')
   const form = useForm<AcceptanceForm>({
     resolver: zodResolver(acceptanceSchema),
     defaultValues: { accepted: true, rating: '', note: '' },
@@ -1078,7 +1434,7 @@ function AcceptanceDialog({
     <FormDialog
       open
       onOpenChange={(v) => !v && onClose()}
-      title="Nghiệm thu"
+      title={t('detail.acceptance.title')}
       form={form}
       onSubmit={async (values) => {
         try {
@@ -1087,7 +1443,7 @@ function AcceptanceDialog({
             rating: values.rating === '' ? undefined : values.rating,
             note: values.note || undefined,
           })
-          toast.success('Đã nghiệm thu')
+          toast.success(t('detail.acceptance.saved'))
           onDone()
           onClose()
         } catch (error) {
@@ -1100,7 +1456,7 @@ function AcceptanceDialog({
         name="accepted"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Kết quả</FormLabel>
+            <FormLabel>{t('detail.acceptance.result')}</FormLabel>
             <div className="flex gap-4">
               <label className="flex items-center gap-2 text-sm">
                 <input
@@ -1108,24 +1464,42 @@ function AcceptanceDialog({
                   checked={field.value === true}
                   onChange={() => field.onChange(true)}
                 />
-                Đạt
+                {t('detail.acceptance.accepted')}
               </label>
               <label className="flex items-center gap-2 text-sm">
                 <input
                   type="radio"
                   checked={field.value === false}
-                  onChange={() => field.onChange(false)}
+                  onChange={() => {
+                    field.onChange(false)
+                    form.setValue('rating', '')
+                  }}
                 />
-                Không đạt
+                {t('detail.acceptance.rejected')}
               </label>
             </div>
           </FormItem>
         )}
       />
       {accepted && (
-        <NumberField control={form.control} name="rating" label="Đánh giá (1–5 sao)" min={1} />
+        <FormField
+          control={form.control}
+          name="rating"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t('detail.acceptance.rating')}</FormLabel>
+              <FormControl>
+                <StarRating
+                  value={field.value === '' ? null : field.value}
+                  onChange={(value) => field.onChange(value)}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       )}
-      <TextField control={form.control} name="note" label="Ghi chú" />
+      <TextField control={form.control} name="note" label={t('detail.acceptance.note')} />
     </FormDialog>
   )
 }
@@ -1141,6 +1515,7 @@ function EditDialog({
   onClose: () => void
   onDone: () => void
 }) {
+  const { t } = useTranslation('repairs')
   const form = useForm<EditRepairForm>({
     resolver: zodResolver(editRepairSchema),
     defaultValues,
@@ -1149,12 +1524,12 @@ function EditDialog({
     <FormDialog
       open
       onOpenChange={(v) => !v && onClose()}
-      title="Sửa phiếu"
+      title={t('detail.edit.title')}
       form={form}
       onSubmit={async (values) => {
         try {
           await api.updateRepair(id, values)
-          toast.success('Đã lưu phiếu')
+          toast.success(t('detail.edit.saved'))
           onDone()
           onClose()
         } catch (error) {
@@ -1167,7 +1542,7 @@ function EditDialog({
         name="description"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Mô tả</FormLabel>
+            <FormLabel>{t('detail.edit.description')}</FormLabel>
             <FormControl>
               <Textarea {...field} />
             </FormControl>
@@ -1178,13 +1553,17 @@ function EditDialog({
       <SelectField
         control={form.control}
         name="severity"
-        label="Mức khẩn"
+        label={t('detail.edit.severity')}
         options={['low', 'medium', 'high', 'critical'].map((item) => ({
           value: item,
           label: faultSeverityMap[item]?.label ?? item,
         }))}
       />
-      <SwitchField control={form.control} name="equipmentDown" label="Máy ngừng" />
+      <SwitchField
+        control={form.control}
+        name="equipmentDown"
+        label={t('detail.edit.equipmentDown')}
+      />
     </FormDialog>
   )
 }
@@ -1198,6 +1577,7 @@ function LogDialog({
   onClose: () => void
   onDone: () => void
 }) {
+  const { t } = useTranslation('repairs')
   const form = useForm<LogForm>({
     resolver: zodResolver(logSchema),
     defaultValues: {
@@ -1211,7 +1591,7 @@ function LogDialog({
     <FormDialog
       open
       onOpenChange={(v) => !v && onClose()}
-      title="Thêm nhật ký"
+      title={t('detail.logs.add')}
       form={form}
       onSubmit={async (values) => {
         try {
@@ -1224,7 +1604,7 @@ function LogDialog({
               at: values.at,
             },
           ])
-          toast.success('Đã ghi nhật ký')
+          toast.success(t('detail.logs.created'))
           onDone()
           onClose()
         } catch (error) {
@@ -1232,13 +1612,13 @@ function LogDialog({
         }
       }}
     >
-      <DatetimeField control={form.control} name="at" label="Thời điểm" />
-      <TextField control={form.control} name="action" label="Hành động" />
-      <TextField control={form.control} name="note" label="Ghi chú" />
+      <DatetimeField control={form.control} name="at" label={t('detail.logs.at')} />
+      <TextField control={form.control} name="action" label={t('detail.logs.action')} />
+      <TextField control={form.control} name="note" label={t('detail.overview.note')} />
       <NumberField
         control={form.control}
         name="durationMinutes"
-        label="Thời lượng (phút)"
+        label={t('detail.logs.duration')}
         min={0}
       />
     </FormDialog>
@@ -1256,6 +1636,7 @@ function PartDialog({
   onClose: () => void
   onDone: () => void
 }) {
+  const { t } = useTranslation('repairs')
   const form = useForm<PartForm>({
     resolver: zodResolver(partSchema),
     defaultValues: {
@@ -1270,6 +1651,7 @@ function PartDialog({
       newSerial: '',
       note: '',
       reason: '',
+      cost: '',
     },
   })
   const source = form.watch('source')
@@ -1289,14 +1671,14 @@ function PartDialog({
     <FormDialog
       open
       onOpenChange={(v) => !v && onClose()}
-      title="Thêm linh kiện"
+      title={t('detail.parts.add')}
       width="lg"
       form={form}
       onSubmit={async (values) => {
         try {
           await api.addRepairPart(id, {
             source: values.source,
-            name: values.name || 'Vật tư',
+            name: values.name || t('detail.parts.defaultName'),
             quantity: values.quantity,
             unitCost: values.unitCost || undefined,
             supplyId: values.supplyId ?? undefined,
@@ -1306,8 +1688,9 @@ function PartDialog({
             newSerial: values.newSerial || undefined,
             note: values.note || undefined,
             reason: values.reason || undefined,
+            cost: values.cost || undefined,
           })
-          toast.success('Đã thêm linh kiện')
+          toast.success(t('detail.parts.created'))
           onDone()
           onClose()
         } catch (error) {
@@ -1320,7 +1703,7 @@ function PartDialog({
         name="source"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Nguồn</FormLabel>
+            <FormLabel>{t('detail.parts.source')}</FormLabel>
             <div className="flex flex-wrap gap-3">
               {PART_SOURCES.map((item) => (
                 <label key={item} className="flex items-center gap-2 text-sm">
@@ -1345,7 +1728,7 @@ function PartDialog({
             render={({ field }) => (
               <FormItem>
                 <AsyncSelect
-                  label="Vật tư"
+                  label={t('detail.parts.supply')}
                   queryKey="supplies"
                   loadOptions={supplyOptions}
                   value={field.value}
@@ -1360,8 +1743,8 @@ function PartDialog({
             <SelectField
               control={form.control}
               name="stockLotId"
-              label="Lô kho"
-              emptyLabel="Không chọn"
+              label={t('detail.parts.stockLot')}
+              emptyLabel={t('detail.parts.noLot')}
               options={lots.map((lot) => ({
                 value: lot.id,
                 label: `${lot.lotNo ?? lot.id} (${lot.remainingQty ?? lot.qtyOnHand ?? ''})`,
@@ -1370,16 +1753,24 @@ function PartDialog({
           )}
         </>
       )}
-      {source !== 'stock' && <TextField control={form.control} name="name" label="Tên" />}
-      <QtyField control={form.control} name="quantity" label="Số lượng" />
-      {source !== 'stock' && <MoneyField control={form.control} name="unitCost" label="Đơn giá" />}
+      {source !== 'stock' && (
+        <TextField control={form.control} name="name" label={t('detail.parts.name')} />
+      )}
+      <QtyField control={form.control} name="quantity" label={t('detail.parts.quantity')} />
+      {source !== 'stock' && (
+        <MoneyField control={form.control} name="unitCost" label={t('detail.parts.unitCost')} />
+      )}
       {source === 'purchased' && (
         <FormField
           control={form.control}
           name="invoiceFileId"
           render={({ field }) => (
             <FormItem>
-              <FileField label="Hoá đơn" value={field.value} onChange={field.onChange} />
+              <FileField
+                label={t('detail.parts.invoice')}
+                value={field.value}
+                onChange={field.onChange}
+              />
               <FormMessage />
             </FormItem>
           )}
@@ -1390,17 +1781,18 @@ function PartDialog({
           <SelectField
             control={form.control}
             name="componentId"
-            label="Linh kiện máy"
+            label={t('detail.parts.component')}
             options={(components.data ?? []).map((item) => ({
               value: item.id,
               label: item.name,
             }))}
           />
-          <TextField control={form.control} name="newSerial" label="Serial mới" />
-          <TextField control={form.control} name="reason" label="Lý do thay" />
+          <TextField control={form.control} name="newSerial" label={t('detail.parts.newSerial')} />
+          <TextField control={form.control} name="reason" label={t('detail.parts.reason')} />
+          <MoneyField control={form.control} name="cost" label={t('detail.parts.cost')} />
         </>
       )}
-      <TextField control={form.control} name="note" label="Ghi chú" />
+      <TextField control={form.control} name="note" label={t('detail.parts.note')} />
     </FormDialog>
   )
 }
@@ -1414,6 +1806,7 @@ function VendorDialog({
   onClose: () => void
   onDone: () => void
 }) {
+  const { t } = useTranslation('repairs')
   const form = useForm<VendorForm>({
     resolver: zodResolver(vendorSchema),
     defaultValues: {
@@ -1431,7 +1824,7 @@ function VendorDialog({
     <FormDialog
       open
       onOpenChange={(v) => !v && onClose()}
-      title="Thuê ngoài"
+      title={t('detail.vendors.title')}
       form={form}
       onSubmit={async (values) => {
         try {
@@ -1445,7 +1838,7 @@ function VendorDialog({
             visitAt: values.visitAt || undefined,
             note: values.note || undefined,
           })
-          toast.success('Đã thêm thuê ngoài')
+          toast.success(t('detail.vendors.created'))
           onDone()
           onClose()
         } catch (error) {
@@ -1459,9 +1852,10 @@ function VendorDialog({
         render={({ field }) => (
           <FormItem>
             <AsyncSelect
-              label="Nhà cung cấp"
+              label={t('detail.vendors.supplierFull')}
               queryKey="suppliers"
               loadOptions={(q) => catalogOptions('suppliers', q)}
+              resolveOption={(id) => resolveCatalogItem('suppliers', id)}
               value={field.value || null}
               onChange={(v) => field.onChange(typeof v === 'string' ? v : '')}
             />
@@ -1469,22 +1863,30 @@ function VendorDialog({
           </FormItem>
         )}
       />
-      <TextField control={form.control} name="engineerName" label="Kỹ thuật viên" />
-      <TextField control={form.control} name="engineerPhone" label="Điện thoại" />
-      <MoneyField control={form.control} name="quotationAmount" label="Giá báo" />
+      <TextField control={form.control} name="engineerName" label={t('detail.vendors.engineer')} />
+      <TextField control={form.control} name="engineerPhone" label={t('detail.vendors.phone')} />
+      <MoneyField
+        control={form.control}
+        name="quotationAmount"
+        label={t('detail.vendors.quotationFull')}
+      />
       <FormField
         control={form.control}
         name="quotationFileId"
         render={({ field }) => (
           <FormItem>
-            <FileField label="File báo giá" value={field.value} onChange={field.onChange} />
+            <FileField
+              label={t('detail.vendors.quotationFile')}
+              value={field.value}
+              onChange={field.onChange}
+            />
             <FormMessage />
           </FormItem>
         )}
       />
-      <TextField control={form.control} name="contractNo" label="Số HĐ" />
-      <DatetimeField control={form.control} name="visitAt" label="Ngày đến" />
-      <TextField control={form.control} name="note" label="Ghi chú" />
+      <TextField control={form.control} name="contractNo" label={t('detail.vendors.contractNo')} />
+      <DatetimeField control={form.control} name="visitAt" label={t('detail.vendors.visitAt')} />
+      <TextField control={form.control} name="note" label={t('detail.vendors.note')} />
     </FormDialog>
   )
 }
@@ -1498,6 +1900,7 @@ function CostDialog({
   onClose: () => void
   onDone: () => void
 }) {
+  const { t } = useTranslation('repairs')
   const form = useForm<CostForm>({
     resolver: zodResolver(costSchema),
     defaultValues: {
@@ -1513,7 +1916,7 @@ function CostDialog({
     <FormDialog
       open
       onOpenChange={(v) => !v && onClose()}
-      title="Thêm chi phí"
+      title={t('detail.costs.title')}
       form={form}
       onSubmit={async (values) => {
         try {
@@ -1525,7 +1928,7 @@ function CostDialog({
             invoiceDate: values.invoiceDate || undefined,
             paidAt: values.paidAt || undefined,
           })
-          toast.success('Đã thêm chi phí')
+          toast.success(t('detail.costs.created'))
           onDone()
           onClose()
         } catch (error) {
@@ -1536,43 +1939,57 @@ function CostDialog({
       <SelectField
         control={form.control}
         name="category"
-        label="Loại"
+        label={t('detail.costs.category')}
         options={COST_CATEGORIES.map((item) => ({
           value: item,
           label: costCategoryMap[item]?.label ?? item,
         }))}
       />
-      <TextField control={form.control} name="description" label="Mô tả" />
-      <MoneyField control={form.control} name="amount" label="Số tiền" />
-      <TextField control={form.control} name="invoiceNo" label="Số hoá đơn" />
-      <DateField control={form.control} name="invoiceDate" label="Ngày hoá đơn" />
-      <DatetimeField control={form.control} name="paidAt" label="Ngày thanh toán" />
+      <TextField control={form.control} name="description" label={t('detail.costs.description')} />
+      <MoneyField control={form.control} name="amount" label={t('detail.costs.amount')} />
+      <TextField control={form.control} name="invoiceNo" label={t('detail.costs.invoiceNoFull')} />
+      <DateField control={form.control} name="invoiceDate" label={t('detail.costs.invoiceDate')} />
+      <DatetimeField control={form.control} name="paidAt" label={t('detail.costs.paidAt')} />
     </FormDialog>
   )
 }
 
 function SignDialog({
   id,
+  canTechnician,
+  canDepartment,
   onClose,
   onDone,
 }: {
   id: string
+  canTechnician: boolean
+  canDepartment: boolean
   onClose: () => void
   onDone: () => void
 }) {
+  const { t } = useTranslation('repairs')
+  const me = useAuthStore((s) => s.user)
   const [file, setFile] = useState<File | null>(null)
-  const form = useForm<{ role: 'technician' | 'department'; signerName: string }>({
-    defaultValues: { role: 'technician', signerName: '' },
+  const form = useForm<SignForm>({
+    resolver: zodResolver(signSchema),
+    defaultValues: {
+      role: canTechnician ? 'technician' : 'department',
+      signerName: me?.fullName ?? '',
+    },
   })
+  const roleOptions = [
+    ...(canTechnician ? [{ value: 'technician', label: t('detail.sign.technician') }] : []),
+    ...(canDepartment ? [{ value: 'department', label: t('detail.sign.department') }] : []),
+  ]
   return (
     <FormDialog
       open
       onOpenChange={(v) => !v && onClose()}
-      title="Ký biên bản"
+      title={t('detail.sign.title')}
       form={form}
       onSubmit={async (values) => {
         if (!file) {
-          toast.error('Hãy ký trên vùng vẽ')
+          toast.error(t('detail.sign.empty'))
           return
         }
         try {
@@ -1580,9 +1997,9 @@ function SignDialog({
           await api.addRepairSignature(id, {
             role: values.role,
             fileId,
-            signerName: values.signerName || 'Người ký',
+            signerName: values.signerName,
           })
-          toast.success('Đã lưu chữ ký')
+          toast.success(t('detail.sign.saved'))
           onDone()
           onClose()
         } catch (error) {
@@ -1593,13 +2010,10 @@ function SignDialog({
       <SelectField
         control={form.control}
         name="role"
-        label="Vai trò"
-        options={[
-          { value: 'technician', label: 'Kỹ thuật' },
-          { value: 'department', label: 'Khoa' },
-        ]}
+        label={t('detail.sign.role')}
+        options={roleOptions}
       />
-      <TextField control={form.control} name="signerName" label="Tên người ký" />
+      <TextField control={form.control} name="signerName" label={t('detail.sign.signerName')} />
       <SignaturePad onFile={setFile} />
     </FormDialog>
   )

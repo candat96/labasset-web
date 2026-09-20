@@ -2108,6 +2108,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** Lookup equipment by QR token (uuid) or by code (uppercase) */
         get: operations["EquipmentToolsController_byQr"];
         put?: never;
         post?: never;
@@ -2766,6 +2767,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["NotificationsController_stream"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/notifications/types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["NotificationsController_types"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3878,6 +3895,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/stocktakes/{id}/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["StocktakesController_close"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/stocktakes/{id}/compare": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["StocktakesController_compare"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/stocktakes/{id}/counts": {
         parameters: {
             query?: never;
@@ -4000,6 +4049,38 @@ export interface paths {
         get: operations["StocktakesController_progress"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/stocktakes/{id}/report.pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["StocktakesController_report"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/stocktakes/{id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["StocktakesController_review"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4291,6 +4372,7 @@ export interface components {
             /** Format: date-time */
             endsAt: string | null;
             id: string;
+            isActive: boolean;
             /** @enum {string} */
             level: "info" | "warning";
             /** Format: date-time */
@@ -4314,7 +4396,7 @@ export interface components {
             qtyApproved: string;
         };
         ApproveRequestDto: {
-            /** @description Omitted lines keep qtyRequested */
+            /** @description Must list every request line exactly once */
             items?: components["schemas"]["ApproveItemDto"][];
             note?: Record<string, never>;
         };
@@ -4353,6 +4435,9 @@ export interface components {
             id: string;
             kind: string;
             label: string | null;
+            mime: string;
+            name: string;
+            size: number;
             sortOrder: number;
         };
         AuditPageDto: {
@@ -4380,6 +4465,7 @@ export interface components {
             userAgent: string | null;
             /** Format: uuid */
             userId: string | null;
+            userName: string | null;
         };
         BaseCatalogCreateDto: {
             code: string;
@@ -4500,6 +4586,38 @@ export interface components {
         CancelRequestDto: {
             reason?: Record<string, never>;
         };
+        CatalogDeactivatedDto: {
+            /** @enum {boolean} */
+            deactivated: true;
+        };
+        CatalogImportErrorDto: {
+            field: string;
+            message: string;
+            row: number;
+        };
+        CatalogImportResultDto: {
+            created: number;
+            errors: components["schemas"]["CatalogImportErrorDto"][];
+            updated: number;
+        };
+        CatalogPageDto: {
+            items: components["schemas"]["CatalogResponseDto"][];
+            limit: number;
+            page: number;
+            total: number;
+        };
+        CatalogResponseDto: {
+            code: string;
+            /** Format: date-time */
+            createdAt: string;
+            description: string | null;
+            id: string;
+            isActive: boolean;
+            name: string;
+            sortOrder: number;
+            /** Format: date-time */
+            updatedAt: string;
+        };
         ChangePasswordDto: {
             current: string;
             /** @description ≥8 ký tự, có chữ và số */
@@ -4519,6 +4637,31 @@ export interface components {
             code?: string;
             name?: string;
             serial?: string | null;
+        };
+        CloseResultDto: {
+            adjusted: number;
+            /** Format: date-time */
+            closedAt: string | null;
+            code: string;
+            id: string;
+            ignored: number;
+            /** @enum {string} */
+            status: "draft" | "open" | "counting" | "review" | "closed" | "cancelled";
+        };
+        CompareDto: {
+            items: components["schemas"]["CompareItemDto"][];
+            summary: {
+                currDiffCount?: number;
+                prevDiffCount?: number;
+                repeated?: number;
+            };
+        };
+        CompareItemDto: {
+            code: string;
+            currDiff: string | null;
+            key: string;
+            name: string;
+            prevDiff: string | null;
         };
         CompleteCalibrationDto: {
             agencyId?: Record<string, never> | null;
@@ -4614,10 +4757,22 @@ export interface components {
             photoFileId?: Record<string, never>;
             qrToken?: string;
         };
+        CountsResultDto: {
+            accepted: number;
+            conflicts: {
+                clientId?: string;
+                itemId?: string;
+                /** Format: date-time */
+                keptCountedAt?: string;
+            }[];
+            duplicated: number;
+            extras: string[];
+        };
         CreateAnnouncementDto: {
             body: string;
             /** Format: date-time */
             endsAt?: Record<string, never> | null;
+            isActive?: boolean;
             /** @enum {string} */
             level?: "info" | "warning";
             /** Format: date-time */
@@ -4690,6 +4845,10 @@ export interface components {
             sortOrder?: number;
             /** @enum {string} */
             type: "lab" | "equipment_office" | "other";
+        };
+        CreatedUserDto: {
+            tempPassword: string;
+            user: components["schemas"]["UserViewDto"];
         };
         CreateEquipmentDto: {
             assetCode?: string | null;
@@ -4984,6 +5143,32 @@ export interface components {
             keeperUserId?: Record<string, never>;
             name: string;
             sortOrder?: number;
+        };
+        DeactivatedDto: {
+            /** @enum {boolean} */
+            deactivated: true;
+        };
+        DepartmentPageDto: {
+            items: components["schemas"]["DepartmentResponseDto"][];
+            limit: number;
+            page: number;
+            total: number;
+        };
+        DepartmentResponseDto: {
+            code: string;
+            /** Format: date-time */
+            createdAt: string;
+            headUserId: string | null;
+            id: string;
+            isActive: boolean;
+            location: string | null;
+            name: string;
+            phone: string | null;
+            sortOrder: number;
+            /** @enum {string} */
+            type: "lab" | "equipment_office" | "other";
+            /** Format: date-time */
+            updatedAt: string;
         };
         DeviceDto: {
             /** @enum {string} */
@@ -5382,6 +5567,12 @@ export interface components {
             created: number;
             skipped: number;
         };
+        HealthResponseDto: {
+            master?: string;
+            mode: string;
+            status: string;
+            tenant?: string;
+        };
         HospitalDetailDto: {
             code: string;
             contactEmail: string | null;
@@ -5461,6 +5652,10 @@ export interface components {
             quantity: string;
             supplyId: string;
         };
+        IssueLinePickDto: {
+            id: string;
+            quantity: string;
+        };
         IssuePageDto: {
             items: components["schemas"]["IssueResponseDto"][];
             limit: number;
@@ -5468,8 +5663,10 @@ export interface components {
             total: number;
         };
         IssueRequestDto: {
-            /** @description Subset of item ids */
+            /** @description Deprecated: subset of item ids (full remaining qty) */
             itemIds?: string[];
+            /** @description Subset of lines with quantities */
+            items?: components["schemas"]["IssueLinePickDto"][];
             /** @description Defaults to stock.defaultWarehouseId */
             warehouseId?: string;
         };
@@ -5589,6 +5786,10 @@ export interface components {
             total: number;
             unreadCount: number;
         };
+        NotificationTypeDto: {
+            label: string;
+            type: string;
+        };
         NotificationViewDto: {
             body: string;
             /** Format: date-time */
@@ -5604,6 +5805,11 @@ export interface components {
             type: string;
             /** Format: uuid */
             userId: string;
+        };
+        NumberingPreviewDto: {
+            example: string;
+            nextValue: number;
+            template: string;
         };
         Object: Record<string, never>;
         OtpChallengeDto: {
@@ -5629,16 +5835,21 @@ export interface components {
             location: string | null;
             lotId: string | null;
             lotNo: string | null;
+            manufacturerCode: string | null;
             name: string;
+            qrToken: string | null;
+            supplyCode: string | null;
         };
         PatchItemDto: {
             countedLocation?: Record<string, never>;
             countedQty?: string;
             countedStatus?: Record<string, never>;
-            diffReason?: Record<string, never>;
+            /** @enum {string} */
+            diffReason?: "damaged" | "lost" | "mislabeled" | "found" | "data_error" | "other";
             note?: Record<string, never>;
             photoFileId?: Record<string, never>;
-            resolution?: Record<string, never>;
+            /** @enum {string} */
+            resolution?: "adjust" | "ignore";
         };
         PendingMigrationsDto: {
             error?: string;
@@ -6343,6 +6554,9 @@ export interface components {
             /** @description Token trong liên kết email: <tenantId>.<token> */
             token: string;
         };
+        ResetPasswordResultDto: {
+            tempPassword: string;
+        };
         ResolveExtraDto: {
             ignore?: boolean;
             itemId?: string;
@@ -6531,6 +6745,54 @@ export interface components {
             page: number;
             total: number;
         };
+        StocktakeExtraResponseDto: {
+            clientId: string | null;
+            /** Format: date-time */
+            countedAt: string | null;
+            countedBy: string | null;
+            countedQty: string | null;
+            id: string;
+            lotNo: string | null;
+            note: string | null;
+            qrToken: string | null;
+            resolvedItemId: string | null;
+            sessionId: string;
+            /** @enum {string} */
+            status: "pending" | "linked" | "ignored";
+            supplyCode: string | null;
+        };
+        StocktakeItemPageDto: {
+            items: components["schemas"]["StocktakeItemResponseDto"][];
+            limit: number;
+            page: number;
+            total: number;
+        };
+        StocktakeItemResponseDto: {
+            bookLocation: string | null;
+            bookLotNo: string | null;
+            bookQty: string;
+            bookStatus: string | null;
+            clientId: string | null;
+            code: string;
+            /** Format: date-time */
+            countedAt: string | null;
+            countedBy: string | null;
+            countedLocation: string | null;
+            countedQty: string | null;
+            countedStatus: string | null;
+            diffQty: string;
+            diffReason: string | null;
+            equipmentId: string | null;
+            id: string;
+            lotId: string | null;
+            movedDuringSession: boolean;
+            name: string;
+            note: string | null;
+            resolution: string | null;
+            sessionId: string;
+            supplyId: string | null;
+            warehouseId: string | null;
+        };
         StocktakeSessionDetailDto: {
             assignments: components["schemas"]["AssignmentResponseDto"][];
             /** Format: date-time */
@@ -6630,6 +6892,15 @@ export interface components {
         };
         SysLoginDto: {
             password: string;
+            username: string;
+        };
+        SysLoginResultDto: {
+            accessToken: string;
+            user: components["schemas"]["SysUserViewDto"];
+        };
+        SysUserViewDto: {
+            fullName: string;
+            id: string;
             username: string;
         };
         TaskDetailDto: {
@@ -6801,6 +7072,7 @@ export interface components {
             body?: string;
             /** Format: date-time */
             endsAt?: Record<string, never> | null;
+            isActive?: boolean;
             /** @enum {string} */
             level?: "info" | "warning";
             /** Format: date-time */
@@ -7041,6 +7313,7 @@ export interface components {
             description?: string;
             /** @default false */
             equipmentDown: boolean;
+            equipmentId?: string;
             reportedDepartmentId?: string;
             /**
              * @default medium
@@ -7207,11 +7480,21 @@ export interface components {
             quantity: number;
             supplyId: string;
         };
+        UserPageDto: {
+            items: components["schemas"]["UserViewDto"][];
+            limit: number;
+            page: number;
+            total: number;
+        };
         UserViewDto: {
             departmentId: string | null;
+            departmentName: string | null;
             email: string | null;
             fullName: string;
             id: string;
+            isActive: boolean;
+            /** Format: date-time */
+            lastLoginAt: string | null;
             mustChangePassword: boolean;
             otpEnabled: boolean;
             phone: string | null;
@@ -7239,20 +7522,21 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Service health */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["HealthResponseDto"];
+                };
             };
         };
     };
     SysAnnouncementsController_list: {
         parameters: {
             query?: {
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
             };
             header?: {
                 /** @description Hospital id (multi-tenant mode) */
@@ -7393,7 +7677,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["SysLoginResultDto"];
+                };
             };
         };
     };
@@ -7413,15 +7699,17 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["SysUserViewDto"];
+                };
             };
         };
     };
     HospitalsController_list: {
         parameters: {
             query?: {
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 q?: string;
                 status?: "provisioning" | "active" | "suspended" | "failed";
             };
@@ -7668,8 +7956,8 @@ export interface operations {
     JobsController_list: {
         parameters: {
             query?: {
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
             };
             header?: {
                 /** @description Hospital id (multi-tenant mode) */
@@ -7878,11 +8166,14 @@ export interface operations {
     AuditController_list: {
         parameters: {
             query?: {
+                action?: string;
                 entityId?: string;
                 entityType?: string;
                 from?: string;
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
+                /** @description ILIKE on entityId, entityType, action */
+                q?: string;
                 to?: string;
                 userId?: string;
             };
@@ -7908,8 +8199,8 @@ export interface operations {
     AuditController_entity: {
         parameters: {
             query?: {
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
             };
             header?: {
                 /** @description Hospital id (multi-tenant mode) */
@@ -8238,8 +8529,8 @@ export interface operations {
                 dueBefore?: string;
                 equipmentId?: string;
                 from?: string;
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 result?: "pass" | "fail" | "conditional";
                 status?: "scheduled" | "done" | "cancelled";
                 to?: string;
@@ -8424,8 +8715,8 @@ export interface operations {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
                 isActive?: boolean;
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 /** @description Search on code, name */
                 q?: string;
             };
@@ -8442,7 +8733,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogPageDto"];
+                };
             };
         };
     };
@@ -8466,7 +8759,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogResponseDto"];
+                };
             };
         };
     };
@@ -8488,7 +8783,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogResponseDto"];
+                };
             };
         };
     };
@@ -8512,7 +8809,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["CatalogDeactivatedDto"];
                 };
             };
             /** @description Hard-deleted (not referenced) */
@@ -8546,7 +8843,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogResponseDto"];
+                };
             };
         };
     };
@@ -8556,8 +8855,8 @@ export interface operations {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
                 isActive?: boolean;
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 /** @description Search on code, name */
                 q?: string;
             };
@@ -8574,7 +8873,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
             };
         };
     };
@@ -8601,7 +8902,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogImportResultDto"];
+                };
             };
         };
     };
@@ -8621,7 +8924,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
             };
         };
     };
@@ -8631,8 +8936,8 @@ export interface operations {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
                 isActive?: boolean;
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 /** @description Search on code, name */
                 q?: string;
             };
@@ -8649,7 +8954,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogPageDto"];
+                };
             };
         };
     };
@@ -8673,7 +8980,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogResponseDto"];
+                };
             };
         };
     };
@@ -8695,7 +9004,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogResponseDto"];
+                };
             };
         };
     };
@@ -8719,7 +9030,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["CatalogDeactivatedDto"];
                 };
             };
             /** @description Hard-deleted (not referenced) */
@@ -8753,7 +9064,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogResponseDto"];
+                };
             };
         };
     };
@@ -8763,8 +9076,8 @@ export interface operations {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
                 isActive?: boolean;
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 /** @description Search on code, name */
                 q?: string;
             };
@@ -8781,7 +9094,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
             };
         };
     };
@@ -8808,7 +9123,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogImportResultDto"];
+                };
             };
         };
     };
@@ -8828,7 +9145,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
             };
         };
     };
@@ -8838,8 +9157,8 @@ export interface operations {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
                 isActive?: boolean;
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 /** @description Search on code, name */
                 q?: string;
             };
@@ -8856,7 +9175,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogPageDto"];
+                };
             };
         };
     };
@@ -8880,7 +9201,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogResponseDto"];
+                };
             };
         };
     };
@@ -8902,7 +9225,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogResponseDto"];
+                };
             };
         };
     };
@@ -8926,7 +9251,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["CatalogDeactivatedDto"];
                 };
             };
             /** @description Hard-deleted (not referenced) */
@@ -8960,7 +9285,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogResponseDto"];
+                };
             };
         };
     };
@@ -8970,8 +9297,8 @@ export interface operations {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
                 isActive?: boolean;
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 /** @description Search on code, name */
                 q?: string;
             };
@@ -8988,7 +9315,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
             };
         };
     };
@@ -9015,7 +9344,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogImportResultDto"];
+                };
             };
         };
     };
@@ -9035,7 +9366,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
             };
         };
     };
@@ -9045,8 +9378,8 @@ export interface operations {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
                 isActive?: boolean;
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 /** @description Search on code, name */
                 q?: string;
             };
@@ -9063,7 +9396,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogPageDto"];
+                };
             };
         };
     };
@@ -9087,7 +9422,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogResponseDto"];
+                };
             };
         };
     };
@@ -9109,7 +9446,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogResponseDto"];
+                };
             };
         };
     };
@@ -9133,7 +9472,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["CatalogDeactivatedDto"];
                 };
             };
             /** @description Hard-deleted (not referenced) */
@@ -9167,7 +9506,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogResponseDto"];
+                };
             };
         };
     };
@@ -9177,8 +9518,8 @@ export interface operations {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
                 isActive?: boolean;
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 /** @description Search on code, name */
                 q?: string;
             };
@@ -9195,7 +9536,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
             };
         };
     };
@@ -9222,7 +9565,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogImportResultDto"];
+                };
             };
         };
     };
@@ -9242,7 +9587,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
             };
         };
     };
@@ -9252,8 +9599,8 @@ export interface operations {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
                 isActive?: boolean;
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 /** @description Search on code, name */
                 q?: string;
             };
@@ -9270,7 +9617,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogPageDto"];
+                };
             };
         };
     };
@@ -9294,7 +9643,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogResponseDto"];
+                };
             };
         };
     };
@@ -9316,7 +9667,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogResponseDto"];
+                };
             };
         };
     };
@@ -9340,7 +9693,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["CatalogDeactivatedDto"];
                 };
             };
             /** @description Hard-deleted (not referenced) */
@@ -9374,7 +9727,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogResponseDto"];
+                };
             };
         };
     };
@@ -9384,8 +9739,8 @@ export interface operations {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
                 isActive?: boolean;
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 /** @description Search on code, name */
                 q?: string;
             };
@@ -9402,7 +9757,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
             };
         };
     };
@@ -9429,7 +9786,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogImportResultDto"];
+                };
             };
         };
     };
@@ -9449,7 +9808,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
             };
         };
     };
@@ -9459,8 +9820,8 @@ export interface operations {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
                 isActive?: boolean;
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 /** @description Search on code, name */
                 q?: string;
             };
@@ -9477,7 +9838,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogPageDto"];
+                };
             };
         };
     };
@@ -9501,7 +9864,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogResponseDto"];
+                };
             };
         };
     };
@@ -9523,7 +9888,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogResponseDto"];
+                };
             };
         };
     };
@@ -9547,7 +9914,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["CatalogDeactivatedDto"];
                 };
             };
             /** @description Hard-deleted (not referenced) */
@@ -9581,7 +9948,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogResponseDto"];
+                };
             };
         };
     };
@@ -9591,8 +9960,8 @@ export interface operations {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
                 isActive?: boolean;
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 /** @description Search on code, name */
                 q?: string;
             };
@@ -9609,7 +9978,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
             };
         };
     };
@@ -9636,7 +10007,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogImportResultDto"];
+                };
             };
         };
     };
@@ -9656,7 +10029,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
             };
         };
     };
@@ -9666,8 +10041,8 @@ export interface operations {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
                 isActive?: boolean;
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 /** @description Search on code, name */
                 q?: string;
             };
@@ -9684,7 +10059,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogPageDto"];
+                };
             };
         };
     };
@@ -9708,7 +10085,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogResponseDto"];
+                };
             };
         };
     };
@@ -9730,7 +10109,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogResponseDto"];
+                };
             };
         };
     };
@@ -9754,7 +10135,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["CatalogDeactivatedDto"];
                 };
             };
             /** @description Hard-deleted (not referenced) */
@@ -9788,7 +10169,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogResponseDto"];
+                };
             };
         };
     };
@@ -9798,8 +10181,8 @@ export interface operations {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
                 isActive?: boolean;
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 /** @description Search on code, name */
                 q?: string;
             };
@@ -9816,7 +10199,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
             };
         };
     };
@@ -9843,7 +10228,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogImportResultDto"];
+                };
             };
         };
     };
@@ -9863,7 +10250,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
             };
         };
     };
@@ -9873,8 +10262,8 @@ export interface operations {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
                 isActive?: boolean;
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 /** @description Search on code, name */
                 q?: string;
             };
@@ -9891,7 +10280,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogPageDto"];
+                };
             };
         };
     };
@@ -9915,7 +10306,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogResponseDto"];
+                };
             };
         };
     };
@@ -9937,7 +10330,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogResponseDto"];
+                };
             };
         };
     };
@@ -9961,7 +10356,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["CatalogDeactivatedDto"];
                 };
             };
             /** @description Hard-deleted (not referenced) */
@@ -9995,7 +10390,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogResponseDto"];
+                };
             };
         };
     };
@@ -10005,8 +10402,8 @@ export interface operations {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
                 isActive?: boolean;
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 /** @description Search on code, name */
                 q?: string;
             };
@@ -10023,7 +10420,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
             };
         };
     };
@@ -10050,7 +10449,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogImportResultDto"];
+                };
             };
         };
     };
@@ -10070,7 +10471,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
             };
         };
     };
@@ -10080,8 +10483,8 @@ export interface operations {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
                 isActive?: boolean;
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 /** @description Search on code, name */
                 q?: string;
             };
@@ -10098,7 +10501,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogPageDto"];
+                };
             };
         };
     };
@@ -10122,7 +10527,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogResponseDto"];
+                };
             };
         };
     };
@@ -10144,7 +10551,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogResponseDto"];
+                };
             };
         };
     };
@@ -10168,7 +10577,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["CatalogDeactivatedDto"];
                 };
             };
             /** @description Hard-deleted (not referenced) */
@@ -10202,7 +10611,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogResponseDto"];
+                };
             };
         };
     };
@@ -10212,8 +10623,8 @@ export interface operations {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
                 isActive?: boolean;
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 /** @description Search on code, name */
                 q?: string;
             };
@@ -10230,7 +10641,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
             };
         };
     };
@@ -10257,7 +10670,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogImportResultDto"];
+                };
             };
         };
     };
@@ -10277,7 +10692,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
             };
         };
     };
@@ -10287,8 +10704,8 @@ export interface operations {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
                 isActive?: boolean;
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 /** @description Search on code, name */
                 q?: string;
             };
@@ -10305,7 +10722,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogPageDto"];
+                };
             };
         };
     };
@@ -10329,7 +10748,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogResponseDto"];
+                };
             };
         };
     };
@@ -10351,7 +10772,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogResponseDto"];
+                };
             };
         };
     };
@@ -10375,7 +10798,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["CatalogDeactivatedDto"];
                 };
             };
             /** @description Hard-deleted (not referenced) */
@@ -10409,7 +10832,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogResponseDto"];
+                };
             };
         };
     };
@@ -10419,8 +10844,8 @@ export interface operations {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
                 isActive?: boolean;
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 /** @description Search on code, name */
                 q?: string;
             };
@@ -10437,7 +10862,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
             };
         };
     };
@@ -10464,7 +10891,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogImportResultDto"];
+                };
             };
         };
     };
@@ -10484,7 +10913,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
             };
         };
     };
@@ -10494,8 +10925,8 @@ export interface operations {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
                 isActive?: boolean;
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 /** @description Search on code, name */
                 q?: string;
             };
@@ -10512,7 +10943,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogPageDto"];
+                };
             };
         };
     };
@@ -10536,7 +10969,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogResponseDto"];
+                };
             };
         };
     };
@@ -10558,7 +10993,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogResponseDto"];
+                };
             };
         };
     };
@@ -10582,7 +11019,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["CatalogDeactivatedDto"];
                 };
             };
             /** @description Hard-deleted (not referenced) */
@@ -10616,7 +11053,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogResponseDto"];
+                };
             };
         };
     };
@@ -10626,8 +11065,8 @@ export interface operations {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
                 isActive?: boolean;
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 /** @description Search on code, name */
                 q?: string;
             };
@@ -10644,7 +11083,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
             };
         };
     };
@@ -10671,7 +11112,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogImportResultDto"];
+                };
             };
         };
     };
@@ -10691,7 +11134,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
             };
         };
     };
@@ -10701,10 +11146,11 @@ export interface operations {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
                 isActive?: boolean;
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 /** @description Search on code, name */
                 q?: string;
+                sort?: "code" | "name" | "createdAt";
             };
             header?: {
                 /** @description Hospital id (multi-tenant mode) */
@@ -10719,7 +11165,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DepartmentPageDto"];
+                };
             };
         };
     };
@@ -10743,7 +11191,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DepartmentResponseDto"];
+                };
             };
         };
     };
@@ -10765,7 +11215,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DepartmentResponseDto"];
+                };
             };
         };
     };
@@ -10789,7 +11241,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["DeactivatedDto"];
                 };
             };
             /** @description Hard-deleted (not referenced) */
@@ -10823,15 +11275,17 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DepartmentResponseDto"];
+                };
             };
         };
     };
     DepartmentsController_listUsers: {
         parameters: {
             query?: {
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
             };
             header?: {
                 /** @description Hospital id (multi-tenant mode) */
@@ -10848,7 +11302,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["UserPageDto"];
+                };
             };
         };
     };
@@ -10858,8 +11314,8 @@ export interface operations {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
                 isActive?: boolean;
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 /** @description Search on code, name */
                 q?: string;
             };
@@ -10876,7 +11332,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
             };
         };
     };
@@ -10903,7 +11361,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CatalogImportResultDto"];
+                };
             };
         };
     };
@@ -10923,7 +11383,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
             };
         };
     };
@@ -10981,11 +11443,11 @@ export interface operations {
                 departmentId?: string;
                 export?: "xlsx";
                 groupId?: string;
-                limit?: components["schemas"]["Object"];
+                limit?: number;
                 maintenanceDueBefore?: string;
                 manufacturerId?: string;
                 order?: "asc" | "desc";
-                page?: components["schemas"]["Object"];
+                page?: number;
                 q?: string;
                 sort?: "code" | "name" | "status" | "departmentId" | "commissionedAt" | "updatedAt";
                 staffId?: string;
@@ -11455,8 +11917,8 @@ export interface operations {
         parameters: {
             query?: {
                 from?: string;
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 to?: string;
             };
             header?: {
@@ -11512,8 +11974,8 @@ export interface operations {
         parameters: {
             query?: {
                 from?: string;
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 to?: string;
                 /** @description Exact type or prefix such as repair.* */
                 type?: string;
@@ -11908,8 +12370,8 @@ export interface operations {
     TimelineController_history: {
         parameters: {
             query?: {
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
             };
             header?: {
                 /** @description Hospital id (multi-tenant mode) */
@@ -12011,8 +12473,8 @@ export interface operations {
     TimelineController_list: {
         parameters: {
             query?: {
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 status?: "pending" | "approved" | "rejected" | "cancelled";
             };
             header?: {
@@ -12227,8 +12689,8 @@ export interface operations {
     TimelineController_pending: {
         parameters: {
             query?: {
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 status?: "pending" | "approved" | "rejected" | "cancelled";
             };
             header?: {
@@ -12255,10 +12717,10 @@ export interface operations {
             query?: {
                 errorCode?: string;
                 groupId?: string;
-                limit?: components["schemas"]["Object"];
+                limit?: number;
                 manufacturerId?: string;
                 model?: string;
-                page?: components["schemas"]["Object"];
+                page?: number;
                 q?: string;
                 scope?: "model" | "group" | "all";
                 severity?: "low" | "medium" | "high" | "critical";
@@ -12544,8 +13006,8 @@ export interface operations {
     FaultSuggestionsController_list: {
         parameters: {
             query?: {
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 status?: "pending" | "accepted" | "rejected";
             };
             header?: {
@@ -12958,8 +13420,8 @@ export interface operations {
                 assigneeId?: string;
                 equipmentId?: string;
                 from?: string;
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 planId?: string;
                 status?: string;
                 to?: string;
@@ -13375,8 +13837,10 @@ export interface operations {
     NotificationsController_list: {
         parameters: {
             query?: {
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
+                /** @description Exact notification type */
+                type?: string;
                 unread?: boolean;
             };
             header?: {
@@ -13502,13 +13966,39 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "text/event-stream": string;
+                };
+            };
+        };
+    };
+    NotificationsController_types: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationTypeDto"][];
+                };
             };
         };
     };
     NumberingController_preview: {
         parameters: {
             query: {
+                /** @description Unsaved template; syntax-checked, does not write sequences */
+                template?: string;
                 type: string;
             };
             header?: {
@@ -13524,7 +14014,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["NumberingPreviewDto"];
+                };
             };
         };
     };
@@ -13535,9 +14027,9 @@ export interface operations {
                 departmentId?: string;
                 equipmentId?: string;
                 from?: string;
-                limit?: components["schemas"]["Object"];
+                limit?: number;
                 overdue?: boolean;
-                page?: components["schemas"]["Object"];
+                page?: number;
                 q?: string;
                 severity?: "low" | "medium" | "high" | "critical";
                 /** @description Comma-separated statuses */
@@ -13964,8 +14456,8 @@ export interface operations {
     RepairResourcesController_logs: {
         parameters: {
             query?: {
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
             };
             header?: {
                 /** @description Hospital id (multi-tenant mode) */
@@ -14386,8 +14878,8 @@ export interface operations {
             query?: {
                 departmentId?: string;
                 from?: string;
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 /** @description Requests waiting for the caller to approve */
                 pendingFor?: "me";
                 priority?: "normal" | "urgent";
@@ -14791,8 +15283,8 @@ export interface operations {
         parameters: {
             query?: {
                 departmentId?: string;
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 supplyId?: string;
             };
             header?: {
@@ -14893,8 +15385,8 @@ export interface operations {
     RequestsController_listRecurring: {
         parameters: {
             query?: {
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
             };
             header?: {
                 /** @description Hospital id (multi-tenant mode) */
@@ -15007,7 +15499,11 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
             };
         };
     };
@@ -15053,7 +15549,11 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
             };
         };
     };
@@ -15091,8 +15591,8 @@ export interface operations {
     StockController_listAlerts: {
         parameters: {
             query?: {
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 resolved?: boolean;
                 supplyId?: string;
                 type?: "low_stock" | "expiring" | "expired" | "open_vial_expiring" | "stale";
@@ -15144,13 +15644,15 @@ export interface operations {
     StockController_balances: {
         parameters: {
             query?: {
+                /** @description Match lotNo or supplies.code or supplies.manufacturerCode */
+                barcode?: string;
                 belowMin?: boolean;
                 expiringWithinDays?: number;
                 export?: string;
                 from?: string;
                 groupId?: string;
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 q?: string;
                 status?: string;
                 supplyId?: string;
@@ -15204,8 +15706,8 @@ export interface operations {
     IssuesController_list: {
         parameters: {
             query?: {
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 q?: string;
                 status?: string;
                 warehouseId?: string;
@@ -15463,13 +15965,15 @@ export interface operations {
     StockController_lots: {
         parameters: {
             query?: {
+                /** @description Match lotNo or supplies.code or supplies.manufacturerCode */
+                barcode?: string;
                 belowMin?: boolean;
                 expiringWithinDays?: number;
                 export?: string;
                 from?: string;
                 groupId?: string;
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 q?: string;
                 status?: string;
                 supplyId?: string;
@@ -15522,8 +16026,8 @@ export interface operations {
     ReceiptsController_list: {
         parameters: {
             query?: {
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 q?: string;
                 status?: string;
                 warehouseId?: string;
@@ -15812,13 +16316,15 @@ export interface operations {
     StockController_value: {
         parameters: {
             query?: {
+                /** @description Match lotNo or supplies.code or supplies.manufacturerCode */
+                barcode?: string;
                 belowMin?: boolean;
                 expiringWithinDays?: number;
                 export?: string;
                 from?: string;
                 groupId?: string;
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 q?: string;
                 status?: string;
                 supplyId?: string;
@@ -15850,8 +16356,8 @@ export interface operations {
         parameters: {
             query?: {
                 from?: string;
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 status?: "draft" | "open" | "counting" | "review" | "closed" | "cancelled";
                 to?: string;
                 type?: "equipment" | "supply";
@@ -16005,6 +16511,56 @@ export interface operations {
             };
         };
     };
+    StocktakesController_close: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CloseResultDto"];
+                };
+            };
+        };
+    };
+    StocktakesController_compare: {
+        parameters: {
+            query: {
+                withSessionId: string;
+            };
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompareDto"];
+                };
+            };
+        };
+    };
     StocktakesController_countsSubmit: {
         parameters: {
             query?: never;
@@ -16027,7 +16583,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CountsResultDto"];
+                };
             };
         };
     };
@@ -16049,7 +16607,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StocktakeExtraResponseDto"][];
+                };
             };
         };
     };
@@ -16076,7 +16636,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StocktakeExtraResponseDto"];
+                };
             };
         };
     };
@@ -16085,8 +16647,8 @@ export interface operations {
             query?: {
                 assignee?: string;
                 diffOnly?: boolean;
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 status?: "counted" | "uncounted";
             };
             header?: {
@@ -16104,7 +16666,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StocktakeItemPageDto"];
+                };
             };
         };
     };
@@ -16131,7 +16695,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StocktakeItemResponseDto"];
+                };
             };
         };
     };
@@ -16207,6 +16773,54 @@ export interface operations {
             };
         };
     };
+    StocktakesController_report: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+        };
+    };
+    StocktakesController_review: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StocktakeSessionDetailDto"];
+                };
+            };
+        };
+    };
     StocktakesController_startCounting: {
         parameters: {
             query?: never;
@@ -16237,8 +16851,8 @@ export interface operations {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
                 isActive?: boolean;
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 /** @description Search on code, name */
                 q?: string;
             };
@@ -16374,13 +16988,15 @@ export interface operations {
     SuppliesController_card: {
         parameters: {
             query?: {
+                /** @description Match lotNo or supplies.code or supplies.manufacturerCode */
+                barcode?: string;
                 belowMin?: boolean;
                 expiringWithinDays?: number;
                 export?: string;
                 from?: string;
                 groupId?: string;
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 q?: string;
                 status?: string;
                 supplyId?: string;
@@ -16473,8 +17089,8 @@ export interface operations {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
                 isActive?: boolean;
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 /** @description Search on code, name */
                 q?: string;
             };
@@ -16555,10 +17171,12 @@ export interface operations {
     UsersController_list: {
         parameters: {
             query?: {
+                /** @description Return up to 500 rows, no pagination (dropdowns) */
+                all?: boolean;
                 departmentId?: string;
                 isActive?: boolean;
-                limit?: components["schemas"]["Object"];
-                page?: components["schemas"]["Object"];
+                limit?: number;
+                page?: number;
                 /** @description Search on username, fullName, email */
                 q?: string;
                 role?: "HOSPITAL_ADMIN" | "EQUIPMENT_STAFF" | "DEPT_HEAD" | "DEPT_USER";
@@ -16576,7 +17194,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["UserPageDto"];
+                };
             };
         };
     };
@@ -16600,7 +17220,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CreatedUserDto"];
+                };
             };
         };
     };
@@ -16622,7 +17244,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["UserViewDto"];
+                };
             };
         };
     };
@@ -16670,7 +17294,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["UserViewDto"];
+                };
             };
         };
     };
@@ -16736,7 +17362,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ResetPasswordResultDto"];
+                };
             };
         };
     };

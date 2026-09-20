@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { isValidElement, useEffect, useMemo, useState, type ReactNode } from 'react'
 import {
   flexRender,
   getCoreRowModel,
@@ -21,6 +21,7 @@ import {
 import { EmptyState } from '@/components/page/EmptyState'
 import { ErrorState } from '@/components/page/ErrorState'
 import { cn } from '@/lib/utils'
+import { FilterBar } from '@/components/filter-bar'
 import { ColumnToggle } from './ColumnToggle'
 import { DataTablePagination } from './DataTablePagination'
 import type { ServerTableParams } from './useServerTable'
@@ -115,11 +116,14 @@ export function DataTable<T>({
   })
 
   const colCount = table.getVisibleLeafColumns().length || 1
+  const hasFilterBar = isValidElement(toolbarLeft) && toolbarLeft.type === FilterBar
 
   return (
     <div className="space-y-2">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-2">{toolbarLeft}</div>
+      <div className="flex items-end justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          {toolbarLeft && (hasFilterBar ? toolbarLeft : <FilterBar>{toolbarLeft}</FilterBar>)}
+        </div>
         <div className="flex flex-wrap items-center gap-2">
           {toolbarRight}
           <ColumnToggle table={table} />

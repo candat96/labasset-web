@@ -4,15 +4,22 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
+import { useTranslation } from 'react-i18next'
 
 const SOURCES = [
-  { id: 'equipment', label: 'Thiết bị', fields: ['code', 'name', 'status', 'departmentId'] },
-  { id: 'repairs', label: 'Sửa chữa', fields: ['code', 'status', 'totalCost', 'openedAt'] },
-  { id: 'supplies', label: 'Vật tư', fields: ['code', 'name', 'minQty'] },
-  { id: 'stocktakes', label: 'Kiểm kê', fields: ['code', 'status', 'diffQty'] },
+  {
+    id: 'equipment',
+    labelKey: 'sourceEquipment',
+    fields: ['code', 'name', 'status', 'departmentId'],
+  },
+  { id: 'repairs', labelKey: 'sourceRepairs', fields: ['code', 'status', 'totalCost', 'openedAt'] },
+  { id: 'supplies', labelKey: 'sourceSupplies', fields: ['code', 'name', 'minQty'] },
+  { id: 'stocktakes', labelKey: 'sourceStocktakes', fields: ['code', 'status', 'diffQty'] },
 ]
 
 export function Component() {
+  const { t } = useTranslation('reports')
+
   const [name, setName] = useState('')
   const [source, setSource] = useState(SOURCES[0]?.id ?? 'equipment')
   const [columns, setColumns] = useState<string[]>(['code', 'name'])
@@ -20,18 +27,15 @@ export function Component() {
   const fields = SOURCES.find((row) => row.id === source)?.fields ?? []
   return (
     <>
-      <PageHeader title="Báo cáo tuỳ chỉnh" />
-      <p className="text-muted-foreground mb-4 text-sm">
-        API D1 chưa có (`GET /v1/reports/sources`). Builder chọn nguồn, cột, lọc, nhóm — chạy khi
-        backend sẵn sàng.
-      </p>
+      <PageHeader title={t('builderTitle')} />
+      <p className="text-muted-foreground mb-4 text-sm">{t('builderNote')}</p>
       <div className="max-w-xl space-y-4">
         <div className="space-y-1">
-          <Label htmlFor="report-name">Tên</Label>
+          <Label htmlFor="report-name">{t('name')}</Label>
           <Input id="report-name" value={name} onChange={(event) => setName(event.target.value)} />
         </div>
         <div className="space-y-1">
-          <Label htmlFor="report-source">Nguồn</Label>
+          <Label htmlFor="report-source">{t('source')}</Label>
           <select
             id="report-source"
             className="border-input h-9 w-full rounded-md border px-3 text-sm"
@@ -43,13 +47,13 @@ export function Component() {
           >
             {SOURCES.map((row) => (
               <option key={row.id} value={row.id}>
-                {row.label}
+                {t(row.labelKey)}
               </option>
             ))}
           </select>
         </div>
         <fieldset>
-          <legend className="mb-2 text-sm font-medium">Cột (≤ 20)</legend>
+          <legend className="mb-2 text-sm font-medium">{t('columns')}</legend>
           <div className="grid gap-2 sm:grid-cols-2">
             {fields.map((field) => (
               <label key={field} className="flex items-center gap-2 text-sm">
@@ -81,13 +85,13 @@ export function Component() {
               )
             }
           >
-            Thêm lọc
+            {t('addFilter')}
           </Button>
           <ul className="mt-2 space-y-2">
             {filters.map((filter, index) => (
               <li key={index} className="flex gap-2">
                 <Input
-                  aria-label={`Lọc trường ${index + 1}`}
+                  aria-label={t('filterField', { index: index + 1 })}
                   value={filter.field}
                   onChange={(event) =>
                     setFilters((current) =>
@@ -98,7 +102,7 @@ export function Component() {
                   }
                 />
                 <Input
-                  aria-label={`Lọc giá trị ${index + 1}`}
+                  aria-label={t('filterValue', { index: index + 1 })}
                   value={filter.value}
                   onChange={(event) =>
                     setFilters((current) =>
@@ -113,7 +117,7 @@ export function Component() {
           </ul>
         </div>
         <Button type="button" disabled>
-          Xem trước
+          {t('preview')}
         </Button>
       </div>
     </>

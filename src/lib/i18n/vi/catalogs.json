@@ -1,5 +1,125 @@
 {
   "index": "Danh mục",
   "indexDesc": "Mười một danh mục dùng chung trong viện.",
-  "add": "Thêm mới"
+  "add": "Thêm mới",
+  "count": "{{total}} bản ghi",
+  "saved": "Đã lưu danh mục",
+  "deleted": "Đã xoá danh mục",
+  "deactivated": "Đã ngừng hoạt động danh mục",
+  "deleteTitle": "Xoá {{name}}?",
+  "deleteDesc": "Nếu danh mục đang được dùng, hệ thống sẽ yêu cầu ngưng hoạt động.",
+  "formTitle": {
+    "add": "Thêm {{name}}",
+    "edit": "Sửa {{name}}"
+  },
+  "search": {
+    "label": "Tìm danh mục",
+    "placeholder": "Tìm mã hoặc tên"
+  },
+  "filter": {
+    "select": "Chọn danh mục",
+    "status": "Lọc trạng thái",
+    "allStatuses": "Mọi trạng thái",
+    "active": "Hoạt động",
+    "inactive": "Ngưng hoạt động"
+  },
+  "fields": {
+    "code": "Mã",
+    "name": "Tên",
+    "description": "Mô tả",
+    "sortOrder": "Thứ tự",
+    "isActive": "Đang hoạt động",
+    "status": "Trạng thái"
+  },
+  "boolean": {
+    "yes": "Có",
+    "no": "Không"
+  },
+  "errors": {
+    "code": "Mã chỉ gồm A–Z, số, _ hoặc -",
+    "email": "Email không hợp lệ",
+    "url": "URL không hợp lệ"
+  },
+  "severity": {
+    "low": "Thấp",
+    "medium": "Trung bình",
+    "high": "Cao",
+    "critical": "Nghiêm trọng"
+  },
+  "import": {
+    "title": "Nhập danh mục từ Excel",
+    "step1": "Tải tệp mẫu, điền dữ liệu rồi chọn tệp để nhập.",
+    "template": "Tải tệp mẫu",
+    "file": "Tệp Excel",
+    "result": "Tạo mới: {{created}} · Cập nhật: {{updated}} · Lỗi: {{errors}}",
+    "row": "Dòng",
+    "field": "Trường",
+    "error": "Lỗi"
+  },
+  "titles": {
+    "suppliers": "Nhà cung cấp",
+    "manufacturers": "Hãng sản xuất",
+    "equipment-groups": "Nhóm thiết bị",
+    "supply-groups": "Nhóm vật tư",
+    "units": "Đơn vị tính",
+    "warehouses": "Kho",
+    "funding-sources": "Nguồn kinh phí",
+    "connection-types": "Loại kết nối",
+    "component-types": "Loại linh kiện",
+    "calibration-agencies": "Đơn vị kiểm định",
+    "fault-groups": "Nhóm lỗi"
+  },
+  "catalogFields": {
+    "suppliers": {
+      "contactName": "Người liên hệ",
+      "contactPhone": "Điện thoại người liên hệ",
+      "phone": "Điện thoại",
+      "email": "Email",
+      "address": "Địa chỉ",
+      "taxCode": "Mã số thuế",
+      "maintenanceContractNo": "Số hợp đồng bảo trì",
+      "maintenanceContractExpiresAt": "Hợp đồng đến ngày",
+      "rating": "Đánh giá (1–5 sao)",
+      "notes": "Ghi chú"
+    },
+    "manufacturers": {
+      "country": "Quốc gia",
+      "website": "Website"
+    },
+    "equipment-groups": {
+      "parentId": "Nhóm cha",
+      "defaultMaintenanceCycleMonths": "Chu kỳ bảo dưỡng (tháng)",
+      "defaultCalibrationCycleMonths": "Chu kỳ kiểm định (tháng)"
+    },
+    "supply-groups": {
+      "parentId": "Nhóm cha",
+      "requiresLot": "Bắt buộc số lô",
+      "requiresExpiry": "Bắt buộc hạn dùng"
+    },
+    "units": {
+      "symbol": "Ký hiệu"
+    },
+    "warehouses": {
+      "departmentId": "Khoa/phòng (trống = kho trung tâm)",
+      "address": "Địa chỉ/vị trí",
+      "keeperUserId": "Người phụ trách"
+    },
+    "funding-sources": {},
+    "connection-types": {},
+    "component-types": {
+      "defaultLifespanHours": "Tuổi thọ mặc định (giờ)",
+      "defaultLifespanTests": "Tuổi thọ mặc định (lượt xét nghiệm)",
+      "defaultLifespanMonths": "Tuổi thọ mặc định (tháng)"
+    },
+    "calibration-agencies": {
+      "address": "Địa chỉ",
+      "phone": "Điện thoại",
+      "email": "Email",
+      "licenseNo": "Số giấy phép"
+    },
+    "fault-groups": {
+      "severity": "Mức độ mặc định",
+      "requiresCalibrationAfterFix": "Yêu cầu kiểm định sau sửa"
+    }
+  }
 }

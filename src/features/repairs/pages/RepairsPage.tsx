@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { Link, useNavigate } from 'react-router'
 import type { ColumnDef } from '@tanstack/react-table'
+import { useTranslation } from 'react-i18next'
 import { AlertTriangle, PowerOff } from 'lucide-react'
 import { DataTable, useServerTable } from '@/components/data-table'
 import { PageHeader } from '@/components/page/PageHeader'
@@ -8,6 +9,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
+import { DatePicker } from '@/components/date-picker'
+import { FilterBar, FilterField, FilterPreset } from '@/components/filter-bar'
+import { MultiSelect } from '@/components/multi-select'
 import { StatusBadge } from '@/components/status-badge'
 import { AsyncSelect } from '@/components/form/async-select'
 import {
@@ -20,9 +24,12 @@ import {
 import { faultSeverityMap, repairStatusMap } from '@/lib/status-maps'
 import { formatDateTime } from '@/lib/format/date'
 import { formatVnd } from '@/lib/format/money'
+import { dayRangeToIso } from '@/lib/format/date-range'
 import { departmentOptions, equipmentOptions, staffUserOptions } from '@/api/references'
+import { useCan } from '@/app/guards/useCan'
+import { ADM } from '@/routes/roles'
 import { useAuthStore } from '@/stores/auth.store'
-import { useRepairs } from '../hooks'
+import { useDepartmentNames, useRepairs } from '../hooks'
 import {
   REPAIR_SEVERITIES,
   REPAIR_STATUSES,
@@ -31,16 +38,15 @@ import {
   type RepairSeverity,
 } from '../types'
 
-const PRESETS = [
-  { id: 'all', label: 'Tất cả' },
-  { id: 'mine', label: 'Của tôi' },
-  { id: 'new', label: 'Mới' },
-  { id: 'overdue', label: 'Quá hạn' },
-] as const
+const PRESETS = ['all', 'mine', 'new', 'overdue'] as const
+type Preset = (typeof PRESETS)[number]
 
 export function Component() {
+  const { t } = useTranslation('repairs')
   const navigate = useNavigate()
   const me = useAuthStore((s) => s.user?.id)
+  const canListUsers = useCan(ADM)
+  const departmentName = useDepartmentNames()
   const table = useServerTable({
     filterKeys: [
       'status',
@@ -55,7 +61,8 @@ export function Component() {
     ],
   })
   const f = table.params.filters
-  const preset = f.preset ?? 'all'
+  const preset = (f.preset ?? 'all') as Preset
+  const range = dayRangeToIso(f.from, f.to)
   const params: RepairListParams = {
     page: table.params.page,
     limit: table.params.limit,
@@ -66,11 +73,11 @@ export function Component() {
     departmentId: f.departmentId,
     equipmentId: f.equipmentId,
     overdue: f.overdue === 'true' ? true : undefined,
-    from: f.from,
-    to: f.to,
+    from: range.from,
+    to: range.to,
   }
   const list = useRepairs(params)
-  const setPreset = (id: (typeof PRESETS)[number]['id']) => {
+  const setPreset = (id: Preset) => {
     if (id === 'all')
       table.setFilters({
         preset: undefined,
@@ -88,7 +95,7 @@ export function Component() {
     () => [
       {
         accessorKey: 'code',
-        header: 'Mã',
+        header: t('columns.code'),
         cell: ({ row }) => (
           <Link
             className="text-primary font-mono text-xs hover:underline"
@@ -100,7 +107,7 @@ export function Component() {
       },
       {
         id: 'equipment',
-        header: 'Máy',
+        header: t('columns.equipment'),
         cell: ({ row }) =>
           row.original.equipment
             ? `${row.original.equipment.code} – ${row.original.equipment.name}`
@@ -108,42 +115,45 @@ export function Component() {
       },
       {
         accessorKey: 'reportedDepartmentId',
-        header: 'Khoa',
-        cell: ({ row }) => row.original.reportedDepartmentId ?? '—',
+        header: t('columns.department'),
+        cell: ({ row }) => departmentName(row.original.reportedDepartmentId),
       },
       {
         accessorKey: 'severity',
-        header: 'Mức khẩn',
+        header: t('columns.severity'),
         cell: ({ row }) => <StatusBadge value={row.original.severity} map={faultSeverityMap} />,
       },
       {
         id: 'down',
-        header: 'Ngừng',
+        header: t('columns.equipmentDown'),
         cell: ({ row }) =>
           row.original.equipmentDown ? (
-            <PowerOff className="text-destructive size-4" aria-label="Máy ngừng" />
+            <PowerOff
+              className="text-destructive size-4"
+              aria-label={t('columns.equipmentDownLabel')}
+            />
           ) : null,
       },
       {
         accessorKey: 'status',
-        header: 'Trạng thái',
+        header: t('columns.status'),
         cell: ({ row }) => <StatusBadge value={row.original.status} map={repairStatusMap} />,
       },
       {
         id: 'assignee',
-        header: 'Người xử lý',
+        header: t('columns.assignee'),
         cell: ({ row }) => row.original.assignee?.fullName ?? '—',
       },
       {
         accessorKey: 'dueAt',
-        header: 'Hạn',
+        header: t('columns.dueAt'),
         cell: ({ row }) => (
           <span className={row.original.isOverdue ? 'text-destructive font-medium' : undefined}>
             {formatDateTime(row.original.dueAt) || '—'}
             {row.original.isOverdue && (
               <StatusBadge
                 value="overdue"
-                map={{ overdue: { label: 'Quá hạn', tone: 'danger' } }}
+                map={{ overdue: { label: t('detail.overdue'), tone: 'danger' } }}
               />
             )}
           </span>
@@ -151,47 +161,38 @@ export function Component() {
       },
       {
         accessorKey: 'createdAt',
-        header: 'Tạo lúc',
+        header: t('columns.createdAt'),
         cell: ({ getValue }) => formatDateTime(getValue<string>()),
       },
       {
         accessorKey: 'totalCost',
-        header: 'Chi phí',
+        header: t('columns.cost'),
         cell: ({ row }) => (
           <span className="inline-flex items-center gap-1">
             {formatVnd(row.original.totalCost) || '—'}
             {row.original.costWarning && (
-              <AlertTriangle className="text-destructive size-4" aria-label="Cảnh báo chi phí" />
+              <AlertTriangle
+                className="text-destructive size-4"
+                aria-label={t('columns.warningLabel')}
+              />
             )}
           </span>
         ),
       },
     ],
-    [],
+    [t, departmentName],
   )
-  const selectedStatus = (f.status ?? '').split(',').filter(Boolean)
+  const selectedStatuses = (f.status ?? '').split(',').filter(Boolean)
   return (
     <>
       <PageHeader
-        title="Phiếu sửa chữa"
+        title={t('title')}
         actions={
           <Button asChild>
-            <Link to="/repairs/new">Báo hỏng</Link>
+            <Link to="/repairs/new">{t('new')}</Link>
           </Button>
         }
       />
-      <div className="mb-3 flex flex-wrap gap-2">
-        {PRESETS.map((item) => (
-          <Button
-            key={item.id}
-            size="sm"
-            variant={preset === item.id ? 'default' : 'outline'}
-            onClick={() => setPreset(item.id)}
-          >
-            {item.label}
-          </Button>
-        ))}
-      </div>
       <DataTable
         tableId="repairs"
         columns={columns}
@@ -206,76 +207,88 @@ export function Component() {
         getRowId={(row) => row.id}
         onRowClick={(row) => navigate(`/repairs/${row.id}`)}
         toolbarLeft={
-          <>
-            <Input
-              aria-label="Tìm phiếu"
-              placeholder="Mã, mô tả…"
-              value={table.inputQ}
-              onChange={(event) => table.setQ(event.target.value)}
-            />
-            <Select
-              value={selectedStatus[0] ?? '__all__'}
-              onValueChange={(value) =>
-                table.setFilter('status', value === '__all__' ? undefined : value)
-              }
-            >
-              <SelectTrigger aria-label="Trạng thái" className="w-44">
-                <SelectValue placeholder="Trạng thái" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__all__">Mọi trạng thái</SelectItem>
-                {REPAIR_STATUSES.map((item) => (
-                  <SelectItem key={item} value={item}>
-                    {repairStatusMap[item]?.label ?? item}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select
-              value={f.severity ?? '__all__'}
-              onValueChange={(value) =>
-                table.setFilter('severity', value === '__all__' ? undefined : value)
-              }
-            >
-              <SelectTrigger aria-label="Mức khẩn" className="w-40">
-                <SelectValue placeholder="Mức khẩn" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__all__">Mọi mức</SelectItem>
-                {REPAIR_SEVERITIES.map((item) => (
-                  <SelectItem key={item} value={item}>
-                    {faultSeverityMap[item]?.label ?? item}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <div className="min-w-48">
-              <AsyncSelect
-                label="Người xử lý"
-                queryKey="staff-users"
-                loadOptions={staffUserOptions}
-                value={f.assigneeId && f.assigneeId !== 'me' ? f.assigneeId : null}
-                onChange={(value) =>
-                  table.setFilter('assigneeId', typeof value === 'string' ? value : undefined)
-                }
-                clearable
+          <FilterBar
+            presets={PRESETS.map((item) => (
+              <FilterPreset key={item} active={preset === item} onClick={() => setPreset(item)}>
+                {t(`presets.${item}`)}
+              </FilterPreset>
+            ))}
+            onClear={table.params.q || Object.keys(f).length ? table.reset : undefined}
+          >
+            <FilterField label={t('filters.q')}>
+              <Input
+                aria-label={t('filters.q')}
+                placeholder={t('filters.qPlaceholder')}
+                value={table.inputQ}
+                onChange={(event) => table.setQ(event.target.value)}
               />
-              {me && (
+            </FilterField>
+            <FilterField label={t('filters.status')}>
+              <MultiSelect
+                value={selectedStatuses}
+                onChange={(next) =>
+                  table.setFilter('status', next.length ? next.join(',') : undefined)
+                }
+                options={REPAIR_STATUSES.map((status) => ({
+                  value: status,
+                  label: repairStatusMap[status]?.label ?? status,
+                }))}
+                placeholder={t('filters.status')}
+              />
+            </FilterField>
+            <FilterField label={t('filters.severity')}>
+              <Select
+                value={f.severity ?? '__all__'}
+                onValueChange={(value) =>
+                  table.setFilter('severity', value === '__all__' ? undefined : value)
+                }
+              >
+                <SelectTrigger aria-label={t('filters.severity')} className="w-40">
+                  <SelectValue placeholder={t('filters.severity')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">{t('filters.allSeverities')}</SelectItem>
+                  {REPAIR_SEVERITIES.map((item) => (
+                    <SelectItem key={item} value={item}>
+                      {faultSeverityMap[item]?.label ?? item}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FilterField>
+            {canListUsers && (
+              <FilterField label={t('filters.assignee')}>
+                <AsyncSelect
+                  label={t('filters.assignee')}
+                  queryKey="staff-users"
+                  loadOptions={staffUserOptions}
+                  value={f.assigneeId && f.assigneeId !== 'me' ? f.assigneeId : null}
+                  onChange={(value) =>
+                    table.setFilter('assigneeId', typeof value === 'string' ? value : undefined)
+                  }
+                  clearable
+                  showLabel={false}
+                />
+              </FilterField>
+            )}
+            {me && (
+              <FilterField label={t('filters.me')}>
                 <Button
+                  className="w-full"
                   type="button"
                   size="sm"
-                  variant={f.assigneeId === 'me' ? 'default' : 'ghost'}
+                  variant={f.assigneeId === 'me' ? 'default' : 'outline'}
                   onClick={() =>
                     table.setFilter('assigneeId', f.assigneeId === 'me' ? undefined : 'me')
                   }
                 >
-                  Tôi
+                  {t('filters.me')}
                 </Button>
-              )}
-            </div>
-            <div className="min-w-48">
+              </FilterField>
+            )}
+            <FilterField label={t('filters.department')}>
               <AsyncSelect
-                label="Khoa"
+                label={t('filters.department')}
                 queryKey="departments"
                 loadOptions={departmentOptions}
                 value={f.departmentId ?? null}
@@ -283,11 +296,12 @@ export function Component() {
                   table.setFilter('departmentId', typeof value === 'string' ? value : undefined)
                 }
                 clearable
+                showLabel={false}
               />
-            </div>
-            <div className="min-w-48">
+            </FilterField>
+            <FilterField label={t('filters.equipment')}>
               <AsyncSelect
-                label="Máy"
+                label={t('filters.equipment')}
                 queryKey="equipment"
                 loadOptions={equipmentOptions}
                 value={f.equipmentId ?? null}
@@ -295,29 +309,34 @@ export function Component() {
                   table.setFilter('equipmentId', typeof value === 'string' ? value : undefined)
                 }
                 clearable
+                showLabel={false}
               />
-            </div>
-            <Input
-              type="date"
-              aria-label="Từ ngày"
-              value={f.from ?? ''}
-              onChange={(event) => table.setFilter('from', event.target.value || undefined)}
-            />
-            <Input
-              type="date"
-              aria-label="Đến ngày"
-              value={f.to ?? ''}
-              onChange={(event) => table.setFilter('to', event.target.value || undefined)}
-            />
-            <div className="flex items-center gap-2">
-              <Switch
-                id="overdue"
-                checked={f.overdue === 'true'}
-                onCheckedChange={(on) => table.setFilter('overdue', on ? 'true' : undefined)}
+            </FilterField>
+            <FilterField label={t('filters.from')}>
+              <DatePicker
+                ariaLabel={t('filters.from')}
+                value={f.from ?? ''}
+                onChange={(value) => table.setFilter('from', value)}
               />
-              <Label htmlFor="overdue">Quá hạn</Label>
-            </div>
-          </>
+            </FilterField>
+            <FilterField label={t('filters.to')}>
+              <DatePicker
+                ariaLabel={t('filters.to')}
+                value={f.to ?? ''}
+                onChange={(value) => table.setFilter('to', value)}
+              />
+            </FilterField>
+            <FilterField label={t('filters.overdue')}>
+              <div className="flex h-9 items-center gap-2 rounded-md border px-3">
+                <Switch
+                  id="overdue"
+                  checked={f.overdue === 'true'}
+                  onCheckedChange={(on) => table.setFilter('overdue', on ? 'true' : undefined)}
+                />
+                <Label htmlFor="overdue">{t('filters.overdue')}</Label>
+              </div>
+            </FilterField>
+          </FilterBar>
         }
       />
     </>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useTranslation } from 'react-i18next'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { toast } from 'sonner'
@@ -33,6 +34,8 @@ const empty: AnnouncementValues = {
 }
 
 export function Component() {
+  const { t } = useTranslation('sys')
+  const { t: tc } = useTranslation()
   const table = useServerTable()
   const list = useQuery({
     queryKey: ['sys-announcements', table.params.page, table.params.limit],
@@ -76,7 +79,7 @@ export function Component() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['sys-announcements'] })
       setOpen(false)
-      toast.success('Đã lưu thông báo')
+      toast.success(t('announcement.saved'))
     },
     onError: (error) => {
       if (!applyServerErrors(form, error)) toast.error(messageFor(error))
@@ -86,26 +89,26 @@ export function Component() {
     mutationFn: deleteSysAnnouncement,
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['sys-announcements'] })
-      toast.success('Đã xoá thông báo')
+      toast.success(t('announcement.deleted'))
     },
     onError: (error) => toast.error(messageFor(error)),
   })
   const columns: ColumnDef<SysAnnouncement>[] = [
-    { accessorKey: 'title', header: 'Tiêu đề' },
-    { accessorKey: 'level', header: 'Mức' },
+    { accessorKey: 'title', header: t('announcement.fields.title') },
+    { accessorKey: 'level', header: t('announcement.fields.level') },
     {
       accessorKey: 'startsAt',
-      header: 'Bắt đầu',
+      header: t('announcement.fields.startsAt'),
       cell: ({ getValue }) => formatDateTime(getValue<string>()),
     },
     {
       accessorKey: 'endsAt',
-      header: 'Kết thúc',
+      header: t('announcement.fields.endsAt'),
       cell: ({ getValue }) => formatDateTime(getValue<string | null>()) || '—',
     },
     {
       id: 'actions',
-      header: 'Thao tác',
+      header: tc('actions.more'),
       cell: ({ row }) => (
         <div className="flex gap-1">
           <Button
@@ -116,20 +119,22 @@ export function Component() {
               setOpen(true)
             }}
           >
-            Sửa
+            {tc('actions.edit')}
           </Button>
           <Button
             variant="ghost"
             size="sm"
             onClick={async () => {
               if (
-                (await confirm({ title: `Xoá ${row.original.title}?`, destructive: true })) !==
-                false
+                (await confirm({
+                  title: t('announcement.deleteTitle', { name: row.original.title }),
+                  destructive: true,
+                })) !== false
               )
                 remove.mutate(row.original.id)
             }}
           >
-            Xoá
+            {tc('actions.delete')}
           </Button>
         </div>
       ),
@@ -139,7 +144,7 @@ export function Component() {
     <>
       {dialog}
       <PageHeader
-        title="Thông báo hệ thống"
+        title={t('announcement.title')}
         actions={
           <Button
             onClick={() => {
@@ -147,7 +152,7 @@ export function Component() {
               setOpen(true)
             }}
           >
-            Thêm thông báo
+            {t('announcement.add')}
           </Button>
         }
       />
@@ -167,18 +172,18 @@ export function Component() {
       <FormDialog
         open={open}
         onOpenChange={setOpen}
-        title={editing ? 'Sửa thông báo' : 'Thêm thông báo'}
+        title={editing ? t('announcement.edit') : t('announcement.add')}
         form={form}
         onSubmit={(values) => save.mutateAsync(values)}
         submitting={save.isPending}
       >
-        <TextField control={form.control} name="title" label="Tiêu đề" />
+        <TextField control={form.control} name="title" label={t('announcement.fields.title')} />
         <FormField
           control={form.control}
           name="body"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Nội dung</FormLabel>
+              <FormLabel>{t('announcement.fields.body')}</FormLabel>
               <FormControl>
                 <Textarea rows={6} {...field} />
               </FormControl>
@@ -189,14 +194,22 @@ export function Component() {
         <SelectField
           control={form.control}
           name="level"
-          label="Mức"
+          label={t('announcement.fields.level')}
           options={[
-            { value: 'info', label: 'Thông tin' },
-            { value: 'warning', label: 'Cảnh báo' },
+            { value: 'info', label: t('announcement.levels.info') },
+            { value: 'warning', label: t('announcement.levels.warning') },
           ]}
         />
-        <DatetimeField control={form.control} name="startsAt" label="Bắt đầu" />
-        <DatetimeField control={form.control} name="endsAt" label="Kết thúc" />
+        <DatetimeField
+          control={form.control}
+          name="startsAt"
+          label={t('announcement.fields.startsAt')}
+        />
+        <DatetimeField
+          control={form.control}
+          name="endsAt"
+          label={t('announcement.fields.endsAt')}
+        />
       </FormDialog>
     </>
   )

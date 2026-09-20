@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { decimalString } from '@/lib/validation/decimal'
 
 const optionalText = z.string()
 const optionalId = z.string().nullable()
@@ -20,7 +21,7 @@ export const equipmentSchema = z.object({
   receivedAt: optionalText,
   commissionedAt: optionalText,
   fundingSourceId: optionalId,
-  originalValue: optionalText,
+  originalValue: decimalString({ maxScale: 0, min: '0' }),
   warrantyUntil: optionalText,
   purchaseContractNo: optionalText,
   decisionNo: optionalText,
@@ -50,9 +51,9 @@ export type EquipmentForm = z.infer<typeof equipmentSchema>
 
 export const accessorySchema = z.object({
   code: optionalText,
-  name: z.string().trim().min(1, 'Bắt buộc'),
+  name: z.string().trim().min(1, 'Bắt buộc').max(255),
   type: z.enum(['power_cable', 'data_cable', 'tube', 'probe', 'ups', 'other']),
-  quantity: z.union([z.literal(''), z.number().int().min(1)]),
+  quantity: z.union([z.literal(''), z.number().int().min(1, 'Tối thiểu 1')]),
   condition: z.enum(['good', 'worn', 'broken']),
   replacedAt: optionalText,
   notes: optionalText,
@@ -60,7 +61,7 @@ export const accessorySchema = z.object({
 export type AccessoryForm = z.infer<typeof accessorySchema>
 
 export const softwareSchema = z.object({
-  name: z.string().trim().min(1, 'Bắt buộc'),
+  name: z.string().trim().min(1, 'Bắt buộc').max(255),
   version: optionalText,
   updatedOn: optionalText,
   licenseExpiresAt: optionalText,
@@ -69,15 +70,75 @@ export const softwareSchema = z.object({
 })
 export type SoftwareForm = z.infer<typeof softwareSchema>
 
+export const softwareUpgradeSchema = z.object({
+  toVersion: z.string().trim().min(1, 'Bắt buộc').max(128),
+  note: optionalText,
+})
+export type SoftwareUpgradeForm = z.infer<typeof softwareUpgradeSchema>
+
 export const componentSchema = z.object({
-  name: z.string().trim().min(1, 'Bắt buộc'),
+  name: z.string().trim().min(1, 'Bắt buộc').max(255),
   componentTypeId: optionalId,
   partNo: optionalText,
   serial: optionalText,
   installedAt: optionalText,
-  lifespanHours: z.union([z.literal(''), z.number().int().min(0)]),
-  lifespanTests: z.union([z.literal(''), z.number().int().min(0)]),
-  lifespanMonths: z.union([z.literal(''), z.number().int().min(0)]),
+  lifespanHours: z.union([z.literal(''), z.number().int().min(1, 'Tối thiểu 1')]),
+  lifespanTests: z.union([z.literal(''), z.number().int().min(1, 'Tối thiểu 1')]),
+  lifespanMonths: z.union([z.literal(''), z.number().int().min(1, 'Tối thiểu 1')]),
   notes: optionalText,
 })
 export type ComponentForm = z.infer<typeof componentSchema>
+
+export const replaceComponentSchema = z.object({
+  reason: z.string().trim().min(1, 'Bắt buộc').max(2000),
+  newSerial: optionalText,
+  cost: decimalString({ maxScale: 0, min: '0' }),
+  repairTicketId: optionalId,
+  replacedAt: optionalText,
+})
+export type ReplaceComponentForm = z.infer<typeof replaceComponentSchema>
+
+export const supplyRowSchema = z.object({
+  supplyId: z.string(),
+  normQtyPerDay: decimalString({ maxScale: 4, min: '0' }),
+  normQtyPerTest: decimalString({ maxScale: 4, min: '0' }),
+  isPrimary: z.boolean(),
+  notes: optionalText,
+})
+export const suppliesSchema = z.object({ rows: z.array(supplyRowSchema) })
+export type SuppliesForm = z.infer<typeof suppliesSchema>
+
+export const counterSchema = z.object({
+  recordedAt: optionalText,
+  runHours: decimalString({ maxScale: 2, min: '0' }),
+  testCount: z.union([z.literal(''), z.number().int().min(0)]),
+  note: optionalText,
+})
+export type CounterForm = z.infer<typeof counterSchema>
+
+export const statusChangeSchema = z.object({
+  status: z.enum(['active', 'broken', 'awaiting_parts', 'suspended', 'retired', 'disposed']),
+  reason: z.string().trim().min(1, 'Bắt buộc').max(2000),
+})
+export type StatusChangeForm = z.infer<typeof statusChangeSchema>
+
+export const cloneSchema = z.object({
+  code: z.union([
+    z.literal(''),
+    z
+      .string()
+      .trim()
+      .transform((value) => value.toUpperCase())
+      .pipe(z.string().regex(/^[A-Z0-9_-]{1,32}$/, 'Mã A–Z, số, _ hoặc -')),
+  ]),
+  name: optionalText,
+  serial: optionalText,
+})
+export type CloneForm = z.infer<typeof cloneSchema>
+
+export const transferSchema = z.object({
+  toDepartmentId: z.string().min(1, 'Bắt buộc'),
+  toLocation: optionalText,
+  reason: z.string().trim().min(1, 'Bắt buộc').max(2000),
+})
+export type TransferForm = z.infer<typeof transferSchema>

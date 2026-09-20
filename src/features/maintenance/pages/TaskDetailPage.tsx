@@ -18,13 +18,16 @@ import { isApiError, messageFor } from '@/api/errors'
 import { useAuthStore } from '@/stores/auth.store'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import * as api from '../api'
-import { useInvalidateMaint, useTask } from '../hooks'
+import { useInvalidateTasks, useTask } from '../hooks'
 import type { ResultRow } from '../types'
+import { useTranslation } from 'react-i18next'
 
 export function Component() {
+  const { t } = useTranslation('maintenance')
+
   const { id = '' } = useParams()
   const detail = useTask(id)
-  const invalidate = useInvalidateMaint()
+  const invalidate = useInvalidateTasks()
   const isAdm = useCan(ADM)
   const isStaff = useCan(STAFF)
   const userId = useAuthStore((s) => s.user?.id)
@@ -48,7 +51,7 @@ export function Component() {
     }, 30000)
     return () => clearInterval(timer)
   })
-  if (detail.isPending) return <p role="status">Đang tải công việc…</p>
+  if (detail.isPending) return <p role="status">{t('loadingTask')}</p>
   if (detail.error) return <ErrorState error={detail.error} onRetry={() => void detail.refetch()} />
   const row = detail.data
   const assignee = isStaff || row.assigneeId === userId
@@ -61,7 +64,7 @@ export function Component() {
         clientVersion: row.clientVersion,
       })
       dirty.current = false
-      toast.success('Đã lưu kết quả')
+      toast.success(t('resultsSaved'))
       void invalidate()
     } catch (error) {
       if (isApiError(error) && error.code === 'MAINT_STALE_VERSION') {
@@ -92,27 +95,27 @@ export function Component() {
               <Button
                 onClick={async () => {
                   await api.startTask(id)
-                  toast.success('Đã bắt đầu')
+                  toast.success(t('taskStarted'))
                   void invalidate()
                 }}
               >
-                Bắt đầu
+                {t('start')}
               </Button>
             )}
-            {canSave && <Button onClick={() => void save()}>Lưu kết quả</Button>}
+            {canSave && <Button onClick={() => void save()}>{t('saveResults')}</Button>}
             {canSave && (
               <Button
                 onClick={async () => {
                   try {
                     await api.finishTask(id, { overallPass: true })
-                    toast.success('Đã hoàn thành')
+                    toast.success(t('taskFinished'))
                     void invalidate()
                   } catch (error) {
                     toast.error(messageFor(error))
                   }
                 }}
               >
-                Hoàn thành
+                {t('finish')}
               </Button>
             )}
             {isAdm && row.status !== 'done' && (
@@ -120,17 +123,17 @@ export function Component() {
                 variant="outline"
                 onClick={async () => {
                   const reason = await confirm({
-                    title: 'Bỏ qua?',
+                    title: t('skipConfirm'),
                     requireReason: true,
                     destructive: true,
                   })
                   if (reason === false) return
                   await api.skipTask(id, reason)
-                  toast.success('Đã bỏ qua')
+                  toast.success(t('taskSkipped'))
                   void invalidate()
                 }}
               >
-                Bỏ qua
+                {t('skip')}
               </Button>
             )}
             {row.status === 'done' && (
@@ -140,33 +143,34 @@ export function Component() {
                   void api.downloadTaskReport(id, row.code).catch((e) => toast.error(messageFor(e)))
                 }
               >
-                In biên bản
+                {t('printReport')}
               </Button>
             )}
           </div>
         }
       />
       <p className="text-muted-foreground mb-4 text-sm">
-        Lịch {formatDateTime(row.scheduledAt)} · Hạn {formatDateTime(row.dueAt)}
+        {t('schedule')} {formatDateTime(row.scheduledAt)} {t('dueLabel')}{' '}
+        {formatDateTime(row.dueAt)}
         {row.planId && (
           <>
             {' '}
             ·{' '}
             <Link className="text-primary hover:underline" to={`/maintenance/plans/${row.planId}`}>
-              Kế hoạch
+              {t('plan')}
             </Link>
           </>
         )}
         {' · '}
         <Link className="text-primary hover:underline" to={`/equipment/${row.equipmentId}`}>
-          Máy
+          {t('equipment')}
         </Link>
       </p>
       <Tabs defaultValue="checklist">
         <TabsList>
           <TabsTrigger value="checklist">Checklist</TabsTrigger>
-          <TabsTrigger value="docs">Tài liệu</TabsTrigger>
-          <TabsTrigger value="audit">Lịch sử</TabsTrigger>
+          <TabsTrigger value="docs">{t('tabDocs')}</TabsTrigger>
+          <TabsTrigger value="audit">{t('tabHistory')}</TabsTrigger>
         </TabsList>
         <TabsContent value="checklist" className="space-y-3">
           {row.templateItems.map((item) => {
@@ -190,14 +194,14 @@ export function Component() {
                       variant={result.pass === true ? 'default' : 'outline'}
                       onClick={() => patch(item.key, { pass: true, value: true })}
                     >
-                      Đạt
+                      {t('pass')}
                     </Button>
                     <Button
                       size="sm"
                       variant={result.pass === false ? 'default' : 'outline'}
                       onClick={() => patch(item.key, { pass: false, value: false })}
                     >
-                      Không đạt
+                      {t('fail')}
                     </Button>
                   </div>
                 )}
@@ -206,6 +210,7 @@ export function Component() {
                     <Input
                       aria-label={item.label}
                       type="number"
+                      placeholder={`${item.unit}${item.min != null || item.max != null ? ` (${item.min ?? '—'}–${item.max ?? '—'})` : ''}`}
                       value={result.value == null ? '' : String(result.value)}
                       onChange={(e) => {
                         const value = e.target.value === '' ? null : Number(e.target.value)
@@ -217,13 +222,7 @@ export function Component() {
                         patch(item.key, { value, pass })
                       }}
                     />
-                    <p className="text-muted-foreground text-xs">
-                      {item.unit}{' '}
-                      {item.min != null || item.max != null
-                        ? `(${item.min ?? '—'}–${item.max ?? '—'})`
-                        : ''}
-                      {inRange ? ' · trong khoảng' : ''}
-                    </p>
+                    {inRange && <span className="sr-only">{t('inRange')}</span>}
                   </div>
                 )}
                 {item.type === 'text' && (
@@ -238,7 +237,7 @@ export function Component() {
                 )}
                 <Input
                   className="mt-2"
-                  placeholder="Ghi chú"
+                  placeholder={t('notes')}
                   value={result.note ?? ''}
                   onChange={(e) => patch(item.key, { note: e.target.value })}
                 />
@@ -251,10 +250,10 @@ export function Component() {
             entityType="maintenance_task"
             entityId={id}
             kinds={[
-              { value: 'photo', label: 'Ảnh' },
-              { value: 'signature_technician', label: 'Chữ ký kỹ thuật' },
-              { value: 'signature_department', label: 'Chữ ký khoa' },
-              { value: 'report', label: 'Biên bản' },
+              { value: 'photo', label: t('attachmentPhoto') },
+              { value: 'signature_technician', label: t('attachmentSignatureTechnician') },
+              { value: 'signature_department', label: t('attachmentSignatureDepartment') },
+              { value: 'report', label: t('attachmentReport') },
             ]}
           />
         </TabsContent>

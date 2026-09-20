@@ -1,4 +1,5 @@
 import { Link } from 'react-router'
+import { useTranslation } from 'react-i18next'
 import type { ColumnDef } from '@tanstack/react-table'
 import { DataTable, useServerTable } from '@/components/data-table'
 import { PageHeader } from '@/components/page/PageHeader'
@@ -20,6 +21,8 @@ import type { Hospital } from '../api'
 const statuses = ['provisioning', 'active', 'suspended', 'failed'] as const
 
 export function Component() {
+  const { t } = useTranslation('sys')
+  const { t: tc } = useTranslation()
   const table = useServerTable({ filterKeys: ['status'] })
   const status = table.params.filters.status
   const params = {
@@ -32,7 +35,7 @@ export function Component() {
   const columns: ColumnDef<Hospital>[] = [
     {
       accessorKey: 'code',
-      header: 'Mã',
+      header: t('hospital.fields.code'),
       cell: ({ row }) => (
         <Link
           className="text-primary font-mono text-xs hover:underline"
@@ -42,41 +45,41 @@ export function Component() {
         </Link>
       ),
     },
-    { accessorKey: 'name', header: 'Tên' },
+    { accessorKey: 'name', header: t('hospital.fields.name') },
     {
       accessorKey: 'status',
-      header: 'Trạng thái',
+      header: t('hospital.fields.status'),
       cell: ({ row }) => <StatusBadge value={row.original.status} map={commonStatusMap} />,
     },
     {
       id: 'plan',
-      header: 'Gói / hết hạn',
+      header: t('hospital.fields.planExpires'),
       cell: ({ row }) =>
         `${row.original.plan}${row.original.licenseExpiresAt ? ` · ${formatDateTime(row.original.licenseExpiresAt)}` : ''}`,
     },
     {
       id: 'migrations',
-      header: 'Migration',
+      header: t('hospital.fields.migrations'),
       cell: ({ row }) =>
         row.original.migrations.error
           ? row.original.migrations.error
           : row.original.migrations.pending?.length
-            ? `${row.original.migrations.pending.length} chờ`
-            : 'Đã cập nhật',
+            ? t('hospital.pending', { pending: row.original.migrations.pending.length })
+            : t('hospital.updated'),
     },
     {
       accessorKey: 'createdAt',
-      header: 'Tạo lúc',
+      header: t('hospital.fields.createdAt'),
       cell: ({ getValue }) => formatDateTime(getValue<string>()),
     },
   ]
   return (
     <>
       <PageHeader
-        title="Bệnh viện"
+        title={t('hospital.title')}
         actions={
           <Button asChild>
-            <Link to="/sys/hospitals/new">Thêm bệnh viện</Link>
+            <Link to="/sys/hospitals/new">{t('hospital.add')}</Link>
           </Button>
         }
       />
@@ -95,8 +98,8 @@ export function Component() {
         toolbarLeft={
           <>
             <Input
-              aria-label="Tìm bệnh viện"
-              placeholder="Tìm mã hoặc tên"
+              aria-label={t('hospital.searchLabel')}
+              placeholder={t('hospital.searchPlaceholder')}
               value={table.inputQ}
               onChange={(event) => table.setQ(event.target.value)}
             />
@@ -106,11 +109,11 @@ export function Component() {
                 table.setFilter('status', value === 'all' ? undefined : value)
               }
             >
-              <SelectTrigger aria-label="Trạng thái" className="w-44">
-                <SelectValue placeholder="Trạng thái" />
+              <SelectTrigger aria-label={t('hospital.fields.status')} className="w-44">
+                <SelectValue placeholder={t('hospital.fields.status')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Tất cả</SelectItem>
+                <SelectItem value="all">{tc('status.all')}</SelectItem>
                 {statuses.map((value) => (
                   <SelectItem key={value} value={value}>
                     {commonStatusMap[value]?.label ?? value}

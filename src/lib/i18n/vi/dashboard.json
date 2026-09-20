@@ -10,5 +10,11 @@
     "suppliesLow": "Hoá chất sắp hết / hết hạn",
     "requestsPending": "Phiếu chờ duyệt",
     "repairsOpen": "Sửa chữa đang mở"
-  }
+  },
+  "myTasksTitle": "Việc của tôi",
+  "repairsMine": "Sửa chữa của tôi",
+  "maintenanceMine": "Bảo dưỡng của tôi",
+  "pendingApproval": "Chờ tôi duyệt",
+  "awaitingReceive": "Chờ nhận",
+  "empty": "Không có việc"
 }

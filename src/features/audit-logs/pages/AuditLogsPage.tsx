@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router'
+import { useTranslation } from 'react-i18next'
 import type { ColumnDef } from '@tanstack/react-table'
 import { DataTable, useServerTable } from '@/components/data-table'
 import { PageHeader } from '@/components/page/PageHeader'
 import { Input } from '@/components/ui/input'
 import { AsyncSelect } from '@/components/form/async-select'
+import { DatePicker } from '@/components/date-picker'
 import { AuditDiff } from '@/components/audit-diff'
 import {
   Sheet,
@@ -22,6 +24,7 @@ import { searchAuditUsers } from '../api'
 import type { AuditLog } from '../types'
 
 export function Component() {
+  const { t } = useTranslation('audit-logs')
   const table = useServerTable({ filterKeys: ['userId', 'entityType', 'from', 'to'] })
   const filters = table.params.filters
   const range = dayRangeToIso(filters.from, filters.to)
@@ -44,7 +47,7 @@ export function Component() {
     () => [
       {
         accessorKey: 'createdAt',
-        header: 'Thời gian',
+        header: t('columns.createdAt'),
         cell: ({ getValue }) => (
           <time className="tabular-nums" dateTime={getValue<string>()}>
             {formatDateTime(getValue<string>())}
@@ -53,18 +56,18 @@ export function Component() {
       },
       {
         accessorKey: 'userId',
-        header: 'Người dùng',
+        header: t('columns.user'),
         cell: ({ row }) => names.get(row.original.userId ?? '') ?? row.original.userId ?? '—',
       },
-      { accessorKey: 'entityType', header: 'Đối tượng' },
+      { accessorKey: 'entityType', header: t('columns.entityType') },
       {
         accessorKey: 'action',
-        header: 'Hành động',
+        header: t('columns.action'),
         cell: ({ row }) => auditActionLabel(row.original.action),
       },
       {
         accessorKey: 'entityId',
-        header: 'Mã bản ghi',
+        header: t('columns.entityId'),
         cell: ({ row }) => {
           const id = row.original.entityId
           const href = auditEntityPath(row.original.entityType, id)
@@ -83,15 +86,15 @@ export function Component() {
       },
       {
         accessorKey: 'ip',
-        header: 'IP',
+        header: t('columns.ip'),
         cell: ({ getValue }) => getValue<string | null>() ?? '—',
       },
     ],
-    [names],
+    [names, t],
   )
   return (
     <>
-      <PageHeader title="Nhật ký hệ thống" />
+      <PageHeader title={t('title')} />
       <DataTable
         tableId="audit-logs"
         columns={columns}
@@ -107,21 +110,19 @@ export function Component() {
         getRowId={(row) => row.id}
         toolbarLeft={
           <>
-            <Input
-              aria-label="Từ ngày"
-              type="date"
+            <DatePicker
+              ariaLabel={t('filter.from')}
               value={filters.from ?? ''}
-              onChange={(event) => table.setFilter('from', event.target.value || undefined)}
+              onChange={(value) => table.setFilter('from', value)}
             />
-            <Input
-              aria-label="Đến ngày"
-              type="date"
+            <DatePicker
+              ariaLabel={t('filter.to')}
               value={filters.to ?? ''}
-              onChange={(event) => table.setFilter('to', event.target.value || undefined)}
+              onChange={(value) => table.setFilter('to', value)}
             />
             <div className="min-w-56">
               <AsyncSelect
-                label="Người dùng"
+                label={t('filter.user')}
                 queryKey="audit-users"
                 loadOptions={searchAuditUsers}
                 value={filters.userId ?? null}
@@ -137,8 +138,8 @@ export function Component() {
               />
             </div>
             <Input
-              aria-label="Loại đối tượng"
-              placeholder="entityType"
+              aria-label={t('filter.entityType')}
+              placeholder={t('filter.entityTypePlaceholder')}
               value={filters.entityType ?? ''}
               onChange={(event) => table.setFilter('entityType', event.target.value || undefined)}
             />

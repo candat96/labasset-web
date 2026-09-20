@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import i18n from '@/lib/i18n'
 import type { CatalogConfig, CatalogValue } from './types'
 
 export function catalogSchema(config: CatalogConfig) {
@@ -6,8 +7,8 @@ export function catalogSchema(config: CatalogConfig) {
     code: z
       .string()
       .trim()
-      .regex(/^[A-Z0-9_-]{1,32}$/, 'Mã chỉ gồm A–Z, số, _ hoặc -'),
-    name: z.string().trim().min(1, 'Bắt buộc').max(255),
+      .regex(/^[A-Z0-9_-]{1,32}$/, i18n.t('catalogs:errors.code')),
+    name: z.string().trim().min(1).max(255),
     description: z.string().optional(),
     isActive: z.boolean(),
     sortOrder: z.number().int().min(0),
@@ -26,9 +27,11 @@ export function catalogSchema(config: CatalogConfig) {
         .optional()
     else if (field.type === 'boolean') shape[field.name] = z.boolean().optional()
     else if (field.type === 'email')
-      shape[field.name] = z.union([z.literal(''), z.email('Email không hợp lệ')]).optional()
+      shape[field.name] = z
+        .union([z.literal(''), z.email(i18n.t('catalogs:errors.email'))])
+        .optional()
     else if (field.type === 'url')
-      shape[field.name] = z.union([z.literal(''), z.url('URL không hợp lệ')]).optional()
+      shape[field.name] = z.union([z.literal(''), z.url(i18n.t('catalogs:errors.url'))]).optional()
     else if (field.type === 'severity')
       shape[field.name] = z.enum(['low', 'medium', 'high', 'critical']).optional()
     else shape[field.name] = z.string().optional()

@@ -30,6 +30,15 @@
   "created": "Đã tạo khoa/phòng",
   "updated": "Đã cập nhật khoa/phòng",
   "empty": "Chưa có khoa/phòng nào",
+  "loadingDetail": "Đang tải khoa/phòng…",
+  "userCount": "Số người dùng",
+  "users": "Người dùng",
+  "userColumns": {
+    "username": "Tài khoản",
+    "fullName": "Họ tên",
+    "email": "Email",
+    "roles": "Vai trò"
+  },
   "export": "Xuất Excel",
   "import": {
     "title": "Nhập khoa/phòng từ Excel",

@@ -46,7 +46,19 @@ export function useTask(id: string) {
     enabled: !!id,
   })
 }
-export function useInvalidateMaint() {
+export function useInvalidateTemplates() {
   const qc = useQueryClient()
-  return () => qc.invalidateQueries({ queryKey: maintKeys.all })
+  return () => qc.invalidateQueries({ queryKey: ['maintenance', 'templates'] })
+}
+export function useInvalidatePlans() {
+  const qc = useQueryClient()
+  return () => qc.invalidateQueries({ queryKey: ['maintenance', 'plans'] })
+}
+export function useInvalidateTasks() {
+  const qc = useQueryClient()
+  return () => {
+    void qc.invalidateQueries({ queryKey: ['maintenance', 'tasks'] })
+    void qc.invalidateQueries({ queryKey: ['dashboard', 'maint'] })
+    void qc.invalidateQueries({ queryKey: ['calendar'] })
+  }
 }

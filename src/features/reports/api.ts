@@ -1,13 +1,11 @@
 // TODO(api): D1 reports chưa có trong OpenAPI. Hợp đồng handoff/04-D1-reports.md.
-import { api, unwrapAs } from '@/api/client'
+import { untypedApi, unwrapAs } from '@/api/client'
 import { downloadFile } from '@/api/download'
 import { isApiError } from '@/api/errors'
 import { pageQuery } from '@/api/paths'
 import { dayRangeToIso } from '@/lib/format/date-range'
 
-const get = api.GET as (path: string, init?: object) => ReturnType<typeof api.GET>
-const post = api.POST as (path: string, init?: object) => ReturnType<typeof api.POST>
-const patch = api.PATCH as (path: string, init?: object) => ReturnType<typeof api.PATCH>
+const { GET: get, POST: post, PATCH: patch } = untypedApi
 
 export type JsonSchemaXRef =
   'departmentId' | 'warehouseId' | 'equipmentId' | 'supplyId' | 'sessionId'

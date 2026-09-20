@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useForm, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useTranslation } from 'react-i18next'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { FormDialog } from '@/components/form/FormDialog'
@@ -47,6 +48,7 @@ export function CatalogFormDialog({
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
+  const { t } = useTranslation('catalogs')
   const form = useForm<Values>({
     resolver: zodResolver(catalogSchema(config)) as Resolver<Values>,
     defaultValues: initial(config, row),
@@ -70,7 +72,7 @@ export function CatalogFormDialog({
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['catalogs', slug] })
-      toast.success('Đã lưu danh mục')
+      toast.success(t('saved'))
       onOpenChange(false)
     },
     onError: (error) => {
@@ -84,11 +86,12 @@ export function CatalogFormDialog({
       .filter((item) => item.id !== row?.id)
       .map((item) => ({ id: item.id, code: item.code, name: item.name }))
   }
+  const title = t(`titles.${slug}`)
   return (
     <FormDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={`${row ? 'Sửa' : 'Thêm'} ${config.title.toLowerCase()}`}
+      title={t(row ? 'formTitle.edit' : 'formTitle.add', { name: title.toLowerCase() })}
       form={form}
       onSubmit={(values) => save.mutate(values)}
       submitting={save.isPending}
@@ -98,27 +101,23 @@ export function CatalogFormDialog({
         <TextField
           control={form.control}
           name="code"
-          label="Mã"
+          label={t('fields.code')}
           disabled={!!row}
           transform={(value) => value.toUpperCase()}
         />
-        <TextField control={form.control} name="name" label="Tên" />
+        <TextField control={form.control} name="name" label={t('fields.name')} />
       </div>
-      <TextField control={form.control} name="description" label="Mô tả" />
-      {config.fields.map((field) =>
-        field.type === 'boolean' ? (
-          <SwitchField
-            key={field.name}
-            control={form.control}
-            name={field.name}
-            label={field.label}
-          />
+      <TextField control={form.control} name="description" label={t('fields.description')} />
+      {config.fields.map((field) => {
+        const label = t(`catalogFields.${slug}.${field.name}`)
+        return field.type === 'boolean' ? (
+          <SwitchField key={field.name} control={form.control} name={field.name} label={label} />
         ) : field.type === 'number' ? (
           <NumberField
             key={field.name}
             control={form.control}
             name={field.name}
-            label={field.label}
+            label={label}
             min={field.min}
           />
         ) : field.type === 'severity' ? (
@@ -126,15 +125,11 @@ export function CatalogFormDialog({
             key={field.name}
             control={form.control}
             name={field.name}
-            label={field.label}
-            options={(
-              [
-                ['low', 'Thấp'],
-                ['medium', 'Trung bình'],
-                ['high', 'Cao'],
-                ['critical', 'Nghiêm trọng'],
-              ] as const
-            ).map(([value, label]) => ({ value, label }))}
+            label={label}
+            options={(['low', 'medium', 'high', 'critical'] as const).map((value) => ({
+              value,
+              label: t(`severity.${value}`),
+            }))}
           />
         ) : field.type === 'user' ? (
           <FormField
@@ -144,7 +139,7 @@ export function CatalogFormDialog({
             render={({ field: input }) => (
               <FormItem>
                 <AsyncSelect
-                  label={field.label}
+                  label={label}
                   queryKey="users"
                   loadOptions={userOptions}
                   resolveOption={resolveUser}
@@ -164,7 +159,7 @@ export function CatalogFormDialog({
             render={({ field: input }) => (
               <FormItem>
                 <AsyncSelect
-                  label={field.label}
+                  label={label}
                   queryKey={field.reference === 'self' ? slug : 'departments'}
                   loadOptions={field.reference === 'self' ? selfOptions : departmentOptions}
                   resolveOption={
@@ -188,14 +183,19 @@ export function CatalogFormDialog({
             key={field.name}
             control={form.control}
             name={field.name}
-            label={field.label}
+            label={label}
             type={field.type ?? 'text'}
           />
-        ),
-      )}
+        )
+      })}
       <div className="grid gap-4 sm:grid-cols-2">
-        <NumberField control={form.control} name="sortOrder" label="Thứ tự" min={0} />
-        {row && <SwitchField control={form.control} name="isActive" label="Đang hoạt động" />}
+        <NumberField
+          control={form.control}
+          name="sortOrder"
+          label={t('fields.sortOrder')}
+          min={0}
+        />
+        {row && <SwitchField control={form.control} name="isActive" label={t('fields.isActive')} />}
       </div>
     </FormDialog>
   )

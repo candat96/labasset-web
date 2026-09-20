@@ -5,15 +5,17 @@ import { StatusBadge } from '@/components/status-badge'
 import { formatDateTime } from '@/lib/format/date'
 import { getFileUrl } from '@/api/files'
 import { listReportJobs, type ReportJob } from '../api'
-
-const jobStatusMap = {
-  queued: { label: 'Chờ', tone: 'muted' as const },
-  running: { label: 'Đang chạy', tone: 'info' as const },
-  done: { label: 'Xong', tone: 'success' as const },
-  failed: { label: 'Lỗi', tone: 'danger' as const },
-}
+import { useTranslation } from 'react-i18next'
 
 export function Component() {
+  const { t } = useTranslation('reports')
+  const jobStatusMap = {
+    queued: { label: t('jobQueued'), tone: 'muted' as const },
+    running: { label: t('jobRunning'), tone: 'info' as const },
+    done: { label: t('jobDone'), tone: 'success' as const },
+    failed: { label: t('jobFailed'), tone: 'danger' as const },
+  }
+
   const jobs = useQuery({
     queryKey: ['report-jobs'],
     queryFn: () => listReportJobs(),
@@ -29,16 +31,16 @@ export function Component() {
   }
   return (
     <>
-      <PageHeader title="Báo cáo nền" description="Polling 5 giây khi còn job chưa xong." />
-      {jobs.isPending && <p role="status">Đang tải job…</p>}
+      <PageHeader title={t('jobsTitle')} description={t('jobsDesc')} />
+      {jobs.isPending && <p role="status">{t('loadingJobs')}</p>}
       <table className="w-full text-sm">
         <thead>
           <tr className="text-left">
-            <th>Báo cáo</th>
-            <th>Định dạng</th>
-            <th>Trạng thái</th>
-            <th>Tạo lúc</th>
-            <th>Xong lúc</th>
+            <th>{t('report')}</th>
+            <th>{t('format')}</th>
+            <th>{t('status')}</th>
+            <th>{t('createdAt')}</th>
+            <th>{t('finishedAt')}</th>
             <th></th>
           </tr>
         </thead>
@@ -55,7 +57,7 @@ export function Component() {
               <td>
                 {job.status === 'done' && job.fileId && (
                   <Button size="sm" variant="outline" onClick={() => void download(job)}>
-                    Tải
+                    {t('download')}
                   </Button>
                 )}
                 {job.error && <span className="text-destructive">{job.error}</span>}

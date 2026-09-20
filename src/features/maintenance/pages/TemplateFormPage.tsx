@@ -11,13 +11,15 @@ import { TextField, SelectField, SwitchField, NumberField } from '@/components/f
 import { FormField, FormItem, FormMessage } from '@/components/ui/form'
 import { AsyncSelect } from '@/components/form/async-select'
 import { applyServerErrors, isApiError, messageFor } from '@/api/errors'
-import { catalogOptions } from '@/api/references'
+import { apiBody } from '@/api/client'
+import { catalogOptions, resolveCatalogItem } from '@/api/references'
 import { useCan } from '@/app/guards/useCan'
 import { STAFF } from '@/routes/roles'
 import { useConfirm } from '@/components/confirm-dialog'
 import { cloneTemplate, createTemplate, deleteTemplate, updateTemplate } from '../api'
-import { useInvalidateMaint, useTemplate } from '../hooks'
+import { useInvalidateTemplates, useTemplate } from '../hooks'
 import { templateSchema, type TemplateForm } from '../schema'
+import { useTranslation } from 'react-i18next'
 
 function slugify(label: string) {
   return label
@@ -37,12 +39,14 @@ const empty: TemplateForm = {
 }
 
 export function Component() {
+  const { t } = useTranslation('maintenance')
+
   const { id = '' } = useParams()
   const editing = !!id
   const navigate = useNavigate()
   const canWrite = useCan(STAFF)
   const detail = useTemplate(id)
-  const invalidate = useInvalidateMaint()
+  const invalidate = useInvalidateTemplates()
   const { confirm, dialog } = useConfirm()
   const form = useForm<TemplateForm>({
     resolver: zodResolver(templateSchema),
@@ -67,7 +71,7 @@ export function Component() {
       })),
     })
   }, [detail.data, form])
-  if (editing && detail.isPending) return <p role="status">Đang tải mẫu…</p>
+  if (editing && detail.isPending) return <p role="status">{t('loadingTemplate')}</p>
   if (editing && detail.error)
     return <ErrorState error={detail.error} onRetry={() => void detail.refetch()} />
   const submit = async (values: TemplateForm) => {
@@ -94,15 +98,15 @@ export function Component() {
     }
     try {
       if (editing) {
-        await updateTemplate(id, body as never)
-        toast.success('Đã lưu mẫu')
-      } else {
-        const created = await createTemplate(body as never)
-        toast.success('Đã tạo mẫu')
-        navigate(`/maintenance/templates/${created.id}/edit`)
+        await updateTemplate(id, apiBody(body))
+        toast.success(t('templateSaved'))
+        void invalidate()
         return
       }
+      const created = await createTemplate(apiBody(body))
+      toast.success(t('templateCreated'))
       void invalidate()
+      navigate(`/maintenance/templates/${created.id}/edit`)
     } catch (error) {
       if (!applyServerErrors(form, error)) toast.error(messageFor(error))
     }
@@ -111,7 +115,7 @@ export function Component() {
     <>
       {dialog}
       <PageHeader
-        title={editing ? 'Sửa checklist' : 'Thêm checklist'}
+        title={editing ? t('editTemplate') : t('createTemplateTitle')}
         actions={
           editing &&
           canWrite && (
@@ -120,32 +124,36 @@ export function Component() {
                 variant="outline"
                 onClick={async () => {
                   const cloned = await cloneTemplate(id)
-                  toast.success('Đã nhân bản mẫu')
+                  toast.success(t('templateCloned'))
                   void invalidate()
                   navigate(`/maintenance/templates/${cloned.id}/edit`)
                 }}
               >
-                Nhân bản
+                {t('clone')}
               </Button>
               <Button
                 variant="outline"
                 onClick={async () => {
-                  if ((await confirm({ title: 'Xoá mẫu?', destructive: true })) === false) return
+                  if (
+                    (await confirm({ title: t('deleteTemplateConfirm'), destructive: true })) ===
+                    false
+                  )
+                    return
                   try {
                     await deleteTemplate(id)
-                    toast.success('Đã xoá mẫu')
+                    toast.success(t('templateDeleted'))
                     void invalidate()
                     navigate('/maintenance/templates')
                   } catch (error) {
                     toast.error(
                       isApiError(error) && error.status === 409
-                        ? 'Mẫu đang dùng. Hãy chuyển ngừng hoạt động.'
+                        ? t('templateInUse')
                         : messageFor(error),
                     )
                   }
                 }}
               >
-                Xoá
+                {t('delete')}
               </Button>
             </div>
           )
@@ -153,16 +161,17 @@ export function Component() {
       />
       <Form {...form}>
         <form className="max-w-3xl space-y-4" noValidate onSubmit={form.handleSubmit(submit)}>
-          <TextField control={form.control} name="name" label="Tên" />
+          <TextField control={form.control} name="name" label={t('name')} />
           <FormField
             control={form.control}
             name="groupId"
             render={({ field }) => (
               <FormItem>
                 <AsyncSelect
-                  label="Nhóm máy"
+                  label={t('equipmentGroup')}
                   queryKey="equipment-groups"
                   loadOptions={(q) => catalogOptions('equipment-groups', q)}
+                  resolveOption={(groupId) => resolveCatalogItem('equipment-groups', groupId)}
                   value={field.value}
                   onChange={field.onChange}
                   clearable
@@ -172,12 +181,14 @@ export function Component() {
             )}
           />
           <TextField control={form.control} name="model" label="Model" />
-          <SwitchField control={form.control} name="isActive" label="Đang dùng" />
+          <SwitchField control={form.control} name="isActive" label={t('isActive')} />
           <ol className="space-y-3">
             {items.fields.map((field, index) => (
               <li key={field.id} className="space-y-2 rounded border p-3">
                 <div className="flex justify-between">
-                  <p className="font-medium">Mục {index + 1}</p>
+                  <p className="font-medium">
+                    {t('item')} {index + 1}
+                  </p>
                   <div className="flex gap-1">
                     <Button
                       type="button"
@@ -186,7 +197,7 @@ export function Component() {
                       disabled={index === 0}
                       onClick={() => items.move(index, index - 1)}
                     >
-                      Lên
+                      {t('moveUp')}
                     </Button>
                     <Button
                       type="button"
@@ -195,7 +206,7 @@ export function Component() {
                       disabled={index === items.fields.length - 1}
                       onClick={() => items.move(index, index + 1)}
                     >
-                      Xuống
+                      {t('moveDown')}
                     </Button>
                     <Button
                       type="button"
@@ -203,24 +214,32 @@ export function Component() {
                       variant="ghost"
                       onClick={() => items.remove(index)}
                     >
-                      Xoá
+                      {t('delete')}
                     </Button>
                   </div>
                 </div>
-                <TextField control={form.control} name={`items.${index}.label`} label="Nhãn" />
+                <TextField
+                  control={form.control}
+                  name={`items.${index}.label`}
+                  label={t('itemLabel')}
+                />
                 <SelectField
                   control={form.control}
                   name={`items.${index}.type`}
-                  label="Kiểu"
+                  label={t('itemType')}
                   options={[
-                    { value: 'check', label: 'Đạt/Không đạt' },
-                    { value: 'measure', label: 'Đo' },
-                    { value: 'text', label: 'Văn bản' },
+                    { value: 'check', label: t('optionCheck') },
+                    { value: 'measure', label: t('optionMeasure') },
+                    { value: 'text', label: t('optionText') },
                   ]}
                 />
                 {form.watch(`items.${index}.type`) === 'measure' && (
                   <>
-                    <TextField control={form.control} name={`items.${index}.unit`} label="Đơn vị" />
+                    <TextField
+                      control={form.control}
+                      name={`items.${index}.unit`}
+                      label={t('unit')}
+                    />
                     <NumberField control={form.control} name={`items.${index}.min`} label="Min" />
                     <NumberField control={form.control} name={`items.${index}.max`} label="Max" />
                   </>
@@ -228,7 +247,7 @@ export function Component() {
                 <SwitchField
                   control={form.control}
                   name={`items.${index}.optional`}
-                  label="Không bắt buộc"
+                  label={t('optional')}
                 />
               </li>
             ))}
@@ -248,9 +267,9 @@ export function Component() {
               })
             }
           >
-            Thêm mục
+            {t('addItem')}
           </Button>
-          {canWrite && <Button type="submit">Lưu</Button>}
+          {canWrite && <Button type="submit">{t('save')}</Button>}
         </form>
       </Form>
     </>

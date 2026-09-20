@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { server } from '@/test/msw/server'
@@ -57,7 +57,8 @@ it('lists audit logs and sends server-supported filters', async () => {
   expect(screen.getByText('10.0.0.1')).toBeVisible()
   expect(screen.getAllByRole('link', { name: 'u1' })[0]).toHaveAttribute('href', '/admin/users/u1')
   await userEvent.type(screen.getByLabelText('Loại đối tượng'), 'users')
-  fireEvent.change(screen.getByLabelText('Từ ngày'), { target: { value: '2026-09-01' } })
+  await userEvent.click(screen.getByLabelText('Từ ngày'))
+  await userEvent.click(screen.getByRole('button', { name: /ngày 1 tháng 09 năm 2026/i }))
   await waitFor(() =>
     expect(urls.some((url) => url.includes('entityType=users') && url.includes('from='))).toBe(
       true,

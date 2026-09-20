@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router'
+import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { DataTable, useServerTable } from '@/components/data-table'
@@ -18,15 +19,18 @@ import { AsyncSelect } from '@/components/form/async-select'
 import { TemporaryPasswordDialog } from '@/components/temporary-password-dialog'
 import { departmentOptions, allDepartments, resolveDepartment } from '@/api/references'
 import { useCan } from '@/app/guards/useCan'
-import { ADM, ROLES, type Role } from '@/routes/roles'
-import { roleLabels } from '@/lib/role-labels'
+import { ADM, ROLES } from '@/routes/roles'
 import { StatusBadge } from '@/components/status-badge'
 import { commonStatusMap } from '@/lib/status-maps'
 import { formatDateTime } from '@/lib/format/date'
 import { listUsers } from '../api'
 import type { User, UserParams } from '../types'
 import { UserFormDialog } from '../components/UserFormDialog'
+import { useRoleLabel } from '../role-label'
 export function Component() {
+  const { t } = useTranslation('users')
+  const { t: tc } = useTranslation()
+  const roleLabel = useRoleLabel()
   const canWrite = useCan(ADM),
     table = useServerTable({ filterKeys: ['role', 'departmentId', 'isActive'] })
   const filters = table.params.filters
@@ -49,23 +53,23 @@ export function Component() {
   const columns: ColumnDef<User>[] = [
     {
       accessorKey: 'username',
-      header: 'Tài khoản',
+      header: t('fields.username'),
       cell: ({ row }) => (
         <Link className="text-primary hover:underline" to={`/admin/users/${row.original.id}`}>
           {row.original.username}
         </Link>
       ),
     },
-    { accessorKey: 'fullName', header: 'Họ tên' },
-    { accessorKey: 'email', header: 'Email' },
+    { accessorKey: 'fullName', header: t('fields.fullName') },
+    { accessorKey: 'email', header: t('fields.email') },
     {
       accessorKey: 'roles',
-      header: 'Vai trò',
+      header: t('fields.roles'),
       cell: ({ row }) => (
         <div className="flex flex-wrap gap-1">
           {row.original.roles.map((r) => (
             <Badge variant="secondary" key={r}>
-              {roleLabels[r as Role] ?? r}
+              {roleLabel(r)}
             </Badge>
           ))}
         </div>
@@ -73,7 +77,7 @@ export function Component() {
     },
     {
       accessorKey: 'departmentId',
-      header: 'Khoa',
+      header: t('fields.department'),
       cell: ({ row }) =>
         departments.data?.find((d) => d.id === row.original.departmentId)?.name ??
         row.original.departmentId ??
@@ -81,11 +85,11 @@ export function Component() {
     },
     {
       accessorKey: 'isActive',
-      header: 'Trạng thái',
+      header: t('fields.isActive'),
       cell: ({ row }) =>
         row.original.isActive === undefined ? (
           params.isActive === undefined ? (
-            'Chưa có dữ liệu'
+            tc('table.empty')
           ) : (
             <StatusBadge value={params.isActive ? 'active' : 'inactive'} map={commonStatusMap} />
           )
@@ -98,15 +102,15 @@ export function Component() {
     },
     {
       accessorKey: 'lastLoginAt',
-      header: 'Đăng nhập cuối',
+      header: t('fields.lastLoginAt'),
       cell: ({ row }) => formatDateTime(row.original.lastLoginAt) || '—',
     },
   ]
   return (
     <>
       <PageHeader
-        title="Người dùng"
-        actions={canWrite && <Button onClick={() => setOpen(true)}>Thêm người dùng</Button>}
+        title={t('title')}
+        actions={canWrite && <Button onClick={() => setOpen(true)}>{t('add')}</Button>}
       />
       <DataTable
         tableId="users"
@@ -123,8 +127,8 @@ export function Component() {
         toolbarLeft={
           <>
             <Input
-              aria-label="Tìm người dùng"
-              placeholder="Tìm tài khoản, tên, email"
+              aria-label={t('search.label')}
+              placeholder={t('search.placeholder')}
               value={table.inputQ}
               onChange={(e) => table.setQ(e.target.value)}
               className="w-56"
@@ -133,20 +137,20 @@ export function Component() {
               value={filters.role ?? 'all'}
               onValueChange={(v) => table.setFilter('role', v === 'all' ? undefined : v)}
             >
-              <SelectTrigger aria-label="Lọc vai trò">
-                <SelectValue placeholder="Vai trò" />
+              <SelectTrigger aria-label={t('filter.roleLabel')}>
+                <SelectValue placeholder={t('filter.role')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Mọi vai trò</SelectItem>
+                <SelectItem value="all">{t('filter.allRoles')}</SelectItem>
                 {ROLES.map((r) => (
                   <SelectItem key={r} value={r}>
-                    {roleLabels[r]}
+                    {roleLabel(r)}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <AsyncSelect
-              label="Lọc khoa"
+              label={t('filter.department')}
               queryKey="departments"
               loadOptions={departmentOptions}
               resolveOption={resolveDepartment}
@@ -160,13 +164,13 @@ export function Component() {
               value={filters.isActive ?? 'all'}
               onValueChange={(v) => table.setFilter('isActive', v === 'all' ? undefined : v)}
             >
-              <SelectTrigger aria-label="Lọc trạng thái">
+              <SelectTrigger aria-label={t('filter.status')}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Mọi trạng thái</SelectItem>
-                <SelectItem value="true">Hoạt động</SelectItem>
-                <SelectItem value="false">Đã khoá</SelectItem>
+                <SelectItem value="all">{t('filter.allStatuses')}</SelectItem>
+                <SelectItem value="true">{t('filter.active')}</SelectItem>
+                <SelectItem value="false">{t('filter.locked')}</SelectItem>
               </SelectContent>
             </Select>
           </>

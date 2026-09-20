@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { PageHeader } from '@/components/page/PageHeader'
@@ -9,6 +10,7 @@ import { messageFor } from '@/api/errors'
 import { getPreferences, savePreferences } from '../api'
 import { NOTIFICATION_TYPES } from '../types'
 export function Component() {
+  const { t } = useTranslation('notifications')
   const qc = useQueryClient()
   const list = useQuery({ queryKey: ['notifications', 'preferences'], queryFn: getPreferences })
   const [changes, setChanges] = useState<
@@ -19,7 +21,7 @@ export function Component() {
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: ['notifications', 'preferences'] })
       setChanges({})
-      toast.success('Đã lưu tuỳ chọn thông báo')
+      toast.success(t('preferencesSaved'))
     },
     onError: (e) => toast.error(messageFor(e)),
   })
@@ -28,12 +30,12 @@ export function Component() {
   ]
   return (
     <>
-      <PageHeader title="Tuỳ chọn thông báo" />
+      <PageHeader title={t('preferences')} />
       {list.isPending ? (
-        <p role="status">Đang tải…</p>
+        <p role="status">{t('loading')}</p>
       ) : list.error ? (
         <div role="alert">
-          {messageFor(list.error)} <Button onClick={() => void list.refetch()}>Thử lại</Button>
+          {messageFor(list.error)} <Button onClick={() => void list.refetch()}>{t('retry')}</Button>
         </div>
       ) : (
         <form
@@ -65,7 +67,7 @@ export function Component() {
                           }
                         />
                         <Label htmlFor={`${type}-${channel}`}>
-                          {channel === 'push' ? 'Đẩy tới thiết bị' : 'Trong ứng dụng'} —{' '}
+                          {channel === 'push' ? t('push') : t('inapp')} —{' '}
                           {NOTIFICATION_TYPES[type] ?? type}
                         </Label>
                       </div>
@@ -76,7 +78,7 @@ export function Component() {
             })}
           </div>
           <Button type="submit" disabled={!Object.keys(changes).length || mutation.isPending}>
-            Lưu tuỳ chọn
+            {t('savePreferences')}
           </Button>
         </form>
       )}

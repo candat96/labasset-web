@@ -36,7 +36,6 @@ export interface ImportResult {
 }
 export interface CatalogField {
   name: string
-  label: string
   type?:
     'text' | 'email' | 'url' | 'date' | 'number' | 'boolean' | 'reference' | 'severity' | 'user'
   reference?: 'departments' | 'self'
@@ -44,6 +43,5 @@ export interface CatalogField {
   max?: number
 }
 export interface CatalogConfig {
-  title: string
   fields: CatalogField[]
 }

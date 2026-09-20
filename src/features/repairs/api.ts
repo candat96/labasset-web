@@ -7,7 +7,7 @@ import type { CreateRepair, RepairListParams, UpdateRepair } from './types'
 export function listRepairs(params: RepairListParams) {
   return unwrap(
     api.GET('/v1/repairs', {
-      params: { query: pageQuery({ ...params }) as never },
+      params: { query: pageQuery({ ...params }) },
     }),
   )
 }
@@ -153,6 +153,13 @@ export function repairStats(params: {
 
 export function repairWorkload() {
   return unwrap(api.GET('/v1/repairs/workload'))
+}
+
+// TODO(api): GET /v1/equipment/{id} trả EquipmentDetailDto đã có schema; chỉ lấy field cần.
+export function equipmentBrief(id: string) {
+  return unwrapAs<{ id: string; code: string; name: string; originalValue: string | null }>(
+    api.GET('/v1/equipment/{id}', { params: { path: { id } } }),
+  )
 }
 
 export function publicRepairSettings() {

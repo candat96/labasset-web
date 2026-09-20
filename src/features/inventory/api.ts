@@ -1,23 +1,25 @@
-import { api, unwrap, unwrapAs } from '@/api/client'
+import { api, apiBody, unwrap, unwrapAs } from '@/api/client'
 import { downloadFile } from '@/api/download'
-import { pageQuery } from '@/api/paths'
-import type { components } from '@/api/schema'
+import { apiQuery, pageQuery } from '@/api/paths'
+import type { components, paths } from '@/api/schema'
 import type { Supply } from './types'
+
+type SuppliesQuery = NonNullable<paths['/v1/supplies']['get']['parameters']['query']>
 
 export function listSupplies(params: Record<string, unknown>) {
   return unwrapAs<{ items?: Supply[]; total?: number; page?: number; limit?: number } | Supply[]>(
-    api.GET('/v1/supplies', { params: { query: pageQuery(params as never) as never } }),
+    api.GET('/v1/supplies', { params: { query: apiQuery<SuppliesQuery>(params) } }),
   )
 }
 export function getSupply(id: string) {
   return unwrapAs<Supply>(api.GET('/v1/supplies/{id}', { params: { path: { id } } }))
 }
 export function createSupply(body: Record<string, unknown>) {
-  return unwrapAs<Supply>(api.POST('/v1/supplies', { body: body as never }))
+  return unwrapAs<Supply>(api.POST('/v1/supplies', { body: apiBody(body) }))
 }
 export function updateSupply(id: string, body: Record<string, unknown>) {
   return unwrapAs<Supply>(
-    api.PATCH('/v1/supplies/{id}', { params: { path: { id } }, body: body as never }),
+    api.PATCH('/v1/supplies/{id}', { params: { path: { id } }, body: apiBody(body) }),
   )
 }
 export function exportSupplies() {
@@ -25,29 +27,23 @@ export function exportSupplies() {
 }
 
 export function listBalances(params: Record<string, unknown>) {
-  return unwrap(
-    api.GET('/v1/stock/balances', { params: { query: pageQuery(params as never) as never } }),
-  )
+  return unwrap(api.GET('/v1/stock/balances', { params: { query: pageQuery(params) } }))
 }
 export function stockValue(warehouseId?: string) {
   return unwrap(api.GET('/v1/stock/value', { params: { query: { warehouseId } } }))
 }
 export function listLots(params: Record<string, unknown>) {
-  return unwrap(
-    api.GET('/v1/stock/lots', { params: { query: pageQuery(params as never) as never } }),
-  )
+  return unwrap(api.GET('/v1/stock/lots', { params: { query: pageQuery(params) } }))
 }
 export function openLot(id: string) {
   return unwrap(api.POST('/v1/stock/lots/{id}/open', { params: { path: { id } } }))
 }
 export function adjustStock(body: Record<string, unknown>) {
-  return unwrap(api.POST('/v1/stock/adjust', { body: body as never }))
+  return unwrap(api.POST('/v1/stock/adjust', { body: apiBody(body) }))
 }
 
 export function listReceipts(params: Record<string, unknown>) {
-  return unwrap(
-    api.GET('/v1/stock/receipts', { params: { query: pageQuery(params as never) as never } }),
-  )
+  return unwrap(api.GET('/v1/stock/receipts', { params: { query: pageQuery(params) } }))
 }
 export function getReceipt(id: string) {
   return unwrap(api.GET('/v1/stock/receipts/{id}', { params: { path: { id } } }))
@@ -63,14 +59,12 @@ export function cancelReceipt(id: string) {
 }
 export function qcReceipt(id: string, body: { status: 'passed' | 'failed'; note?: string }) {
   return unwrap(
-    api.POST('/v1/stock/receipts/{id}/qc', { params: { path: { id } }, body: body as never }),
+    api.POST('/v1/stock/receipts/{id}/qc', { params: { path: { id } }, body: apiBody(body) }),
   )
 }
 
 export function listIssues(params: Record<string, unknown>) {
-  return unwrap(
-    api.GET('/v1/stock/issues', { params: { query: pageQuery(params as never) as never } }),
-  )
+  return unwrap(api.GET('/v1/stock/issues', { params: { query: pageQuery(params) } }))
 }
 export function getIssue(id: string) {
   return unwrap(api.GET('/v1/stock/issues/{id}', { params: { path: { id } } }))
@@ -93,7 +87,7 @@ export function suggestLots(query: { supplyId: string; warehouseId: string; quan
 
 export function createTransfer(body: Record<string, unknown>) {
   return unwrapAs<{ id?: string; transferId?: string }>(
-    api.POST('/v1/stock/transfers', { body: body as never }),
+    api.POST('/v1/stock/transfers', { body: apiBody(body) }),
   )
 }
 export function cancelTransfer(transferId: string) {
@@ -103,9 +97,7 @@ export function cancelTransfer(transferId: string) {
 }
 
 export function listAlerts(params: Record<string, unknown>) {
-  return unwrap(
-    api.GET('/v1/stock/alerts', { params: { query: pageQuery(params as never) as never } }),
-  )
+  return unwrap(api.GET('/v1/stock/alerts', { params: { query: pageQuery(params) } }))
 }
 export function resolveAlert(id: string) {
   return unwrap(api.POST('/v1/stock/alerts/{id}/resolve', { params: { path: { id } } }))

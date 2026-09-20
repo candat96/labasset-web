@@ -36,14 +36,4 @@ export const NUMBER_DEFAULTS: Record<NumberingType, string> = {
   stocktake: 'KK-{YYYY}-{SEQ:3}',
 }
 
-export const NUMBER_LABELS: Record<NumberingType, string> = {
-  equipment: 'Thiết bị',
-  repair: 'Sửa chữa',
-  maintenance: 'Bảo dưỡng',
-  calibration: 'Kiểm định',
-  stock_receipt: 'Nhập kho',
-  stock_issue: 'Xuất kho',
-  stock_transfer: 'Chuyển kho',
-  request: 'Phiếu yêu cầu',
-  stocktake: 'Kiểm kê',
-}
+// Nhãn các loại đánh số hiển thị qua i18n (`settings:numbering.<type>`).

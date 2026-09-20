@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { toast } from 'sonner'
 import { DataTable, useServerTable } from '@/components/data-table'
@@ -14,6 +14,7 @@ import { useCan } from '@/app/guards/useCan'
 import { STAFF } from '@/routes/roles'
 import { messageFor } from '@/api/errors'
 import { listLots, openLot } from '../api'
+import { useTranslation } from 'react-i18next'
 
 type Lot = {
   id: string
@@ -26,7 +27,10 @@ type Lot = {
 }
 
 export function Component() {
+  const { t } = useTranslation('inventory')
+
   const canWrite = useCan(STAFF)
+  const qc = useQueryClient()
   const table = useServerTable({
     filterKeys: ['supplyId', 'warehouseId', 'status', 'expiringWithinDays'],
   })
@@ -35,6 +39,8 @@ export function Component() {
     page: table.params.page,
     limit: table.params.limit,
     q: table.params.q || undefined,
+    supplyId: f.supplyId,
+    warehouseId: f.warehouseId,
     status: f.status,
     expiringWithinDays: f.expiringWithinDays ? Number(f.expiringWithinDays) : undefined,
   }
@@ -45,11 +51,11 @@ export function Component() {
   })
   const columns = useMemo<ColumnDef<Lot>[]>(
     () => [
-      { accessorKey: 'supplyName', header: 'Vật tư' },
-      { accessorKey: 'lotNo', header: 'Lô' },
+      { accessorKey: 'supplyName', header: t('supply') },
+      { accessorKey: 'lotNo', header: t('lot') },
       {
         accessorKey: 'expiresAt',
-        header: 'Hạn',
+        header: t('expiry'),
         cell: ({ row }) => {
           const exp = row.original.expiresAt
           const overdue = !!exp && exp < new Date().toISOString()
@@ -62,12 +68,12 @@ export function Component() {
       },
       {
         accessorKey: 'qtyOnHand',
-        header: 'Tồn',
+        header: t('qty'),
         cell: ({ getValue }) => formatQty(String(getValue() ?? '')),
       },
       {
         accessorKey: 'status',
-        header: 'Trạng thái',
+        header: t('status'),
         cell: ({ row }) => <StatusBadge value={row.original.status ?? ''} map={lotStatusMap} />,
       },
       {
@@ -82,27 +88,27 @@ export function Component() {
                 event.stopPropagation()
                 try {
                   await openLot(row.original.id)
-                  toast.success('Đã mở nắp')
-                  void list.refetch()
+                  toast.success(t('lotOpened'))
+                  void qc.invalidateQueries({ queryKey: ['stock', 'lots'] })
                 } catch (error) {
                   toast.error(messageFor(error))
                 }
               }}
             >
-              Mở nắp
+              {t('openLot')}
             </Button>
           ) : null,
       },
     ],
-    [canWrite, list],
+    [canWrite, qc, t],
   )
   return (
     <>
       <PageHeader
-        title="Lô kho"
+        title={t('lotsTitle')}
         actions={
           <Button variant="outline" onClick={() => table.setFilter('expiringWithinDays', '30')}>
-            Hết hạn 30 ngày
+            {t('expiring30')}
           </Button>
         }
       />
@@ -120,7 +126,7 @@ export function Component() {
         getRowId={(row) => row.id}
         toolbarLeft={
           <Input
-            aria-label="Tìm lô"
+            aria-label={t('searchLot')}
             value={table.inputQ}
             onChange={(e) => table.setQ(e.target.value)}
           />

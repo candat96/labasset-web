@@ -1,13 +1,6 @@
 import type { ReactNode } from 'react'
 import type { Control, FieldPath, FieldValues } from 'react-hook-form'
-import {
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form'
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import {
@@ -62,14 +55,13 @@ export function TextField<T extends FieldValues>({
                 field.onChange(transform ? transform(e.target.value) : e.target.value)
               }
               type={type}
-              placeholder={placeholder}
+              placeholder={placeholder ?? description}
               autoComplete={autoComplete}
               autoFocus={autoFocus}
               inputMode={inputMode}
               disabled={disabled}
             />
           </FormControl>
-          {description && <FormDescription>{description}</FormDescription>}
           <FormMessage />
         </FormItem>
       )}
@@ -85,7 +77,8 @@ export function NumberField<T extends FieldValues>({
   disabled,
   min,
   step,
-}: BaseProps<T> & { min?: number; step?: number }) {
+  placeholder,
+}: BaseProps<T> & { min?: number; step?: number; placeholder?: string }) {
   return (
     <FormField
       control={control}
@@ -99,6 +92,7 @@ export function NumberField<T extends FieldValues>({
               inputMode="numeric"
               min={min}
               step={step}
+              placeholder={placeholder ?? description}
               disabled={disabled}
               name={field.name}
               ref={field.ref}
@@ -107,7 +101,6 @@ export function NumberField<T extends FieldValues>({
               onChange={(e) => field.onChange(e.target.value === '' ? '' : Number(e.target.value))}
             />
           </FormControl>
-          {description && <FormDescription>{description}</FormDescription>}
           <FormMessage />
         </FormItem>
       )}
@@ -157,7 +150,7 @@ export function SelectField<T extends FieldValues>({
           >
             <FormControl>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder={placeholder} />
+                <SelectValue placeholder={placeholder ?? description} />
               </SelectTrigger>
             </FormControl>
             <SelectContent>
@@ -169,7 +162,6 @@ export function SelectField<T extends FieldValues>({
               ))}
             </SelectContent>
           </Select>
-          {description && <FormDescription>{description}</FormDescription>}
           <FormMessage />
         </FormItem>
       )}
@@ -181,7 +173,6 @@ export function SwitchField<T extends FieldValues>({
   control,
   name,
   label,
-  description,
   disabled,
 }: BaseProps<T>) {
   return (
@@ -190,10 +181,7 @@ export function SwitchField<T extends FieldValues>({
       name={name}
       render={({ field }) => (
         <FormItem className="flex items-center justify-between rounded-md border px-3 py-2">
-          <div className="space-y-0.5">
-            <FormLabel>{label}</FormLabel>
-            {description && <FormDescription>{description}</FormDescription>}
-          </div>
+          <FormLabel>{label}</FormLabel>
           <FormControl>
             <Switch checked={!!field.value} onCheckedChange={field.onChange} disabled={disabled} />
           </FormControl>

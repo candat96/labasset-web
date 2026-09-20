@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { PageHeader } from '@/components/page/PageHeader'
 import { ErrorState } from '@/components/page/ErrorState'
@@ -13,8 +13,11 @@ import { formatVnd } from '@/lib/format/money'
 import { useCan } from '@/app/guards/useCan'
 import { ADM, STAFF } from '@/routes/roles'
 import { calibrationHistory, cancelCalibration, completeCalibration, getCalibration } from '../api'
+import { useTranslation } from 'react-i18next'
 
 export function Component() {
+  const { t } = useTranslation('calibrations')
+
   const { id = '' } = useParams()
   const detail = useQuery({
     queryKey: ['calibrations', id],
@@ -23,13 +26,17 @@ export function Component() {
   })
   const isStaff = useCan(STAFF)
   const isAdm = useCan(ADM)
+  const qc = useQueryClient()
+  const invalidate = () => {
+    void qc.invalidateQueries({ queryKey: ['calibrations'] })
+  }
   const { confirm, dialog } = useConfirm()
   const history = useQuery({
     queryKey: ['calibrations', 'history', detail.data?.equipmentId],
     queryFn: () => calibrationHistory(detail.data!.equipmentId),
     enabled: !!detail.data?.equipmentId,
   })
-  if (detail.isPending) return <p role="status">Đang tải kiểm định…</p>
+  if (detail.isPending) return <p role="status">{t('loading')}</p>
   if (detail.error) return <ErrorState error={detail.error} onRetry={() => void detail.refetch()} />
   const row = detail.data
   return (
@@ -53,24 +60,25 @@ export function Component() {
                     performedAt: new Date().toISOString(),
                     result: 'pass',
                   })
-                  toast.success('Đã hoàn thành')
-                  void detail.refetch()
+                  toast.success(t('completed'))
+                  invalidate()
                 }}
               >
-                Hoàn thành
+                {t('complete')}
               </Button>
             )}
             {isAdm && row.status === 'scheduled' && (
               <Button
                 variant="outline"
                 onClick={async () => {
-                  if ((await confirm({ title: 'Huỷ phiếu?', destructive: true })) === false) return
+                  if ((await confirm({ title: t('cancelConfirm'), destructive: true })) === false)
+                    return
                   await cancelCalibration(id)
-                  toast.success('Đã huỷ')
-                  void detail.refetch()
+                  toast.success(t('cancelled'))
+                  invalidate()
                 }}
               >
-                Huỷ
+                {t('cancel')}
               </Button>
             )}
           </div>
@@ -78,7 +86,7 @@ export function Component() {
       />
       <dl className="grid gap-2 text-sm sm:grid-cols-2">
         <div>
-          <dt className="text-muted-foreground">Máy</dt>
+          <dt className="text-muted-foreground">{t('equipment')}</dt>
           <dd>
             <Link className="text-primary hover:underline" to={`/equipment/${row.equipmentId}`}>
               {row.equipment?.code} – {row.equipment?.name}
@@ -86,28 +94,28 @@ export function Component() {
           </dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">Lịch</dt>
+          <dt className="text-muted-foreground">{t('schedule')}</dt>
           <dd>{formatDateTime(row.scheduledAt)}</dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">Thực hiện</dt>
+          <dt className="text-muted-foreground">{t('performedAt')}</dt>
           <dd>{formatDateTime(row.performedAt)}</dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">Chứng nhận</dt>
+          <dt className="text-muted-foreground">{t('certificate')}</dt>
           <dd>{row.certificateNo ?? '—'}</dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">Chi phí</dt>
+          <dt className="text-muted-foreground">{t('cost')}</dt>
           <dd>{formatVnd(row.cost) || '—'}</dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">Hạn kế tiếp</dt>
+          <dt className="text-muted-foreground">{t('nextDue')}</dt>
           <dd>{formatDate(row.nextDueAt) || '—'}</dd>
         </div>
         {row.repairTicketId && (
           <div>
-            <dt className="text-muted-foreground">Phiếu sửa</dt>
+            <dt className="text-muted-foreground">{t('repairTicket')}</dt>
             <dd>
               <Link className="text-primary hover:underline" to={`/repairs/${row.repairTicketId}`}>
                 {row.repairTicketId}
@@ -116,7 +124,7 @@ export function Component() {
           </div>
         )}
       </dl>
-      <h2 className="mt-6 mb-2 font-medium">Lịch sử máy</h2>
+      <h2 className="mt-6 mb-2 font-medium">{t('equipmentHistory')}</h2>
       <Timeline
         events={(history.data ?? []).map((item) => ({
           at: item.performedAt ?? item.scheduledAt ?? item.createdAt,

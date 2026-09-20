@@ -1,20 +1,26 @@
 import { useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import { PageHeader } from '@/components/page/PageHeader'
 import { ErrorState } from '@/components/page/ErrorState'
 import { Button } from '@/components/ui/button'
 import { Form } from '@/components/ui/form'
-import { FormField, FormItem, FormMessage } from '@/components/ui/form'
 import { TextField, NumberField } from '@/components/form/fields'
 import { DateField } from '@/components/form/date-field'
 import { MoneyField } from '@/components/form/money-field'
-import { AsyncSelect } from '@/components/form/async-select'
+import { AsyncSelectField } from '../components/async-select-field'
 import { AttachmentsPanel } from '@/components/attachments-panel'
+import {
+  resolveCatalogItem,
+  resolveDepartment,
+  resolveUser,
+  departmentOptions,
+} from '@/api/references'
+import type { ReferenceOption } from '@/components/form/async-select'
 import { applyServerErrors, isApiError, messageFor } from '@/api/errors'
-import { departmentOptions } from '@/api/references'
 import {
   catalogOptions,
   createEquipment,
@@ -23,9 +29,9 @@ import {
   userOptions,
   diffUpdate,
 } from '../api'
-import { useEquipment } from '../hooks'
+import { useEquipment, useInvalidateEquipment } from '../hooks'
 import { equipmentSchema, type EquipmentForm } from '../schema'
-import type { CreateEquipment, UpdateEquipment } from '../types'
+import type { CreateEquipment } from '../types'
 
 const empty: EquipmentForm = {
   code: '',
@@ -103,16 +109,9 @@ function fromDetail(data: NonNullable<ReturnType<typeof useEquipment>['data']>):
   }
 }
 
-function toBody(values: EquipmentForm): CreateEquipment {
-  const specs = emptyToNull({
-    voltage: values.specs.voltage,
-    power: values.specs.power,
-    dimensions: values.specs.dimensions,
-    weight: values.specs.weight,
-    env: emptyToNull({ ...values.specs.env }),
-  })
-  return emptyToNull({
-    code: values.code || undefined,
+/** `includeIdentity=false` khi PATCH: `UpdateEquipmentDto` không nhận `code`/`departmentId`. */
+function toBody(values: EquipmentForm, includeIdentity = true): CreateEquipment {
+  const body: Record<string, unknown> = {
     name: values.name,
     model: values.model,
     serial: values.serial,
@@ -129,7 +128,6 @@ function toBody(values: EquipmentForm): CreateEquipment {
     purchaseContractNo: values.purchaseContractNo,
     decisionNo: values.decisionNo,
     groupId: values.groupId,
-    departmentId: values.departmentId,
     location: values.location,
     deptContactUserId: values.deptContactUserId,
     staffInChargeUserId: values.staffInChargeUserId,
@@ -141,56 +139,35 @@ function toBody(values: EquipmentForm): CreateEquipment {
       : [],
     throughputPerHour: values.throughputPerHour === '' ? null : values.throughputPerHour,
     notes: values.notes,
-    specs,
-  }) as CreateEquipment
+    specs: emptyToNull({
+      voltage: values.specs.voltage,
+      power: values.specs.power,
+      dimensions: values.specs.dimensions,
+      weight: values.specs.weight,
+      env: emptyToNull({ ...values.specs.env }),
+    }),
+  }
+  if (includeIdentity) {
+    body.code = values.code || undefined
+    body.departmentId = values.departmentId
+  }
+  return emptyToNull(body) as CreateEquipment
 }
 
-function SelectRef({
-  control,
-  name,
-  label,
-  queryKey,
-  load,
-}: {
-  control: ReturnType<typeof useForm<EquipmentForm>>['control']
-  name:
-    | 'manufacturerId'
-    | 'supplierId'
-    | 'fundingSourceId'
-    | 'groupId'
-    | 'departmentId'
-    | 'deptContactUserId'
-    | 'staffInChargeUserId'
-  label: string
-  queryKey: string
-  load: (q: string) => Promise<{ id: string; code: string; name: string }[]>
-}) {
-  return (
-    <FormField
-      control={control}
-      name={name}
-      render={({ field }) => (
-        <FormItem>
-          <AsyncSelect
-            label={label}
-            queryKey={queryKey}
-            loadOptions={load}
-            value={field.value}
-            onChange={field.onChange}
-            clearable
-          />
-          <FormMessage />
-        </FormItem>
-      )}
-    />
-  )
-}
+const catalogOption = (
+  row?: { id: string; code: string; name: string } | null,
+): ReferenceOption[] => (row ? [row] : [])
+const userOption = (
+  row?: { id: string; username: string; fullName: string } | null,
+): ReferenceOption[] => (row ? [{ id: row.id, code: row.username, name: row.fullName }] : [])
 
 export function Component() {
+  const { t } = useTranslation('equipment')
   const { id = '' } = useParams()
   const editing = Boolean(id)
   const navigate = useNavigate()
   const detail = useEquipment(id)
+  const invalidate = useInvalidateEquipment(editing ? id : undefined)
   const form = useForm<EquipmentForm>({
     resolver: zodResolver(equipmentSchema),
     defaultValues: empty,
@@ -199,25 +176,27 @@ export function Component() {
   useEffect(() => {
     if (detail.data) form.reset(fromDetail(detail.data))
   }, [detail.data, form])
-  if (editing && detail.isPending) return <p role="status">Đang tải máy…</p>
+  if (editing && detail.isPending) return <p role="status">{t('loading')}</p>
   if (editing && detail.error)
     return <ErrorState error={detail.error} onRetry={() => void detail.refetch()} />
+  const company = detail.data
   const submit = async (values: EquipmentForm) => {
+    if (!editing && !values.departmentId) {
+      form.setError('departmentId', { type: 'required', message: t('common:form.required') })
+      return
+    }
     try {
-      const body = toBody(values)
       if (editing) {
-        const before = toBody(fromDetail(detail.data!))
-        const after = { ...body }
-        const prev = { ...before }
-        delete (after as { departmentId?: string | null }).departmentId
-        delete (prev as { departmentId?: string | null }).departmentId
-        const patch = diffUpdate(prev as UpdateEquipment, after as UpdateEquipment)
+        const before = toBody(fromDetail(detail.data!), false)
+        const patch = diffUpdate(before, toBody(values, false))
         if (Object.keys(patch).length) await updateEquipment(id, patch)
-        toast.success('Đã lưu máy')
+        invalidate()
+        toast.success(t('toasts.saved'))
         navigate(`/equipment/${id}`)
       } else {
-        const created = await createEquipment(body)
-        toast.success('Đã tạo máy')
+        const created = await createEquipment(toBody(values))
+        invalidate()
+        toast.success(t('toasts.created'))
         navigate(`/equipment/${created.id}`)
       }
     } catch (error) {
@@ -230,140 +209,189 @@ export function Component() {
   }
   return (
     <>
-      <PageHeader title={editing ? 'Sửa máy' : 'Thêm máy'} />
+      <PageHeader title={editing ? t('editTitle') : t('create')} />
       <Form {...form}>
         <form className="max-w-3xl space-y-4" noValidate onSubmit={form.handleSubmit(submit)}>
           <details open className="rounded-lg border p-4">
-            <summary className="cursor-pointer font-medium">Thông tin chung</summary>
+            <summary className="cursor-pointer font-medium">{t('sections.general')}</summary>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <TextField
                 control={form.control}
                 name="code"
-                label="Mã máy"
-                description="Để trống để hệ thống tự sinh TB-YYYY-xxxxx"
+                label={t('fields.equipmentCode')}
+                description={editing ? t('fields.codeLocked') : t('fields.codeHint')}
+                disabled={editing}
                 transform={(value) => value.toUpperCase()}
               />
-              <TextField control={form.control} name="name" label="Tên" />
-              <TextField control={form.control} name="model" label="Model" />
-              <TextField control={form.control} name="serial" label="Serial" />
-              <TextField control={form.control} name="assetCode" label="Mã tài sản" />
-              <SelectRef
+              <TextField control={form.control} name="name" label={t('fields.name')} />
+              <TextField control={form.control} name="model" label={t('fields.model')} />
+              <TextField control={form.control} name="serial" label={t('fields.serial')} />
+              <TextField control={form.control} name="assetCode" label={t('fields.assetCode')} />
+              <AsyncSelectField
                 control={form.control}
                 name="manufacturerId"
-                label="Hãng"
+                label={t('fields.manufacturer')}
                 queryKey="manufacturers"
-                load={(q) => catalogOptions('manufacturers', q)}
+                loadOptions={(q) => catalogOptions('manufacturers', q)}
+                selectedOptions={catalogOption(company?.manufacturer)}
+                resolveOption={(value) => resolveCatalogItem('manufacturers', value)}
+                clearable
               />
-              <SelectRef
+              <AsyncSelectField
                 control={form.control}
                 name="supplierId"
-                label="Nhà cung cấp"
+                label={t('fields.supplier')}
                 queryKey="suppliers"
-                load={(q) => catalogOptions('suppliers', q)}
+                loadOptions={(q) => catalogOptions('suppliers', q)}
+                selectedOptions={catalogOption(company?.supplier)}
+                resolveOption={(value) => resolveCatalogItem('suppliers', value)}
+                clearable
               />
-              <TextField control={form.control} name="countryOfOrigin" label="Xuất xứ" />
+              <TextField
+                control={form.control}
+                name="countryOfOrigin"
+                label={t('fields.countryOfOrigin')}
+              />
               <NumberField
                 control={form.control}
                 name="manufactureYear"
-                label="Năm sản xuất"
+                label={t('fields.manufactureYear')}
                 min={1900}
               />
-              <DateField control={form.control} name="receivedAt" label="Ngày nhận" />
+              <DateField control={form.control} name="receivedAt" label={t('fields.receivedAt')} />
               <DateField
                 control={form.control}
                 name="commissionedAt"
-                label="Ngày đưa vào sử dụng"
+                label={t('fields.commissionedAt')}
               />
-              <SelectRef
+              <AsyncSelectField
                 control={form.control}
                 name="fundingSourceId"
-                label="Nguồn vốn"
+                label={t('fields.fundingSource')}
                 queryKey="funding-sources"
-                load={(q) => catalogOptions('funding-sources', q)}
+                loadOptions={(q) => catalogOptions('funding-sources', q)}
+                selectedOptions={catalogOption(company?.fundingSource)}
+                clearable
               />
-              <MoneyField control={form.control} name="originalValue" label="Nguyên giá" />
-              <DateField control={form.control} name="warrantyUntil" label="Bảo hành đến" />
-              <TextField control={form.control} name="purchaseContractNo" label="Số hợp đồng" />
-              <TextField control={form.control} name="decisionNo" label="Số quyết định" />
-              <SelectRef
+              <MoneyField
+                control={form.control}
+                name="originalValue"
+                label={t('fields.originalValue')}
+              />
+              <DateField
+                control={form.control}
+                name="warrantyUntil"
+                label={t('fields.warrantyUntil')}
+              />
+              <TextField
+                control={form.control}
+                name="purchaseContractNo"
+                label={t('fields.purchaseContractNo')}
+              />
+              <TextField control={form.control} name="decisionNo" label={t('fields.decisionNo')} />
+              <AsyncSelectField
                 control={form.control}
                 name="groupId"
-                label="Nhóm máy"
+                label={t('fields.groupEquipment')}
                 queryKey="equipment-groups"
-                load={(q) => catalogOptions('equipment-groups', q)}
+                loadOptions={(q) => catalogOptions('equipment-groups', q)}
+                selectedOptions={catalogOption(company?.group)}
+                resolveOption={(value) => resolveCatalogItem('equipment-groups', value)}
+                clearable
               />
               {!editing && (
-                <SelectRef
+                <AsyncSelectField
                   control={form.control}
                   name="departmentId"
-                  label="Khoa"
+                  label={t('fields.department')}
                   queryKey="departments"
-                  load={departmentOptions}
+                  loadOptions={departmentOptions}
+                  selectedOptions={catalogOption(company?.department)}
+                  resolveOption={resolveDepartment}
+                  clearable
                 />
               )}
-              <TextField control={form.control} name="location" label="Vị trí" />
-              <SelectRef
+              <TextField control={form.control} name="location" label={t('fields.location')} />
+              <AsyncSelectField
                 control={form.control}
                 name="deptContactUserId"
-                label="Liên hệ khoa"
+                label={t('fields.deptContact')}
                 queryKey="dept-users"
-                load={userOptions}
+                loadOptions={(q) => userOptions(q)}
+                selectedOptions={userOption(company?.deptContact)}
+                resolveOption={resolveUser}
+                clearable
               />
-              <SelectRef
+              <AsyncSelectField
                 control={form.control}
                 name="staffInChargeUserId"
-                label="Phụ trách VT"
+                label={t('fields.staffInCharge')}
                 queryKey="staff"
-                load={userOptions}
+                loadOptions={(q) => userOptions(q)}
+                selectedOptions={userOption(company?.staffInCharge)}
+                resolveOption={resolveUser}
+                clearable
               />
               <TextField
                 control={form.control}
                 name="testTypes"
-                label="Loại xét nghiệm"
-                description="Phân tách bằng dấu phẩy"
+                label={t('fields.testTypes')}
+                description={t('fields.testTypesHint')}
               />
               <NumberField
                 control={form.control}
                 name="throughputPerHour"
-                label="Công suất / giờ"
+                label={t('fields.throughputPerHour')}
                 min={0}
               />
               <div className="sm:col-span-2">
-                <TextField control={form.control} name="notes" label="Ghi chú" />
+                <TextField control={form.control} name="notes" label={t('fields.notes')} />
               </div>
             </div>
           </details>
           <details open className="rounded-lg border p-4">
-            <summary className="cursor-pointer font-medium">Thông số kỹ thuật</summary>
+            <summary className="cursor-pointer font-medium">{t('sections.specs')}</summary>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <TextField control={form.control} name="specs.voltage" label="Điện áp" />
-              <TextField control={form.control} name="specs.power" label="Công suất" />
-              <TextField control={form.control} name="specs.dimensions" label="Kích thước" />
-              <TextField control={form.control} name="specs.weight" label="Khối lượng" />
-              <TextField control={form.control} name="specs.env.temp" label="Nhiệt độ môi trường" />
-              <TextField control={form.control} name="specs.env.humidity" label="Độ ẩm" />
-              <TextField control={form.control} name="specs.env.ups" label="UPS" />
-              <TextField control={form.control} name="specs.env.water" label="Nước" />
-              <TextField control={form.control} name="specs.env.gas" label="Khí" />
+              <TextField control={form.control} name="specs.voltage" label={t('fields.voltage')} />
+              <TextField control={form.control} name="specs.power" label={t('fields.power')} />
+              <TextField
+                control={form.control}
+                name="specs.dimensions"
+                label={t('fields.dimensions')}
+              />
+              <TextField control={form.control} name="specs.weight" label={t('fields.weight')} />
+              <TextField control={form.control} name="specs.env.temp" label={t('fields.envTemp')} />
+              <TextField
+                control={form.control}
+                name="specs.env.humidity"
+                label={t('fields.envHumidity')}
+              />
+              <TextField control={form.control} name="specs.env.ups" label={t('fields.envUps')} />
+              <TextField
+                control={form.control}
+                name="specs.env.water"
+                label={t('fields.envWater')}
+              />
+              <TextField control={form.control} name="specs.env.gas" label={t('fields.envGas')} />
             </div>
           </details>
           {editing && (
             <details open className="rounded-lg border p-4">
-              <summary className="cursor-pointer font-medium">Ảnh đại diện</summary>
+              <summary className="cursor-pointer font-medium">{t('sections.photo')}</summary>
               <div className="mt-4">
                 <AttachmentsPanel
                   entityType="equipment"
                   entityId={id}
-                  kinds={[{ value: 'photo', label: 'Ảnh' }]}
+                  kinds={[{ value: 'photo', label: t('sections.photoKind') }]}
                 />
               </div>
             </details>
           )}
           <div className="flex gap-2">
             <Button type="button" variant="outline" onClick={() => navigate(-1)}>
-              Huỷ
+              {t('common:actions.cancel')}
             </Button>
-            <Button type="submit">Lưu</Button>
+            <Button type="submit">{t('common:actions.save')}</Button>
           </div>
         </form>
       </Form>

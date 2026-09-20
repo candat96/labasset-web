@@ -7,6 +7,8 @@ import { useAuthStore } from '@/stores/auth.store'
 import { Component as SuppliesPage } from './SuppliesPage'
 import { Component as SupplyFormPage } from './SupplyFormPage'
 import { Component as ReceiptsPage } from './ReceiptsPage'
+import { Component as ReceiptFormPage } from './ReceiptFormPage'
+import { Component as IssueFormPage } from './IssueFormPage'
 
 beforeEach(() => {
   useAuthStore.getState().setSession(fakeSession())
@@ -66,7 +68,15 @@ it('creates a supply', async () => {
   const saved: unknown[] = []
   server.use(
     http.post('/v1/supplies', async ({ request }) => {
-      saved.push(await request.json())
+      const body = (await request.json()) as { name?: string }
+      // Handler kiểm tra field bắt buộc như backend để không che lỗi 400 thật.
+      if (!body.name) {
+        return HttpResponse.json(
+          { code: 'VALIDATION_ERROR', message: 'name là bắt buộc' },
+          { status: 400 },
+        )
+      }
+      saved.push(body)
       return HttpResponse.json({ id: 's2', code: 'HC-02', name: 'Mới' }, { status: 201 })
     }),
   )
@@ -86,4 +96,94 @@ it('lists receipts', async () => {
     'href',
     '/stock/receipts/r1',
   )
+})
+
+it('creates an issue with a body validated like the API', async () => {
+  const saved: unknown[] = []
+  server.use(
+    http.get('/v1/catalogs/warehouses', () =>
+      HttpResponse.json([{ id: 'w1', code: 'K1', name: 'Kho chính' }]),
+    ),
+    http.get('/v1/departments', () =>
+      HttpResponse.json({ items: [{ id: 'd1', code: 'XN', name: 'Khoa XN' }] }),
+    ),
+    http.get('/v1/supplies', () =>
+      HttpResponse.json({
+        items: [{ id: 's1', code: 'HC-01', name: 'Huyết thanh' }],
+        total: 1,
+        page: 1,
+        limit: 20,
+      }),
+    ),
+    http.post('/v1/stock/issues', async ({ request }) => {
+      const body = (await request.json()) as {
+        warehouseId?: string
+        toDepartmentId?: string
+        items?: { supplyId?: string; quantity?: string }[]
+      }
+      if (!body.warehouseId || !body.toDepartmentId || !body.items?.[0]?.supplyId) {
+        return HttpResponse.json(
+          { code: 'VALIDATION_ERROR', message: 'Thiếu kho/khoa/vật tư' },
+          { status: 400 },
+        )
+      }
+      saved.push(body)
+      return HttpResponse.json({ id: 'i9', code: 'PX-9' }, { status: 201 })
+    }),
+  )
+  renderWithProviders(<IssueFormPage />, {
+    path: '/stock/issues/new',
+    route: '/stock/issues/new',
+    routes: [{ path: '/stock/issues/:id', element: <div>DETAIL</div> }],
+  })
+  await userEvent.type(screen.getByLabelText('Kho'), 'Kho')
+  await userEvent.click(await screen.findByRole('option', { name: /Kho chính/ }))
+  await userEvent.type(screen.getByLabelText('Khoa nhận'), 'XN')
+  await userEvent.click(await screen.findByRole('option', { name: /Khoa XN/ }))
+  await userEvent.type(screen.getByLabelText('Vật tư'), 'Huyết')
+  await userEvent.click(await screen.findByRole('option', { name: /Huyết thanh/ }))
+  await userEvent.click(screen.getByRole('button', { name: 'Lưu nháp' }))
+  await waitFor(() => expect(saved[0]).toMatchObject({ warehouseId: 'w1', toDepartmentId: 'd1' }))
+})
+
+it('creates a receipt with a body validated like the API', async () => {
+  const saved: unknown[] = []
+  server.use(
+    http.get('/v1/catalogs/warehouses', () =>
+      HttpResponse.json([{ id: 'w1', code: 'K1', name: 'Kho chính' }]),
+    ),
+    http.get('/v1/supplies', () =>
+      HttpResponse.json({
+        items: [{ id: 's1', code: 'HC-01', name: 'Huyết thanh' }],
+        total: 1,
+        page: 1,
+        limit: 20,
+      }),
+    ),
+    http.post('/v1/stock/receipts', async ({ request }) => {
+      const body = (await request.json()) as {
+        warehouseId?: string
+        items?: { supplyId?: string; quantity?: string; unitCost?: string }[]
+      }
+      if (!body.warehouseId || !body.items?.length || !body.items[0]?.supplyId) {
+        return HttpResponse.json(
+          { code: 'VALIDATION_ERROR', message: 'Thiếu kho hoặc vật tư' },
+          { status: 400 },
+        )
+      }
+      saved.push(body)
+      return HttpResponse.json({ id: 'r2', code: 'NK-2' }, { status: 201 })
+    }),
+  )
+  renderWithProviders(<ReceiptFormPage />, {
+    path: '/stock/receipts/new',
+    route: '/stock/receipts/new',
+    routes: [{ path: '/stock/receipts/:id', element: <div>DETAIL</div> }],
+  })
+  await userEvent.type(screen.getByLabelText('Kho'), 'Kho')
+  await userEvent.click(await screen.findByRole('option', { name: /Kho chính/ }))
+  await userEvent.type(screen.getByLabelText('Vật tư'), 'Huyết')
+  await userEvent.click(await screen.findByRole('option', { name: /Huyết thanh/ }))
+  await userEvent.click(screen.getByRole('button', { name: 'Lưu nháp' }))
+  await waitFor(() => expect(saved[0]).toMatchObject({ warehouseId: 'w1' }))
 })

@@ -29,7 +29,14 @@ beforeEach(() => {
     ),
     http.get('/v1/departments', () => HttpResponse.json({ items: [] })),
     http.get('/v1/equipment', () => HttpResponse.json({ items: [] })),
-    http.get('/v1/supplies', () => HttpResponse.json({ items: [] })),
+    http.get('/v1/supplies', () =>
+      HttpResponse.json({
+        items: [{ id: 's1', code: 'HC-01', name: 'Huyết thanh' }],
+        total: 1,
+        page: 1,
+        limit: 20,
+      }),
+    ),
   )
 })
 
@@ -42,7 +49,22 @@ it('creates a draft request', async () => {
   const saved: unknown[] = []
   server.use(
     http.post('/v1/requests', async ({ request }) => {
-      saved.push(await request.json())
+      const body = (await request.json()) as {
+        type?: string
+        items?: { supplyId?: string; qtyRequested?: string }[]
+      }
+      // Phiếu vật tư phải có ít nhất 1 dòng hợp lệ (giống backend).
+      if (
+        !body.type ||
+        (body.type === 'supply' &&
+          (!body.items?.length || !body.items[0]?.supplyId || !body.items[0]?.qtyRequested))
+      ) {
+        return HttpResponse.json(
+          { code: 'VALIDATION_ERROR', message: 'Thiếu dòng vật tư' },
+          { status: 400 },
+        )
+      }
+      saved.push(body)
       return HttpResponse.json({ id: 'q2', code: 'PYC-2' }, { status: 201 })
     }),
   )
@@ -51,6 +73,14 @@ it('creates a draft request', async () => {
     route: '/requests/new',
     routes: [{ path: '/requests/:id', element: <div>DETAIL</div> }],
   })
+  await userEvent.type(screen.getByLabelText('Vật tư'), 'Huyết')
+  await userEvent.click(await screen.findByRole('option', { name: /Huyết thanh/ }))
   await userEvent.click(screen.getByRole('button', { name: 'Lưu nháp' }))
-  await waitFor(() => expect(saved[0]).toMatchObject({ type: 'supply', priority: 'normal' }))
+  await waitFor(() =>
+    expect(saved[0]).toMatchObject({
+      type: 'supply',
+      priority: 'normal',
+      items: [{ supplyId: 's1', qtyRequested: '1' }],
+    }),
+  )
 })

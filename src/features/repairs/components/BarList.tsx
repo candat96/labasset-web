@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next'
+
 export function BarList({
   items,
   ariaLabel,
@@ -5,6 +7,7 @@ export function BarList({
   items: { label: string; value: number; hint?: string }[]
   ariaLabel: string
 }) {
+  const { t } = useTranslation()
   const max = Math.max(...items.map((item) => item.value), 1)
   return (
     <ul aria-label={ariaLabel} className="space-y-2">
@@ -20,7 +23,7 @@ export function BarList({
           </svg>
         </li>
       ))}
-      {items.length === 0 && <li className="text-muted-foreground text-sm">Chưa có dữ liệu</li>}
+      {items.length === 0 && <li className="text-muted-foreground text-sm">{t('table.empty')}</li>}
     </ul>
   )
 }

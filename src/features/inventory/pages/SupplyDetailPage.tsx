@@ -10,8 +10,11 @@ import { useCan } from '@/app/guards/useCan'
 import { STAFF } from '@/routes/roles'
 import { api, unwrapAs } from '@/api/client'
 import { getSupply } from '../api'
+import { useTranslation } from 'react-i18next'
 
 export function Component() {
+  const { t } = useTranslation('inventory')
+
   const { id = '' } = useParams()
   const canWrite = useCan(STAFF)
   const detail = useQuery({
@@ -27,7 +30,7 @@ export function Component() {
       ),
     enabled: !!id,
   })
-  if (detail.isPending) return <p role="status">Đang tải vật tư…</p>
+  if (detail.isPending) return <p role="status">{t('loadingSupply')}</p>
   if (detail.error) return <ErrorState error={detail.error} onRetry={() => void detail.refetch()} />
   const row = detail.data
   return (
@@ -39,24 +42,24 @@ export function Component() {
         actions={
           canWrite && (
             <Button asChild>
-              <Link to={`/supplies/${id}/edit`}>Sửa</Link>
+              <Link to={`/supplies/${id}/edit`}>{t('edit')}</Link>
             </Button>
           )
         }
       />
       <dl className="grid gap-2 text-sm sm:grid-cols-2">
         <div>
-          <dt className="text-muted-foreground">Giá tham khảo</dt>
+          <dt className="text-muted-foreground">{t('refPrice')}</dt>
           <dd>{formatVnd(row.refPrice) || '—'}</dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">Theo lô / hạn</dt>
+          <dt className="text-muted-foreground">{t('trackLotExpiry')}</dt>
           <dd>
-            {row.trackLot ? 'Lô' : 'Không'} / {row.trackExpiry ? 'Hạn' : 'Không'}
+            {row.trackLot ? t('lot') : t('no')} / {row.trackExpiry ? t('expiry') : t('no')}
           </dd>
         </div>
       </dl>
-      <h2 className="mt-6 mb-2 font-medium">Tồn theo lô</h2>
+      <h2 className="mt-6 mb-2 font-medium">{t('stockByLot')}</h2>
       <ul className="text-sm">
         {(stock.data?.lots ?? []).map((lot) => (
           <li key={lot.id}>
@@ -64,7 +67,7 @@ export function Component() {
           </li>
         ))}
         {(stock.data?.lots ?? []).length === 0 && (
-          <li className="text-muted-foreground">Chưa có lô</li>
+          <li className="text-muted-foreground">{t('noLots')}</li>
         )}
       </ul>
     </>

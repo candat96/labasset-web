@@ -1,6 +1,7 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router'
+import { useTranslation } from 'react-i18next'
 import { Loader2, FlaskConical } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -14,6 +15,7 @@ import { sysLoginSchema, type SysLoginValues } from '../schema'
 import { safeReturnTo } from '@/lib/return-to'
 
 export function Component() {
+  const { t } = useTranslation('sys')
   const token = useSysAuthStore((s) => s.accessToken)
   const [sp] = useSearchParams()
   const navigate = useNavigate()
@@ -40,12 +42,12 @@ export function Component() {
           <div className="bg-primary text-primary-foreground flex size-9 items-center justify-center rounded-md">
             <FlaskConical className="size-5" aria-hidden />
           </div>
-          <div className="text-lg font-semibold">LabAsset · Hệ thống</div>
+          <div className="text-lg font-semibold">{t('login.brand')}</div>
         </div>
         <Card>
           <CardHeader>
-            <CardTitle>Đăng nhập quản trị hệ thống</CardTitle>
-            <CardDescription>Tài khoản System Admin, không gắn bệnh viện.</CardDescription>
+            <CardTitle>{t('login.title')}</CardTitle>
+            <CardDescription>{t('login.description')}</CardDescription>
           </CardHeader>
           <CardContent>
             <Form {...form}>
@@ -53,25 +55,25 @@ export function Component() {
                 <TextField
                   control={form.control}
                   name="username"
-                  label="Tài khoản"
+                  label={t('login.username')}
                   autoComplete="username"
                   autoFocus
                 />
                 <TextField
                   control={form.control}
                   name="password"
-                  label="Mật khẩu"
+                  label={t('login.password')}
                   type="password"
                   autoComplete="current-password"
                 />
                 <FormRootError form={form} />
                 <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
                   {form.formState.isSubmitting && <Loader2 className="animate-spin" aria-hidden />}
-                  Đăng nhập
+                  {t('login.submit')}
                 </Button>
                 <div className="text-center text-sm">
                   <Link to="/login" className="text-primary hover:underline">
-                    Đăng nhập bệnh viện
+                    {t('login.hospitalLogin')}
                   </Link>
                 </div>
               </form>

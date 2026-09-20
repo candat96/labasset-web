@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import {
@@ -24,6 +25,8 @@ export function CatalogImportDialog({
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
+  const { t } = useTranslation('catalogs')
+  const { t: tc } = useTranslation()
   const [file, setFile] = useState<File | null>(null)
   const [result, setResult] = useState<ImportResult | null>(null)
   const queryClient = useQueryClient()
@@ -48,14 +51,14 @@ export function CatalogImportDialog({
     >
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Nhập danh mục từ Excel</DialogTitle>
-          <DialogDescription>Tải tệp mẫu, điền dữ liệu rồi chọn tệp để nhập.</DialogDescription>
+          <DialogTitle>{t('import.title')}</DialogTitle>
+          <DialogDescription>{t('import.step1')}</DialogDescription>
         </DialogHeader>
         <Button variant="outline" onClick={() => void downloadCatalogTemplate(slug)}>
-          Tải tệp mẫu
+          {t('import.template')}
         </Button>
         <Input
-          aria-label="Tệp Excel"
+          aria-label={t('import.file')}
           type="file"
           accept=".xlsx"
           onChange={(event) => setFile(event.target.files?.[0] ?? null)}
@@ -63,16 +66,20 @@ export function CatalogImportDialog({
         {result && (
           <div>
             <p>
-              Tạo mới: {result.created} · Cập nhật: {result.updated} · Lỗi: {result.errors.length}
+              {t('import.result', {
+                created: result.created,
+                updated: result.updated,
+                errors: result.errors.length,
+              })}
             </p>
             {result.errors.length > 0 && (
               <div className="max-h-64 overflow-auto rounded border">
                 <table className="w-full text-sm">
                   <thead>
                     <tr>
-                      <th>Dòng</th>
-                      <th>Trường</th>
-                      <th>Lỗi</th>
+                      <th>{t('import.row')}</th>
+                      <th>{t('import.field')}</th>
+                      <th>{t('import.error')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -91,13 +98,13 @@ export function CatalogImportDialog({
         )}
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Đóng
+            {tc('actions.close')}
           </Button>
           <Button
             disabled={!file || mutation.isPending}
             onClick={() => file && mutation.mutate(file)}
           >
-            Nhập Excel
+            {tc('actions.import')}
           </Button>
         </DialogFooter>
       </DialogContent>

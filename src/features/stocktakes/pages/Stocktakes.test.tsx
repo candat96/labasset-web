@@ -98,6 +98,34 @@ it('lists stocktakes', async () => {
   )
 })
 
+it('creates a stocktake with a body validated like the API', async () => {
+  const saved: unknown[] = []
+  server.use(
+    http.post('/v1/stocktakes', async ({ request }) => {
+      const body = (await request.json()) as { name?: string; type?: string; scopeType?: string }
+      if (!body.name || !body.type || !body.scopeType) {
+        return HttpResponse.json(
+          { code: 'VALIDATION_ERROR', message: 'Thiếu tên/loại/phạm vi' },
+          { status: 400 },
+        )
+      }
+      saved.push(body)
+      return HttpResponse.json({ id: 'k2', code: 'KK-2' }, { status: 201 })
+    }),
+  )
+  renderWithProviders(<StocktakesPage />, {
+    path: '/stocktakes',
+    route: '/stocktakes',
+    routes: [{ path: '/stocktakes/:id', element: <div>DETAIL</div> }],
+  })
+  await userEvent.click(await screen.findByRole('button', { name: 'Tạo đợt' }))
+  await userEvent.type(await screen.findByLabelText('Tên'), 'Kiểm kho 10')
+  await userEvent.click(screen.getByRole('button', { name: 'Lưu' }))
+  await waitFor(() =>
+    expect(saved[0]).toMatchObject({ name: 'Kiểm kho 10', type: 'supply', scopeType: 'all' }),
+  )
+})
+
 it('posts counts with clientId after Ghi and Gửi', async () => {
   const posted: unknown[] = []
   server.use(

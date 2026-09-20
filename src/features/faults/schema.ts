@@ -13,7 +13,8 @@ export const faultStepSchema = z.object({
 
 export const faultPartSchema = z.object({
   name: z.string().trim().min(1, 'Bắt buộc'),
-  quantity: z.union([z.literal(''), z.number().positive()]),
+  // API (FaultPartDto) yêu cầu số nguyên ≥ 1.
+  quantity: z.number().int().min(1),
   note: optionalText,
   componentTypeId: optionalId,
   supplyId: optionalId,

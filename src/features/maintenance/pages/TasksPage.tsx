@@ -17,15 +17,20 @@ import { DatetimeField } from '@/components/form/datetime-field'
 import { FormField, FormItem, FormMessage } from '@/components/ui/form'
 import { AsyncSelect } from '@/components/form/async-select'
 import { useCan } from '@/app/guards/useCan'
-import { STAFF } from '@/routes/roles'
+import { ADM, STAFF } from '@/routes/roles'
 import { applyServerErrors, messageFor } from '@/api/errors'
 import { equipmentOptions, staffUserOptions } from '@/api/references'
+import { dayRangeToIso } from '@/lib/format/date-range'
+import { useAuthStore } from '@/stores/auth.store'
 import { createTask } from '../api'
-import { useInvalidateMaint, useTasks, useTemplates } from '../hooks'
+import { useInvalidateTasks, useTasks, useTemplates } from '../hooks'
 import { adhocSchema, type AdhocForm } from '../schema'
 import type { Task } from '../types'
+import { useTranslation } from 'react-i18next'
 
 export function Component() {
+  const { t } = useTranslation('maintenance')
+
   const canWrite = useCan(STAFF)
   const navigate = useNavigate()
   const table = useServerTable({
@@ -40,6 +45,8 @@ export function Component() {
       'planId',
     ],
   })
+  const canListUsers = useCan(ADM)
+  const myId = useAuthStore((s) => s.user?.id)
   const f = table.params.filters
   const params = {
     page: table.params.page,
@@ -50,13 +57,12 @@ export function Component() {
     assigneeId: f.assigneeId,
     equipmentId: f.equipmentId,
     departmentId: f.departmentId,
-    from: f.from,
-    to: f.to,
+    ...dayRangeToIso(f.from, f.to),
     planId: f.planId,
   }
   const list = useTasks(params)
   const templates = useTemplates()
-  const invalidate = useInvalidateMaint()
+  const invalidate = useInvalidateTasks()
   const [open, setOpen] = useState(false)
   const form = useForm<AdhocForm>({
     resolver: zodResolver(adhocSchema),
@@ -72,7 +78,7 @@ export function Component() {
     () => [
       {
         accessorKey: 'code',
-        header: 'Mã',
+        header: t('code'),
         cell: ({ row }) => (
           <Link
             className="text-primary font-mono text-xs hover:underline"
@@ -84,43 +90,43 @@ export function Component() {
       },
       {
         accessorKey: 'type',
-        header: 'Loại',
+        header: t('type'),
         cell: ({ row }) => <StatusBadge value={row.original.type} map={taskTypeMap} />,
       },
       {
         accessorKey: 'scheduledAt',
-        header: 'Lịch',
+        header: t('schedule'),
         cell: ({ getValue }) => formatDateTime(getValue<string>()),
       },
       {
         accessorKey: 'dueAt',
-        header: 'Hạn',
+        header: t('due'),
         cell: ({ getValue }) => formatDateTime(getValue<string>()),
       },
       {
         accessorKey: 'status',
-        header: 'Trạng thái',
+        header: t('status'),
         cell: ({ row }) => <StatusBadge value={row.original.status} map={taskStatusMap} />,
       },
       {
         accessorKey: 'overallPass',
-        header: 'Kết quả',
+        header: t('result'),
         cell: ({ row }) =>
           row.original.overallPass == null ? '—' : row.original.overallPass ? '✓' : '✗',
       },
     ],
-    [],
+    [t],
   )
   return (
     <>
       <PageHeader
-        title="Công việc bảo dưỡng"
+        title={t('tasksTitle')}
         actions={
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => table.setFilter('assigneeId', 'me')}>
-              Của tôi
+              {t('mine')}
             </Button>
-            {canWrite && <Button onClick={() => setOpen(true)}>Tạo đột xuất</Button>}
+            {canWrite && <Button onClick={() => setOpen(true)}>{t('createAdhoc')}</Button>}
           </div>
         }
       />
@@ -139,7 +145,7 @@ export function Component() {
         onRowClick={(row) => navigate(`/maintenance/tasks/${row.id}`)}
         toolbarLeft={
           <Input
-            aria-label="Tìm việc"
+            aria-label={t('searchTask')}
             value={table.inputQ}
             onChange={(e) => table.setQ(e.target.value)}
           />
@@ -148,18 +154,19 @@ export function Component() {
       <FormDialog
         open={open}
         onOpenChange={setOpen}
-        title="Tạo đột xuất"
+        title={t('createAdhoc')}
         form={form}
         onSubmit={async (values) => {
           try {
             const created = await createTask({
               equipmentId: values.equipmentId,
               scheduledAt: values.scheduledAt,
-              assigneeId: values.assigneeId ?? undefined,
+              // `GET /v1/users` chỉ ADM đọc được → role khác mặc định giao cho chính mình.
+              assigneeId: values.assigneeId ?? (canListUsers ? undefined : myId),
               templateId: values.templateId ?? undefined,
               notes: values.notes || undefined,
             })
-            toast.success('Đã tạo công việc')
+            toast.success(t('taskCreated'))
             void invalidate()
             setOpen(false)
             navigate(`/maintenance/tasks/${created.id}`)
@@ -174,7 +181,7 @@ export function Component() {
           render={({ field }) => (
             <FormItem>
               <AsyncSelect
-                label="Máy"
+                label={t('equipment')}
                 queryKey="equipment"
                 loadOptions={equipmentOptions}
                 value={field.value || null}
@@ -184,24 +191,29 @@ export function Component() {
             </FormItem>
           )}
         />
-        <DatetimeField control={form.control} name="scheduledAt" label="Lịch" />
-        <FormField
-          control={form.control}
-          name="assigneeId"
-          render={({ field }) => (
-            <FormItem>
-              <AsyncSelect
-                label="Người làm"
-                queryKey="staff-users"
-                loadOptions={staffUserOptions}
-                value={field.value}
-                onChange={field.onChange}
-                clearable
-              />
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <DatetimeField control={form.control} name="scheduledAt" label={t('schedule')} />
+        {/* `GET /v1/users` chỉ HOSPITAL_ADMIN đọc được → STAFF không gọi danh bạ. */}
+        {canListUsers ? (
+          <FormField
+            control={form.control}
+            name="assigneeId"
+            render={({ field }) => (
+              <FormItem>
+                <AsyncSelect
+                  label={t('assignee')}
+                  queryKey="staff-users"
+                  loadOptions={staffUserOptions}
+                  value={field.value}
+                  onChange={field.onChange}
+                  clearable
+                />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        ) : (
+          <p className="text-muted-foreground text-sm">{t('assigneeMe')}</p>
+        )}
         <FormField
           control={form.control}
           name="templateId"
@@ -223,7 +235,7 @@ export function Component() {
             </FormItem>
           )}
         />
-        <TextField control={form.control} name="notes" label="Ghi chú" />
+        <TextField control={form.control} name="notes" label={t('notes')} />
       </FormDialog>
     </>
   )

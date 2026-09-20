@@ -11,8 +11,11 @@ import { useCan } from '@/app/guards/useCan'
 import { STAFF } from '@/routes/roles'
 import { useTemplates } from '../hooks'
 import type { Template } from '../types'
+import { useTranslation } from 'react-i18next'
 
 export function Component() {
+  const { t } = useTranslation('maintenance')
+
   const canWrite = useCan(STAFF)
   const navigate = useNavigate()
   const table = useServerTable()
@@ -26,7 +29,7 @@ export function Component() {
     () => [
       {
         accessorKey: 'name',
-        header: 'Tên',
+        header: t('name'),
         cell: ({ row }) => (
           <Link
             className="text-primary hover:underline"
@@ -39,13 +42,13 @@ export function Component() {
       { accessorKey: 'model', header: 'Model' },
       {
         id: 'items',
-        header: 'Số mục',
+        header: t('itemCount'),
         cell: ({ row }) => row.original.items.length,
       },
       { accessorKey: 'version', header: 'Version' },
       {
         accessorKey: 'isActive',
-        header: 'Trạng thái',
+        header: t('status'),
         cell: ({ row }) => (
           <StatusBadge
             value={row.original.isActive ? 'active' : 'inactive'}
@@ -54,16 +57,16 @@ export function Component() {
         ),
       },
     ],
-    [],
+    [t],
   )
   return (
     <>
       <PageHeader
-        title="Checklist mẫu"
+        title={t('templatesTitle')}
         actions={
           canWrite && (
             <Button asChild>
-              <Link to="/maintenance/templates/new">Thêm mẫu</Link>
+              <Link to="/maintenance/templates/new">{t('createTemplate')}</Link>
             </Button>
           )
         }
@@ -83,7 +86,7 @@ export function Component() {
         onRowClick={(row) => navigate(`/maintenance/templates/${row.id}/edit`)}
         toolbarLeft={
           <Input
-            aria-label="Tìm mẫu"
+            aria-label={t('searchTemplate')}
             value={table.inputQ}
             onChange={(e) => table.setQ(e.target.value)}
           />

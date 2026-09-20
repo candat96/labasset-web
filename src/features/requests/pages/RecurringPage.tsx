@@ -6,10 +6,13 @@ import { PageHeader } from '@/components/page/PageHeader'
 import { formatDateTime } from '@/lib/format/date'
 import { listRecurring } from '../api'
 import type { components } from '@/api/schema'
+import { useTranslation } from 'react-i18next'
 
 type Row = components['schemas']['RecurringResponseDto']
 
 export function Component() {
+  const { t } = useTranslation('requests')
+
   const table = useServerTable()
   const list = useQuery({
     queryKey: ['requests', 'recurring', table.params],
@@ -18,22 +21,19 @@ export function Component() {
   const columns = useMemo<ColumnDef<Row>[]>(
     () => [
       { accessorKey: 'departmentId', header: 'Khoa' },
-      { accessorKey: 'dayOfMonth', header: 'Ngày trong tháng' },
-      { accessorKey: 'priority', header: 'Ưu tiên' },
+      { accessorKey: 'dayOfMonth', header: t('dayOfMonth') },
+      { accessorKey: 'priority', header: t('priority') },
       {
         accessorKey: 'lastGeneratedAt',
-        header: 'Sinh lần cuối',
+        header: t('lastGeneratedAt'),
         cell: ({ getValue }) => formatDateTime(getValue<string | null>()),
       },
     ],
-    [],
+    [t],
   )
   return (
     <>
-      <PageHeader
-        title="Phiếu định kỳ"
-        description="Hệ thống tự tạo phiếu nháp lúc 05:30 ngày đã chọn"
-      />
+      <PageHeader title={t('recurring')} description={t('recurringDesc')} />
       <DataTable
         tableId="recurring"
         columns={columns}

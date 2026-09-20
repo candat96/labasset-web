@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
+import { useTranslation } from 'react-i18next'
 import type { ColumnDef } from '@tanstack/react-table'
 import { toast } from 'sonner'
 import { DataTable, useServerTable } from '@/components/data-table'
@@ -7,17 +8,33 @@ import { PageHeader } from '@/components/page/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
+import { DatePicker } from '@/components/date-picker'
+import { FilterBar, FilterField, FilterPreset } from '@/components/filter-bar'
+import { MultiSelect } from '@/components/multi-select'
 import { StatusBadge } from '@/components/status-badge'
 import { AsyncSelect } from '@/components/form/async-select'
 import { equipmentStatusMap } from '@/lib/status-maps'
 import { formatDate, formatDateTime } from '@/lib/format/date'
+import { dayRangeToIso } from '@/lib/format/date-range'
 import { useCan } from '@/app/guards/useCan'
-import { STAFF } from '@/routes/roles'
-import { departmentOptions } from '@/api/references'
+import { ADM, STAFF } from '@/routes/roles'
+import {
+  departmentOptions,
+  resolveCatalogItem,
+  resolveDepartment,
+  resolveUser,
+} from '@/api/references'
 import { messageFor } from '@/api/errors'
 import { catalogOptions, downloadQrLabels, exportEquipment, userOptions } from '../api'
 import { useEquipmentList } from '../hooks'
-import { EQUIPMENT_STATUSES, type Equipment, type EquipmentStatus } from '../types'
+import { shortId, useUserNames } from '../components/lookups'
+import { EQUIPMENT_STATUSES, type Equipment, type EquipmentListParams } from '../types'
+
+/** Chỉ 6 cột API cho phép sort (xem `ListEquipmentDto`). */
+const SORT_KEYS = ['code', 'name', 'status', 'departmentId', 'commissionedAt', 'updatedAt'] as const
+type SortKey = (typeof SORT_KEYS)[number]
+const isSortKey = (value: string | undefined): value is SortKey =>
+  !!value && (SORT_KEYS as readonly string[]).includes(value)
 
 function plusDays(days: number) {
   const date = new Date()
@@ -26,7 +43,10 @@ function plusDays(days: number) {
 }
 
 export function Component() {
+  const { t } = useTranslation('equipment')
+  const isAdm = useCan(ADM)
   const canWrite = useCan(STAFF)
+  const staffNames = useUserNames(isAdm)
   const navigate = useNavigate()
   const table = useServerTable({
     filterKeys: [
@@ -41,7 +61,7 @@ export function Component() {
     ],
   })
   const f = table.params.filters
-  const params = {
+  const params: EquipmentListParams = {
     page: table.params.page,
     limit: table.params.limit,
     q: table.params.q || undefined,
@@ -50,14 +70,10 @@ export function Component() {
     manufacturerId: f.manufacturerId,
     staffId: f.staffId,
     status: f.status,
-    maintenanceDueBefore: f.maintenanceDueBefore
-      ? `${f.maintenanceDueBefore}T23:59:59.000Z`
-      : undefined,
-    calibrationDueBefore: f.calibrationDueBefore
-      ? `${f.calibrationDueBefore}T23:59:59.000Z`
-      : undefined,
+    maintenanceDueBefore: dayRangeToIso(undefined, f.maintenanceDueBefore).to,
+    calibrationDueBefore: dayRangeToIso(undefined, f.calibrationDueBefore).to,
     calibrationOverdue: f.calibrationOverdue === 'true' ? true : undefined,
-    sort: table.params.sort as EquipmentListParamsSort,
+    sort: isSortKey(table.params.sort) ? table.params.sort : undefined,
     order: table.params.order,
   }
   const list = useEquipmentList(params)
@@ -69,9 +85,10 @@ export function Component() {
       {
         id: 'select',
         header: '',
+        enableSorting: false,
         cell: ({ row }) => (
           <Checkbox
-            aria-label={`Chọn ${row.original.code}`}
+            aria-label={t('filters.selectRow', { code: row.original.code })}
             checked={selected.includes(row.original.id)}
             onClick={(event) => event.stopPropagation()}
             onCheckedChange={(value) => toggle(row.original.id, value === true)}
@@ -80,7 +97,8 @@ export function Component() {
       },
       {
         accessorKey: 'code',
-        header: 'Mã',
+        header: t('fields.code'),
+        meta: { label: t('fields.code') },
         cell: ({ row }) => (
           <Link
             className="text-primary font-mono text-xs hover:underline"
@@ -90,16 +108,59 @@ export function Component() {
           </Link>
         ),
       },
-      { accessorKey: 'name', header: 'Tên' },
-      { accessorKey: 'model', header: 'Model' },
-      { accessorKey: 'serial', header: 'Serial' },
-      { accessorKey: 'departmentName', header: 'Khoa' },
-      { accessorKey: 'groupName', header: 'Nhóm' },
-      { accessorKey: 'manufacturerName', header: 'Hãng' },
-      { accessorKey: 'location', header: 'Vị trí' },
+      { accessorKey: 'name', header: t('fields.name'), meta: { label: t('fields.name') } },
+      {
+        accessorKey: 'model',
+        header: t('fields.model'),
+        enableSorting: false,
+        meta: { label: t('fields.model') },
+      },
+      {
+        accessorKey: 'serial',
+        header: t('fields.serial'),
+        enableSorting: false,
+        meta: { label: t('fields.serial') },
+      },
+      {
+        id: 'departmentId',
+        accessorFn: (row) => row.departmentName ?? '',
+        header: t('fields.department'),
+        meta: { label: t('fields.department') },
+        cell: ({ row }) => row.original.departmentName ?? '—',
+      },
+      {
+        accessorKey: 'groupName',
+        header: t('fields.group'),
+        enableSorting: false,
+        meta: { label: t('fields.group') },
+      },
+      {
+        accessorKey: 'manufacturerName',
+        header: t('fields.manufacturer'),
+        enableSorting: false,
+        meta: { label: t('fields.manufacturer') },
+      },
+      {
+        accessorKey: 'location',
+        header: t('fields.location'),
+        enableSorting: false,
+        meta: { label: t('fields.location') },
+      },
+      {
+        accessorKey: 'staffInChargeUserId',
+        header: t('fields.staffInCharge'),
+        enableSorting: false,
+        meta: { label: t('fields.staffInCharge') },
+        cell: ({ row }) => {
+          const id = row.original.staffInChargeUserId
+          if (!id) return '—'
+          return staffNames.get(id) ?? shortId(id)
+        },
+      },
       {
         accessorKey: 'status',
-        header: 'Trạng thái',
+        header: t('fields.status'),
+        meta: { label: t('fields.status') },
         cell: ({ row }) => {
           const badge = <StatusBadge value={row.original.status} map={equipmentStatusMap} />
           return row.original.status === 'disposed' ? <s>{badge}</s> : badge
@@ -107,12 +168,16 @@ export function Component() {
       },
       {
         accessorKey: 'nextMaintenanceAt',
-        header: 'Bảo dưỡng kế tiếp',
+        header: t('fields.nextMaintenanceAt'),
+        enableSorting: false,
+        meta: { label: t('fields.nextMaintenanceAt') },
         cell: ({ getValue }) => formatDate(getValue<string | null>()),
       },
       {
         accessorKey: 'nextCalibrationAt',
-        header: 'Kiểm định kế tiếp',
+        header: t('fields.nextCalibrationAt'),
+        enableSorting: false,
+        meta: { label: t('fields.nextCalibrationAt') },
         cell: ({ row }) => (
           <span className={row.original.calibrationOverdue ? 'text-destructive' : undefined}>
             {formatDate(row.original.nextCalibrationAt) || '—'}
@@ -121,148 +186,21 @@ export function Component() {
       },
       {
         accessorKey: 'updatedAt',
-        header: 'Cập nhật',
+        header: t('fields.updatedAt'),
+        meta: { label: t('fields.updatedAt') },
         cell: ({ getValue }) => formatDateTime(getValue<string>()),
       },
     ],
-    [selected],
+    [selected, t, staffNames],
   )
   const selectedStatus = (f.status ?? '').split(',').filter(Boolean)
-  const toggleStatus = (status: EquipmentStatus, on: boolean) => {
-    const next = on ? [...selectedStatus, status] : selectedStatus.filter((item) => item !== status)
-    table.setFilter('status', next.length ? next.join(',') : undefined)
-  }
+  const dueIn30 = f.calibrationDueBefore === plusDays(30)
   return (
     <>
       <PageHeader
-        title="Hồ sơ thiết bị"
+        title={t('title')}
         actions={
-          canWrite && (
-            <Button asChild>
-              <Link to="/equipment/new">Thêm máy</Link>
-            </Button>
-          )
-        }
-      />
-      <DataTable
-        tableId="equipment"
-        columns={columns}
-        data={list.data?.items}
-        total={list.data?.total ?? 0}
-        params={table.params}
-        onPageChange={table.setPage}
-        onLimitChange={table.setLimit}
-        onSortChange={table.setSort}
-        isLoading={list.isPending}
-        error={list.error}
-        onRetry={() => void list.refetch()}
-        getRowId={(row) => row.id}
-        onRowClick={(row) => navigate(`/equipment/${row.id}`)}
-        toolbarLeft={
-          <>
-            <Input
-              aria-label="Tìm máy"
-              placeholder="Mã, tên, serial…"
-              value={table.inputQ}
-              onChange={(event) => table.setQ(event.target.value)}
-            />
-            <div className="min-w-48">
-              <AsyncSelect
-                label="Khoa"
-                queryKey="departments"
-                loadOptions={departmentOptions}
-                value={f.departmentId ?? null}
-                onChange={(value) =>
-                  table.setFilter('departmentId', typeof value === 'string' ? value : undefined)
-                }
-                clearable
-              />
-            </div>
-            <div className="min-w-48">
-              <AsyncSelect
-                label="Nhóm"
-                queryKey="equipment-groups"
-                loadOptions={(q) => catalogOptions('equipment-groups', q)}
-                value={f.groupId ?? null}
-                onChange={(value) =>
-                  table.setFilter('groupId', typeof value === 'string' ? value : undefined)
-                }
-                clearable
-              />
-            </div>
-            <div className="min-w-48">
-              <AsyncSelect
-                label="Hãng"
-                queryKey="manufacturers"
-                loadOptions={(q) => catalogOptions('manufacturers', q)}
-                value={f.manufacturerId ?? null}
-                onChange={(value) =>
-                  table.setFilter('manufacturerId', typeof value === 'string' ? value : undefined)
-                }
-                clearable
-              />
-            </div>
-            <div className="min-w-48">
-              <AsyncSelect
-                label="Phụ trách VT"
-                queryKey="staff"
-                loadOptions={userOptions}
-                value={f.staffId ?? null}
-                onChange={(value) =>
-                  table.setFilter('staffId', typeof value === 'string' ? value : undefined)
-                }
-                clearable
-              />
-            </div>
-            <fieldset className="flex flex-wrap gap-2">
-              <legend className="sr-only">Trạng thái</legend>
-              {EQUIPMENT_STATUSES.map((status) => (
-                <label key={status} className="flex items-center gap-1 text-xs">
-                  <Checkbox
-                    checked={selectedStatus.includes(status)}
-                    onCheckedChange={(value) => toggleStatus(status, value === true)}
-                  />
-                  {equipmentStatusMap[status]?.label}
-                </label>
-              ))}
-            </fieldset>
-            <Input
-              aria-label="Bảo dưỡng trước ngày"
-              type="date"
-              value={f.maintenanceDueBefore ?? ''}
-              onChange={(event) =>
-                table.setFilter('maintenanceDueBefore', event.target.value || undefined)
-              }
-            />
-            <Input
-              aria-label="Kiểm định trước ngày"
-              type="date"
-              value={f.calibrationDueBefore ?? ''}
-              onChange={(event) =>
-                table.setFilter('calibrationDueBefore', event.target.value || undefined)
-              }
-            />
-            <Button
-              type="button"
-              variant={f.calibrationDueBefore === plusDays(30) ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => table.setFilter('calibrationDueBefore', plusDays(30))}
-            >
-              Đến hạn kiểm định 30 ngày
-            </Button>
-            <label className="flex items-center gap-1 text-sm">
-              <Checkbox
-                checked={f.calibrationOverdue === 'true'}
-                onCheckedChange={(value) =>
-                  table.setFilter('calibrationOverdue', value === true ? 'true' : undefined)
-                }
-              />
-              Quá hạn kiểm định
-            </label>
-          </>
-        }
-        toolbarRight={
-          <>
+          <div className="flex flex-wrap gap-2">
             <Button
               variant="outline"
               size="sm"
@@ -274,7 +212,7 @@ export function Component() {
                 }
               }}
             >
-              Xuất Excel
+              {t('actions.export')}
             </Button>
             <Button
               variant="outline"
@@ -288,7 +226,7 @@ export function Component() {
                 }
               }}
             >
-              In tem QR
+              {t('actions.printQr')}
             </Button>
             <Button
               variant="outline"
@@ -296,14 +234,159 @@ export function Component() {
               disabled={selected.length !== 2}
               onClick={() => navigate(`/equipment/compare?ids=${selected.join(',')}`)}
             >
-              So sánh
+              {t('actions.compare')}
             </Button>
-          </>
+            {canWrite && (
+              <Button asChild>
+                <Link to="/equipment/new">{t('create')}</Link>
+              </Button>
+            )}
+          </div>
+        }
+      />
+      <DataTable
+        tableId="equipment"
+        columns={columns}
+        data={list.data?.items}
+        total={list.data?.total ?? 0}
+        params={table.params}
+        onPageChange={(page) => {
+          setSelected([])
+          table.setPage(page)
+        }}
+        onLimitChange={(limit) => {
+          setSelected([])
+          table.setLimit(limit)
+        }}
+        onSortChange={(sort, order) =>
+          table.setSort(isSortKey(sort) ? sort : undefined, isSortKey(sort) ? order : undefined)
+        }
+        isLoading={list.isPending}
+        error={list.error}
+        onRetry={() => void list.refetch()}
+        getRowId={(row) => row.id}
+        onRowClick={(row) => navigate(`/equipment/${row.id}`)}
+        toolbarLeft={
+          <FilterBar
+            presets={
+              <FilterPreset
+                active={dueIn30}
+                onClick={() =>
+                  table.setFilter('calibrationDueBefore', dueIn30 ? undefined : plusDays(30))
+                }
+              >
+                {t('filters.dueIn30')}
+              </FilterPreset>
+            }
+            onClear={table.params.q || Object.keys(f).length ? table.reset : undefined}
+          >
+            <FilterField label={t('filters.search')}>
+              <Input
+                aria-label={t('filters.search')}
+                placeholder={t('filters.searchPlaceholder')}
+                value={table.inputQ}
+                onChange={(event) => table.setQ(event.target.value)}
+              />
+            </FilterField>
+            <FilterField label={t('filters.department')}>
+              <AsyncSelect
+                label={t('filters.department')}
+                queryKey="departments"
+                loadOptions={departmentOptions}
+                value={f.departmentId ?? null}
+                onChange={(value) =>
+                  table.setFilter('departmentId', typeof value === 'string' ? value : undefined)
+                }
+                resolveOption={resolveDepartment}
+                clearable
+                showLabel={false}
+              />
+            </FilterField>
+            <FilterField label={t('filters.group')}>
+              <AsyncSelect
+                label={t('filters.group')}
+                queryKey="equipment-groups"
+                loadOptions={(q) => catalogOptions('equipment-groups', q)}
+                value={f.groupId ?? null}
+                onChange={(value) =>
+                  table.setFilter('groupId', typeof value === 'string' ? value : undefined)
+                }
+                resolveOption={(id) => resolveCatalogItem('equipment-groups', id)}
+                clearable
+                showLabel={false}
+              />
+            </FilterField>
+            <FilterField label={t('filters.manufacturer')}>
+              <AsyncSelect
+                label={t('filters.manufacturer')}
+                queryKey="manufacturers"
+                loadOptions={(q) => catalogOptions('manufacturers', q)}
+                value={f.manufacturerId ?? null}
+                onChange={(value) =>
+                  table.setFilter('manufacturerId', typeof value === 'string' ? value : undefined)
+                }
+                resolveOption={(id) => resolveCatalogItem('manufacturers', id)}
+                clearable
+                showLabel={false}
+              />
+            </FilterField>
+            {isAdm && (
+              <FilterField label={t('filters.staff')}>
+                <AsyncSelect
+                  label={t('filters.staff')}
+                  queryKey="staff"
+                  loadOptions={(q) => userOptions(q)}
+                  value={f.staffId ?? null}
+                  onChange={(value) =>
+                    table.setFilter('staffId', typeof value === 'string' ? value : undefined)
+                  }
+                  resolveOption={resolveUser}
+                  clearable
+                  showLabel={false}
+                />
+              </FilterField>
+            )}
+            <FilterField label={t('filters.status')}>
+              <MultiSelect
+                value={selectedStatus}
+                onChange={(next) =>
+                  table.setFilter('status', next.length ? next.join(',') : undefined)
+                }
+                options={EQUIPMENT_STATUSES.map((status) => ({
+                  value: status,
+                  label: equipmentStatusMap[status]?.label ?? status,
+                }))}
+                placeholder={t('filters.status')}
+              />
+            </FilterField>
+            <FilterField label={t('filters.maintenanceBefore')}>
+              <DatePicker
+                ariaLabel={t('filters.maintenanceBefore')}
+                value={f.maintenanceDueBefore ?? ''}
+                onChange={(value) => table.setFilter('maintenanceDueBefore', value)}
+              />
+            </FilterField>
+            <FilterField label={t('filters.calibrationBefore')}>
+              <DatePicker
+                ariaLabel={t('filters.calibrationBefore')}
+                value={f.calibrationDueBefore ?? ''}
+                onChange={(value) => table.setFilter('calibrationDueBefore', value)}
+              />
+            </FilterField>
+            <FilterField label={t('filters.overdue')}>
+              <label className="flex h-9 items-center gap-2 rounded-md border px-3 text-sm">
+                <Checkbox
+                  checked={f.calibrationOverdue === 'true'}
+                  onCheckedChange={(value) =>
+                    table.setFilter('calibrationOverdue', value === true ? 'true' : undefined)
+                  }
+                />
+                {t('filters.overdue')}
+              </label>
+            </FilterField>
+          </FilterBar>
         }
       />
     </>
   )
 }
-
-type EquipmentListParamsSort =
-  'code' | 'name' | 'status' | 'departmentId' | 'commissionedAt' | 'updatedAt' | undefined

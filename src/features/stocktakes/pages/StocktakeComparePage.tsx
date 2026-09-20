@@ -7,6 +7,7 @@ import { ErrorState } from '@/components/page/ErrorState'
 import { formatQty } from '@/lib/format/number'
 import { isApiError, messageFor } from '@/api/errors'
 import { compareStocktakes } from '../api'
+import { useTranslation } from 'react-i18next'
 
 function qtyNonZero(value: string | null | undefined) {
   if (value == null || value === '') return false
@@ -14,6 +15,8 @@ function qtyNonZero(value: string | null | undefined) {
 }
 
 export function Component() {
+  const { t } = useTranslation('stocktakes')
+
   const { id = '' } = useParams()
   const [params] = useSearchParams()
   const withSessionId = params.get('withSessionId') ?? ''
@@ -31,43 +34,43 @@ export function Component() {
   if (!withSessionId) {
     return (
       <>
-        <PageHeader title="So sánh đợt kiểm kê" />
-        <p className="text-muted-foreground text-sm">Thiếu withSessionId trên URL.</p>
+        <PageHeader title={t('compareTitle')} />
+        <p className="text-muted-foreground text-sm">{t('missingSession')}</p>
       </>
     )
   }
-  if (compare.isPending) return <p role="status">Đang so sánh…</p>
+  if (compare.isPending) return <p role="status">{t('comparing')}</p>
   if (compare.error)
     return <ErrorState error={compare.error} onRetry={() => void compare.refetch()} />
   const data = compare.data
-  if (!data) return <p role="status">Đang so sánh…</p>
+  if (!data) return <p role="status">{t('comparing')}</p>
   const summary = data.summary
   return (
     <>
-      <PageHeader title="So sánh đợt kiểm kê" />
+      <PageHeader title={t('compareTitle')} />
       <dl className="mb-4 grid gap-3 text-sm sm:grid-cols-3">
         <div>
-          <dt className="text-muted-foreground">Chênh đợt trước</dt>
+          <dt className="text-muted-foreground">{t('prevDiff')}</dt>
           <dd>{summary.prevDiffCount}</dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">Chênh đợt này</dt>
+          <dt className="text-muted-foreground">{t('currDiff')}</dt>
           <dd>{summary.currDiffCount}</dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">Lặp lại</dt>
+          <dt className="text-muted-foreground">{t('repeated')}</dt>
           <dd>{summary.repeated}</dd>
         </div>
       </dl>
       <table className="w-full text-sm">
         <thead>
           <tr className="text-left">
-            <th>Khóa</th>
-            <th>Mã</th>
-            <th>Tên</th>
-            <th>Chênh đợt trước</th>
-            <th>Chênh đợt này</th>
-            <th>Lặp lại</th>
+            <th>{t('key')}</th>
+            <th>{t('code')}</th>
+            <th>{t('name')}</th>
+            <th>{t('prevDiff')}</th>
+            <th>{t('currDiff')}</th>
+            <th>{t('repeated')}</th>
           </tr>
         </thead>
         <tbody>

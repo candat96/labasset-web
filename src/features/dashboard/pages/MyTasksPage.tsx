@@ -3,8 +3,11 @@ import { useQuery } from '@tanstack/react-query'
 import { PageHeader } from '@/components/page/PageHeader'
 import { api, unwrap } from '@/api/client'
 import { pageQuery } from '@/api/paths'
+import { useTranslation } from 'react-i18next'
 
 export function Component() {
+  const { t } = useTranslation('dashboard')
+
   const repairs = useQuery({
     queryKey: ['my-tasks', 'repairs'],
     queryFn: () =>
@@ -42,7 +45,7 @@ export function Component() {
     queryFn: () =>
       unwrap(
         api.GET('/v1/requests', {
-          params: { query: pageQuery({ pendingFor: 'me' as const, page: 1, limit: 20 }) as never },
+          params: { query: pageQuery({ pendingFor: 'me' as const, page: 1, limit: 20 }) },
         }),
       ),
   })
@@ -57,25 +60,25 @@ export function Component() {
   })
   const groups = [
     {
-      title: 'Sửa chữa của tôi',
+      title: t('repairsMine'),
       items: repairs.data?.items ?? [],
       href: (id: string) => `/repairs/${id}`,
       code: (r: { code: string }) => r.code,
     },
     {
-      title: 'Bảo dưỡng của tôi',
+      title: t('maintenanceMine'),
       items: tasks.data?.items ?? [],
       href: (id: string) => `/maintenance/tasks/${id}`,
       code: (r: { code: string }) => r.code,
     },
     {
-      title: 'Chờ tôi duyệt',
+      title: t('pendingApproval'),
       items: pending.data?.items ?? [],
       href: (id: string) => `/requests/${id}`,
       code: (r: { code: string }) => r.code,
     },
     {
-      title: 'Chờ nhận',
+      title: t('awaitingReceive'),
       items: issued.data?.items ?? [],
       href: (id: string) => `/requests/${id}`,
       code: (r: { code: string }) => r.code,
@@ -83,7 +86,7 @@ export function Component() {
   ].sort((a, b) => b.items.length - a.items.length)
   return (
     <>
-      <PageHeader title="Việc của tôi" />
+      <PageHeader title={t('myTasksTitle')} />
       <div className="space-y-6">
         {groups.map((group) => (
           <section key={group.title}>
@@ -98,7 +101,7 @@ export function Component() {
                   </Link>
                 </li>
               ))}
-              {group.items.length === 0 && <li className="text-muted-foreground">Không có việc</li>}
+              {group.items.length === 0 && <li className="text-muted-foreground">{t('empty')}</li>}
             </ul>
           </section>
         ))}

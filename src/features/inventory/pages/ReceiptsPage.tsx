@@ -1,6 +1,6 @@
-import { useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { toast } from 'sonner'
 import { DataTable, useServerTable } from '@/components/data-table'
@@ -11,14 +11,19 @@ import { StatusBadge } from '@/components/status-badge'
 import { qcStatusMap, stockDocStatusMap } from '@/lib/status-maps'
 import { formatDateTime } from '@/lib/format/date'
 import { formatVnd } from '@/lib/format/money'
+import { dayRangeToIso } from '@/lib/format/date-range'
 import { useCan } from '@/app/guards/useCan'
 import { ADM, STAFF } from '@/routes/roles'
 import { useConfirm } from '@/components/confirm-dialog'
 import { messageFor } from '@/api/errors'
+import { FilterBar, FilterField } from '@/components/filter-bar'
 import { listReceipts, postReceipt } from '../api'
 import type { Receipt } from '../types'
+import { useTranslation } from 'react-i18next'
 
 export function Component() {
+  const { t } = useTranslation('inventory')
+
   const canWrite = useCan(STAFF)
   const isAdm = useCan(ADM)
   const navigate = useNavigate()
@@ -32,10 +37,16 @@ export function Component() {
     q: table.params.q || undefined,
     status: f.status,
     type: f.type,
+    warehouseId: f.warehouseId,
     qcStatus: f.qcStatus,
-    from: f.from,
-    to: f.to,
+    ...dayRangeToIso(f.from, f.to),
   }
+  const qc = useQueryClient()
+  const invalidate = useCallback(() => {
+    void qc.invalidateQueries({ queryKey: ['stock', 'receipts'] })
+    void qc.invalidateQueries({ queryKey: ['stock', 'balances'] })
+    void qc.invalidateQueries({ queryKey: ['stock', 'lots'] })
+  }, [qc])
   const list = useQuery({
     queryKey: ['stock', 'receipts', params],
     queryFn: () => listReceipts(params),
@@ -46,7 +57,7 @@ export function Component() {
     () => [
       {
         accessorKey: 'code',
-        header: 'Mã',
+        header: t('code'),
         cell: ({ row }) => (
           <Link
             className="text-primary font-mono text-xs hover:underline"
@@ -56,10 +67,10 @@ export function Component() {
           </Link>
         ),
       },
-      { accessorKey: 'type', header: 'Loại' },
+      { accessorKey: 'type', header: t('type') },
       {
         accessorKey: 'totalAmount',
-        header: 'Tổng',
+        header: t('totalAmount'),
         cell: ({ getValue }) => formatVnd(getValue<string>()),
       },
       {
@@ -74,12 +85,12 @@ export function Component() {
       },
       {
         accessorKey: 'status',
-        header: 'Trạng thái',
+        header: t('status'),
         cell: ({ row }) => <StatusBadge value={row.original.status} map={stockDocStatusMap} />,
       },
       {
         accessorKey: 'receivedAt',
-        header: 'Ngày nhận',
+        header: t('receivedAt'),
         cell: ({ getValue }) => formatDateTime(getValue<string | undefined>()),
       },
       {
@@ -93,32 +104,32 @@ export function Component() {
               size="sm"
               onClick={async (event) => {
                 event.stopPropagation()
-                if ((await confirm({ title: 'Ghi sổ phiếu nhập?' })) === false) return
+                if ((await confirm({ title: t('postReceiptConfirm') })) === false) return
                 try {
                   await postReceipt(row.original.id)
-                  toast.success('Đã ghi sổ')
-                  void list.refetch()
+                  toast.success(t('posted'))
+                  invalidate()
                 } catch (error) {
                   toast.error(messageFor(error))
                 }
               }}
             >
-              Ghi sổ
+              {t('post')}
             </Button>
           ) : null,
       },
     ],
-    [canWrite, isAdm, confirm, list],
+    [canWrite, isAdm, confirm, invalidate, t],
   )
   return (
     <>
       {dialog}
       <PageHeader
-        title="Phiếu nhập"
+        title={t('receiptsTitle')}
         actions={
           canWrite && (
             <Button asChild>
-              <Link to="/stock/receipts/new">Tạo phiếu nhập</Link>
+              <Link to="/stock/receipts/new">{t('createReceipt')}</Link>
             </Button>
           )
         }
@@ -137,11 +148,16 @@ export function Component() {
         getRowId={(row) => row.id}
         onRowClick={(row) => navigate(`/stock/receipts/${row.id}`)}
         toolbarLeft={
-          <Input
-            aria-label="Tìm phiếu nhập"
-            value={table.inputQ}
-            onChange={(e) => table.setQ(e.target.value)}
-          />
+          <FilterBar onClear={table.inputQ ? () => table.setQ('') : undefined}>
+            <FilterField label={t('searchReceipt')}>
+              <Input
+                aria-label={t('searchReceipt')}
+                placeholder={t('searchReceipt')}
+                value={table.inputQ}
+                onChange={(e) => table.setQ(e.target.value)}
+              />
+            </FilterField>
+          </FilterBar>
         }
       />
     </>

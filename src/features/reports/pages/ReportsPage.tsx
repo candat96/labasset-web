@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { toast } from 'sonner'
 import { isApiError, messageFor } from '@/api/errors'
@@ -23,6 +23,7 @@ import {
   type ReportParamValues,
 } from '../api'
 import { SchemaParamsForm, type SchemaParamsFormHandle } from '../schema-form'
+import { useTranslation } from 'react-i18next'
 
 function formatCell(type: ReportColumn['type'], value: unknown): string {
   if (value == null || value === '') return '—'
@@ -50,7 +51,10 @@ function groupedReports(reports: ReportMeta[]) {
 }
 
 export function Component() {
+  const { t } = useTranslation('reports')
+
   const navigate = useNavigate()
+  const qc = useQueryClient()
   const [sp, setSp] = useSearchParams()
   const table = useServerTable({ filterKeys: ['key'] })
   const key = table.params.filters.key ?? sp.get('key') ?? undefined
@@ -97,7 +101,7 @@ export function Component() {
 
   const exportReport = useMutation({
     mutationFn: (format: 'xlsx' | 'pdf') => runReport(selected!.key, readParams(), format),
-    onSuccess: () => toast.success('Đã tải tệp'),
+    onSuccess: () => toast.success(t('fileDownloaded')),
     onError: (error, format) => {
       if (isApiError(error) && error.code === 'REPORT_TOO_LARGE') {
         setTooLarge(true)
@@ -114,7 +118,8 @@ export function Component() {
   const background = useMutation({
     mutationFn: () => runReportJob(selected!.key, readParams(), bgFormat),
     onSuccess: () => {
-      toast.success('Đã tạo báo cáo nền')
+      toast.success(t('jobCreated'))
+      void qc.invalidateQueries({ queryKey: ['report-jobs'] })
       void navigate('/reports/jobs')
     },
     onError: (error) => toast.error(messageFor(error)),
@@ -145,21 +150,19 @@ export function Component() {
   return (
     <>
       <PageHeader
-        title="Báo cáo"
+        title={t('report')}
         actions={
           <div className="flex flex-wrap gap-2">
             <Button asChild variant="outline">
-              <Link to="/reports/jobs">Báo cáo nền</Link>
+              <Link to="/reports/jobs">{t('jobsTitle')}</Link>
             </Button>
             <Button asChild variant="outline">
-              <Link to="/reports/builder">Báo cáo tuỳ chỉnh</Link>
+              <Link to="/reports/builder">{t('builderTitle')}</Link>
             </Button>
           </div>
         }
       />
-      <p className="text-muted-foreground mb-3 text-sm">
-        API D1 chưa có — danh sách theo hợp đồng, chạy thật khi backend sẵn sàng.
-      </p>
+      <p className="text-muted-foreground mb-3 text-sm">{t('reportsNote')}</p>
       <div className="grid gap-4 lg:grid-cols-[240px_1fr]">
         <aside className="space-y-3">
           {groups.map((group) => (
@@ -204,7 +207,7 @@ export function Component() {
                   disabled={!selected || exportReport.isPending}
                   onClick={() => exportReport.mutate('xlsx')}
                 >
-                  Xuất Excel
+                  {t('exportExcel')}
                 </Button>
                 <Button
                   type="button"
@@ -212,21 +215,21 @@ export function Component() {
                   disabled={!selected || exportReport.isPending}
                   onClick={() => exportReport.mutate('pdf')}
                 >
-                  Xuất PDF
+                  {t('exportPdf')}
                 </Button>
               </div>
               {showBackground && (
                 <Alert>
-                  <AlertTitle>Báo cáo quá lớn</AlertTitle>
+                  <AlertTitle>{t('tooLarge')}</AlertTitle>
                   <AlertDescription className="flex flex-wrap items-center gap-2">
-                    Hãy chạy nền để xuất tệp khi xong.
+                    {t('tooLargeDesc')}
                     <Button
                       type="button"
                       size="sm"
                       disabled={background.isPending}
                       onClick={() => background.mutate()}
                     >
-                      Chạy nền
+                      {t('runBackground')}
                     </Button>
                   </AlertDescription>
                 </Alert>
@@ -249,12 +252,12 @@ export function Component() {
                   error={viewTooLarge ? undefined : view.error}
                   onRetry={() => void view.refetch()}
                   getRowId={(row) => String(row._rid)}
-                  emptyTitle="Không có dòng nào"
+                  emptyTitle={t('emptyRows')}
                 />
               )}
             </div>
           ) : (
-            <p className="text-muted-foreground">Chọn một báo cáo.</p>
+            <p className="text-muted-foreground">{t('pickReport')}</p>
           )}
         </section>
       </div>

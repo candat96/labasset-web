@@ -1,4 +1,19 @@
 {
   "title": "Nhật ký hệ thống",
-  "limited": "Kết quả bị giới hạn"
+  "limited": "Kết quả bị giới hạn",
+  "columns": {
+    "createdAt": "Thời gian",
+    "user": "Người dùng",
+    "entityType": "Đối tượng",
+    "action": "Hành động",
+    "entityId": "Mã bản ghi",
+    "ip": "IP"
+  },
+  "filter": {
+    "from": "Từ ngày",
+    "to": "Đến ngày",
+    "user": "Người dùng",
+    "entityType": "Loại đối tượng",
+    "entityTypePlaceholder": "entityType"
+  }
 }

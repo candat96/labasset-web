@@ -12,5 +12,11 @@
   "markRead": "Đánh dấu đã đọc",
   "allRead": "Đã đánh dấu tất cả là đã đọc",
   "polling": "Đang dùng chế độ cập nhật định kỳ",
-  "preferences": "Tuỳ chọn thông báo"
+  "preferences": "Tuỳ chọn thông báo",
+  "preferencesSaved": "Đã lưu tuỳ chọn thông báo",
+  "loading": "Đang tải…",
+  "retry": "Thử lại",
+  "push": "Đẩy tới thiết bị",
+  "inapp": "Trong ứng dụng",
+  "savePreferences": "Lưu tuỳ chọn"
 }

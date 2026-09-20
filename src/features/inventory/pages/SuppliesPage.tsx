@@ -15,8 +15,11 @@ import { STAFF } from '@/routes/roles'
 import { messageFor } from '@/api/errors'
 import { asSupplyPage, exportSupplies, listSupplies } from '../api'
 import type { Supply } from '../types'
+import { useTranslation } from 'react-i18next'
 
 export function Component() {
+  const { t } = useTranslation('inventory')
+
   const canWrite = useCan(STAFF)
   const navigate = useNavigate()
   const table = useServerTable({
@@ -38,7 +41,7 @@ export function Component() {
     () => [
       {
         accessorKey: 'code',
-        header: 'Mã',
+        header: t('code'),
         cell: ({ row }) => (
           <Link
             className="text-primary font-mono text-xs hover:underline"
@@ -48,24 +51,24 @@ export function Component() {
           </Link>
         ),
       },
-      { accessorKey: 'name', header: 'Tên' },
+      { accessorKey: 'name', header: t('name') },
       {
         accessorKey: 'trackLot',
-        header: 'Theo lô',
-        cell: ({ row }) => (row.original.trackLot ? 'Lô' : '—'),
+        header: t('trackLot'),
+        cell: ({ row }) => (row.original.trackLot ? t('lot') : '—'),
       },
       {
         accessorKey: 'minStock',
-        header: 'Tồn min',
+        header: t('minStock'),
       },
       {
         accessorKey: 'refPrice',
-        header: 'Giá',
+        header: t('price'),
         cell: ({ getValue }) => formatVnd(getValue<string | null>()),
       },
       {
         accessorKey: 'isActive',
-        header: 'Trạng thái',
+        header: t('status'),
         cell: ({ row }) => (
           <StatusBadge
             value={row.original.isActive ? 'active' : 'inactive'}
@@ -74,23 +77,23 @@ export function Component() {
         ),
       },
     ],
-    [],
+    [t],
   )
   return (
     <>
       <PageHeader
-        title="Danh mục vật tư"
+        title={t('suppliesTitle')}
         actions={
           <div className="flex gap-2">
             <Button
               variant="outline"
               onClick={() => exportSupplies().catch((e) => toast.error(messageFor(e)))}
             >
-              Xuất Excel
+              {t('exportExcel')}
             </Button>
             {canWrite && (
               <Button asChild>
-                <Link to="/supplies/new">Thêm vật tư</Link>
+                <Link to="/supplies/new">{t('createSupply')}</Link>
               </Button>
             )}
           </div>
@@ -111,7 +114,7 @@ export function Component() {
         onRowClick={(row) => navigate(`/supplies/${row.id}`)}
         toolbarLeft={
           <Input
-            aria-label="Tìm vật tư"
+            aria-label={t('searchSupply')}
             value={table.inputQ}
             onChange={(e) => table.setQ(e.target.value)}
           />

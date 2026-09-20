@@ -1,13 +1,15 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import type { ColumnDef } from '@tanstack/react-table'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { DataTable, useServerTable } from '@/components/data-table'
 import { PageHeader } from '@/components/page/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { StatusBadge } from '@/components/status-badge'
 import { AsyncSelect } from '@/components/form/async-select'
+import { FilterBar, FilterField } from '@/components/filter-bar'
 import {
   Select,
   SelectContent,
@@ -19,26 +21,51 @@ import { faultSeverityMap, faultStatusMap } from '@/lib/status-maps'
 import { formatDateTime } from '@/lib/format/date'
 import { useCan } from '@/app/guards/useCan'
 import { ADM, STAFF } from '@/routes/roles'
-import { catalogOptions } from '@/api/references'
+import { catalogOptions, resolveCatalogItem } from '@/api/references'
 import { listFaultSuggestions } from '../api'
-import { useFaults } from '../hooks'
+import { faultKeys, useFaults } from '../hooks'
 import {
   FAULT_SEVERITIES,
   FAULT_STATUSES,
   type Fault,
   type FaultListParams,
-  type FaultScope,
   type FaultSeverity,
   type FaultStatus,
 } from '../types'
 
-const SCOPE_LABEL: Record<FaultScope, string> = {
-  model: 'Model',
-  group: 'Nhóm',
-  all: 'Tất cả',
+/** Ô lọc gõ liên tục: giữ giá trị nháp rồi mới đẩy lên URL sau 300 ms. */
+function DebouncedFilterInput({
+  label,
+  placeholder,
+  value,
+  onCommit,
+}: {
+  label: string
+  placeholder?: string
+  value: string | undefined
+  onCommit: (value: string | undefined) => void
+}) {
+  const [draft, setDraft] = useState(value ?? '')
+  useEffect(() => {
+    setDraft(value ?? '')
+  }, [value])
+  useEffect(() => {
+    if (draft === (value ?? '')) return
+    const timer = setTimeout(() => onCommit(draft || undefined), 300)
+    return () => clearTimeout(timer)
+  }, [draft, value, onCommit])
+  return (
+    <Input
+      aria-label={label}
+      placeholder={placeholder}
+      value={draft}
+      onChange={(event) => setDraft(event.target.value)}
+    />
+  )
 }
 
 export function Component() {
+  const { t } = useTranslation('faults')
   const canWrite = useCan(STAFF)
   const isAdm = useCan(ADM)
   const navigate = useNavigate()
@@ -61,7 +88,7 @@ export function Component() {
   }
   const list = useFaults(params)
   const pending = useQuery({
-    queryKey: ['faults', 'suggestions', 'pending-count'],
+    queryKey: [...faultKeys.suggestions, 'pending-count'],
     queryFn: () => listFaultSuggestions({ status: 'pending', page: 1, limit: 1 }),
     enabled: isAdm,
   })
@@ -69,7 +96,7 @@ export function Component() {
     () => [
       {
         accessorKey: 'errorCode',
-        header: 'Mã lỗi',
+        header: t('columns.errorCode'),
         cell: ({ row }) => (
           <Link
             className="text-primary font-mono text-xs hover:underline"
@@ -79,62 +106,63 @@ export function Component() {
           </Link>
         ),
       },
-      { accessorKey: 'title', header: 'Tiêu đề' },
+      { accessorKey: 'title', header: t('columns.title') },
       {
         accessorKey: 'scope',
-        header: 'Phạm vi',
+        header: t('columns.scope'),
         cell: ({ row }) => {
           const scope = row.original.scope
           const extra = scope === 'model' && row.original.model ? ` · ${row.original.model}` : ''
-          return `${SCOPE_LABEL[scope]}${extra}`
+          return `${t(`scope.${scope}`)}${extra}`
         },
       },
       {
         accessorKey: 'severity',
-        header: 'Mức độ',
+        header: t('columns.severity'),
         cell: ({ row }) => <StatusBadge value={row.original.severity} map={faultSeverityMap} />,
       },
       {
         accessorKey: 'status',
-        header: 'Trạng thái',
+        header: t('columns.status'),
         cell: ({ row }) => <StatusBadge value={row.original.status} map={faultStatusMap} />,
       },
-      { accessorKey: 'viewCount', header: 'Lượt xem' },
+      { accessorKey: 'viewCount', header: t('columns.viewCount') },
       {
         id: 'helpful',
-        header: 'Hữu ích',
+        header: t('columns.helpful'),
         cell: ({ row }) => `👍 ${row.original.helpfulCount}`,
       },
       {
         accessorKey: 'version',
-        header: 'Version',
+        header: t('columns.version'),
         cell: ({ row }) => `v${row.original.version}`,
       },
       {
         accessorKey: 'updatedAt',
-        header: 'Cập nhật',
+        header: t('columns.updatedAt'),
         cell: ({ getValue }) => formatDateTime(getValue<string>()),
       },
     ],
-    [],
+    [t],
   )
   return (
     <>
       <PageHeader
-        title="Thư viện lỗi"
+        title={t('title')}
         actions={
           <div className="flex flex-wrap gap-2">
             {isAdm && (
               <Button variant="outline" asChild>
                 <Link to="/faults/suggestions">
-                  Đề xuất chờ duyệt
-                  {pending.data?.total ? ` (${pending.data.total})` : ''}
+                  {pending.data?.total
+                    ? t('suggestions.buttonCount', { n: pending.data.total })
+                    : t('suggestions.button')}
                 </Link>
               </Button>
             )}
             {canWrite && (
               <Button asChild>
-                <Link to="/faults/new">Thêm lỗi</Link>
+                <Link to="/faults/new">{t('create')}</Link>
               </Button>
             )}
           </div>
@@ -154,102 +182,118 @@ export function Component() {
         getRowId={(row) => row.id}
         onRowClick={(row) => navigate(`/faults/${row.id}`)}
         toolbarLeft={
-          <>
-            <Input
-              aria-label="Tìm lỗi"
-              placeholder="Tìm không dấu…"
-              value={table.inputQ}
-              onChange={(event) => table.setQ(event.target.value)}
-            />
-            <Input
-              aria-label="Mã lỗi"
-              placeholder="Mã lỗi"
-              value={f.errorCode ?? ''}
-              onChange={(event) => table.setFilter('errorCode', event.target.value || undefined)}
-            />
-            <Input
-              aria-label="Model"
-              placeholder="Model"
-              value={f.model ?? ''}
-              onChange={(event) => table.setFilter('model', event.target.value || undefined)}
-            />
-            <div className="min-w-48">
+          <FilterBar onClear={table.params.q || Object.keys(f).length ? table.reset : undefined}>
+            <FilterField label={t('filters.q')}>
+              <Input
+                aria-label={t('filters.q')}
+                placeholder={t('filters.qPlaceholder')}
+                value={table.inputQ}
+                onChange={(event) => table.setQ(event.target.value)}
+              />
+            </FilterField>
+            <FilterField label={t('filters.errorCode')}>
+              <DebouncedFilterInput
+                label={t('filters.errorCode')}
+                placeholder={t('filters.errorCode')}
+                value={f.errorCode}
+                onCommit={(value) => table.setFilter('errorCode', value)}
+              />
+            </FilterField>
+            <FilterField label={t('filters.model')}>
+              <DebouncedFilterInput
+                label={t('filters.model')}
+                placeholder={t('filters.model')}
+                value={f.model}
+                onCommit={(value) => table.setFilter('model', value)}
+              />
+            </FilterField>
+            <FilterField label={t('filters.manufacturer')}>
               <AsyncSelect
-                label="Hãng"
+                label={t('filters.manufacturer')}
                 queryKey="manufacturers"
                 loadOptions={(q) => catalogOptions('manufacturers', q)}
+                resolveOption={(id) => resolveCatalogItem('manufacturers', id)}
                 value={f.manufacturerId ?? null}
                 onChange={(value) =>
                   table.setFilter('manufacturerId', typeof value === 'string' ? value : undefined)
                 }
                 clearable
+                showLabel={false}
               />
-            </div>
-            <div className="min-w-48">
+            </FilterField>
+            <FilterField label={t('filters.group')}>
               <AsyncSelect
-                label="Nhóm máy"
+                label={t('filters.group')}
                 queryKey="equipment-groups"
                 loadOptions={(q) => catalogOptions('equipment-groups', q)}
+                resolveOption={(id) => resolveCatalogItem('equipment-groups', id)}
                 value={f.groupId ?? null}
                 onChange={(value) =>
                   table.setFilter('groupId', typeof value === 'string' ? value : undefined)
                 }
                 clearable
+                showLabel={false}
               />
-            </div>
-            <Select
-              value={f.severity ?? '__all__'}
-              onValueChange={(value) =>
-                table.setFilter('severity', value === '__all__' ? undefined : value)
-              }
-            >
-              <SelectTrigger aria-label="Mức độ" className="w-40">
-                <SelectValue placeholder="Mức độ" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__all__">Mọi mức độ</SelectItem>
-                {FAULT_SEVERITIES.map((item) => (
-                  <SelectItem key={item} value={item}>
-                    {faultSeverityMap[item]?.label ?? item}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select
-              value={f.status ?? '__all__'}
-              onValueChange={(value) =>
-                table.setFilter('status', value === '__all__' ? undefined : value)
-              }
-            >
-              <SelectTrigger aria-label="Trạng thái" className="w-40">
-                <SelectValue placeholder="Trạng thái" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__all__">Mọi trạng thái</SelectItem>
-                {FAULT_STATUSES.map((item) => (
-                  <SelectItem key={item} value={item}>
-                    {faultStatusMap[item]?.label ?? item}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select
-              value={sort ?? '__default__'}
-              onValueChange={(value) =>
-                table.setFilter('sort', value === '__default__' ? undefined : value)
-              }
-            >
-              <SelectTrigger aria-label="Sắp xếp" className="w-40">
-                <SelectValue placeholder="Sắp xếp" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__default__">Mặc định</SelectItem>
-                <SelectItem value="relevance">Liên quan</SelectItem>
-                <SelectItem value="viewCount">Lượt xem</SelectItem>
-                <SelectItem value="updatedAt">Cập nhật</SelectItem>
-              </SelectContent>
-            </Select>
-          </>
+            </FilterField>
+            <FilterField label={t('filters.severity')}>
+              <Select
+                value={f.severity ?? '__all__'}
+                onValueChange={(value) =>
+                  table.setFilter('severity', value === '__all__' ? undefined : value)
+                }
+              >
+                <SelectTrigger aria-label={t('filters.severity')} className="w-40">
+                  <SelectValue placeholder={t('filters.severity')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">{t('filters.allSeverities')}</SelectItem>
+                  {FAULT_SEVERITIES.map((item) => (
+                    <SelectItem key={item} value={item}>
+                      {faultSeverityMap[item]?.label ?? item}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FilterField>
+            <FilterField label={t('filters.status')}>
+              <Select
+                value={f.status ?? '__all__'}
+                onValueChange={(value) =>
+                  table.setFilter('status', value === '__all__' ? undefined : value)
+                }
+              >
+                <SelectTrigger aria-label={t('filters.status')} className="w-40">
+                  <SelectValue placeholder={t('filters.status')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">{t('filters.allStatuses')}</SelectItem>
+                  {FAULT_STATUSES.map((item) => (
+                    <SelectItem key={item} value={item}>
+                      {faultStatusMap[item]?.label ?? item}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FilterField>
+            <FilterField label={t('filters.sort')}>
+              <Select
+                value={sort ?? '__default__'}
+                onValueChange={(value) =>
+                  table.setFilter('sort', value === '__default__' ? undefined : value)
+                }
+              >
+                <SelectTrigger aria-label={t('filters.sort')} className="w-40">
+                  <SelectValue placeholder={t('filters.sort')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__default__">{t('filters.sortDefault')}</SelectItem>
+                  <SelectItem value="relevance">{t('filters.sortRelevance')}</SelectItem>
+                  <SelectItem value="viewCount">{t('filters.sortViewCount')}</SelectItem>
+                  <SelectItem value="updatedAt">{t('filters.sortUpdatedAt')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </FilterField>
+          </FilterBar>
         }
       />
     </>

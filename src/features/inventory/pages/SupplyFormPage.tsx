@@ -14,22 +14,25 @@ import { QtyField } from '@/components/form/qty-field'
 import { FormField, FormItem, FormMessage } from '@/components/ui/form'
 import { AsyncSelect } from '@/components/form/async-select'
 import { applyServerErrors, messageFor } from '@/api/errors'
-import { catalogOptions } from '@/api/references'
-import { useQuery } from '@tanstack/react-query'
+import { catalogOptions, resolveCatalogItem } from '@/api/references'
+import { decimalString } from '@/lib/validation/decimal'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createSupply, getSupply, updateSupply } from '../api'
+import { useTranslation } from 'react-i18next'
+import i18n from '@/lib/i18n'
 
 const schema = z.object({
   code: z.string(),
-  name: z.string().trim().min(1, 'Bắt buộc'),
+  name: z.string().trim().min(1, i18n.t('common:form.required')),
   groupId: z.string().nullable(),
   unitId: z.string().nullable(),
   packaging: z.string(),
   manufacturerId: z.string().nullable(),
-  refPrice: z.string(),
+  refPrice: decimalString({ maxScale: 0, min: '0' }),
   trackLot: z.boolean(),
   trackExpiry: z.boolean(),
-  minStock: z.string(),
-  maxStock: z.string(),
+  minStock: decimalString({ maxScale: 3, min: '0' }),
+  maxStock: decimalString({ maxScale: 3, min: '0' }),
   isActive: z.boolean(),
   notes: z.string(),
 })
@@ -51,9 +54,12 @@ const empty: FormValues = {
 }
 
 export function Component() {
+  const { t } = useTranslation('inventory')
+
   const { id = '' } = useParams()
   const editing = !!id
   const navigate = useNavigate()
+  const qc = useQueryClient()
   const detail = useQuery({
     queryKey: ['supplies', id],
     queryFn: () => getSupply(id),
@@ -78,7 +84,7 @@ export function Component() {
       notes: detail.data.notes ?? '',
     })
   }, [detail.data, form])
-  if (editing && detail.isPending) return <p role="status">Đang tải vật tư…</p>
+  if (editing && detail.isPending) return <p role="status">{t('loadingSupply')}</p>
   if (editing && detail.error)
     return <ErrorState error={detail.error} onRetry={() => void detail.refetch()} />
   const submit = async (values: FormValues) => {
@@ -94,11 +100,13 @@ export function Component() {
     try {
       if (editing) {
         await updateSupply(id, body)
-        toast.success('Đã lưu vật tư')
+        toast.success(t('supplySaved'))
+        void qc.invalidateQueries({ queryKey: ['supplies'] })
         navigate(`/supplies/${id}`)
       } else {
         const created = await createSupply(body)
-        toast.success('Đã tạo vật tư')
+        toast.success(t('supplyCreated'))
+        void qc.invalidateQueries({ queryKey: ['supplies'] })
         navigate(`/supplies/${created.id}`)
       }
     } catch (error) {
@@ -107,25 +115,26 @@ export function Component() {
   }
   return (
     <>
-      <PageHeader title={editing ? 'Sửa vật tư' : 'Thêm vật tư'} />
+      <PageHeader title={editing ? t('editSupply') : t('createSupply')} />
       <Form {...form}>
         <form className="max-w-xl space-y-4" noValidate onSubmit={form.handleSubmit(submit)}>
           <TextField
             control={form.control}
             name="code"
-            label="Mã"
+            label={t('code')}
             transform={(v) => v.toUpperCase()}
           />
-          <TextField control={form.control} name="name" label="Tên" />
+          <TextField control={form.control} name="name" label={t('name')} />
           <FormField
             control={form.control}
             name="groupId"
             render={({ field }) => (
               <FormItem>
                 <AsyncSelect
-                  label="Nhóm"
+                  label={t('group')}
                   queryKey="supply-groups"
                   loadOptions={(q) => catalogOptions('supply-groups', q)}
+                  resolveOption={(groupId) => resolveCatalogItem('supply-groups', groupId)}
                   value={field.value}
                   onChange={field.onChange}
                   clearable
@@ -140,9 +149,10 @@ export function Component() {
             render={({ field }) => (
               <FormItem>
                 <AsyncSelect
-                  label="ĐVT"
+                  label={t('unit')}
                   queryKey="units"
                   loadOptions={(q) => catalogOptions('units', q)}
+                  resolveOption={(unitId) => resolveCatalogItem('units', unitId)}
                   value={field.value}
                   onChange={field.onChange}
                   clearable
@@ -151,14 +161,14 @@ export function Component() {
               </FormItem>
             )}
           />
-          <MoneyField control={form.control} name="refPrice" label="Giá tham khảo" />
-          <SwitchField control={form.control} name="trackLot" label="Theo dõi lô" />
-          <SwitchField control={form.control} name="trackExpiry" label="Theo dõi hạn" />
-          <QtyField control={form.control} name="minStock" label="Tồn min" />
-          <QtyField control={form.control} name="maxStock" label="Tồn max" />
-          <SwitchField control={form.control} name="isActive" label="Đang dùng" />
-          <TextField control={form.control} name="notes" label="Ghi chú" />
-          <Button type="submit">Lưu</Button>
+          <MoneyField control={form.control} name="refPrice" label={t('refPrice')} />
+          <SwitchField control={form.control} name="trackLot" label={t('trackLotField')} />
+          <SwitchField control={form.control} name="trackExpiry" label={t('trackExpiry')} />
+          <QtyField control={form.control} name="minStock" label={t('minStock')} />
+          <QtyField control={form.control} name="maxStock" label={t('maxStock')} />
+          <SwitchField control={form.control} name="isActive" label={t('isActive')} />
+          <TextField control={form.control} name="notes" label={t('notes')} />
+          <Button type="submit">{t('save')}</Button>
         </form>
       </Form>
     </>

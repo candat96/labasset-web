@@ -1,7 +1,6 @@
 import { api, unwrap, unwrapAs } from '@/api/client'
 import { pageQuery } from '@/api/paths'
-import { matchesAuditQuery } from '@/lib/audit-entity'
-import type { AuditListParams, AuditLog, AuditPage } from './types'
+import type { AuditListParams, AuditPage } from './types'
 
 type ServerParams = Omit<AuditListParams, 'action' | 'q'>
 
@@ -21,33 +20,8 @@ export function fetchAuditPage(params: ServerParams) {
   return unwrap(api.GET('/v1/audit-logs', { params: { query: queryOf(params) } }))
 }
 
-export async function fetchAllAuditLogs(params: Omit<ServerParams, 'page' | 'limit'>) {
-  const limit = 100
-  let page = 1
-  const items: AuditLog[] = []
-  let total = Number.POSITIVE_INFINITY
-  while (items.length < total) {
-    const result = await fetchAuditPage({ ...params, page, limit })
-    total = result.total
-    items.push(...result.items)
-    if (result.items.length === 0) break
-    page += 1
-  }
-  return items
-}
-
-/** Tắt lọc client action/q cho tới khi API có (review 01 C2). */
-export const AUDIT_CLIENT_FILTER = false
-
 export async function listAuditLogs(params: AuditListParams): Promise<AuditPage> {
-  const { action, q, page = 1, limit = 20, ...server } = params
-  if (AUDIT_CLIENT_FILTER && (action || q)) {
-    const items = (await fetchAllAuditLogs(server)).filter((item) =>
-      matchesAuditQuery(item, action, q),
-    )
-    const start = (page - 1) * limit
-    return { items: items.slice(start, start + limit), total: items.length, page, limit }
-  }
+  const { page = 1, limit = 20, ...server } = params
   return fetchAuditPage({ ...server, page, limit })
 }
 

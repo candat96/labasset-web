@@ -47,7 +47,7 @@ export function generatePlan(id: string, year: number) {
 }
 
 export function listTasks(params: TaskListParams) {
-  return unwrap(api.GET('/v1/maintenance/tasks', { params: { query: pageQuery(params) as never } }))
+  return unwrap(api.GET('/v1/maintenance/tasks', { params: { query: pageQuery(params) } }))
 }
 export function getTask(id: string) {
   return unwrap(api.GET('/v1/maintenance/tasks/{id}', { params: { path: { id } } }))

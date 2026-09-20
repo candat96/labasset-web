@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { toast } from 'sonner'
 import { DataTable, useServerTable } from '@/components/data-table'
@@ -12,6 +12,7 @@ import { useCan } from '@/app/guards/useCan'
 import { STAFF } from '@/routes/roles'
 import { messageFor } from '@/api/errors'
 import { listAlerts, resolveAlert } from '../api'
+import { useTranslation } from 'react-i18next'
 
 type AlertRow = {
   id: string
@@ -23,7 +24,10 @@ type AlertRow = {
 }
 
 export function Component() {
+  const { t } = useTranslation('inventory')
+
   const canWrite = useCan(STAFF)
+  const qc = useQueryClient()
   const table = useServerTable({ filterKeys: ['type', 'resolved', 'warehouseId'] })
   const resolved = table.params.filters.resolved === 'true'
   const list = useQuery({
@@ -33,6 +37,7 @@ export function Component() {
         page: table.params.page,
         limit: table.params.limit,
         type: table.params.filters.type,
+        warehouseId: table.params.filters.warehouseId,
         resolved,
       }),
     placeholderData: (p) => p,
@@ -41,13 +46,13 @@ export function Component() {
     () => [
       {
         accessorKey: 'type',
-        header: 'Loại',
+        header: t('type'),
         cell: ({ row }) => <StatusBadge value={row.original.type} map={alertTypeMap} />,
       },
-      { accessorKey: 'message', header: 'Thông điệp' },
+      { accessorKey: 'message', header: t('message') },
       {
         accessorKey: 'createdAt',
-        header: 'Tạo lúc',
+        header: t('createdAt'),
         cell: ({ getValue }) => formatDateTime(getValue<string | undefined>()),
       },
       {
@@ -60,37 +65,37 @@ export function Component() {
               onClick={async () => {
                 try {
                   await resolveAlert(row.original.id)
-                  toast.success('Đã xử lý')
-                  void list.refetch()
+                  toast.success(t('resolved'))
+                  void qc.invalidateQueries({ queryKey: ['stock', 'alerts'] })
                 } catch (error) {
                   toast.error(messageFor(error))
                 }
               }}
             >
-              Đánh dấu đã xử lý
+              {t('resolveAlert')}
             </Button>
           ) : null,
       },
     ],
-    [canWrite, list],
+    [canWrite, qc, t],
   )
   return (
     <>
       <PageHeader
-        title="Cảnh báo kho"
+        title={t('alertsTitle')}
         actions={
           <div className="flex gap-2">
             <Button
               variant={resolved ? 'outline' : 'default'}
               onClick={() => table.setFilter('resolved', undefined)}
             >
-              Đang mở
+              {t('openAlerts')}
             </Button>
             <Button
               variant={resolved ? 'default' : 'outline'}
               onClick={() => table.setFilter('resolved', 'true')}
             >
-              Đã xử lý
+              {t('resolved')}
             </Button>
           </div>
         }

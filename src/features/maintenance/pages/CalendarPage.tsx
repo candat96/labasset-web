@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { addMonths, format, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns'
 import { PageHeader } from '@/components/page/PageHeader'
 import { Button } from '@/components/ui/button'
@@ -9,6 +10,7 @@ import { ErrorState } from '@/components/page/ErrorState'
 import { messageFor } from '@/api/errors'
 import { listCalendar, moveCalendar } from '../api'
 import type { CalendarItem } from '../types'
+import { useTranslation } from 'react-i18next'
 
 const TYPE_CLASS: Record<string, string> = {
   maintenance: 'bg-sky-100 text-sky-800',
@@ -24,7 +26,10 @@ const hrefFor = (item: CalendarItem) =>
       : `/repairs/${item.id}`
 
 export function Component() {
+  const { t } = useTranslation('maintenance')
+
   const navigate = useNavigate()
+  const qc = useQueryClient()
   const [month, setMonth] = useState(() => startOfMonth(new Date()))
   const [types, setTypes] = useState(['maintenance', 'calibration', 'repair'])
   const [mine, setMine] = useState(false)
@@ -54,17 +59,17 @@ export function Component() {
   return (
     <>
       <PageHeader
-        title="Lịch"
+        title={t('schedule')}
         actions={
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => setMonth((d) => addMonths(d, -1))}>
-              Tháng trước
+              {t('prevMonth')}
             </Button>
             <Button variant="outline" onClick={() => setMonth(startOfMonth(new Date()))}>
               {format(month, 'MM/yyyy')}
             </Button>
             <Button variant="outline" onClick={() => setMonth((d) => addMonths(d, 1))}>
-              Tháng sau
+              {t('nextMonth')}
             </Button>
           </div>
         }
@@ -77,15 +82,15 @@ export function Component() {
               onCheckedChange={(v) => toggle(type, v === true)}
             />
             {type === 'maintenance'
-              ? 'Bảo dưỡng'
+              ? t('typeMaintenance')
               : type === 'calibration'
-                ? 'Kiểm định'
-                : 'Sửa chữa'}
+                ? t('typeCalibration')
+                : t('typeRepair')}
           </label>
         ))}
         <label className="flex items-center gap-2">
           <Checkbox checked={mine} onCheckedChange={(v) => setMine(v === true)} />
-          Của tôi
+          {t('mine')}
         </label>
       </div>
       {list.error && <ErrorState error={list.error} onRetry={() => void list.refetch()} />}
@@ -121,13 +126,14 @@ export function Component() {
                               item.id,
                               new Date(day.setHours(9, 0, 0, 0)).toISOString(),
                             )
-                            void list.refetch()
+                            void qc.invalidateQueries({ queryKey: ['calendar'] })
+                            void qc.invalidateQueries({ queryKey: ['maintenance', 'tasks'] })
                           } catch (error) {
-                            alert(messageFor(error))
+                            toast.error(messageFor(error))
                           }
                         }}
                       >
-                        Đổi ngày
+                        {t('moveDate')}
                       </Button>
                     )}
                   </li>

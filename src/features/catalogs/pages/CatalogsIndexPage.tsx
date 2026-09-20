@@ -2,7 +2,6 @@ import { Link } from 'react-router'
 import { useQueries } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { PageHeader } from '@/components/page/PageHeader'
-import { catalogConfigs } from '../config'
 import { listCatalog } from '../api'
 import { catalogSlugs } from '../types'
 
@@ -28,9 +27,9 @@ export function Component() {
               className="bg-card hover:bg-accent block rounded-lg border p-4"
               to={`/admin/catalogs/${slug}`}
             >
-              <h2 className="font-medium">{catalogConfigs[slug].title}</h2>
+              <h2 className="font-medium">{t(`titles.${slug}`)}</h2>
               <p className="text-muted-foreground mt-1 text-sm">
-                {counts[index]?.data ?? '—'} bản ghi
+                {t('count', { total: counts[index]?.data ?? '—' })}
               </p>
             </Link>
           </li>

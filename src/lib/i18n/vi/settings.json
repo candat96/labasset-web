@@ -2,5 +2,74 @@
   "title": "Cấu hình hệ thống",
   "saved": "Đã lưu cấu hình",
   "noChange": "Không có thay đổi",
-  "numberingSeq": "Mẫu số phải chứa {SEQ"
+  "numberingSeq": "Mẫu số phải chứa {SEQ",
+  "loading": "Đang tải cấu hình…",
+  "save": "Lưu thay đổi",
+  "tabs": {
+    "hospital": "Viện",
+    "workflow": "Quy trình",
+    "stock": "Kho",
+    "alerts": "Cảnh báo",
+    "numbering": "Đánh số",
+    "ai": "AI",
+    "other": "Khác"
+  },
+  "hospital": {
+    "name": "Tên bệnh viện",
+    "address": "Địa chỉ",
+    "logoFileId": "Logo bệnh viện"
+  },
+  "workflow": {
+    "approvalLevels": "Số cấp duyệt",
+    "level": "{{level}} cấp",
+    "requireAcceptance": "Sửa chữa cần nghiệm thu",
+    "restrictToCompatible": "Chỉ cho yêu cầu vật tư tương thích",
+    "slaLow": "SLA thấp (giờ)",
+    "slaMedium": "SLA vừa (giờ)",
+    "slaHigh": "SLA cao (giờ)",
+    "slaCritical": "SLA nghiêm trọng (giờ)",
+    "levelError": "Chọn 1 hoặc 2 cấp"
+  },
+  "stock": {
+    "defaultWarehouseId": "Kho mặc định",
+    "cancelWindowDays": "Số ngày được huỷ phiếu kho"
+  },
+  "alerts": {
+    "stockMinEnabled": "Bật cảnh báo tồn tối thiểu",
+    "expiryDaysBefore": "Cảnh báo hết hạn trước (ngày)",
+    "maintenanceDaysBefore": "Cảnh báo bảo dưỡng trước (ngày)",
+    "calibrationDaysBefore": "Cảnh báo kiểm định trước (ngày)",
+    "repairCostPctOfValue": "Ngưỡng chi phí sửa chữa (%)",
+    "dueGraceDays": "Số ngày gia hạn bảo dưỡng"
+  },
+  "numbering": {
+    "equipment": "Thiết bị",
+    "repair": "Sửa chữa",
+    "maintenance": "Bảo dưỡng",
+    "calibration": "Kiểm định",
+    "stock_receipt": "Nhập kho",
+    "stock_issue": "Xuất kho",
+    "stock_transfer": "Chuyển kho",
+    "request": "Phiếu yêu cầu",
+    "stocktake": "Kiểm kê",
+    "preview": "Xem trước",
+    "previewSaved": "Xem trước đã lưu: {{value}}",
+    "invalid": "Mẫu số phải chứa {SEQ} hoặc {SEQ:1..32} và chỉ dùng token hợp lệ (YYYY, YY, MM, DD, TYPE)"
+  },
+  "ai": {
+    "note": "API D2 chưa có — lưu khoá `ai.*` khi backend sẵn sàng. Không hiện lại API key đã đặt.",
+    "enabled": "Bật trợ lý AI",
+    "provider": "Nhà cung cấp",
+    "model": "Mô hình",
+    "embeddingProvider": "Embedding",
+    "embeddingModel": "Mô hình embedding",
+    "budget": "Ngân sách token/tháng (0 = không giới hạn)",
+    "apiKey": "API key",
+    "apiKeySet": "API key (đã đặt)",
+    "apiKeyUnset": "API key (chưa đặt)"
+  },
+  "backup": {
+    "title": "Sao lưu & khôi phục",
+    "description": "API viện không có màn sao lưu. Sao lưu CSDL do quản trị hệ thống (SYS) thực hiện trên máy chủ. Liên hệ SYS nếu cần xuất/khôi phục dữ liệu viện."
+  }
 }

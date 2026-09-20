@@ -3,9 +3,7 @@ import { pageQuery } from '@/api/paths'
 import type { components } from '@/api/schema'
 
 export function listCalibrations(params: Record<string, unknown>) {
-  return unwrap(
-    api.GET('/v1/calibrations', { params: { query: pageQuery(params as never) as never } }),
-  )
+  return unwrap(api.GET('/v1/calibrations', { params: { query: pageQuery(params) } }))
 }
 export function getCalibration(id: string) {
   return unwrap(api.GET('/v1/calibrations/{id}', { params: { path: { id } } }))

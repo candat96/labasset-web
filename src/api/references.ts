@@ -7,10 +7,10 @@ export interface Reference {
   name: string
 }
 export async function departmentOptions(q: string): Promise<Reference[]> {
-  const data = await unwrapAs<{ items: Reference[] }>(
+  const data = await unwrapAs<Reference[] | { items: Reference[] }>(
     api.GET('/v1/departments', { params: { query: { q } } }),
   )
-  return data.items
+  return Array.isArray(data) ? data : data.items
 }
 export async function allDepartments(): Promise<Reference[]> {
   return unwrapAs<Reference[]>(api.GET('/v1/departments', { params: { query: { all: true } } }))

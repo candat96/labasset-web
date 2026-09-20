@@ -26,6 +26,27 @@ const DIAGNOSIS_STATUSES = new Set(['accepted', 'in_progress', 'awaiting_parts',
 const COMPLETE_STATUSES = new Set(['in_progress', 'awaiting_parts', 'awaiting_vendor'])
 const TERMINAL = new Set(['closed', 'cancelled'])
 
+/**
+ * Trạng thái hợp lệ cho `POST /:id/status` theo ma trận `repair-rules.ts`
+ * (bỏ `completed` vì đã có dialog Hoàn thành riêng).
+ */
+export function availableStatuses(
+  status: string,
+): ('in_progress' | 'awaiting_parts' | 'awaiting_vendor')[] {
+  switch (status) {
+    case 'accepted':
+      return ['in_progress']
+    case 'in_progress':
+      return ['awaiting_parts', 'awaiting_vendor']
+    case 'awaiting_parts':
+      return ['in_progress', 'awaiting_vendor']
+    case 'awaiting_vendor':
+      return ['in_progress', 'awaiting_parts']
+    default:
+      return []
+  }
+}
+
 export function isRepairAssignee(
   userId: string,
   assignments: Pick<RepairAssignment, 'userId' | 'role' | 'response'>[],
@@ -42,6 +63,17 @@ export function pendingAssignment(
   return assignments.some((row) => row.userId === userId && row.response === 'pending')
 }
 
+/** Ủy quyền ghi (nhật ký/linh kiện/chi phí…) theo §8.9 B3: assignee hoặc ADM. */
+export function canWriteRepair(
+  userId: string,
+  roles: string[],
+  assignments: Pick<RepairAssignment, 'userId' | 'role' | 'response'>[],
+) {
+  if (roles.includes('HOSPITAL_ADMIN')) return true
+  if (!roles.includes('EQUIPMENT_STAFF')) return false
+  return isRepairAssignee(userId, assignments)
+}
+
 export function visibleRepairActions(input: {
   status: string
   roles: string[]
@@ -56,12 +88,13 @@ export function visibleRepairActions(input: {
   const out: RepairAction[] = ['print']
   if (input.status === 'new' && isVt) out.push('accept')
   if (isAdm && !TERMINAL.has(input.status)) out.push('assign')
-  if (pendingAssignment(input.userId, input.assignments)) out.push('respond')
-  if ((assignee || isAdm) && DIAGNOSIS_STATUSES.has(input.status)) {
+  // `respond`/`diagnosis`/`status`/`complete` đều nằm trong controller chỉ cho ADM/VT.
+  if (isVt && pendingAssignment(input.userId, input.assignments)) out.push('respond')
+  if (isVt && (assignee || isAdm) && DIAGNOSIS_STATUSES.has(input.status)) {
     out.push('diagnosis')
     out.push('status')
   }
-  if (assignee && COMPLETE_STATUSES.has(input.status)) out.push('complete')
+  if (isVt && assignee && COMPLETE_STATUSES.has(input.status)) out.push('complete')
   if (input.status === 'completed' && isDept) out.push('acceptance')
   if (
     isAdm &&

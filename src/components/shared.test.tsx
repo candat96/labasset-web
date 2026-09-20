@@ -92,12 +92,15 @@ it('debounces API references, selects multiple values and clears', async () => {
     )
   }
   renderWithProviders(<Example />)
-  await userEvent.type(screen.getByRole('combobox'), 'XN')
+  await userEvent.click(screen.getByRole('combobox', { name: 'Khoa' }))
+  await userEvent.type(screen.getAllByRole('combobox')[1]!, 'XN')
   await waitFor(() => expect(searches).toContain('XN'))
   await userEvent.click(screen.getByRole('option', { name: 'XN — Xét nghiệm' }))
   expect(screen.getByRole('option')).toHaveAttribute('aria-selected', 'true')
-  await userEvent.click(screen.getByRole('button', { name: 'Bỏ chọn Khoa' }))
-  expect(screen.getByRole('option')).toHaveAttribute('aria-selected', 'false')
+  await userEvent.click(screen.getByRole('button', { name: 'Bỏ XN — Xét nghiệm' }))
+  await waitFor(() =>
+    expect(screen.queryByRole('button', { name: 'Bỏ XN — Xét nghiệm' })).not.toBeInTheDocument(),
+  )
 })
 it('preserves decimal strings and emits ISO date/time values', async () => {
   let output: unknown
@@ -122,7 +125,8 @@ it('preserves decimal strings and emits ISO date/time values', async () => {
   renderWithProviders(<Example />)
   await userEvent.type(screen.getByLabelText('Tiền'), '999999999999999999')
   await userEvent.type(screen.getByLabelText('Số lượng'), '1.250')
-  fireEvent.change(screen.getByLabelText('Ngày'), { target: { value: '2026-09-19' } })
+  await userEvent.click(screen.getByLabelText('Ngày'))
+  await userEvent.click(screen.getByRole('button', { name: /ngày 19 tháng 09 năm 2026/i }))
   fireEvent.change(screen.getByLabelText('Thời điểm'), { target: { value: '2026-09-19T12:00' } })
   await userEvent.click(screen.getByRole('button', { name: 'Lưu' }))
   expect(output).toEqual({

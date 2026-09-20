@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { PageHeader } from '@/components/page/PageHeader'
 import { ErrorState } from '@/components/page/ErrorState'
@@ -16,9 +16,13 @@ import { useCan } from '@/app/guards/useCan'
 import { ADM, STAFF } from '@/routes/roles'
 import { useAuthStore } from '@/stores/auth.store'
 import { messageFor } from '@/api/errors'
+import { apiBody } from '@/api/client'
 import * as api from '../api'
+import { useTranslation } from 'react-i18next'
 
 export function Component() {
+  const { t } = useTranslation('requests')
+
   const { id = '' } = useParams()
   const navigate = useNavigate()
   const detail = useQuery({
@@ -29,9 +33,13 @@ export function Component() {
   const isStaff = useCan(STAFF)
   const isAdm = useCan(ADM)
   const userId = useAuthStore((s) => s.user?.id)
+  const qc = useQueryClient()
+  const invalidate = () => {
+    void qc.invalidateQueries({ queryKey: ['requests'] })
+  }
   const { confirm, dialog } = useConfirm()
   const [comment, setComment] = useState('')
-  if (detail.isPending) return <p role="status">Đang tải phiếu yêu cầu…</p>
+  if (detail.isPending) return <p role="status">{t('loading')}</p>
   if (detail.error) return <ErrorState error={detail.error} onRetry={() => void detail.refetch()} />
   const row = detail.data
   const owner = row.requesterId === userId || isAdm
@@ -39,8 +47,8 @@ export function Component() {
     if ((await confirm({ title })) === false) return
     try {
       await action()
-      toast.success('Đã cập nhật phiếu')
-      void detail.refetch()
+      toast.success(t('updated'))
+      invalidate()
     } catch (error) {
       toast.error(messageFor(error))
     }
@@ -54,12 +62,15 @@ export function Component() {
           <div className="flex gap-1">
             <StatusBadge value={row.status} map={requestStatusMap} />
             {row.priority === 'urgent' && (
-              <StatusBadge value="urgent" map={{ urgent: { label: 'Khẩn', tone: 'danger' } }} />
+              <StatusBadge
+                value="urgent"
+                map={{ urgent: { label: t('urgent'), tone: 'danger' } }}
+              />
             )}
             {row.quotaExceeded && (
               <StatusBadge
                 value="quota"
-                map={{ quota: { label: 'Vượt định mức', tone: 'warning' } }}
+                map={{ quota: { label: t('quotaExceeded'), tone: 'warning' } }}
               />
             )}
           </div>
@@ -68,41 +79,44 @@ export function Component() {
           <div className="flex flex-wrap gap-2">
             {row.status === 'draft' && owner && (
               <Button asChild>
-                <Link to={`/requests/${id}/edit`}>Sửa</Link>
+                <Link to={`/requests/${id}/edit`}>{t('edit')}</Link>
               </Button>
             )}
             {row.status === 'draft' && (
-              <Button onClick={() => void run('Gửi duyệt?', () => api.submitRequest(id))}>
-                Gửi duyệt
+              <Button onClick={() => void run(t('submitConfirm'), () => api.submitRequest(id))}>
+                {t('submit')}
               </Button>
             )}
             {['draft', 'submitted', 'dept_approved'].includes(row.status) && (owner || isAdm) && (
               <Button
                 variant="outline"
-                onClick={() => void run('Huỷ phiếu?', () => api.cancelRequest(id))}
+                onClick={() => void run(t('cancelConfirm'), () => api.cancelRequest(id))}
               >
-                Huỷ
+                {t('cancel')}
               </Button>
             )}
             {row.status === 'submitted' && row.approvalLevels === 2 && (
-              <Button onClick={() => void run('Duyệt cấp khoa?', () => api.deptApprove(id))}>
-                Duyệt cấp khoa
+              <Button onClick={() => void run(t('deptApproveConfirm'), () => api.deptApprove(id))}>
+                {t('deptApprove')}
               </Button>
             )}
             {isStaff && (row.status === 'submitted' || row.status === 'dept_approved') && (
               <Button
                 onClick={() =>
-                  void run('Duyệt phiếu?', () =>
-                    api.approveRequest(id, {
-                      items: row.items.map((item) => ({
-                        id: item.id,
-                        qtyApproved: item.qtyRequested,
-                      })),
-                    } as never),
+                  void run(t('approveConfirm'), () =>
+                    api.approveRequest(
+                      id,
+                      apiBody({
+                        items: row.items.map((item) => ({
+                          id: item.id,
+                          qtyApproved: item.qtyRequested,
+                        })),
+                      }),
+                    ),
                   )
                 }
               >
-                Duyệt
+                {t('approve')}
               </Button>
             )}
             {isStaff && (row.status === 'submitted' || row.status === 'dept_approved') && (
@@ -110,27 +124,27 @@ export function Component() {
                 variant="outline"
                 onClick={async () => {
                   const reason = await confirm({
-                    title: 'Từ chối?',
+                    title: t('rejectConfirm'),
                     requireReason: true,
                     destructive: true,
                   })
                   if (reason === false) return
                   await api.rejectRequest(id, reason)
-                  toast.success('Đã từ chối')
-                  void detail.refetch()
+                  toast.success(t('rejected'))
+                  invalidate()
                 }}
               >
-                Từ chối
+                {t('reject')}
               </Button>
             )}
             {isStaff && (row.status === 'approved' || row.status === 'partially_approved') && (
-              <Button onClick={() => void run('Cấp phát?', () => api.issueRequest(id, {}))}>
-                Cấp phát
+              <Button onClick={() => void run(t('issueConfirm'), () => api.issueRequest(id, {}))}>
+                {t('issue')}
               </Button>
             )}
             {row.status === 'issued' && (
-              <Button onClick={() => void run('Xác nhận đã nhận?', () => api.receiveRequest(id))}>
-                Xác nhận đã nhận
+              <Button onClick={() => void run(t('receiveConfirm'), () => api.receiveRequest(id))}>
+                {t('receive')}
               </Button>
             )}
             {row.type === 'supply' && (
@@ -138,10 +152,11 @@ export function Component() {
                 variant="outline"
                 onClick={async () => {
                   const cloned = await api.cloneRequest(id)
+                  invalidate()
                   navigate(`/requests/${cloned.id}/edit`)
                 }}
               >
-                Tạo lại
+                {t('clone')}
               </Button>
             )}
           </div>
@@ -149,7 +164,7 @@ export function Component() {
       />
       {row.repairTicketId && (
         <p className="mb-2 text-sm">
-          Phiếu sửa:{' '}
+          {t('repairTicket')}{' '}
           <Link className="text-primary hover:underline" to={`/repairs/${row.repairTicketId}`}>
             {row.repairTicket?.code ?? row.repairTicketId}
           </Link>
@@ -158,10 +173,10 @@ export function Component() {
       <table className="mb-4 w-full text-sm">
         <thead>
           <tr className="text-left">
-            <th>Vật tư</th>
-            <th>Yêu cầu</th>
-            <th>Duyệt</th>
-            <th>Đã cấp</th>
+            <th>{t('supply')}</th>
+            <th>{t('qtyRequested')}</th>
+            <th>{t('approve')}</th>
+            <th>{t('qtyIssued')}</th>
           </tr>
         </thead>
         <tbody>
@@ -175,7 +190,7 @@ export function Component() {
           ))}
         </tbody>
       </table>
-      <h2 className="mb-2 font-medium">Bình luận</h2>
+      <h2 className="mb-2 font-medium">{t('comments')}</h2>
       <ul className="mb-2 space-y-2 text-sm">
         {row.comments.map((item) => (
           <li key={item.id}>
@@ -188,7 +203,7 @@ export function Component() {
         value={comment}
         onChange={(e) => setComment(e.target.value)}
         maxLength={2000}
-        aria-label="Bình luận"
+        aria-label={t('comments')}
       />
       <Button
         className="mt-2"
@@ -196,10 +211,10 @@ export function Component() {
           if (!comment.trim()) return
           await api.addComment(id, comment)
           setComment('')
-          void detail.refetch()
+          invalidate()
         }}
       >
-        Gửi
+        {t('send')}
       </Button>
       <div className="mt-6">
         <AuditTrail entityType="request" entityId={id} />

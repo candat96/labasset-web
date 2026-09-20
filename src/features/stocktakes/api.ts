@@ -1,12 +1,10 @@
-import { api, unwrap, unwrapAs } from '@/api/client'
+import { api, apiBody, unwrap, unwrapAs } from '@/api/client'
 import { downloadFile } from '@/api/download'
 import { pageQuery } from '@/api/paths'
 import type { components } from '@/api/schema'
 
 export function listStocktakes(params: Record<string, unknown>) {
-  return unwrap(
-    api.GET('/v1/stocktakes', { params: { query: pageQuery(params as never) as never } }),
-  )
+  return unwrap(api.GET('/v1/stocktakes', { params: { query: pageQuery(params) } }))
 }
 export function getStocktake(id: string) {
   return unwrap(api.GET('/v1/stocktakes/{id}', { params: { path: { id } } }))
@@ -24,12 +22,10 @@ export function startCounting(id: string) {
   return unwrap(api.POST('/v1/stocktakes/{id}/start-counting', { params: { path: { id } } }))
 }
 export function reviewStocktake(id: string) {
-  const post = api.POST as (path: string, init?: object) => ReturnType<typeof api.POST>
-  return unwrapAs<unknown>(post('/v1/stocktakes/{id}/review', { params: { path: { id } } }))
+  return unwrapAs<unknown>(api.POST('/v1/stocktakes/{id}/review', { params: { path: { id } } }))
 }
 export function closeStocktake(id: string) {
-  const post = api.POST as (path: string, init?: object) => ReturnType<typeof api.POST>
-  return unwrapAs<unknown>(post('/v1/stocktakes/{id}/close', { params: { path: { id } } }))
+  return unwrapAs<unknown>(api.POST('/v1/stocktakes/{id}/close', { params: { path: { id } } }))
 }
 export function cancelStocktake(id: string) {
   return unwrap(api.POST('/v1/stocktakes/{id}/cancel', { params: { path: { id } } }))
@@ -40,7 +36,7 @@ export function stocktakeProgress(id: string) {
 export function stocktakeItems(id: string, params: Record<string, unknown>) {
   return unwrap(
     api.GET('/v1/stocktakes/{id}/items', {
-      params: { path: { id }, query: pageQuery(params as never) as never },
+      params: { path: { id }, query: pageQuery(params) },
     }),
   )
 }
@@ -48,7 +44,7 @@ export function patchStocktakeItem(id: string, itemId: string, body: Record<stri
   return unwrap(
     api.PATCH('/v1/stocktakes/{id}/items/{itemId}', {
       params: { path: { id, itemId } },
-      body: body as never,
+      body: body,
     }),
   )
 }
@@ -77,9 +73,8 @@ type PackageRaw = {
 }
 
 export function stocktakePackage(id: string) {
-  const get = api.GET as (path: string, init?: object) => ReturnType<typeof api.GET>
   return unwrapAs<PackageRaw>(
-    get('/v1/stocktakes/{id}/package', { params: { path: { id } } }),
+    api.GET('/v1/stocktakes/{id}/package', { params: { path: { id } } }),
   ).then((data) => ({
     items: (data.items ?? []).map((item) => ({
       id: item.id ?? item.itemId ?? '',
@@ -102,7 +97,10 @@ export type StocktakeCountsResult = {
 
 export function postCounts(id: string, counts: Record<string, unknown>[]) {
   return unwrapAs<StocktakeCountsResult>(
-    api.POST('/v1/stocktakes/{id}/counts', { params: { path: { id } }, body: { counts } as never }),
+    api.POST('/v1/stocktakes/{id}/counts', {
+      params: { path: { id } },
+      body: apiBody({ counts }),
+    }),
   )
 }
 
@@ -120,9 +118,8 @@ export type StocktakeCompare = {
 }
 
 export function compareStocktakes(id: string, withSessionId: string) {
-  const get = api.GET as (path: string, init?: object) => ReturnType<typeof api.GET>
   return unwrapAs<StocktakeCompare>(
-    get('/v1/stocktakes/{id}/compare', {
+    api.GET('/v1/stocktakes/{id}/compare', {
       params: { path: { id }, query: { withSessionId } },
     }),
   )
@@ -139,7 +136,7 @@ export function resolveExtra(
   return unwrap(
     api.POST('/v1/stocktakes/{id}/extras/{extraId}/resolve', {
       params: { path: { id, extraId } },
-      body: body as never,
+      body: body,
     }),
   )
 }

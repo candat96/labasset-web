@@ -1,4 +1,4 @@
-import { api, unwrap } from '@/api/client'
+import { api, unwrap, unwrapAs } from '@/api/client'
 import { pageQuery } from '@/api/paths'
 import type { components } from '@/api/schema'
 import type { CreateFault, FaultListParams, UpdateFault } from './types'
@@ -6,7 +6,7 @@ import type { CreateFault, FaultListParams, UpdateFault } from './types'
 export function listFaults(params: FaultListParams) {
   return unwrap(
     api.GET('/v1/faults', {
-      params: { query: pageQuery(params) as never },
+      params: { query: pageQuery(params) },
     }),
   )
 }
@@ -54,9 +54,7 @@ export function listFaultSuggestions(params: {
   limit?: number
   status?: 'pending' | 'accepted' | 'rejected'
 }) {
-  return unwrap(
-    api.GET('/v1/faults/suggestions', { params: { query: pageQuery(params) as never } }),
-  )
+  return unwrap(api.GET('/v1/faults/suggestions', { params: { query: pageQuery(params) } }))
 }
 
 export function getFaultSuggestion(id: string) {
@@ -78,6 +76,13 @@ export function rejectFaultSuggestion(id: string, note: string) {
       params: { path: { id } },
       body: { note },
     }),
+  )
+}
+
+// TODO(api): chưa có endpoint tra cứu phiếu theo lô; gọi tuần tự từng phiếu để hiện mã.
+export function getRepairCode(id: string) {
+  return unwrapAs<{ id: string; code: string }>(
+    api.GET('/v1/repairs/{id}', { params: { path: { id } } }),
   )
 }
 

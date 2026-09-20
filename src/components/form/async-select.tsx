@@ -1,10 +1,20 @@
-import { useId, useState } from 'react'
+import { useId, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { Check, ChevronsUpDown, Loader2, X } from 'lucide-react'
 import { useDebounce } from '@/lib/use-debounce'
-import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import {
+  Command,
+  CommandEmpty,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command'
 import { Label } from '@/components/ui/label'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { messageFor } from '@/api/errors'
+import { cn } from '@/lib/utils'
+
 export interface ReferenceOption {
   id: string
   code: string
@@ -21,7 +31,14 @@ export interface AsyncSelectProps {
   disabled?: boolean
   selectedOptions?: ReferenceOption[]
   resolveOption?: (id: string) => Promise<ReferenceOption | null>
+  placeholder?: string
+  showLabel?: boolean
+  className?: string
 }
+
+const optionLabel = (option: ReferenceOption) =>
+  option.code ? `${option.code} — ${option.name}` : option.name
+
 export function AsyncSelect({
   label,
   queryKey,
@@ -33,20 +50,24 @@ export function AsyncSelect({
   disabled,
   selectedOptions = [],
   resolveOption,
+  placeholder,
+  showLabel = true,
+  className,
 }: AsyncSelectProps) {
   const id = useId()
   const [q, setQ] = useState('')
   const [open, setOpen] = useState(false)
+  const [chosen, setChosen] = useState<ReferenceOption[]>([])
   const search = useDebounce(q)
+  const ids = useMemo(() => (Array.isArray(value) ? value : value ? [value] : []), [value])
   const query = useQuery({
     queryKey: ['reference', queryKey, search],
     queryFn: () => loadOptions(search),
     enabled: open && !disabled,
   })
-  const [chosen, setChosen] = useState<ReferenceOption[]>([])
-  const ids = Array.isArray(value) ? value : value ? [value] : []
-  const known = new Map(
-    [...selectedOptions, ...chosen, ...(query.data ?? [])].map((o) => [o.id, o]),
+  const known = useMemo(
+    () => new Map([...selectedOptions, ...chosen, ...(query.data ?? [])].map((o) => [o.id, o])),
+    [chosen, query.data, selectedOptions],
   )
   const missing = ids.filter((key) => !known.has(key))
   const resolved = useQuery({
@@ -54,110 +75,130 @@ export function AsyncSelect({
     enabled: missing.length > 0 && !disabled,
     queryFn: async () => {
       const found: ReferenceOption[] = []
+      const fallback = resolveOption ? null : await loadOptions('')
       for (const key of missing) {
-        if (resolveOption) {
-          const option = await resolveOption(key)
-          if (option) found.push(option)
-          continue
-        }
-        const list = await loadOptions('')
-        const match = list.find((item) => item.id === key)
-        if (match) found.push(match)
+        const option = resolveOption
+          ? await resolveOption(key)
+          : (fallback?.find((item) => item.id === key) ?? null)
+        if (option) found.push(option)
       }
       return found
     },
   })
   const options = new Map([...known.values(), ...(resolved.data ?? [])].map((o) => [o.id, o]))
+  const selection = ids.map((key) => options.get(key)).filter(Boolean) as ReferenceOption[]
+  const remove = (key: string) => onChange(multiple ? ids.filter((item) => item !== key) : null)
+
   return (
-    <div className="space-y-2">
-      <Label htmlFor={id}>{label}</Label>
-      <div className="flex flex-wrap gap-2">
-        {ids.map((key) => (
-          <span key={key} className="bg-muted rounded px-2 py-1 text-sm">
-            {options.get(key) ? `${options.get(key)!.code} — ${options.get(key)!.name}` : key}
-          </span>
-        ))}
-        {clearable && ids.length > 0 && (
+    <div className={cn('space-y-1.5', className)}>
+      {showLabel && <Label htmlFor={id}>{label}</Label>}
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
           <Button
+            id={id}
             type="button"
-            variant="ghost"
-            size="sm"
+            role="combobox"
+            aria-expanded={open}
+            aria-label={label}
+            variant="outline"
             disabled={disabled}
-            onClick={() => onChange(multiple ? [] : null)}
+            className="h-9 w-full justify-between overflow-hidden px-3 font-normal"
           >
-            Bỏ chọn {label}
+            <span className="flex min-w-0 flex-1 items-center gap-1 overflow-hidden">
+              {selection.length ? (
+                selection.map((option) => (
+                  <span
+                    key={option.id}
+                    className={cn(
+                      'flex min-w-0 items-center gap-1 truncate',
+                      multiple && 'bg-muted rounded px-1.5 py-0.5 text-xs',
+                    )}
+                  >
+                    <span className="truncate">{optionLabel(option)}</span>
+                    {(clearable || multiple) && (
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        aria-label={`Bỏ ${optionLabel(option)}`}
+                        className="hover:text-destructive shrink-0 rounded"
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          remove(option.id)
+                        }}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault()
+                            event.stopPropagation()
+                            remove(option.id)
+                          }
+                        }}
+                      >
+                        <X className="size-3" />
+                      </span>
+                    )}
+                  </span>
+                ))
+              ) : ids.length ? (
+                <span className="text-muted-foreground truncate">Đang tải giá trị…</span>
+              ) : (
+                <span className="text-muted-foreground truncate">{placeholder ?? label}</span>
+              )}
+            </span>
+            <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
           </Button>
-        )}
-      </div>
-      <Input
-        id={id}
-        role="combobox"
-        aria-expanded={open}
-        aria-controls={`${id}-options`}
-        aria-autocomplete="list"
-        value={q}
-        disabled={disabled}
-        placeholder="Tìm theo mã hoặc tên"
-        onFocus={() => setOpen(true)}
-        onKeyDown={(e) => {
-          if (e.key === 'Escape') setOpen(false)
-          if (e.key === 'ArrowDown') {
-            e.preventDefault()
-            document.getElementById(`${id}-options`)?.querySelector('button')?.focus()
-          }
-        }}
-        onChange={(e) => {
-          setQ(e.target.value)
-          setOpen(true)
-        }}
-      />
-      {open && (
-        <div
-          id={`${id}-options`}
-          role="listbox"
-          aria-label={label}
-          aria-multiselectable={multiple}
-          className="bg-popover max-h-60 overflow-auto rounded-md border p-1"
-        >
-          {query.isPending && <p role="status">Đang tải…</p>}
-          {query.error && (
-            <div role="alert">
-              {messageFor(query.error)}{' '}
-              <Button type="button" variant="ghost" onClick={() => void query.refetch()}>
-                Thử lại
-              </Button>
-            </div>
-          )}
-          {query.data?.length === 0 && (
-            <p className="text-muted-foreground p-2">Không có kết quả</p>
-          )}
-          {query.data?.map((o) => (
-            <button
-              type="button"
-              role="option"
-              aria-selected={ids.includes(o.id)}
-              key={o.id}
-              className="hover:bg-accent focus:bg-accent block min-h-8 w-full rounded px-2 text-left focus:outline-none"
-              onClick={() => {
-                setChosen((prev) => [...prev.filter((x) => x.id !== o.id), o])
-                onChange(
-                  multiple
-                    ? ids.includes(o.id)
-                      ? ids.filter((x) => x !== o.id)
-                      : [...ids, o.id]
-                    : o.id,
+        </PopoverTrigger>
+        <PopoverContent className="w-(--radix-popover-trigger-width) p-0" align="start">
+          <Command shouldFilter={false}>
+            <CommandInput value={q} onValueChange={setQ} placeholder="Tìm theo mã hoặc tên" />
+            <CommandList>
+              {query.isPending && (
+                <div className="flex items-center justify-center gap-2 py-6 text-sm" role="status">
+                  <Loader2 className="size-4 animate-spin" /> Đang tải…
+                </div>
+              )}
+              {query.error && (
+                <div className="text-destructive p-3 text-sm" role="alert">
+                  {messageFor(query.error)}{' '}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => void query.refetch()}
+                  >
+                    Thử lại
+                  </Button>
+                </div>
+              )}
+              {!query.isPending && !query.error && (query.data?.length ?? 0) === 0 && (
+                <CommandEmpty>Không có kết quả</CommandEmpty>
+              )}
+              {query.data?.map((option) => {
+                const selected = ids.includes(option.id)
+                return (
+                  <CommandItem
+                    key={option.id}
+                    value={option.id}
+                    onSelect={() => {
+                      setChosen((prev) => [...prev.filter((item) => item.id !== option.id), option])
+                      onChange(
+                        multiple
+                          ? selected
+                            ? ids.filter((item) => item !== option.id)
+                            : [...ids, option.id]
+                          : option.id,
+                      )
+                      if (!multiple) setOpen(false)
+                    }}
+                  >
+                    <Check className={cn('size-4', selected ? 'opacity-100' : 'opacity-0')} />
+                    <span className="truncate">{optionLabel(option)}</span>
+                  </CommandItem>
                 )
-                if (!multiple) setOpen(false)
-              }}
-            >
-              {o.code} — {o.name}
-            </button>
-          ))}
-          <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(false)}>
-            Đóng danh sách
-          </Button>
-        </div>
-      )}
+              })}
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
     </div>
   )
 }

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router'
 import type { ColumnDef } from '@tanstack/react-table'
 import { useMutation, useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { DataTable, useServerTable } from '@/components/data-table'
 import { PageHeader } from '@/components/page/PageHeader'
@@ -25,19 +26,22 @@ import { messageFor } from '@/api/errors'
 import {
   acceptFaultSuggestion,
   getFaultSuggestion,
+  getRepairCode,
   listFaults,
   listFaultSuggestions,
   rejectFaultSuggestion,
 } from '../api'
-import { useInvalidateFaults } from '../hooks'
+import { faultKeys, useInvalidateSuggestions, useUserNames } from '../hooks'
 import type { FaultProposal } from '../types'
 
 export function Component() {
+  const { t } = useTranslation('faults')
+  const { t: tc } = useTranslation()
   const isAdm = useCan(ADM)
   const table = useServerTable({ filterKeys: ['status'] })
   const status = (table.params.filters.status ?? 'pending') as 'pending' | 'accepted' | 'rejected'
   const list = useQuery({
-    queryKey: ['faults', 'suggestions', { ...table.params, status }],
+    queryKey: [...faultKeys.suggestions, { ...table.params, status }],
     queryFn: () =>
       listFaultSuggestions({
         page: table.params.page,
@@ -46,36 +50,53 @@ export function Component() {
       }),
     enabled: isAdm,
   })
+  const userName = useUserNames()
   const { confirm, dialog } = useConfirm()
-  const invalidate = useInvalidateFaults()
+  const invalidate = useInvalidateSuggestions()
   const [openId, setOpenId] = useState<string | null>(null)
   const [acceptOpen, setAcceptOpen] = useState(false)
   const [mode, setMode] = useState<'create' | 'merge'>('create')
   const [mergeId, setMergeId] = useState<string | null>(null)
   const detail = useQuery({
-    queryKey: ['faults', 'suggestions', openId],
+    queryKey: faultKeys.suggestion(openId ?? ''),
     queryFn: () => getFaultSuggestion(openId!),
     enabled: !!openId,
+  })
+  const ticketIds = useMemo(
+    () =>
+      [...new Set((list.data?.items ?? []).map((row) => row.repairTicketId))]
+        .filter((id): id is string => !!id)
+        .sort(),
+    [list.data?.items],
+  )
+  const tickets = useQuery({
+    queryKey: ['faults', 'suggestions', 'tickets', ticketIds.join(',')],
+    queryFn: async () => {
+      const entries = await Promise.all(
+        ticketIds.map(async (id) => [id, (await getRepairCode(id)).code] as const),
+      )
+      return Object.fromEntries(entries)
+    },
+    enabled: isAdm && ticketIds.length > 0,
+    staleTime: 60_000,
   })
   const accept = useMutation({
     mutationFn: () =>
       acceptFaultSuggestion(openId!, mode === 'merge' ? (mergeId ?? undefined) : undefined),
     onSuccess: () => {
-      toast.success('Đã chấp nhận đề xuất')
+      toast.success(t('suggestions.accepted'))
       setAcceptOpen(false)
       setOpenId(null)
-      void invalidate()
-      void list.refetch()
+      invalidate()
     },
     onError: (error) => toast.error(messageFor(error)),
   })
   const reject = useMutation({
     mutationFn: (reviewNote: string) => rejectFaultSuggestion(openId!, reviewNote),
     onSuccess: () => {
-      toast.success('Đã từ chối đề xuất')
+      toast.success(t('suggestions.rejected'))
       setOpenId(null)
-      void invalidate()
-      void list.refetch()
+      invalidate()
     },
     onError: (error) => toast.error(messageFor(error)),
   })
@@ -83,12 +104,12 @@ export function Component() {
     () => [
       {
         accessorKey: 'payload.title',
-        header: 'Tiêu đề',
+        header: t('columns.title'),
         cell: ({ row }) => row.original.payload.title,
       },
       {
         id: 'ticket',
-        header: 'Phiếu',
+        header: t('suggestions.ticket'),
         cell: ({ row }) =>
           row.original.repairTicketId ? (
             <Link
@@ -96,7 +117,7 @@ export function Component() {
               to={`/repairs/${row.original.repairTicketId}`}
               onClick={(event) => event.stopPropagation()}
             >
-              {row.original.repairTicketId}
+              {tickets.data?.[row.original.repairTicketId] ?? row.original.repairTicketId}
             </Link>
           ) : (
             '—'
@@ -104,28 +125,28 @@ export function Component() {
       },
       {
         accessorKey: 'proposedBy',
-        header: 'Người đề xuất',
-        cell: ({ row }) => row.original.proposedBy ?? '—',
+        header: t('suggestions.proposedBy'),
+        cell: ({ row }) => userName(row.original.proposedBy),
       },
       {
         accessorKey: 'createdAt',
-        header: 'Ngày',
+        header: t('suggestions.createdAt'),
         cell: ({ getValue }) => formatDateTime(getValue<string>()),
       },
       {
         accessorKey: 'status',
-        header: 'Trạng thái',
+        header: t('suggestions.status'),
         cell: ({ row }) => <StatusBadge value={row.original.status} map={suggestionStatusMap} />,
       },
     ],
-    [],
+    [t, tickets.data, userName],
   )
-  if (!isAdm) return <p role="alert">Bạn không có quyền duyệt đề xuất.</p>
+  if (!isAdm) return <p role="alert">{t('suggestions.forbidden')}</p>
   const payload = detail.data?.payload
   return (
     <>
       {dialog}
-      <PageHeader title="Đề xuất thư viện lỗi" />
+      <PageHeader title={t('suggestions.title')} />
       <DataTable
         tableId="fault-suggestions"
         columns={columns}
@@ -143,18 +164,36 @@ export function Component() {
       <Sheet open={!!openId} onOpenChange={(open) => !open && setOpenId(null)}>
         <SheetContent className="overflow-y-auto sm:max-w-lg">
           <SheetHeader>
-            <SheetTitle>{payload?.title ?? 'Đề xuất'}</SheetTitle>
+            <SheetTitle>{payload?.title ?? t('suggestions.sheetTitle')}</SheetTitle>
           </SheetHeader>
-          {detail.isPending && <p role="status">Đang tải đề xuất…</p>}
+          {detail.isPending && <p role="status">{t('suggestions.loading')}</p>}
           {detail.error && <p role="alert">{messageFor(detail.error)}</p>}
           {payload && (
             <div className="space-y-3 p-4 text-sm">
-              {payload.errorCode && <p>Mã lỗi: {payload.errorCode}</p>}
+              {detail.data?.repairTicketId && (
+                <p>
+                  {t('suggestions.ticket')}:{' '}
+                  <Link
+                    className="text-primary hover:underline"
+                    to={`/repairs/${detail.data.repairTicketId}`}
+                  >
+                    {tickets.data?.[detail.data.repairTicketId] ?? detail.data.repairTicketId}
+                  </Link>
+                </p>
+              )}
+              <p>
+                {t('suggestions.proposedBy')}: {userName(detail.data?.proposedBy)}
+              </p>
+              {payload.errorCode && (
+                <p>{t('suggestions.errorCode', { code: payload.errorCode })}</p>
+              )}
               {payload.symptoms && (
-                <p className="whitespace-pre-wrap">Triệu chứng: {payload.symptoms}</p>
+                <p className="whitespace-pre-wrap">
+                  {t('suggestions.symptoms', { text: payload.symptoms })}
+                </p>
               )}
               <div>
-                <p className="font-medium">Các bước</p>
+                <p className="font-medium">{t('suggestions.steps')}</p>
                 <ol className="list-decimal pl-5">
                   {(payload.steps ?? []).map((step, index) => (
                     <li key={index}>{step.instruction}</li>
@@ -162,7 +201,7 @@ export function Component() {
                 </ol>
               </div>
               <div>
-                <p className="font-medium">Linh kiện</p>
+                <p className="font-medium">{t('suggestions.parts')}</p>
                 <ul>
                   {(payload.parts ?? []).map((part, index) => (
                     <li key={index}>
@@ -173,21 +212,21 @@ export function Component() {
               </div>
               {detail.data?.status === 'pending' && (
                 <div className="flex gap-2">
-                  <Button onClick={() => setAcceptOpen(true)}>Chấp nhận</Button>
+                  <Button onClick={() => setAcceptOpen(true)}>{t('suggestions.accept')}</Button>
                   <Button
                     variant="outline"
                     onClick={async () => {
                       const reason = await confirm({
-                        title: 'Từ chối đề xuất?',
+                        title: t('suggestions.rejectTitle'),
                         requireReason: true,
                         destructive: true,
-                        confirmLabel: 'Từ chối',
+                        confirmLabel: t('suggestions.reject'),
                       })
                       if (reason === false) return
                       reject.mutate(reason)
                     }}
                   >
-                    Từ chối
+                    {t('suggestions.reject')}
                   </Button>
                 </div>
               )}
@@ -198,7 +237,7 @@ export function Component() {
       <Dialog open={acceptOpen} onOpenChange={setAcceptOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Chấp nhận đề xuất</DialogTitle>
+            <DialogTitle>{t('suggestions.acceptTitle')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <label className="flex items-center gap-2 text-sm">
@@ -208,7 +247,7 @@ export function Component() {
                 checked={mode === 'create'}
                 onChange={() => setMode('create')}
               />
-              Tạo lỗi mới
+              {t('suggestions.createNew')}
             </label>
             <label className="flex items-center gap-2 text-sm">
               <input
@@ -217,11 +256,11 @@ export function Component() {
                 checked={mode === 'merge'}
                 onChange={() => setMode('merge')}
               />
-              Gộp vào lỗi có sẵn
+              {t('suggestions.merge')}
             </label>
             {mode === 'merge' && (
               <AsyncSelect
-                label="Lỗi đích"
+                label={t('suggestions.target')}
                 queryKey="faults-merge"
                 loadOptions={async (q) => {
                   const page = await listFaults({ q, page: 1, limit: 50 })
@@ -239,13 +278,13 @@ export function Component() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAcceptOpen(false)}>
-              Huỷ
+              {tc('actions.cancel')}
             </Button>
             <Button
               disabled={accept.isPending || (mode === 'merge' && !mergeId)}
               onClick={() => accept.mutate()}
             >
-              Xác nhận
+              {tc('actions.confirm')}
             </Button>
           </DialogFooter>
         </DialogContent>

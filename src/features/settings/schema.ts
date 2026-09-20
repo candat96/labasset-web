@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import i18n from '@/lib/i18n'
 
 export const settingsSchema = z.object({
   hospital: z.object({
@@ -7,7 +8,9 @@ export const settingsSchema = z.object({
     logoFileId: z.string().nullable(),
   }),
   approval: z.object({
-    levels: z.union([z.literal(1), z.literal(2)], { error: 'Chọn 1 hoặc 2 cấp' }),
+    levels: z.union([z.literal(1), z.literal(2)], {
+      error: i18n.t('settings:workflow.levelError'),
+    }),
   }),
   repair: z.object({
     requireAcceptance: z.boolean(),

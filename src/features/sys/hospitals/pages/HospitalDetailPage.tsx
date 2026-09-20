@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router'
+import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { PageHeader } from '@/components/page/PageHeader'
@@ -16,6 +17,8 @@ import { hospitalUsage } from '../api'
 import { useHospital, useHospitalMutations } from '../hooks'
 
 export function Component() {
+  const { t } = useTranslation('sys')
+  const { t: tc } = useTranslation()
   const { id = '' } = useParams()
   const detail = useHospital(id)
   const usage = useQuery({
@@ -26,7 +29,7 @@ export function Component() {
   const mutations = useHospitalMutations()
   const { confirm, dialog } = useConfirm()
   const [password, setPassword] = useState<string | null>(null)
-  if (detail.isPending) return <p role="status">Đang tải bệnh viện…</p>
+  if (detail.isPending) return <p role="status">{t('hospital.loading')}</p>
   if (detail.error) return <ErrorState error={detail.error} onRetry={() => void detail.refetch()} />
   const row = detail.data
   const run = async (
@@ -38,11 +41,11 @@ export function Component() {
       if (action === 'reset-admin') {
         const result = await mutations.resetAdmin.mutateAsync(id)
         setPassword(result.tempPassword)
-        toast.success(`Mật khẩu tạm cho ${result.username}`)
+        toast.success(t('hospital.tempPassword', { username: result.username }))
         return
       }
       await mutations.action.mutateAsync({ id, action })
-      toast.success('Đã thực hiện')
+      toast.success(t('hospital.done'))
     } catch (error) {
       toast.error(messageFor(error))
     }
@@ -58,38 +61,55 @@ export function Component() {
         actions={
           <>
             <Button asChild variant="outline">
-              <Link to={`/sys/hospitals/${id}/edit`}>Sửa</Link>
+              <Link to={`/sys/hospitals/${id}/edit`}>{tc('actions.edit')}</Link>
             </Button>
             {row.status === 'active' && (
               <Button
                 variant="outline"
-                onClick={() => void run('suspend', `Tạm khoá ${row.name}?`)}
+                onClick={() =>
+                  void run('suspend', t('hospital.confirm.suspend', { name: row.name }))
+                }
               >
-                Tạm khoá
+                {t('hospital.actions.suspend')}
               </Button>
             )}
             {row.status === 'suspended' && (
-              <Button onClick={() => void run('resume', `Mở lại ${row.name}?`)}>Mở lại</Button>
+              <Button
+                onClick={() => void run('resume', t('hospital.confirm.resume', { name: row.name }))}
+              >
+                {t('hospital.actions.resume')}
+              </Button>
             )}
             {row.status === 'failed' && (
-              <Button onClick={() => void run('provision/retry', `Chạy lại khởi tạo ${row.name}?`)}>
-                Thử khởi tạo lại
+              <Button
+                onClick={() =>
+                  void run(
+                    'provision/retry',
+                    t('hospital.confirm.retryProvision', { name: row.name }),
+                  )
+                }
+              >
+                {t('hospital.actions.retryProvision')}
               </Button>
             )}
             {(row.status === 'active' || row.status === 'suspended') && (
               <Button
                 variant="outline"
-                onClick={() => void run('migrate', `Chạy migration ${row.name}?`)}
+                onClick={() =>
+                  void run('migrate', t('hospital.confirm.migrate', { name: row.name }))
+                }
               >
-                Migration
+                {t('hospital.actions.migrate')}
               </Button>
             )}
             {row.status === 'active' && (
               <Button
                 variant="outline"
-                onClick={() => void run('reset-admin', `Reset admin ${row.name}?`)}
+                onClick={() =>
+                  void run('reset-admin', t('hospital.confirm.resetAdmin', { name: row.name }))
+                }
               >
-                Reset admin
+                {t('hospital.actions.resetAdmin')}
               </Button>
             )}
           </>
@@ -97,31 +117,33 @@ export function Component() {
       />
       <dl className="mb-6 grid gap-3 sm:grid-cols-2">
         <div>
-          <dt className="text-muted-foreground text-xs">Gói</dt>
+          <dt className="text-xs text-muted-foreground">{t('hospital.fields.plan')}</dt>
           <dd>{row.plan}</dd>
         </div>
         <div>
-          <dt className="text-muted-foreground text-xs">Hết hạn</dt>
+          <dt className="text-xs text-muted-foreground">{t('hospital.fields.expires')}</dt>
           <dd>{formatDateTime(row.licenseExpiresAt) || '—'}</dd>
         </div>
         <div>
-          <dt className="text-muted-foreground text-xs">Liên hệ</dt>
+          <dt className="text-xs text-muted-foreground">{t('hospital.fields.contact')}</dt>
           <dd>{row.contactName || '—'}</dd>
         </div>
         <div>
-          <dt className="text-muted-foreground text-xs">Migration</dt>
+          <dt className="text-xs text-muted-foreground">{t('hospital.fields.migrations')}</dt>
           <dd>
             {row.migrations.error
               ? row.migrations.error
               : row.migrations.pending?.length
                 ? row.migrations.pending.join(', ')
-                : 'Đã cập nhật'}
+                : t('hospital.updated')}
           </dd>
         </div>
       </dl>
-      <h2 className="mb-2 text-lg font-semibold">Khởi tạo</h2>
+      <h2 className="mb-2 text-lg font-semibold">{t('hospital.provision')}</h2>
       <ul className="mb-6 space-y-2 text-sm">
-        {row.provisionJobs.length === 0 && <li className="text-muted-foreground">Chưa có job</li>}
+        {row.provisionJobs.length === 0 && (
+          <li className="text-muted-foreground">{t('hospital.noJobs')}</li>
+        )}
         {row.provisionJobs.map((job) => (
           <li key={job.id} className="rounded border p-2">
             <StatusBadge value={job.status} map={commonStatusMap} /> {job.step} ·{' '}
@@ -132,8 +154,8 @@ export function Component() {
           </li>
         ))}
       </ul>
-      <h2 className="mb-2 text-lg font-semibold">Sử dụng</h2>
-      {usage.isPending && <p role="status">Đang tải usage…</p>}
+      <h2 className="mb-2 text-lg font-semibold">{t('hospital.usage')}</h2>
+      {usage.isPending && <p role="status">{t('hospital.usageLoading')}</p>}
       {usage.error && <ErrorState error={usage.error} onRetry={() => void usage.refetch()} />}
       <ul className="space-y-1 text-sm">
         {(usage.data ?? []).map((item) => (
@@ -141,7 +163,9 @@ export function Component() {
             {item.date}: {item.users} user · {formatQty(item.storageBytes)} byte
           </li>
         ))}
-        {usage.data?.length === 0 && <li className="text-muted-foreground">Chưa có số liệu</li>}
+        {usage.data?.length === 0 && (
+          <li className="text-muted-foreground">{t('hospital.noUsage')}</li>
+        )}
       </ul>
     </>
   )

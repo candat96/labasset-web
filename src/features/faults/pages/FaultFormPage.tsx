@@ -1,7 +1,9 @@
 import { useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router'
-import { useForm, useFieldArray } from 'react-hook-form'
+import { useForm, useFieldArray, type Control } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { PageHeader } from '@/components/page/PageHeader'
 import { ErrorState } from '@/components/page/ErrorState'
@@ -13,7 +15,8 @@ import { FileField } from '@/components/form/file-field'
 import { AsyncSelect } from '@/components/form/async-select'
 import { Textarea } from '@/components/ui/textarea'
 import { applyServerErrors, messageFor } from '@/api/errors'
-import { catalogOptions, supplyOptions } from '@/api/references'
+import { catalogOptions, resolveCatalogItem, supplyOptions } from '@/api/references'
+import { getFileUrl } from '@/api/files'
 import { faultSeverityMap } from '@/lib/status-maps'
 import { createFault, diffUpdate, emptyToNull, updateFault } from '../api'
 import { useFault } from '../hooks'
@@ -95,7 +98,7 @@ function toBody(values: FaultForm): CreateFault {
     parts: values.parts.map((part) =>
       emptyToNull({
         name: part.name,
-        quantity: part.quantity === '' ? 1 : part.quantity,
+        quantity: part.quantity,
         note: part.note,
         componentTypeId: part.componentTypeId,
         supplyId: part.supplyId,
@@ -104,18 +107,20 @@ function toBody(values: FaultForm): CreateFault {
   }) as CreateFault
 }
 
+type CatalogSlug = Parameters<typeof resolveCatalogItem>[0]
+
 function SelectRef({
   control,
   name,
   label,
   queryKey,
-  load,
+  slug,
 }: {
-  control: ReturnType<typeof useForm<FaultForm>>['control']
+  control: Control<FaultForm>
   name: 'groupId' | 'manufacturerId' | 'faultGroupId'
   label: string
   queryKey: string
-  load: (q: string) => Promise<{ id: string; code: string; name: string }[]>
+  slug: CatalogSlug
 }) {
   return (
     <FormField
@@ -126,7 +131,8 @@ function SelectRef({
           <AsyncSelect
             label={label}
             queryKey={queryKey}
-            loadOptions={load}
+            loadOptions={(q) => catalogOptions(slug, q)}
+            resolveOption={(id) => resolveCatalogItem(slug, id)}
             value={field.value}
             onChange={field.onChange}
             clearable
@@ -138,7 +144,21 @@ function SelectRef({
   )
 }
 
+/** Ảnh bước đã tải: hiện thumbnail nhỏ cạnh FileField. */
+function StepImagePreview({ fileId }: { fileId: string | null }) {
+  const url = useQuery({
+    queryKey: ['file-url', fileId, true],
+    queryFn: () => getFileUrl(fileId!, true),
+    enabled: !!fileId,
+    staleTime: 600_000,
+  })
+  if (!fileId || !url.data) return null
+  return <img src={url.data.url} alt="" className="mt-1 size-20 rounded object-cover" />
+}
+
 export function Component() {
+  const { t } = useTranslation('faults')
+  const { t: tc } = useTranslation()
   const { id = '' } = useParams()
   const editing = !!id
   const navigate = useNavigate()
@@ -154,10 +174,9 @@ export function Component() {
     if (detail.data) form.reset(fromDetail(detail.data))
   }, [detail.data, form])
   useEffect(() => {
-    if (detail.data?.status === 'published')
-      toast.warning('Sửa lỗi đã ban hành sẽ tạo phiên bản mới')
-  }, [detail.data?.status])
-  if (editing && detail.isPending) return <p role="status">Đang tải lỗi…</p>
+    if (detail.data?.status === 'published') toast.warning(t('form.publishedWarning'))
+  }, [detail.data?.status, t])
+  if (editing && detail.isPending) return <p role="status">{t('form.loading')}</p>
   if (editing && detail.error)
     return <ErrorState error={detail.error} onRetry={() => void detail.refetch()} />
   const submit = async (values: FaultForm) => {
@@ -167,11 +186,11 @@ export function Component() {
         const before = toBody(fromDetail(detail.data!))
         const patch = diffUpdate(before as UpdateFault, body as UpdateFault)
         if (Object.keys(patch).length) await updateFault(id, patch)
-        toast.success('Đã lưu lỗi')
+        toast.success(t('form.saved'))
         navigate(`/faults/${id}`)
       } else {
         const created = await createFault(body)
-        toast.success('Đã tạo lỗi')
+        toast.success(t('form.created'))
         navigate(`/faults/${created.id}`)
       }
     } catch (error) {
@@ -180,26 +199,20 @@ export function Component() {
   }
   return (
     <>
-      <PageHeader title={editing ? 'Sửa lỗi' : 'Thêm lỗi'} />
+      <PageHeader title={editing ? t('edit') : t('create')} />
       <Form {...form}>
         <form className="max-w-3xl space-y-4" noValidate onSubmit={form.handleSubmit(submit)}>
           <details open className="rounded-lg border p-4">
-            <summary className="cursor-pointer font-medium">Thông tin</summary>
+            <summary className="cursor-pointer font-medium">{t('form.info')}</summary>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="scope"
                 render={({ field }) => (
                   <FormItem className="sm:col-span-2">
-                    <FormLabel>Phạm vi</FormLabel>
+                    <FormLabel>{t('form.scope')}</FormLabel>
                     <div className="flex flex-wrap gap-4">
-                      {(
-                        [
-                          ['model', 'Model'],
-                          ['group', 'Nhóm'],
-                          ['all', 'Tất cả'],
-                        ] as const
-                      ).map(([value, label]) => (
+                      {(['model', 'group', 'all'] as const).map((value) => (
                         <label key={value} className="flex items-center gap-2 text-sm">
                           <input
                             type="radio"
@@ -208,7 +221,7 @@ export function Component() {
                             checked={field.value === value}
                             onChange={() => field.onChange(value)}
                           />
-                          {label}
+                          {t(`scope.${value}`)}
                         </label>
                       ))}
                     </div>
@@ -216,29 +229,31 @@ export function Component() {
                   </FormItem>
                 )}
               />
-              {scope === 'model' && <TextField control={form.control} name="model" label="Model" />}
+              {scope === 'model' && (
+                <TextField control={form.control} name="model" label={t('form.model')} />
+              )}
               {scope === 'group' && (
                 <SelectRef
                   control={form.control}
                   name="groupId"
-                  label="Nhóm máy"
+                  label={t('form.group')}
                   queryKey="equipment-groups"
-                  load={(q) => catalogOptions('equipment-groups', q)}
+                  slug="equipment-groups"
                 />
               )}
               <SelectRef
                 control={form.control}
                 name="manufacturerId"
-                label="Hãng"
+                label={t('form.manufacturer')}
                 queryKey="manufacturers"
-                load={(q) => catalogOptions('manufacturers', q)}
+                slug="manufacturers"
               />
-              <TextField control={form.control} name="errorCode" label="Mã lỗi" />
-              <TextField control={form.control} name="title" label="Tiêu đề" />
+              <TextField control={form.control} name="errorCode" label={t('form.errorCode')} />
+              <TextField control={form.control} name="title" label={t('form.title')} />
               <SelectField
                 control={form.control}
                 name="severity"
-                label="Mức độ"
+                label={t('form.severity')}
                 options={FAULT_SEVERITIES.map((item) => ({
                   value: item,
                   label: faultSeverityMap[item]?.label ?? item,
@@ -247,22 +262,22 @@ export function Component() {
               <NumberField
                 control={form.control}
                 name="estMinutes"
-                label="Thời gian ước tính (phút)"
+                label={t('form.estMinutes')}
                 min={0}
               />
               <SelectRef
                 control={form.control}
                 name="faultGroupId"
-                label="Nhóm lỗi"
+                label={t('form.faultGroup')}
                 queryKey="fault-groups"
-                load={(q) => catalogOptions('fault-groups', q)}
+                slug="fault-groups"
               />
               <FormField
                 control={form.control}
                 name="symptoms"
                 render={({ field }) => (
                   <FormItem className="sm:col-span-2">
-                    <FormLabel>Triệu chứng</FormLabel>
+                    <FormLabel>{t('form.symptoms')}</FormLabel>
                     <FormControl>
                       <Textarea {...field} value={field.value ?? ''} />
                     </FormControl>
@@ -275,7 +290,7 @@ export function Component() {
                 name="causes"
                 render={({ field }) => (
                   <FormItem className="sm:col-span-2">
-                    <FormLabel>Nguyên nhân</FormLabel>
+                    <FormLabel>{t('form.causes')}</FormLabel>
                     <FormControl>
                       <Textarea {...field} value={field.value ?? ''} />
                     </FormControl>
@@ -286,12 +301,12 @@ export function Component() {
             </div>
           </details>
           <details open className="rounded-lg border p-4">
-            <summary className="cursor-pointer font-medium">Các bước xử lý</summary>
+            <summary className="cursor-pointer font-medium">{t('form.steps')}</summary>
             <ol className="mt-4 space-y-4">
               {steps.fields.map((field, index) => (
                 <li key={field.id} className="space-y-3 rounded-md border p-3">
                   <div className="flex items-center justify-between">
-                    <p className="font-medium">Bước {index + 1}</p>
+                    <p className="font-medium">{t('form.step', { n: index + 1 })}</p>
                     <div className="flex gap-1">
                       <Button
                         type="button"
@@ -300,7 +315,7 @@ export function Component() {
                         disabled={index === 0}
                         onClick={() => steps.move(index, index - 1)}
                       >
-                        Lên
+                        {t('form.up')}
                       </Button>
                       <Button
                         type="button"
@@ -309,7 +324,7 @@ export function Component() {
                         disabled={index === steps.fields.length - 1}
                         onClick={() => steps.move(index, index + 1)}
                       >
-                        Xuống
+                        {t('form.down')}
                       </Button>
                       <Button
                         type="button"
@@ -317,24 +332,24 @@ export function Component() {
                         variant="ghost"
                         onClick={() => steps.remove(index)}
                       >
-                        Xoá
+                        {tc('actions.delete')}
                       </Button>
                     </div>
                   </div>
                   <TextField
                     control={form.control}
                     name={`steps.${index}.instruction`}
-                    label="Hướng dẫn"
+                    label={t('form.instruction')}
                   />
                   <TextField
                     control={form.control}
                     name={`steps.${index}.expectedResult`}
-                    label="Kết quả kỳ vọng"
+                    label={t('form.expectedResult')}
                   />
                   <TextField
                     control={form.control}
                     name={`steps.${index}.cautions`}
-                    label="Lưu ý"
+                    label={t('form.cautions')}
                   />
                   <FormField
                     control={form.control}
@@ -342,11 +357,12 @@ export function Component() {
                     render={({ field }) => (
                       <FormItem>
                         <FileField
-                          label="Ảnh bước"
+                          label={t('form.stepImage')}
                           accept="image/*"
                           value={field.value}
                           onChange={field.onChange}
                         />
+                        <StepImagePreview fileId={field.value} />
                         <FormMessage />
                       </FormItem>
                     )}
@@ -368,11 +384,11 @@ export function Component() {
                 })
               }
             >
-              Thêm bước
+              {t('form.addStep')}
             </Button>
           </details>
           <details open className="rounded-lg border p-4">
-            <summary className="cursor-pointer font-medium">Linh kiện/vật tư thường cần</summary>
+            <summary className="cursor-pointer font-medium">{t('form.parts')}</summary>
             <ul className="mt-4 space-y-4">
               {parts.fields.map((field, index) => (
                 <li key={field.id} className="space-y-3 rounded-md border p-3">
@@ -383,16 +399,20 @@ export function Component() {
                       variant="ghost"
                       onClick={() => parts.remove(index)}
                     >
-                      Xoá
+                      {tc('actions.delete')}
                     </Button>
                   </div>
-                  <TextField control={form.control} name={`parts.${index}.name`} label="Tên" />
+                  <TextField
+                    control={form.control}
+                    name={`parts.${index}.name`}
+                    label={t('form.partName')}
+                  />
                   <NumberField
                     control={form.control}
                     name={`parts.${index}.quantity`}
-                    label="Số lượng"
-                    min={0}
-                    step={0.001}
+                    label={t('form.quantity')}
+                    min={1}
+                    step={1}
                   />
                   <FormField
                     control={form.control}
@@ -400,7 +420,7 @@ export function Component() {
                     render={({ field: f }) => (
                       <FormItem>
                         <AsyncSelect
-                          label="Vật tư"
+                          label={t('form.supply')}
                           queryKey="supplies"
                           loadOptions={supplyOptions}
                           value={f.value}
@@ -417,9 +437,10 @@ export function Component() {
                     render={({ field: f }) => (
                       <FormItem>
                         <AsyncSelect
-                          label="Loại linh kiện"
+                          label={t('form.componentType')}
                           queryKey="component-types"
                           loadOptions={(q) => catalogOptions('component-types', q)}
+                          resolveOption={(id) => resolveCatalogItem('component-types', id)}
                           value={f.value}
                           onChange={f.onChange}
                           clearable
@@ -428,7 +449,11 @@ export function Component() {
                       </FormItem>
                     )}
                   />
-                  <TextField control={form.control} name={`parts.${index}.note`} label="Ghi chú" />
+                  <TextField
+                    control={form.control}
+                    name={`parts.${index}.note`}
+                    label={t('form.note')}
+                  />
                 </li>
               ))}
             </ul>
@@ -446,14 +471,14 @@ export function Component() {
                 })
               }
             >
-              Thêm linh kiện
+              {t('form.addPart')}
             </Button>
           </details>
           <div className="flex gap-2">
             <Button type="button" variant="outline" onClick={() => navigate(-1)}>
-              Huỷ
+              {tc('actions.cancel')}
             </Button>
-            <Button type="submit">Lưu</Button>
+            <Button type="submit">{tc('actions.save')}</Button>
           </div>
         </form>
       </Form>

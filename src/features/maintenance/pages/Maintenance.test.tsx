@@ -72,11 +72,55 @@ it('lists maintenance tasks', async () => {
   )
 })
 
+it('giao việc đột xuất cho chính mình khi không phải ADM (không gọi /v1/users)', async () => {
+  useAuthStore.getState().setSession(fakeSession(['EQUIPMENT_STAFF']))
+  const saved: unknown[] = []
+  server.use(
+    http.get('/v1/equipment', () =>
+      HttpResponse.json({
+        items: [{ id: 'e1', code: 'TB-1', name: 'Máy XN' }],
+        total: 1,
+        page: 1,
+        limit: 20,
+      }),
+    ),
+    http.post('/v1/maintenance/tasks', async ({ request }) => {
+      const body = (await request.json()) as { equipmentId?: string; assigneeId?: string }
+      if (!body.equipmentId) {
+        return HttpResponse.json(
+          { code: 'VALIDATION_ERROR', message: 'equipmentId là bắt buộc' },
+          { status: 400 },
+        )
+      }
+      saved.push(body)
+      return HttpResponse.json({ id: 'k2', code: 'BD-2' }, { status: 201 })
+    }),
+  )
+  renderWithProviders(<TasksPage />, {
+    path: '/maintenance/tasks',
+    route: '/maintenance/tasks',
+    routes: [{ path: '/maintenance/tasks/:id', element: <div>DETAIL</div> }],
+  })
+  await userEvent.click(await screen.findByRole('button', { name: 'Tạo đột xuất' }))
+  expect(screen.queryByLabelText('Người làm')).toBeNull()
+  await userEvent.type(await screen.findByLabelText('Máy'), 'TB-1')
+  await userEvent.click(await screen.findByRole('option', { name: /Máy XN/ }))
+  await userEvent.click(screen.getByRole('button', { name: 'Lưu' }))
+  await waitFor(() => expect(saved[0]).toMatchObject({ equipmentId: 'e1', assigneeId: 'u1' }))
+})
+
 it('creates a template', async () => {
   const saved: unknown[] = []
   server.use(
     http.post('/v1/maintenance/templates', async ({ request }) => {
-      saved.push(await request.json())
+      const body = (await request.json()) as { name?: string; items?: { label?: string }[] }
+      if (!body.name || !body.items?.length || !body.items[0]?.label) {
+        return HttpResponse.json(
+          { code: 'VALIDATION_ERROR', message: 'Thiếu tên hoặc mục checklist' },
+          { status: 400 },
+        )
+      }
+      saved.push(body)
       return HttpResponse.json({ ...template, id: 't2' }, { status: 201 })
     }),
   )

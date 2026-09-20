@@ -13,6 +13,16 @@ import users from './vi/users.json'
 import settings from './vi/settings.json'
 import auditLogs from './vi/audit-logs.json'
 import sys from './vi/sys.json'
+import equipment from './vi/equipment.json'
+import faults from './vi/faults.json'
+import repairs from './vi/repairs.json'
+import inventory from './vi/inventory.json'
+import requests from './vi/requests.json'
+import stocktakes from './vi/stocktakes.json'
+import maintenance from './vi/maintenance.json'
+import calibrations from './vi/calibrations.json'
+import reports from './vi/reports.json'
+import assistant from './vi/assistant.json'
 
 export const resources = {
   vi: {
@@ -28,6 +38,16 @@ export const resources = {
     settings,
     'audit-logs': auditLogs,
     sys,
+    equipment,
+    faults,
+    repairs,
+    inventory,
+    requests,
+    stocktakes,
+    maintenance,
+    calibrations,
+    reports,
+    assistant,
   },
 } as const
 

@@ -4,14 +4,19 @@ import { api, unwrapAs } from '@/api/client'
 import { pageQuery } from '@/api/paths'
 import { ErrorState } from '@/components/page/ErrorState'
 import { Timeline } from '@/components/timeline'
+import { useCan } from '@/app/guards/useCan'
+import { ADM } from '@/routes/roles'
 import { auditActionLabel } from '@/lib/audit-actions'
+import { shortId } from '@/lib/format/id'
 
 export function AuditTrail({ entityType, entityId }: { entityType: string; entityId: string }) {
+  const canListUsers = useCan(ADM)
   const trail = useQuery({
     queryKey: ['audit-logs', 'entity', entityType, entityId],
     queryFn: () => listEntityAudit(entityType, entityId),
     enabled: !!entityType && !!entityId,
   })
+  // `GET /v1/users` chỉ HOSPITAL_ADMIN đọc được (handoff/06 B6) → role khác không gọi.
   const users = useQuery({
     queryKey: ['audit-logs', 'users'],
     queryFn: async () => {
@@ -21,6 +26,7 @@ export function AuditTrail({ entityType, entityId }: { entityType: string; entit
       return result.items
     },
     staleTime: 60_000,
+    enabled: canListUsers,
   })
   const names = new Map((users.data ?? []).map((user) => [user.id, user.fullName || user.username]))
   if (trail.isPending) return <p role="status">Đang tải lịch sử…</p>
@@ -30,7 +36,7 @@ export function AuditTrail({ entityType, entityId }: { entityType: string; entit
       events={(trail.data?.items ?? []).map((item) => ({
         at: item.createdAt,
         title: auditActionLabel(item.action),
-        by: names.get(item.userId ?? '') ?? undefined,
+        by: names.get(item.userId ?? '') ?? shortId(item.userId),
       }))}
     />
   )

@@ -1,9 +1,12 @@
 import { useQueries } from '@tanstack/react-query'
 import type { StatusTone } from '@/components/page/StatusBadge'
 import { api, unwrapAs } from '@/api/client'
-import { pageQuery } from '@/api/paths'
+import { apiQuery, pageQuery } from '@/api/paths'
+import type { paths } from '@/api/schema'
 import { useCan } from '@/app/guards/useCan'
 import { STAFF } from '@/routes/roles'
+
+type EquipmentQuery = NonNullable<paths['/v1/equipment']['get']['parameters']['query']>
 
 export interface DashboardKpi {
   key: string
@@ -33,7 +36,7 @@ export function useDashboard() {
         queryFn: () =>
           unwrapAs<{ total: number }>(
             api.GET('/v1/equipment', {
-              params: { query: pageQuery({ status: 'active', page: 1, limit: 1 }) as never },
+              params: { query: apiQuery<EquipmentQuery>({ status: 'active', page: 1, limit: 1 }) },
             }),
           ),
       },
@@ -42,7 +45,7 @@ export function useDashboard() {
         queryFn: () =>
           unwrapAs<{ total: number }>(
             api.GET('/v1/equipment', {
-              params: { query: pageQuery({ status: 'broken', page: 1, limit: 1 }) as never },
+              params: { query: apiQuery<EquipmentQuery>({ status: 'broken', page: 1, limit: 1 }) },
             }),
           ),
       },
@@ -87,7 +90,7 @@ export function useDashboard() {
           unwrapAs<{ total: number }>(
             api.GET('/v1/requests', {
               params: {
-                query: pageQuery({ pendingFor: 'me' as const, page: 1, limit: 1 }) as never,
+                query: pageQuery({ pendingFor: 'me' as const, page: 1, limit: 1 }),
               },
             }),
           ),
@@ -97,7 +100,7 @@ export function useDashboard() {
         queryFn: () =>
           unwrapAs<{ total: number }>(
             api.GET('/v1/stock/alerts', {
-              params: { query: pageQuery({ resolved: false, page: 1, limit: 1 }) as never },
+              params: { query: pageQuery({ resolved: false, page: 1, limit: 1 }) },
             }),
           ),
         enabled: isStaff,

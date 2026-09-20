@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useTranslation } from 'react-i18next'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { PageHeader } from '@/components/page/PageHeader'
@@ -22,9 +23,10 @@ import { ADM } from '@/routes/roles'
 import { applyServerErrors, isApiError, messageFor } from '@/api/errors'
 import { previewNumber, resolveWarehouse, saveSettings, searchWarehouses } from '../api'
 import { changedSettings, settingField, values } from '../diff'
+import { isValidNumberingTemplate } from '../numbering'
 import { settingsKeys, useSettings } from '../hooks'
 import { settingsSchema, type SettingsForm } from '../schema'
-import { NUMBER_DEFAULTS, NUMBER_LABELS, NUMBER_TYPES, type NumberingType } from '../types'
+import { NUMBER_DEFAULTS, NUMBER_TYPES, type NumberingType } from '../types'
 
 const known = new Set([
   'hospital.name',
@@ -53,6 +55,7 @@ function previewText(result: { example?: string } | string) {
 const TABS = ['hospital', 'workflow', 'stock', 'alerts', 'numbering', 'ai', 'other'] as const
 
 export function Component() {
+  const { t } = useTranslation('settings')
   const canWrite = useCan(ADM)
   const queryClient = useQueryClient()
   const settings = useSettings()
@@ -106,7 +109,7 @@ export function Component() {
     mutationFn: saveSettings,
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: settingsKeys.all })
-      toast.success('Đã lưu cấu hình')
+      toast.success(t('saved'))
     },
     onError: (error) => {
       if (
@@ -133,14 +136,14 @@ export function Component() {
       Object.fromEntries(Object.entries(settings.data ?? {}).filter(([key]) => !known.has(key))),
     [settings.data],
   )
-  if (settings.isPending) return <p role="status">Đang tải cấu hình…</p>
+  if (settings.isPending) return <p role="status">{t('loading')}</p>
   if (settings.error)
     return <ErrorState error={settings.error} onRetry={() => void settings.refetch()} />
   const submit = (after: SettingsForm) => {
     const errors: Record<string, string> = {}
     for (const type of NUMBER_TYPES) {
-      if (templates[type] && !/\{SEQ/.test(templates[type]))
-        errors[`numbering.${type}`] = 'Mẫu số phải chứa {SEQ'
+      if (templates[type] && !isValidNumberingTemplate(templates[type]))
+        errors[`numbering.${type}`] = t('numbering.invalid')
     }
     setTemplateErrors(errors)
     if (Object.keys(errors).length) return
@@ -158,14 +161,14 @@ export function Component() {
     putAi('ai.monthlyTokenBudget', ai.monthlyTokenBudget, '0')
     if (ai.apiKey) body['ai.apiKey'] = ai.apiKey
     if (!Object.keys(body).length) {
-      toast.message('Không có thay đổi')
+      toast.message(t('noChange'))
       return
     }
     mutation.mutate(body)
   }
   return (
     <>
-      <PageHeader title="Cấu hình hệ thống" />
+      <PageHeader title={t('title')} />
       <Form {...form}>
         <form className="space-y-4" noValidate onSubmit={form.handleSubmit(submit)}>
           <Tabs
@@ -177,28 +180,32 @@ export function Component() {
             }}
           >
             <TabsList className="max-w-full flex-wrap">
-              <TabsTrigger value="hospital">Viện</TabsTrigger>
-              <TabsTrigger value="workflow">Quy trình</TabsTrigger>
-              <TabsTrigger value="stock">Kho</TabsTrigger>
-              <TabsTrigger value="alerts">Cảnh báo</TabsTrigger>
-              <TabsTrigger value="numbering">Đánh số</TabsTrigger>
-              <TabsTrigger value="ai">AI</TabsTrigger>
-              <TabsTrigger value="other">Khác</TabsTrigger>
+              <TabsTrigger value="hospital">{t('tabs.hospital')}</TabsTrigger>
+              <TabsTrigger value="workflow">{t('tabs.workflow')}</TabsTrigger>
+              <TabsTrigger value="stock">{t('tabs.stock')}</TabsTrigger>
+              <TabsTrigger value="alerts">{t('tabs.alerts')}</TabsTrigger>
+              <TabsTrigger value="numbering">{t('tabs.numbering')}</TabsTrigger>
+              <TabsTrigger value="ai">{t('tabs.ai')}</TabsTrigger>
+              <TabsTrigger value="other">{t('tabs.other')}</TabsTrigger>
             </TabsList>
             <TabsContent
               value="hospital"
               forceMount
               className="space-y-4 data-[state=inactive]:hidden"
             >
-              <TextField control={form.control} name="hospital.name" label="Tên bệnh viện" />
-              <TextField control={form.control} name="hospital.address" label="Địa chỉ" />
+              <TextField control={form.control} name="hospital.name" label={t('hospital.name')} />
+              <TextField
+                control={form.control}
+                name="hospital.address"
+                label={t('hospital.address')}
+              />
               <FormField
                 control={form.control}
                 name="hospital.logoFileId"
                 render={({ field }) => (
                   <FormItem>
                     <FileField
-                      label="Logo bệnh viện"
+                      label={t('hospital.logoFileId')}
                       accept="image/*"
                       value={field.value}
                       onChange={field.onChange}
@@ -219,7 +226,9 @@ export function Component() {
                 render={({ field }) => (
                   <FormItem>
                     <fieldset className="space-y-2">
-                      <legend className="text-sm font-medium">Số cấp duyệt</legend>
+                      <legend className="text-sm font-medium">
+                        {t('workflow.approvalLevels')}
+                      </legend>
                       <RadioGroup
                         className="flex gap-4"
                         value={String(field.value)}
@@ -228,7 +237,7 @@ export function Component() {
                         {([1, 2] as const).map((level) => (
                           <label key={level} className="flex min-h-8 items-center gap-2 text-sm">
                             <RadioGroupItem value={String(level)} />
-                            {level} cấp
+                            {t('workflow.level', { level })}
                           </label>
                         ))}
                       </RadioGroup>
@@ -240,36 +249,36 @@ export function Component() {
               <SwitchField
                 control={form.control}
                 name="repair.requireAcceptance"
-                label="Sửa chữa cần nghiệm thu"
+                label={t('workflow.requireAcceptance')}
               />
               <SwitchField
                 control={form.control}
                 name="requests.restrictToCompatible"
-                label="Chỉ cho yêu cầu vật tư tương thích"
+                label={t('workflow.restrictToCompatible')}
               />
               <div className="grid gap-4 sm:grid-cols-4">
                 <NumberField
                   control={form.control}
                   name="repair.sla.low"
-                  label="SLA thấp (giờ)"
+                  label={t('workflow.slaLow')}
                   min={1}
                 />
                 <NumberField
                   control={form.control}
                   name="repair.sla.medium"
-                  label="SLA vừa (giờ)"
+                  label={t('workflow.slaMedium')}
                   min={1}
                 />
                 <NumberField
                   control={form.control}
                   name="repair.sla.high"
-                  label="SLA cao (giờ)"
+                  label={t('workflow.slaHigh')}
                   min={1}
                 />
                 <NumberField
                   control={form.control}
                   name="repair.sla.critical"
-                  label="SLA nghiêm trọng (giờ)"
+                  label={t('workflow.slaCritical')}
                   min={1}
                 />
               </div>
@@ -285,7 +294,7 @@ export function Component() {
                 render={({ field }) => (
                   <FormItem>
                     <AsyncSelect
-                      label="Kho mặc định"
+                      label={t('stock.defaultWarehouseId')}
                       queryKey="warehouses"
                       loadOptions={searchWarehouses}
                       resolveOption={resolveWarehouse}
@@ -300,7 +309,7 @@ export function Component() {
               <NumberField
                 control={form.control}
                 name="stock.cancelWindowDays"
-                label="Số ngày được huỷ phiếu kho"
+                label={t('stock.cancelWindowDays')}
                 min={0}
               />
             </TabsContent>
@@ -312,36 +321,36 @@ export function Component() {
               <SwitchField
                 control={form.control}
                 name="alerts.stockMinEnabled"
-                label="Bật cảnh báo tồn tối thiểu"
+                label={t('alerts.stockMinEnabled')}
               />
               <NumberField
                 control={form.control}
                 name="alerts.expiryDaysBefore"
-                label="Cảnh báo hết hạn trước (ngày)"
+                label={t('alerts.expiryDaysBefore')}
                 min={0}
               />
               <NumberField
                 control={form.control}
                 name="alerts.maintenanceDaysBefore"
-                label="Cảnh báo bảo dưỡng trước (ngày)"
+                label={t('alerts.maintenanceDaysBefore')}
                 min={0}
               />
               <NumberField
                 control={form.control}
                 name="alerts.calibrationDaysBefore"
-                label="Cảnh báo kiểm định trước (ngày)"
+                label={t('alerts.calibrationDaysBefore')}
                 min={0}
               />
               <NumberField
                 control={form.control}
                 name="alerts.repairCostPctOfValue"
-                label="Ngưỡng chi phí sửa chữa (%)"
+                label={t('alerts.repairCostPctOfValue')}
                 min={0}
               />
               <NumberField
                 control={form.control}
                 name="maintenance.dueGraceDays"
-                label="Số ngày gia hạn bảo dưỡng"
+                label={t('alerts.dueGraceDays')}
                 min={0}
               />
             </TabsContent>
@@ -356,7 +365,7 @@ export function Component() {
                   className="grid items-end gap-2 rounded border p-3 sm:grid-cols-[180px_1fr_auto]"
                 >
                   <label className="text-sm font-medium" htmlFor={`number-${type}`}>
-                    {NUMBER_LABELS[type]}
+                    {t(`numbering.${type}`)}
                   </label>
                   <div>
                     <Input
@@ -372,9 +381,9 @@ export function Component() {
                       </p>
                     )}
                     {previews[type] && (
-                      <p className="text-muted-foreground text-xs">
-                        Xem trước đã lưu: {previews[type]}
-                      </p>
+                      <output className="text-xs text-muted-foreground">
+                        {t('numbering.previewSaved', { value: previews[type] })}
+                      </output>
                     )}
                   </div>
                   <Button
@@ -389,7 +398,7 @@ export function Component() {
                       }
                     }}
                   >
-                    Xem trước
+                    {t('numbering.preview')}
                   </Button>
                 </div>
               ))}
@@ -397,8 +406,7 @@ export function Component() {
             <TabsContent value="ai" forceMount className="space-y-4 data-[state=inactive]:hidden">
               <p className="text-muted-foreground text-sm">
                 {/* TODO(api): D2 chưa có GET /v1/ai/status. Khoá gửi qua PUT /v1/settings. */}
-                API D2 chưa có — lưu khoá `ai.*` khi backend sẵn sàng. Không hiện lại API key đã
-                đặt.
+                {t('ai.note')}
               </p>
               <div className="flex items-center gap-2">
                 <Switch
@@ -406,11 +414,11 @@ export function Component() {
                   checked={ai.enabled}
                   onCheckedChange={(value) => setAi((current) => ({ ...current, enabled: value }))}
                 />
-                <Label htmlFor="ai-enabled">Bật trợ lý AI</Label>
+                <Label htmlFor="ai-enabled">{t('ai.enabled')}</Label>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="ai-provider">Nhà cung cấp</Label>
+                  <Label htmlFor="ai-provider">{t('ai.provider')}</Label>
                   <Input
                     id="ai-provider"
                     value={ai.provider}
@@ -420,7 +428,7 @@ export function Component() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="ai-model">Mô hình</Label>
+                  <Label htmlFor="ai-model">{t('ai.model')}</Label>
                   <Input
                     id="ai-model"
                     value={ai.model}
@@ -430,7 +438,7 @@ export function Component() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="ai-embed-provider">Embedding</Label>
+                  <Label htmlFor="ai-embed-provider">{t('ai.embeddingProvider')}</Label>
                   <Input
                     id="ai-embed-provider"
                     value={ai.embeddingProvider}
@@ -440,7 +448,7 @@ export function Component() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="ai-embed-model">Mô hình embedding</Label>
+                  <Label htmlFor="ai-embed-model">{t('ai.embeddingModel')}</Label>
                   <Input
                     id="ai-embed-model"
                     value={ai.embeddingModel}
@@ -450,7 +458,7 @@ export function Component() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="ai-budget">Ngân sách token/tháng (0 = không giới hạn)</Label>
+                  <Label htmlFor="ai-budget">{t('ai.budget')}</Label>
                   <Input
                     id="ai-budget"
                     value={ai.monthlyTokenBudget}
@@ -461,7 +469,7 @@ export function Component() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="ai-key">
-                    API key {settings.data?.['ai.apiKeySet'] ? '(đã đặt)' : '(chưa đặt)'}
+                    {settings.data?.['ai.apiKeySet'] ? t('ai.apiKeySet') : t('ai.apiKeyUnset')}
                   </Label>
                   <Input
                     id="ai-key"
@@ -483,7 +491,7 @@ export function Component() {
           </Tabs>
           {canWrite && (
             <Button type="submit" disabled={mutation.isPending}>
-              Lưu thay đổi
+              {t('save')}
             </Button>
           )}
         </form>

@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { PageHeader } from '@/components/page/PageHeader'
 import { ErrorState } from '@/components/page/ErrorState'
@@ -41,6 +42,8 @@ function toBody(values: HospitalValues) {
 }
 
 export function Component() {
+  const { t } = useTranslation('sys')
+  const { t: tc } = useTranslation()
   const { id = '' } = useParams()
   const navigate = useNavigate()
   const editing = Boolean(id)
@@ -65,7 +68,7 @@ export function Component() {
       notes: detail.data.notes ?? '',
     })
   }, [detail.data, form])
-  if (editing && detail.isPending) return <p role="status">Đang tải bệnh viện…</p>
+  if (editing && detail.isPending) return <p role="status">{t('hospital.loading')}</p>
   if (editing && detail.error)
     return <ErrorState error={detail.error} onRetry={() => void detail.refetch()} />
   const submit = async (values: HospitalValues) => {
@@ -92,18 +95,18 @@ export function Component() {
             patch[key] = body[key]
         }
         if (!Object.keys(patch).length) {
-          toast.message('Không có thay đổi')
+          toast.message(tc('actions.noChange'))
           return
         }
         await mutations.update.mutateAsync({
           id,
           body: patch as components['schemas']['UpdateHospitalDto'],
         })
-        toast.success('Đã lưu bệnh viện')
+        toast.success(t('hospital.saved'))
         navigate(`/sys/hospitals/${id}`)
       } else {
         const created = await mutations.create.mutateAsync(body)
-        toast.success('Đã tạo bệnh viện. Mật khẩu admin tạm lấy bằng Reset admin khi viện active.')
+        toast.success(t('hospital.created'))
         navigate(`/sys/hospitals/${created.id}`)
       }
     } catch (error) {
@@ -112,39 +115,60 @@ export function Component() {
   }
   return (
     <>
-      <PageHeader title={editing ? 'Sửa bệnh viện' : 'Thêm bệnh viện'} />
+      <PageHeader title={editing ? t('hospital.edit') : t('hospital.add')} />
       <Form {...form}>
         <form className="max-w-xl space-y-4" noValidate onSubmit={form.handleSubmit(submit)}>
           {!editing && (
             <TextField
               control={form.control}
               name="code"
-              label="Mã"
+              label={t('hospital.fields.code')}
               transform={(value) => value.toUpperCase()}
             />
           )}
-          <TextField control={form.control} name="name" label="Tên" />
+          <TextField control={form.control} name="name" label={t('hospital.fields.name')} />
           <SelectField
             control={form.control}
             name="plan"
-            label="Gói"
+            label={t('hospital.fields.plan')}
             options={[
               { value: 'standard', label: 'Standard' },
               { value: 'pro', label: 'Pro' },
             ]}
           />
-          <NumberField control={form.control} name="maxUsers" label="Số user tối đa" min={1} />
-          <DatetimeField control={form.control} name="licenseExpiresAt" label="Hết hạn giấy phép" />
-          <TextField control={form.control} name="contactName" label="Người liên hệ" />
-          <TextField control={form.control} name="contactEmail" label="Email liên hệ" />
-          <TextField control={form.control} name="contactPhone" label="Điện thoại" />
-          <TextField control={form.control} name="notes" label="Ghi chú" />
+          <NumberField
+            control={form.control}
+            name="maxUsers"
+            label={t('hospital.fields.maxUsers')}
+            min={1}
+          />
+          <DatetimeField
+            control={form.control}
+            name="licenseExpiresAt"
+            label={t('hospital.fields.licenseExpiresAt')}
+          />
+          <TextField
+            control={form.control}
+            name="contactName"
+            label={t('hospital.fields.contactName')}
+          />
+          <TextField
+            control={form.control}
+            name="contactEmail"
+            label={t('hospital.fields.contactEmail')}
+          />
+          <TextField
+            control={form.control}
+            name="contactPhone"
+            label={t('hospital.fields.contactPhone')}
+          />
+          <TextField control={form.control} name="notes" label={t('hospital.fields.notes')} />
           <div className="flex gap-2">
             <Button type="button" variant="outline" onClick={() => navigate(-1)}>
-              Huỷ
+              {tc('actions.cancel')}
             </Button>
             <Button type="submit" disabled={form.formState.isSubmitting}>
-              Lưu
+              {tc('actions.save')}
             </Button>
           </div>
         </form>

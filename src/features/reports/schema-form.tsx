@@ -1,4 +1,5 @@
 import { forwardRef, useEffect, useImperativeHandle, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useForm, useFormContext, useWatch, type Control, type FieldPath } from 'react-hook-form'
 import { format, subDays } from 'date-fns'
 import { api, unwrapAs } from '@/api/client'
@@ -20,6 +21,7 @@ import {
   TextField,
 } from '@/components/form/fields'
 import { Form } from '@/components/ui/form'
+import i18n from '@/lib/i18n'
 import type { JsonObjectSchema, JsonSchemaProperty, ReportParamValues } from './api'
 
 export type SchemaFieldKind = 'date' | 'uuid' | 'enum' | 'boolean' | 'number' | 'string'
@@ -34,32 +36,33 @@ export interface SchemaParamsFormProps {
   onChange?: (value: ReportParamValues) => void
 }
 
-const DEFAULT_LABELS: Record<string, string> = {
-  from: 'Từ ngày',
-  to: 'Đến ngày',
-  q: 'Từ khóa',
-  status: 'Trạng thái',
-  departmentId: 'Khoa',
-  warehouseId: 'Kho',
-  equipmentId: 'Thiết bị',
-  supplyId: 'Vật tư',
-  sessionId: 'Đợt kiểm kê',
-  groupBy: 'Nhóm theo',
-  minCost: 'Chi phí tối thiểu',
-  includeRetired: 'Gồm máy ngừng sử dụng',
-  onlyBelowMin: 'Chỉ dưới mức tối thiểu',
-  includeZero: 'Gồm dòng không chênh',
-  minAbsDiff: 'Chênh tối thiểu',
+/** Khoá i18n `reports` cho nhãn tham số mặc định (fallback khi schema API thiếu `title`). */
+const DEFAULT_LABEL_KEYS: Record<string, string> = {
+  from: 'paramFrom',
+  to: 'paramTo',
+  q: 'paramQ',
+  status: 'paramStatus',
+  departmentId: 'paramDepartment',
+  warehouseId: 'paramWarehouse',
+  equipmentId: 'paramEquipment',
+  supplyId: 'paramSupply',
+  sessionId: 'paramSession',
+  groupBy: 'paramGroupBy',
+  minCost: 'paramMinCost',
+  includeRetired: 'paramIncludeRetired',
+  onlyBelowMin: 'paramOnlyBelowMin',
+  includeZero: 'paramIncludeZero',
+  minAbsDiff: 'paramMinAbsDiff',
 }
 
-const ENUM_LABELS: Record<string, string> = {
-  active: 'Hoạt động',
-  broken: 'Hỏng',
-  awaiting_parts: 'Chờ linh kiện',
-  retired: 'Ngừng sử dụng',
-  equipment: 'Theo máy',
-  department: 'Theo khoa',
-  month: 'Theo tháng',
+const ENUM_LABEL_KEYS: Record<string, string> = {
+  active: 'enumActive',
+  broken: 'enumBroken',
+  awaiting_parts: 'enumAwaitingParts',
+  retired: 'enumRetired',
+  equipment: 'enumByEquipment',
+  department: 'enumByDepartment',
+  month: 'enumByMonth',
 }
 
 const XREF_KEYS = ['departmentId', 'warehouseId', 'equipmentId', 'supplyId', 'sessionId'] as const
@@ -104,7 +107,13 @@ export function schemaProperties(schema: JsonObjectSchema): [string, JsonSchemaP
 }
 
 export function fieldLabel(name: string, property: JsonSchemaProperty): string {
-  return property.title ?? DEFAULT_LABELS[name] ?? name
+  const key = DEFAULT_LABEL_KEYS[name]
+  if (property.title) return property.title
+  return key ? i18n.t(`reports:${key}`) : name
+}
+
+function enumLabelKey(value: string): string | undefined {
+  return ENUM_LABEL_KEYS[value]
 }
 
 export function asObjectSchema(params: JsonObjectSchema | Record<string, unknown> | undefined) {
@@ -177,6 +186,7 @@ export function SchemaField({
   control: Control<ReportParamValues>
   required?: boolean
 }) {
+  const { t } = useTranslation('reports')
   const label = fieldLabel(name, property)
   const kind = fieldKind(property)
   const path = name as FieldPath<ReportParamValues>
@@ -189,12 +199,12 @@ export function SchemaField({
         control={control}
         name={path}
         label={label}
-        placeholder="Chọn"
-        emptyLabel={required ? undefined : 'Tất cả'}
-        options={(property.enum ?? []).map((value) => ({
-          value,
-          label: ENUM_LABELS[value] ?? value,
-        }))}
+        placeholder={t('selectPlaceholder')}
+        emptyLabel={required ? undefined : t('allOption')}
+        options={(property.enum ?? []).map((value) => {
+          const key = enumLabelKey(value)
+          return { value, label: key ? t(key) : value }
+        })}
       />
     )
   }

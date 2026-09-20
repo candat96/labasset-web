@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { messageFor } from '@/api/errors'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -9,6 +10,7 @@ import { useConfirm } from '@/components/confirm-dialog'
 import { migrationsStatus, runAllMigrations, type MigrationStatus } from '../../hospitals/api'
 
 export function Component() {
+  const { t } = useTranslation('sys')
   const table = useServerTable()
   const list = useQuery({ queryKey: ['sys-migrations'], queryFn: migrationsStatus })
   const qc = useQueryClient()
@@ -19,21 +21,21 @@ export function Component() {
       void qc.invalidateQueries({ queryKey: ['sys-migrations'] })
       void qc.invalidateQueries({ queryKey: ['sys-hospitals'] })
       const failed = result.filter((row) => !row.ok).length
-      toast.success(failed ? `Xong, ${failed} viện lỗi` : 'Đã chạy migration tất cả viện')
+      toast.success(failed ? t('migration.partial', { failed }) : t('migration.success'))
     },
     onError: (error) => toast.error(messageFor(error)),
   })
   const columns: ColumnDef<MigrationStatus>[] = [
-    { accessorKey: 'code', header: 'Mã viện' },
+    { accessorKey: 'code', header: t('migration.columns.code') },
     {
       id: 'pending',
-      header: 'Chờ chạy',
+      header: t('migration.columns.pending'),
       cell: ({ row }) =>
         row.original.error
           ? row.original.error
           : row.original.pending?.length
             ? row.original.pending.join(', ')
-            : 'Không',
+            : t('migration.none'),
     },
   ]
   const rows = list.data ?? []
@@ -42,14 +44,14 @@ export function Component() {
     <>
       {dialog}
       <PageHeader
-        title="Migration"
+        title={t('migration.title')}
         actions={
           <Button
             onClick={async () => {
-              if ((await confirm({ title: 'Chạy migration tất cả viện?' })) !== false) run.mutate()
+              if ((await confirm({ title: t('migration.confirmRunAll') })) !== false) run.mutate()
             }}
           >
-            Chạy tất cả
+            {t('migration.runAll')}
           </Button>
         }
       />

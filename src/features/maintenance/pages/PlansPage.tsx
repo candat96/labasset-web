@@ -16,22 +16,27 @@ import { DateField } from '@/components/form/date-field'
 import { FormField, FormItem, FormMessage } from '@/components/ui/form'
 import { AsyncSelect } from '@/components/form/async-select'
 import { useCan } from '@/app/guards/useCan'
-import { STAFF } from '@/routes/roles'
+import { ADM, STAFF } from '@/routes/roles'
 import { applyServerErrors, messageFor } from '@/api/errors'
+import { apiBody } from '@/api/client'
 import { catalogOptions, equipmentOptions, staffUserOptions } from '@/api/references'
 import { useState } from 'react'
 import { createPlan } from '../api'
-import { useInvalidateMaint, usePlans, useTemplates } from '../hooks'
+import { useInvalidatePlans, usePlans, useTemplates } from '../hooks'
 import { planSchema, type PlanForm } from '../schema'
 import type { Plan } from '../types'
+import { useTranslation } from 'react-i18next'
 
 export function Component() {
+  const { t } = useTranslation('maintenance')
+
   const canWrite = useCan(STAFF)
+  const canListUsers = useCan(ADM)
   const navigate = useNavigate()
   const table = useServerTable()
   const list = usePlans()
   const templates = useTemplates()
-  const invalidate = useInvalidateMaint()
+  const invalidate = useInvalidatePlans()
   const [open, setOpen] = useState(false)
   const form = useForm<PlanForm>({
     resolver: zodResolver(planSchema),
@@ -58,7 +63,7 @@ export function Component() {
     () => [
       {
         accessorKey: 'name',
-        header: 'Tên',
+        header: t('name'),
         cell: ({ row }) => (
           <Link
             className="text-primary hover:underline"
@@ -70,20 +75,20 @@ export function Component() {
       },
       {
         id: 'target',
-        header: 'Đối tượng',
-        cell: ({ row }) => (row.original.equipmentId ? 'Máy' : 'Nhóm'),
+        header: t('target'),
+        cell: ({ row }) => (row.original.equipmentId ? t('equipment') : t('group')),
       },
       {
         id: 'cycle',
-        header: 'Chu kỳ',
+        header: t('cycle'),
         cell: ({ row }) =>
           row.original.cycleMonths
-            ? `${row.original.cycleMonths} tháng`
-            : `${row.original.cycleDays ?? '—'} ngày`,
+            ? t('cycleMonthsValue', { count: row.original.cycleMonths })
+            : t('cycleDaysValue', { count: row.original.cycleDays ?? '—' }),
       },
       {
         accessorKey: 'isActive',
-        header: 'Trạng thái',
+        header: t('status'),
         cell: ({ row }) => (
           <StatusBadge
             value={row.original.isActive ? 'active' : 'inactive'}
@@ -92,14 +97,14 @@ export function Component() {
         ),
       },
     ],
-    [],
+    [t],
   )
   const target = form.watch('target')
   return (
     <>
       <PageHeader
-        title="Kế hoạch bảo dưỡng"
-        actions={canWrite && <Button onClick={() => setOpen(true)}>Thêm kế hoạch</Button>}
+        title={t('plansTitle')}
+        actions={canWrite && <Button onClick={() => setOpen(true)}>{t('createPlan')}</Button>}
       />
       <DataTable
         tableId="maint-plans"
@@ -116,7 +121,7 @@ export function Component() {
         onRowClick={(row) => navigate(`/maintenance/plans/${row.id}`)}
         toolbarLeft={
           <Input
-            aria-label="Tìm kế hoạch"
+            aria-label={t('searchPlan')}
             value={table.inputQ}
             onChange={(e) => table.setQ(e.target.value)}
           />
@@ -125,27 +130,30 @@ export function Component() {
       <FormDialog
         open={open}
         onOpenChange={setOpen}
-        title="Thêm kế hoạch"
+        title={t('createPlan')}
         width="lg"
         form={form}
         onSubmit={async (values) => {
           try {
-            const created = await createPlan({
-              name: values.name,
-              templateId: values.templateId,
-              startDate: values.startDate,
-              endDate: values.endDate || null,
-              equipmentId: values.target === 'equipment' ? values.equipmentId : null,
-              groupId: values.target === 'group' ? values.groupId : null,
-              cycleMonths: values.cycleKind === 'months' ? values.cycleValue : null,
-              cycleDays: values.cycleKind === 'days' ? values.cycleValue : null,
-              defaultAssigneeId: values.defaultAssigneeId,
-              source: values.source,
-              supplierId: values.source === 'vendor_contract' ? values.supplierId : null,
-              contractNo: values.contractNo || null,
-              isActive: values.isActive,
-            } as never)
-            toast.success('Đã tạo kế hoạch')
+            const created = await createPlan(
+              apiBody({
+                name: values.name,
+                templateId: values.templateId,
+                startDate: values.startDate,
+                endDate: values.endDate || null,
+                equipmentId: values.target === 'equipment' ? values.equipmentId : null,
+                groupId: values.target === 'group' ? values.groupId : null,
+                cycleMonths: values.cycleKind === 'months' ? values.cycleValue : null,
+                cycleDays: values.cycleKind === 'days' ? values.cycleValue : null,
+                // `GET /v1/users` chỉ ADM đọc được → role khác không chọn người mặc định.
+                defaultAssigneeId: canListUsers ? values.defaultAssigneeId : null,
+                source: values.source,
+                supplierId: values.source === 'vendor_contract' ? values.supplierId : null,
+                contractNo: values.contractNo || null,
+                isActive: values.isActive,
+              }),
+            )
+            toast.success(t('planCreated'))
             void invalidate()
             setOpen(false)
             navigate(`/maintenance/plans/${created.id}`)
@@ -154,14 +162,14 @@ export function Component() {
           }
         }}
       >
-        <TextField control={form.control} name="name" label="Tên" />
+        <TextField control={form.control} name="name" label={t('name')} />
         <SelectField
           control={form.control}
           name="target"
-          label="Đối tượng"
+          label={t('target')}
           options={[
-            { value: 'equipment', label: 'Máy' },
-            { value: 'group', label: 'Nhóm' },
+            { value: 'equipment', label: t('equipment') },
+            { value: 'group', label: t('group') },
           ]}
         />
         {target === 'equipment' ? (
@@ -171,7 +179,7 @@ export function Component() {
             render={({ field }) => (
               <FormItem>
                 <AsyncSelect
-                  label="Máy"
+                  label={t('equipment')}
                   queryKey="equipment"
                   loadOptions={equipmentOptions}
                   value={field.value}
@@ -188,7 +196,7 @@ export function Component() {
             render={({ field }) => (
               <FormItem>
                 <AsyncSelect
-                  label="Nhóm máy"
+                  label={t('equipmentGroup')}
                   queryKey="equipment-groups"
                   loadOptions={(q) => catalogOptions('equipment-groups', q)}
                   value={field.value}
@@ -208,42 +216,45 @@ export function Component() {
         <SelectField
           control={form.control}
           name="cycleKind"
-          label="Chu kỳ"
+          label={t('cycle')}
           options={[
-            { value: 'months', label: 'Tháng' },
-            { value: 'days', label: 'Ngày' },
+            { value: 'months', label: t('optionMonths') },
+            { value: 'days', label: t('optionDays') },
           ]}
         />
-        <NumberField control={form.control} name="cycleValue" label="Số" min={1} />
-        <DateField control={form.control} name="startDate" label="Bắt đầu" />
-        <DateField control={form.control} name="endDate" label="Kết thúc" />
-        <FormField
-          control={form.control}
-          name="defaultAssigneeId"
-          render={({ field }) => (
-            <FormItem>
-              <AsyncSelect
-                label="Người mặc định"
-                queryKey="staff-users"
-                loadOptions={staffUserOptions}
-                value={field.value}
-                onChange={field.onChange}
-                clearable
-              />
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <NumberField control={form.control} name="cycleValue" label={t('cycleValue')} min={1} />
+        <DateField control={form.control} name="startDate" label={t('start')} />
+        <DateField control={form.control} name="endDate" label={t('endDate')} />
+        {/* `GET /v1/users` chỉ HOSPITAL_ADMIN đọc được → STAFF không gọi danh bạ. */}
+        {canListUsers && (
+          <FormField
+            control={form.control}
+            name="defaultAssigneeId"
+            render={({ field }) => (
+              <FormItem>
+                <AsyncSelect
+                  label={t('defaultAssignee')}
+                  queryKey="staff-users"
+                  loadOptions={staffUserOptions}
+                  value={field.value}
+                  onChange={field.onChange}
+                  clearable
+                />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
         <SelectField
           control={form.control}
           name="source"
-          label="Nguồn"
+          label={t('source')}
           options={[
-            { value: 'internal', label: 'Nội bộ' },
-            { value: 'vendor_contract', label: 'Hợp đồng nhà thầu' },
+            { value: 'internal', label: t('sourceInternal') },
+            { value: 'vendor_contract', label: t('sourceVendor') },
           ]}
         />
-        <SwitchField control={form.control} name="isActive" label="Đang dùng" />
+        <SwitchField control={form.control} name="isActive" label={t('isActive')} />
       </FormDialog>
     </>
   )

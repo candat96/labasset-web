@@ -59,3 +59,18 @@ it('shows pending suggestion badge for admin', async () => {
   renderWithProviders(<Component />)
   expect(await screen.findByRole('link', { name: 'Đề xuất chờ duyệt (2)' })).toBeVisible()
 })
+
+it('lọc mã lỗi sau debounce', async () => {
+  const urls: string[] = []
+  server.use(
+    http.get('/v1/faults', ({ request }) => {
+      urls.push(request.url)
+      return HttpResponse.json({ items: [row], total: 1, page: 1, limit: 20 })
+    }),
+  )
+  const { router } = renderWithProviders(<Component />)
+  await screen.findByText('Không hút mẫu')
+  await userEvent.type(screen.getByLabelText('Mã lỗi'), 'E-01')
+  await waitFor(() => expect(urls.some((u) => u.includes('errorCode=E-01'))).toBe(true))
+  expect(router.state.location.search).toContain('errorCode=E-01')
+})

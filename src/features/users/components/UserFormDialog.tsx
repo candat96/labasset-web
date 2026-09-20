@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { FormDialog } from '@/components/form/FormDialog'
@@ -10,12 +11,12 @@ import { FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/for
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { ROLES } from '@/routes/roles'
-import { roleLabels } from '@/lib/role-labels'
 import { departmentOptions, resolveDepartment } from '@/api/references'
 import { applyServerErrors, messageFor } from '@/api/errors'
 import { createUser, updateUser } from '../api'
 import { userSchema, type UserValues } from '../schema'
 import type { User, UpdateUser } from '../types'
+import { useRoleLabel } from '../role-label'
 const values = (user?: User): UserValues => ({
   username: user?.username ?? '',
   fullName: user?.fullName ?? '',
@@ -35,6 +36,8 @@ export function UserFormDialog({
   user?: User
   onPassword: (password: string) => void
 }) {
+  const { t } = useTranslation('users')
+  const roleLabel = useRoleLabel()
   const form = useForm<UserValues>({
     resolver: zodResolver(userSchema),
     defaultValues: values(user),
@@ -66,7 +69,7 @@ export function UserFormDialog({
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['users'] })
       onOpenChange(false)
-      toast.success('Đã lưu người dùng')
+      toast.success(t('saved'))
     },
     onError: (e) => {
       if (!applyServerErrors(form, e)) toast.error(messageFor(e))
@@ -76,21 +79,26 @@ export function UserFormDialog({
     <FormDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={user ? 'Sửa người dùng' : 'Thêm người dùng'}
+      title={user ? t('edit') : t('add')}
       form={form}
       onSubmit={(v) => save.mutate(v)}
       submitting={save.isPending}
     >
-      <TextField control={form.control} name="username" label="Tài khoản" disabled={!!user} />
-      <TextField control={form.control} name="fullName" label="Họ tên" />
-      <TextField control={form.control} name="email" label="Email" type="email" />
-      <TextField control={form.control} name="phone" label="Điện thoại" />
+      <TextField
+        control={form.control}
+        name="username"
+        label={t('fields.username')}
+        disabled={!!user}
+      />
+      <TextField control={form.control} name="fullName" label={t('fields.fullName')} />
+      <TextField control={form.control} name="email" label={t('fields.email')} type="email" />
+      <TextField control={form.control} name="phone" label={t('fields.phone')} />
       <FormField
         control={form.control}
         name="roles"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Vai trò</FormLabel>
+            <FormLabel>{t('fields.roles')}</FormLabel>
             <div className="grid gap-2 sm:grid-cols-2">
               {ROLES.map((role) => (
                 <div className="flex items-center gap-2" key={role}>
@@ -103,7 +111,7 @@ export function UserFormDialog({
                       )
                     }
                   />
-                  <Label htmlFor={`role-${role}`}>{roleLabels[role]}</Label>
+                  <Label htmlFor={`role-${role}`}>{roleLabel(role)}</Label>
                 </div>
               ))}
             </div>
@@ -117,7 +125,7 @@ export function UserFormDialog({
         render={({ field }) => (
           <FormItem>
             <AsyncSelect
-              label="Khoa/phòng"
+              label={t('fields.departmentId')}
               queryKey="departments"
               loadOptions={departmentOptions}
               resolveOption={resolveDepartment}

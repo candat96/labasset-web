@@ -1,23 +1,38 @@
 import { api, unwrap, unwrapAs } from '@/api/client'
 import { downloadFile } from '@/api/download'
-import { pageQuery } from '@/api/paths'
-import type { components } from '@/api/schema'
+import { apiQuery, pageQuery } from '@/api/paths'
+import type { components, paths } from '@/api/schema'
 import type { ReferenceOption } from '@/components/form/async-select'
-import type {
-  CreateEquipment,
-  EquipmentDetail,
-  EquipmentListParams,
-  EquipmentSupplyLink,
-  UpdateEquipment,
+import {
+  EQUIPMENT_STATUSES,
+  type CreateEquipment,
+  type EquipmentDetail,
+  type EquipmentListParams,
+  type EquipmentStatus,
+  type EquipmentSupplyLink,
+  type UpdateEquipment,
 } from './types'
 
+type EquipmentQuery = NonNullable<paths['/v1/equipment']['get']['parameters']['query']>
+
 export function listEquipment(params: EquipmentListParams) {
+  const { status, ...rest } = params
   return unwrapAs<import('./types').EquipmentPage>(
     api.GET('/v1/equipment', {
-      params: { query: pageQuery({ ...params, export: undefined }) as never },
+      params: {
+        query: apiQuery<EquipmentQuery>({
+          ...rest,
+          // API nhận `status` dạng mảng (query "a,b" cũng được @Transform tách).
+          status: status ? status.split(',').filter(isEquipmentStatus) : undefined,
+          export: undefined,
+        }),
+      },
     }),
   )
 }
+
+const isEquipmentStatus = (value: string): value is EquipmentStatus =>
+  (EQUIPMENT_STATUSES as string[]).includes(value)
 
 export function getEquipment(id: string) {
   return unwrap(api.GET('/v1/equipment/{id}', { params: { path: { id } } }))
@@ -266,8 +281,9 @@ export async function catalogOptions(
     | 'connection-types'
     | 'component-types',
   q: string,
+  limit = 50,
 ): Promise<ReferenceOption[]> {
-  const query = { params: { query: pageQuery({ q, all: true, page: 1, limit: 50 }) } }
+  const query = { params: { query: pageQuery({ q, all: true, page: 1, limit }) } }
   const result =
     slug === 'manufacturers'
       ? await unwrapAs<ReferenceOption[] | { items: ReferenceOption[] }>(
@@ -295,10 +311,10 @@ export async function catalogOptions(
   return Array.isArray(result) ? result : result.items
 }
 
-export async function userOptions(q: string): Promise<ReferenceOption[]> {
+export async function userOptions(q: string, limit = 50): Promise<ReferenceOption[]> {
   const result = await unwrapAs<{
     items: { id: string; username: string; fullName: string }[]
-  }>(api.GET('/v1/users', { params: { query: pageQuery({ q, page: 1, limit: 50 }) } }))
+  }>(api.GET('/v1/users', { params: { query: pageQuery({ q, page: 1, limit }) } }))
   return result.items.map((user) => ({
     id: user.id,
     code: user.username,
@@ -306,12 +322,35 @@ export async function userOptions(q: string): Promise<ReferenceOption[]> {
   }))
 }
 
-export async function supplyOptions(q: string): Promise<ReferenceOption[]> {
+export async function supplyOptions(q: string, limit = 50): Promise<ReferenceOption[]> {
   const result = await unwrapAs<
     | { id: string; code: string; name: string }[]
     | { items: { id: string; code: string; name: string }[] }
-  >(api.GET('/v1/supplies', { params: { query: pageQuery({ q, page: 1, limit: 50 }) } }))
+  >(api.GET('/v1/supplies', { params: { query: pageQuery({ q, page: 1, limit }) } }))
   return Array.isArray(result) ? result : result.items
+}
+
+// TODO(api): OpenAPI khai `GET /v1/supplies/{id}` là SupplyResponseDto (liên kết máy–vật tư)
+// nhưng thực tế trả hồ sơ vật tư; khai type tay tới khi backend sửa swagger.
+export async function resolveSupplyOption(id: string): Promise<ReferenceOption | null> {
+  try {
+    const row = await unwrapAs<{ id: string; code: string; name: string }>(
+      api.GET('/v1/supplies/{id}', { params: { path: { id } } }),
+    )
+    return { id: row.id, code: row.code, name: row.name }
+  } catch {
+    return null
+  }
+}
+
+/** Nhãn `code — name` của một máy, dùng cho AsyncSelect có giá trị ban đầu. */
+export async function resolveEquipmentOption(id: string): Promise<ReferenceOption | null> {
+  try {
+    const row = await getEquipment(id)
+    return { id: row.id, code: row.code, name: row.name }
+  } catch {
+    return null
+  }
 }
 
 export function listRepairsForEquipment(equipmentId: string) {
@@ -329,7 +368,7 @@ export function listMaintenanceForEquipment(equipmentId: string) {
 }
 
 export function listCalibrationHistory(equipmentId: string) {
-  return unwrapAs<{ id: string; code: string; status: string }[]>(
+  return unwrap(
     api.GET('/v1/calibrations/equipment/{equipmentId}/history', {
       params: { path: { equipmentId } },
     }),

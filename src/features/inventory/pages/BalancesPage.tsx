@@ -11,8 +11,11 @@ import { formatQty } from '@/lib/format/number'
 import { KpiCard } from '@/components/kpi-card'
 import { listBalances, stockValue } from '../api'
 import type { Balance } from '../types'
+import { useTranslation } from 'react-i18next'
 
 export function Component() {
+  const { t } = useTranslation('inventory')
+
   const table = useServerTable({ filterKeys: ['warehouseId', 'groupId', 'belowMin'] })
   const f = table.params.filters
   const params = {
@@ -33,21 +36,21 @@ export function Component() {
   })
   const columns = useMemo<ColumnDef<Balance>[]>(
     () => [
-      { accessorKey: 'code', header: 'Mã' },
-      { accessorKey: 'name', header: 'Tên' },
-      { accessorKey: 'warehouseId', header: 'Kho' },
+      { accessorKey: 'code', header: t('code') },
+      { accessorKey: 'name', header: t('name') },
+      { accessorKey: 'warehouseId', header: t('warehouse') },
       {
         accessorKey: 'qtyOnHand',
-        header: 'Tồn',
+        header: t('qty'),
         cell: ({ row }) => formatQty(row.original.qtyOnHand),
       },
       {
         accessorKey: 'value',
-        header: 'Giá trị',
+        header: t('value'),
         cell: ({ getValue }) => formatVnd(String(getValue() ?? '')),
       },
     ],
-    [],
+    [t],
   )
   const totalValue =
     value.data && typeof value.data === 'object' && 'total' in value.data
@@ -55,9 +58,9 @@ export function Component() {
       : ''
   return (
     <>
-      <PageHeader title="Tồn kho" />
+      <PageHeader title={t('balancesTitle')} />
       <div className="mb-3">
-        <KpiCard title="Giá trị tồn" value={formatVnd(totalValue) || '—'} />
+        <KpiCard title={t('stockValue')} value={formatVnd(totalValue) || '—'} />
       </div>
       <DataTable
         tableId="stock-balances"
@@ -73,7 +76,7 @@ export function Component() {
         toolbarLeft={
           <>
             <Input
-              aria-label="Tìm tồn"
+              aria-label={t('searchBalance')}
               value={table.inputQ}
               onChange={(e) => table.setQ(e.target.value)}
             />
@@ -83,7 +86,7 @@ export function Component() {
                 checked={f.belowMin === 'true'}
                 onCheckedChange={(on) => table.setFilter('belowMin', on ? 'true' : undefined)}
               />
-              <Label htmlFor="belowMin">Dưới min</Label>
+              <Label htmlFor="belowMin">{t('belowMin')}</Label>
             </div>
           </>
         }

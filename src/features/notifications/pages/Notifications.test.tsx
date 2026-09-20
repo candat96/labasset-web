@@ -77,7 +77,7 @@ it('loads preferences and saves only changed types', async () => {
   )
   renderWithProviders(<Preferences />)
   await userEvent.click(
-    await screen.findByRole('switch', { name: 'Đẩy tới thiết bị — Yêu cầu chờ duyệt' }),
+    await screen.findByRole('switch', { name: 'Đẩy tới thiết bị — Phiếu yêu cầu chờ duyệt' }),
   )
   await userEvent.click(screen.getByRole('button', { name: 'Lưu tuỳ chọn' }))
   await waitFor(() =>
@@ -94,7 +94,9 @@ it('keeps edited preferences on server error', async () => {
     ),
   )
   renderWithProviders(<Preferences />)
-  const toggle = await screen.findByRole('switch', { name: 'Đẩy tới thiết bị — Yêu cầu chờ duyệt' })
+  const toggle = await screen.findByRole('switch', {
+    name: 'Đẩy tới thiết bị — Phiếu yêu cầu chờ duyệt',
+  })
   await userEvent.click(toggle)
   await userEvent.click(screen.getByRole('button', { name: 'Lưu tuỳ chọn' }))
   expect(await screen.findByText('Bạn không có quyền thực hiện')).toBeVisible()

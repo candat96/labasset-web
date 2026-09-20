@@ -1,5 +1,12 @@
 import { toApiError, messageFor, applyServerErrors } from './errors'
 import '@/lib/i18n'
+import type { UseFormReturn } from 'react-hook-form'
+
+const formStub = <T extends Record<string, unknown>>(values: T, setError = vi.fn()) =>
+  ({ setError, getValues: () => values }) as unknown as Pick<
+    UseFormReturn<T>,
+    'setError' | 'getValues'
+  >
 
 const res = (status: number) => new Response(null, { status })
 
@@ -26,7 +33,7 @@ it('messageFor uses i18n by code then message', () => {
 
 it('applyServerErrors sets field errors from class-validator strings', () => {
   const setError = vi.fn()
-  const form = { setError, getValues: () => ({ code: '', name: '' }) } as never
+  const form = formStub({ code: '', name: '' }, setError)
   const e = toApiError(res(400), {
     code: 'VALIDATION_ERROR',
     message: 'Validation failed',
@@ -50,7 +57,7 @@ it('applyServerErrors sets field errors from class-validator strings', () => {
 
 it('applyServerErrors accepts object details', () => {
   const setError = vi.fn()
-  const form = { setError, getValues: () => ({ code: '' }) } as never
+  const form = formStub({ code: '' }, setError)
   applyServerErrors(
     form,
     toApiError(res(400), { code: 'VALIDATION_ERROR', message: '', details: { code: 'trùng' } }),
@@ -60,9 +67,6 @@ it('applyServerErrors accepts object details', () => {
 
 it('applyServerErrors returns false for non-validation', () => {
   expect(
-    applyServerErrors(
-      { setError: vi.fn(), getValues: () => ({}) } as never,
-      toApiError(res(409), { code: 'CONFLICT', message: '' }),
-    ),
+    applyServerErrors(formStub({}), toApiError(res(409), { code: 'CONFLICT', message: '' })),
   ).toBe(false)
 })

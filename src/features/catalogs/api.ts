@@ -1,9 +1,18 @@
-import { api, unwrap, unwrapAs } from '@/api/client'
+import { api, apiBody, unwrap, unwrapAs } from '@/api/client'
 import { downloadFile } from '@/api/download'
-import { pageQuery } from '@/api/paths'
+import { apiQuery } from '@/api/paths'
+import type { paths } from '@/api/schema'
 import type { CatalogPageResult, CatalogRow, CatalogSlug, ImportResult } from './types'
 
 type CatalogBody = Record<string, string | number | boolean | null>
+type CatalogPath = `/v1/catalogs/${CatalogSlug}`
+type CatalogQuery = NonNullable<paths[CatalogPath]['get']['parameters']['query']>
+type CatalogCreateBody = NonNullable<
+  paths[CatalogPath]['post']['requestBody']
+>['content']['application/json']
+type CatalogUpdateBody = NonNullable<
+  paths[`${CatalogPath}/{id}`]['patch']['requestBody']
+>['content']['application/json']
 const collection = (slug: CatalogSlug) => `/v1/catalogs/${slug}` as const
 const detail = (slug: CatalogSlug) => `/v1/catalogs/${slug}/{id}` as const
 
@@ -13,18 +22,20 @@ export function listCatalog(
   params: { page?: number; limit?: number; q?: string; isActive?: boolean; all?: boolean },
 ) {
   return unwrapAs<CatalogPageResult | CatalogRow[]>(
-    api.GET(collection(slug), { params: { query: pageQuery(params) } }),
+    api.GET(collection(slug), { params: { query: apiQuery<CatalogQuery>(params) } }),
   )
 }
 export function getCatalog(slug: CatalogSlug, id: string) {
   return unwrapAs<CatalogRow>(api.GET(detail(slug), { params: { path: { id } } }))
 }
 export function createCatalog(slug: CatalogSlug, body: CatalogBody) {
-  return unwrapAs<CatalogRow>(api.POST(collection(slug), { body: body as never }))
+  return unwrapAs<CatalogRow>(
+    api.POST(collection(slug), { body: apiBody<CatalogCreateBody>(body) }),
+  )
 }
 export function updateCatalog(slug: CatalogSlug, id: string, body: CatalogBody) {
   return unwrapAs<CatalogRow>(
-    api.PATCH(detail(slug), { params: { path: { id } }, body: body as never }),
+    api.PATCH(detail(slug), { params: { path: { id } }, body: apiBody<CatalogUpdateBody>(body) }),
   )
 }
 /** 204 = xoá hẳn; 200 `{ deactivated: true }` = còn tham chiếu nên ngừng hoạt động. */

@@ -25,11 +25,17 @@ export type CreateEquipment = components['schemas']['CreateEquipmentDto']
 export type UpdateEquipment = components['schemas']['UpdateEquipmentDto']
 export type Accessory = components['schemas']['AccessoryResponseDto']
 export type Software = components['schemas']['SoftwareResponseDto']
+export type SoftwareHistory = components['schemas']['SoftwareHistoryResponseDto']
 export type ComponentRow = components['schemas']['ComponentResponseDto']
+export type ComponentReplacement = components['schemas']['ReplacementResponseDto']
 export type Transfer = components['schemas']['TransferResponseDto']
 export type Counter = components['schemas']['CounterResponseDto']
 export type EquipmentEvent = components['schemas']['EventResponseDto']
 export type Network = components['schemas']['EquipmentNetworkResponseDto']
+export type Runway = components['schemas']['RunwayResponseDto']
+export type RunwayItem = components['schemas']['RunwayItemDto']
+export type EquipmentComparison = components['schemas']['EquipmentComparisonDto']
+export type StatusHistory = components['schemas']['StatusHistoryResponseDto']
 
 export interface EquipmentListParams {
   page?: number

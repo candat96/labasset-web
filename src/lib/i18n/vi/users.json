@@ -1,5 +1,60 @@
 {
   "title": "Người dùng",
   "add": "Thêm người dùng",
-  "saved": "Đã lưu người dùng"
+  "edit": "Sửa người dùng",
+  "saved": "Đã lưu người dùng",
+  "loading": "Đang tải người dùng…",
+  "fields": {
+    "username": "Tài khoản",
+    "fullName": "Họ tên",
+    "email": "Email",
+    "phone": "Điện thoại",
+    "roles": "Vai trò",
+    "department": "Khoa",
+    "departmentId": "Khoa/phòng",
+    "isActive": "Trạng thái",
+    "lastLoginAt": "Đăng nhập cuối"
+  },
+  "roles": {
+    "HOSPITAL_ADMIN": "Quản trị viện",
+    "EQUIPMENT_STAFF": "Nhân viên vật tư",
+    "DEPT_HEAD": "Trưởng khoa",
+    "DEPT_USER": "Nhân viên khoa"
+  },
+  "search": {
+    "label": "Tìm người dùng",
+    "placeholder": "Tìm tài khoản, tên, email"
+  },
+  "filter": {
+    "role": "Vai trò",
+    "roleLabel": "Lọc vai trò",
+    "allRoles": "Mọi vai trò",
+    "department": "Lọc khoa",
+    "status": "Lọc trạng thái",
+    "allStatuses": "Mọi trạng thái",
+    "active": "Hoạt động",
+    "locked": "Đã khoá"
+  },
+  "detail": {
+    "statusMissing": "Trạng thái: chưa có từ API"
+  },
+  "errors": {
+    "username": "Từ 3–64 ký tự chữ thường, số, dấu chấm, gạch dưới hoặc gạch ngang",
+    "email": "Email không hợp lệ",
+    "phone": "Số điện thoại không hợp lệ",
+    "roles": "Chọn ít nhất một vai trò",
+    "departmentId": "Vai trò khoa bắt buộc chọn khoa/phòng"
+  },
+  "actions": {
+    "resetPassword": "Reset mật khẩu",
+    "lock": "Khoá",
+    "unlock": "Mở khoá",
+    "done": "Đã thực hiện"
+  },
+  "confirm": {
+    "resetPassword": "Đặt lại mật khẩu {{name}}?",
+    "deactivate": "Khoá {{name}}?",
+    "activate": "Mở khoá {{name}}?",
+    "delete": "Xoá {{name}}?"
+  }
 }
