@@ -269,14 +269,27 @@ export function Component() {
         toolbarLeft={
           <FilterBar
             presets={
-              <FilterPreset
-                active={dueIn30}
-                onClick={() =>
-                  table.setFilter('calibrationDueBefore', dueIn30 ? undefined : plusDays(30))
-                }
-              >
-                {t('filters.dueIn30')}
-              </FilterPreset>
+              <>
+                <FilterPreset
+                  active={dueIn30}
+                  onClick={() =>
+                    table.setFilter('calibrationDueBefore', dueIn30 ? undefined : plusDays(30))
+                  }
+                >
+                  {t('filters.dueIn30')}
+                </FilterPreset>
+                <FilterPreset
+                  active={f.calibrationOverdue === 'true'}
+                  onClick={() =>
+                    table.setFilter(
+                      'calibrationOverdue',
+                      f.calibrationOverdue === 'true' ? undefined : 'true',
+                    )
+                  }
+                >
+                  {t('filters.overdue')}
+                </FilterPreset>
+              </>
             }
             onClear={table.params.q || Object.keys(f).length ? table.reset : undefined}
           >
@@ -372,17 +385,6 @@ export function Component() {
                 value={f.calibrationDueBefore ?? ''}
                 onChange={(value) => table.setFilter('calibrationDueBefore', value)}
               />
-            </FilterField>
-            <FilterField label={t('filters.overdue')}>
-              <label className="flex h-9 items-center gap-2 rounded-md border px-3 text-sm">
-                <Checkbox
-                  checked={f.calibrationOverdue === 'true'}
-                  onCheckedChange={(value) =>
-                    table.setFilter('calibrationOverdue', value === true ? 'true' : undefined)
-                  }
-                />
-                {t('filters.overdue')}
-              </label>
             </FilterField>
           </FilterBar>
         }

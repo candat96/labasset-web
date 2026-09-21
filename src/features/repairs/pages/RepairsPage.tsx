@@ -7,8 +7,6 @@ import { DataTable, useServerTable } from '@/components/data-table'
 import { PageHeader } from '@/components/page/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Switch } from '@/components/ui/switch'
-import { Label } from '@/components/ui/label'
 import { DatePicker } from '@/components/date-picker'
 import { FilterBar, FilterField, FilterPreset } from '@/components/filter-bar'
 import { MultiSelect } from '@/components/multi-select'
@@ -325,16 +323,6 @@ export function Component() {
                 value={f.to ?? ''}
                 onChange={(value) => table.setFilter('to', value)}
               />
-            </FilterField>
-            <FilterField label={t('filters.overdue')}>
-              <div className="flex h-9 items-center gap-2 rounded-md border px-3">
-                <Switch
-                  id="overdue"
-                  checked={f.overdue === 'true'}
-                  onCheckedChange={(on) => table.setFilter('overdue', on ? 'true' : undefined)}
-                />
-                <Label htmlFor="overdue">{t('filters.overdue')}</Label>
-              </div>
             </FilterField>
           </FilterBar>
         }

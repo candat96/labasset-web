@@ -61,7 +61,7 @@ export function FilterField({
   return (
     <div
       className={cn(
-        'min-w-0 [&_[data-slot=select-trigger]]:h-9 [&_button]:min-h-9 [&_input]:h-9',
+        'min-w-0 [&_[data-slot=select-trigger]]:h-9 [&_[data-slot=select-trigger]]:w-full [&_[data-slot=popover-trigger]]:w-full [&_button]:min-h-9 [&_input]:h-9 [&_[data-slot=label]]:sr-only [&>div]:space-y-0',
         className,
       )}
       data-filter-label={label}

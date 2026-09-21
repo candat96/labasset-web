@@ -1,6 +1,6 @@
 import { useId, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Check, ChevronsUpDown, Loader2, X } from 'lucide-react'
+import { Check, ChevronDown, Loader2, X } from 'lucide-react'
 import { useDebounce } from '@/lib/use-debounce'
 import { Button } from '@/components/ui/button'
 import {
@@ -102,7 +102,7 @@ export function AsyncSelect({
             aria-label={label}
             variant="outline"
             disabled={disabled}
-            className="h-9 w-full justify-between overflow-hidden px-3 font-normal"
+            className="h-9 w-full justify-between overflow-hidden bg-transparent px-3 font-normal shadow-xs hover:bg-transparent dark:bg-input/30 dark:hover:bg-input/50"
           >
             <span className="flex min-w-0 flex-1 items-center gap-1 overflow-hidden">
               {selection.length ? (
@@ -144,7 +144,7 @@ export function AsyncSelect({
                 <span className="text-muted-foreground truncate">{placeholder ?? label}</span>
               )}
             </span>
-            <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
+            <ChevronDown className="text-muted-foreground ml-2 size-4 shrink-0" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-(--radix-popover-trigger-width) p-0" align="start">
