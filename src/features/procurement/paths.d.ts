@@ -204,6 +204,7 @@ interface DemandPaginated<TItem> {
   page: number
   limit: number
 }
+export type DemandPaginated2<TItem> = DemandPaginated<TItem>
 
 export type DemandPaths = {
   '/v1/demand/periods': {
@@ -216,72 +217,72 @@ export type DemandPaths = {
           limit?: number
         }
       }
-      responses: DemandPaginated<DemandPeriod>
+      responses: { 200: DemandPaginated<DemandPeriod> }
     }
     post: {
       requestBody: { content: { 'application/json': CreateDemandPeriodDto } }
-      responses: DemandPeriod
+      responses: { 200: DemandPeriod }
     }
   }
   '/v1/demand/periods/{id}': {
     get: {
       parameters: { path: { id: string } }
-      responses: DemandPeriod
+      responses: { 200: DemandPeriod }
     }
     patch: {
       parameters: { path: { id: string } }
       requestBody: { content: { 'application/json': UpdateDemandPeriodDto } }
-      responses: DemandPeriod
+      responses: { 200: DemandPeriod }
     }
   }
   '/v1/demand/periods/{id}/open': {
     post: {
       parameters: { path: { id: string } }
-      responses: DemandPeriod
+      responses: { 200: DemandPeriod }
     }
   }
   '/v1/demand/periods/{id}/consolidate': {
     post: {
       parameters: { path: { id: string } }
       requestBody?: { content: { 'application/json': { skipUnsubmitted?: boolean } } }
-      responses: DemandPeriod
+      responses: { 200: DemandPeriod }
     }
   }
   '/v1/demand/periods/{id}/approve': {
     post: {
       parameters: { path: { id: string } }
-      responses: DemandPeriod
+      responses: { 200: DemandPeriod }
     }
   }
   '/v1/demand/periods/{id}/close': {
     post: {
       parameters: { path: { id: string } }
-      responses: { period: DemandPeriod; createdRequests: number }
+      responses: { 200: { period: DemandPeriod; createdRequests: number } }
     }
   }
   '/v1/demand/periods/{id}/cancel': {
     post: {
       parameters: { path: { id: string } }
       requestBody: { content: { 'application/json': { reason: string } } }
-      responses: DemandPeriod
+      responses: { 200: DemandPeriod }
     }
   }
   '/v1/demand/periods/{id}/clone': {
     post: {
       parameters: { path: { id: string } }
-      responses: DemandPeriod
+      responses: { 200: DemandPeriod }
     }
   }
   '/v1/demand/periods/{id}/requests': {
     get: {
       parameters: { path: { id: string } }
-      responses: DemandRequest[]
+      responses: { 200: DemandRequest[] }
     }
   }
   '/v1/demand/periods/{id}/summary': {
     get: {
       parameters: { path: { id: string } }
-      responses: DemandPeriodSummary
+      responses: { 200: DemandPeriodSummary }
     }
   }
   '/v1/demand/periods/{id}/consolidation': {
@@ -290,52 +291,54 @@ export type DemandPaths = {
         path: { id: string }
         query?: { itemType?: DemandItemType; departmentId?: string; q?: string }
       }
-      responses: DemandConsolidation[]
+      responses: { 200: DemandConsolidation[] }
     }
   }
   '/v1/demand/periods/{id}/consolidation/rebuild': {
     post: {
       parameters: { path: { id: string } }
-      responses: DemandConsolidation[]
+      responses: { 200: DemandConsolidation[] }
     }
   }
   '/v1/demand/periods/{id}/export.xlsx': {
     get: {
       parameters: { path: { id: string } }
-      responses: Blob
+      responses: { 200: Blob }
     }
   }
   '/v1/demand/periods/{id}/proposal.pdf': {
     get: {
       parameters: { path: { id: string } }
-      responses: Blob
+      responses: { 200: Blob }
     }
   }
   '/v1/demand/consolidation/{id}': {
     patch: {
       parameters: { path: { id: string } }
       requestBody: { content: { 'application/json': UpdateDemandConsolidationDto } }
-      responses: DemandConsolidation
+      responses: { 200: DemandConsolidation }
     }
   }
   '/v1/demand/my': {
     get: {
       responses: {
-        toSubmit: DemandRequest[]
-        toApprove: DemandRequest[]
-        toAccept: DemandRequest[]
+        200: {
+          toSubmit: DemandRequest[]
+          toApprove: DemandRequest[]
+          toAccept: DemandRequest[]
+        }
       }
     }
   }
   '/v1/demand/requests/{id}': {
     get: {
       parameters: { path: { id: string } }
-      responses: DemandRequest
+      responses: { 200: DemandRequest }
     }
     patch: {
       parameters: { path: { id: string } }
       requestBody: { content: { 'application/json': { notes?: string } } }
-      responses: DemandRequest
+      responses: { 200: DemandRequest }
     }
   }
   '/v1/demand/requests/{id}/submit': {
@@ -348,14 +351,14 @@ export type DemandPaths = {
     post: {
       parameters: { path: { id: string } }
       requestBody: { content: { 'application/json': { reason: string } } }
-      responses: DemandRequest
+      responses: { 200: DemandRequest }
     }
   }
   '/v1/demand/requests/{id}/accept': {
     post: {
       parameters: { path: { id: string } }
       requestBody: { content: { 'application/json': { lines?: AcceptDemandLineDto[] } } }
-      responses: DemandRequest
+      responses: { 200: DemandRequest }
     }
   }
   '/v1/demand/requests/{id}/suggest-all': {
@@ -365,14 +368,14 @@ export type DemandPaths = {
     post: {
       parameters: { path: { id: string } }
       requestBody: { content: { 'application/json': CreateDemandLineDto } }
-      responses: DemandLine
+      responses: { 200: DemandLine }
     }
   }
   '/v1/demand/requests/{id}/lines/import': {
     post: {
       parameters: { path: { id: string } }
       requestBody: { content: { 'multipart/form-data': FormData } }
-      responses: DemandLineImportResult
+      responses: { 200: DemandLineImportResult }
     }
   }
   '/v1/demand/requests/template': {
@@ -382,14 +385,16 @@ export type DemandPaths = {
     patch: {
       parameters: { path: { lineId: string } }
       requestBody: { content: { 'application/json': UpdateDemandLineDto } }
-      responses: DemandLine
+      responses: { 200: DemandLine }
     }
     delete: { parameters: { path: { lineId: string } }; responses: void }
   }
   '/v1/demand/lines/suggest': {
     post: {
       requestBody: { content: { 'application/json': DemandLineSuggestInput } }
-      responses: { suggestedQty: string; qtyByBucket: string[]; suggestion?: DemandSuggestion }
+      responses: {
+        200: { suggestedQty: string; qtyByBucket: string[]; suggestion?: DemandSuggestion }
+      }
     }
   }
 }
