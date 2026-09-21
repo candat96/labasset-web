@@ -1,6 +1,6 @@
 {
   "index": "Danh mục",
-  "indexDesc": "Mười hai danh mục dùng chung trong viện.",
+  "indexDesc": "Mười một danh mục dùng chung trong viện.",
   "add": "Thêm mới",
   "count": "{{total}} bản ghi",
   "saved": "Đã lưu danh mục",
@@ -14,7 +14,8 @@
   },
   "search": {
     "label": "Tìm danh mục",
-    "placeholder": "Tìm mã hoặc tên"
+    "placeholder": "Tìm mã hoặc tên",
+    "roomLabel": "Tìm phòng"
   },
   "filter": {
     "select": "Chọn danh mục",
@@ -22,7 +23,9 @@
     "allStatuses": "Mọi trạng thái",
     "active": "Hoạt động",
     "inactive": "Ngưng hoạt động",
-    "department": "Lọc Khoa/Phòng ban"
+    "department": "Lọc Khoa/Phòng ban",
+    "roomType": "Loại phòng",
+    "allRoomTypes": "Mọi loại"
   },
   "fields": {
     "code": "Mã",
@@ -129,9 +132,14 @@
       "building": "Toà nhà",
       "floor": "Tầng",
       "buildingFloor": "Toà/Tầng",
-      "roomType": "Loại phòng"
+      "roomType": "Loại phòng",
+      "equipmentCount": "Số máy"
     }
   },
   "listHint": "Danh mục dùng chung; thêm, sửa, ngừng hoạt động các mục.",
-  "roomInUse": "Phòng đang có máy nên không xoá được — hãy Sửa và tắt \"Đang hoạt động\"."
+  "roomInUse": "Phòng đang có máy nên không xoá được — hãy Sửa và tắt \"Đang hoạt động\".",
+  "addRoom": "Thêm phòng",
+  "codeAuto": "Để trống để tự sinh",
+  "roomsHint": "Vị trí vật lý đặt máy: phòng của từng Khoa/Phòng ban hoặc phòng dùng chung.",
+  "roomDeleteDesc": "Phòng đang có máy sẽ không xoá được — hãy tắt \"Đang hoạt động\"."
 }

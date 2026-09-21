@@ -7,7 +7,9 @@ import { toast } from 'sonner'
 import { z } from 'zod'
 import { api, apiBody, unwrapAs } from '@/api/client'
 import type { components } from '@/api/schema'
-import { applyServerErrors, messageFor } from '@/api/errors'
+import { applyServerErrors, isApiError, messageFor } from '@/api/errors'
+import { resolveDepartment } from '@/api/references'
+import { suggestRoomCode, withCodeSuffix } from '@/lib/room-code'
 import { FormDialog } from '@/components/form/FormDialog'
 import { SelectField, TextField } from '@/components/form/fields'
 import { ROOM_TYPES, enumLabel } from '@/lib/enum-labels'
@@ -52,20 +54,32 @@ export function RoomFormDialog({
   useEffect(() => {
     if (open) form.reset(empty)
   }, [open, form])
-  const save = useMutation({
-    mutationFn: (values: RoomForm) =>
-      unwrapAs<RoomRow>(
-        api.POST('/v1/catalogs/rooms', {
-          body: apiBody<CreateRoomBody>({
-            code: values.code || undefined,
-            name: values.name,
-            departmentId,
-            building: values.building || null,
-            floor: values.floor || null,
-            roomType: values.roomType,
-          }),
+  const create = (values: RoomForm, code: string) =>
+    unwrapAs<RoomRow>(
+      api.POST('/v1/catalogs/rooms', {
+        body: apiBody<CreateRoomBody>({
+          code,
+          name: values.name,
+          departmentId,
+          building: values.building || null,
+          floor: values.floor || null,
+          roomType: values.roomType,
         }),
-      ),
+      }),
+    )
+  const save = useMutation({
+    mutationFn: async (values: RoomForm) => {
+      if (values.code) return create(values, values.code)
+      // API vẫn bắt buộc `code` → web tự sinh từ mã khoa + tên; trùng thì thêm hậu tố.
+      const department = departmentId ? await resolveDepartment(departmentId) : null
+      const code = suggestRoomCode(department?.code, values.name)
+      try {
+        return await create(values, code)
+      } catch (error) {
+        if (!isApiError(error) || (error.status !== 409 && error.status !== 400)) throw error
+        return create(values, withCodeSuffix(code))
+      }
+    },
     onSuccess: (room) => {
       void qc.invalidateQueries({ queryKey: ['catalogs', 'rooms'] })
       void qc.invalidateQueries({ queryKey: ['reference'] })

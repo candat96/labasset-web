@@ -118,12 +118,12 @@ it('shows deactivated notice when delete keeps the row', async () => {
   expect(await screen.findByText('Đã ngừng hoạt động danh mục')).toBeVisible()
 })
 
-it('renders the catalogs index with 12 links', async () => {
+it('renders the catalogs index with 11 links', async () => {
   server.use(http.get('/v1/catalogs/:name', () => HttpResponse.json({ items: [], total: 0 })))
   renderWithProviders(<CatalogsIndexPage />)
   expect(await screen.findByRole('link', { name: /Hãng sản xuất/ })).toHaveAttribute(
     'href',
     '/admin/catalogs/manufacturers',
   )
-  expect(screen.getAllByRole('link').length).toBeGreaterThanOrEqual(12)
+  expect(screen.getAllByRole('link').length).toBeGreaterThanOrEqual(11)
 })

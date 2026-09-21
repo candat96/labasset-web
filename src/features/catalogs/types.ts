@@ -12,10 +12,10 @@ export const catalogSlugs = [
   'component-types',
   'calibration-agencies',
   'fault-groups',
-  'rooms',
 ] as const
 
-export type CatalogSlug = (typeof catalogSlugs)[number]
+/** `rooms` có trang riêng `/admin/rooms` (không nằm trong Danh mục) nhưng dùng chung API catalog. */
+export type CatalogSlug = (typeof catalogSlugs)[number] | 'rooms'
 export type CatalogValue = string | number | boolean | null
 export interface CatalogRow {
   id: string

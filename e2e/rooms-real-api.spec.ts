@@ -70,3 +70,27 @@ test('14 tạo máy: chọn Khoa/Phòng ban → Phòng → Vị trí, chi tiết
     expect(del.ok()).toBe(true)
   }
 })
+
+test('14 /admin/rooms: thêm phòng (mã tự sinh), sửa, xoá trên API thật', async ({ page }) => {
+  await loginUi(page)
+  await page.goto('/admin/rooms')
+  await expect(page.getByRole('heading', { name: 'Phòng' })).toBeVisible()
+  await page.getByRole('button', { name: 'Thêm phòng' }).click()
+  const name = `E2E phòng ${Date.now()}`
+  const dialog = page.getByRole('dialog')
+  await dialog.getByLabel('Tên', { exact: true }).fill(name)
+  await dialog.getByLabel('Tầng').fill('Tầng 9')
+  await dialog.getByRole('button', { name: 'Lưu' }).click()
+  await expect(page.getByText('Đã lưu danh mục')).toBeVisible()
+  await page.getByLabel('Tìm phòng').fill('E2E phòng')
+  const row = page.getByRole('row', { name: new RegExp(name) })
+  await expect(row).toBeVisible()
+  await expect(row.getByText('Dùng chung')).toBeVisible()
+  await row.getByRole('button', { name: 'Sửa' }).click()
+  await page.getByRole('dialog').getByLabel('Tầng').fill('Tầng 10')
+  await page.getByRole('dialog').getByRole('button', { name: 'Lưu' }).click()
+  await expect(page.getByText('Tầng 10')).toBeVisible()
+  await row.getByRole('button', { name: 'Xoá' }).click()
+  await page.getByRole('button', { name: 'Xác nhận' }).click()
+  await expect(page.getByText('Đã xoá danh mục')).toBeVisible()
+})

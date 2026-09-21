@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { server } from '@/test/msw/server'
 import { renderWithProviders } from '@/test/utils'
-import { Component } from './CatalogPage'
+import { Component } from './RoomsPage'
 
 const departments = [
   { id: 'd1', code: 'XN', name: 'Khoa Xét nghiệm' },
@@ -40,6 +40,13 @@ const rooms = [
 
 function mockDepartments() {
   server.use(
+    http.get('/v1/reports/equipment.byRoom', () =>
+      HttpResponse.json({
+        columns: [],
+        rows: [{ roomCode: 'XN-P101', total: 3 }],
+        total: 1,
+      }),
+    ),
     http.get('/v1/departments', () => HttpResponse.json(departments)),
     http.get('/v1/departments/:id', ({ params }) =>
       HttpResponse.json(departments.find((d) => d.id === params.id) ?? null),
@@ -57,8 +64,8 @@ it('hiện danh mục Phòng: tên khoa, "Dùng chung", Toà/Tầng, loại phò
     }),
   )
   const { router } = renderWithProviders(<Component />, {
-    path: '/admin/catalogs/:name',
-    route: '/admin/catalogs/rooms',
+    path: '/admin/rooms',
+    route: '/admin/rooms',
   })
   expect(await screen.findByText('Phòng Huyết học')).toBeVisible()
   expect(await screen.findByText('Khoa Xét nghiệm')).toBeVisible()
@@ -67,6 +74,11 @@ it('hiện danh mục Phòng: tên khoa, "Dùng chung", Toà/Tầng, loại phò
   expect(screen.getByText('Phòng xét nghiệm')).toBeVisible()
   expect(screen.getByRole('columnheader', { name: 'Khoa/Phòng ban' })).toBeVisible()
   expect(screen.getByRole('columnheader', { name: 'Toà/Tầng' })).toBeVisible()
+  expect(screen.getByRole('columnheader', { name: 'Số máy' })).toBeVisible()
+  expect(await screen.findByRole('link', { name: '3' })).toHaveAttribute(
+    'href',
+    '/equipment?roomId=r1',
+  )
   // không lộ enum thô
   expect(screen.queryByText('lab')).not.toBeInTheDocument()
 
@@ -74,9 +86,15 @@ it('hiện danh mục Phòng: tên khoa, "Dùng chung", Toà/Tầng, loại phò
   await userEvent.click(await screen.findByRole('option', { name: /Khoa Xét nghiệm/ }))
   await waitFor(() => expect(urls.some((url) => url.includes('departmentId=d1'))).toBe(true))
   expect(router.state.location.search).toContain('departmentId=d1')
+  // lọc loại phòng (web lọc trên all=true vì API chưa có ?roomType)
+  await userEvent.click(screen.getByRole('combobox', { name: 'Loại phòng' }))
+  await userEvent.click(await screen.findByRole('option', { name: 'Khác' }))
+  await waitFor(() => expect(screen.queryByText('Phòng Huyết học')).not.toBeInTheDocument())
+  expect(screen.getByText('Hội trường')).toBeVisible()
+  expect(urls.some((url) => url.includes('all=true'))).toBe(true)
 })
 
-it('tạo phòng: gửi đúng body (departmentId, building, floor, roomType); "Dùng chung" gửi null', async () => {
+it('tạo phòng: mã không bắt buộc, gửi đúng body (departmentId, building, floor, roomType); "Dùng chung" gửi null', async () => {
   const bodies: Record<string, unknown>[] = []
   mockDepartments()
   server.use(
@@ -90,12 +108,17 @@ it('tạo phòng: gửi đúng body (departmentId, building, floor, roomType); "
     }),
   )
   renderWithProviders(<Component />, {
-    path: '/admin/catalogs/:name',
-    route: '/admin/catalogs/rooms',
+    path: '/admin/rooms',
+    route: '/admin/rooms',
   })
-  await userEvent.click(await screen.findByRole('button', { name: 'Thêm mới' }))
+  await userEvent.click(await screen.findByRole('button', { name: 'Thêm phòng' }))
   const dialog = within(screen.getByRole('dialog'))
   expect(dialog.getByRole('combobox', { name: 'Khoa/Phòng ban' })).toHaveTextContent('Dùng chung')
+  expect(dialog.getByLabelText('Mã')).toHaveAttribute('placeholder', 'Để trống để tự sinh')
+  // chỉ Tên bắt buộc — Mã trống không báo lỗi
+  await userEvent.click(dialog.getByRole('button', { name: 'Lưu' }))
+  expect(await dialog.findAllByText('Bắt buộc')).toHaveLength(1)
+  expect(dialog.queryByText(/Mã A–Z/)).not.toBeInTheDocument()
   await userEvent.type(dialog.getByLabelText('Mã'), 'xn-p102')
   await userEvent.type(dialog.getByLabelText('Tên'), 'Phòng Sinh hoá')
   await userEvent.click(dialog.getByRole('combobox', { name: 'Khoa/Phòng ban' }))
@@ -118,12 +141,18 @@ it('tạo phòng: gửi đúng body (departmentId, building, floor, roomType); "
   expect(await screen.findByText('Đã lưu danh mục')).toBeVisible()
 
   // phòng dùng chung: không chọn khoa → departmentId null
-  await userEvent.click(await screen.findByRole('button', { name: 'Thêm mới' }))
+  await userEvent.click(await screen.findByRole('button', { name: 'Thêm phòng' }))
   const dialog2 = within(screen.getByRole('dialog'))
-  await userEvent.type(dialog2.getByLabelText('Mã'), 'HT-02')
   await userEvent.type(dialog2.getByLabelText('Tên'), 'Hội trường B')
   await userEvent.click(dialog2.getByRole('button', { name: 'Lưu' }))
-  await waitFor(() => expect(bodies[1]).toMatchObject({ code: 'HT-02', departmentId: null }))
+  // mã để trống → web tự sinh (API vẫn bắt buộc code)
+  await waitFor(() =>
+    expect(bodies[1]).toMatchObject({
+      name: 'Hội trường B',
+      departmentId: null,
+      code: 'CHUNG-HOI-TRUONG-B',
+    }),
+  )
 })
 
 it('sửa phòng gửi diff; xoá bị 409 ROOM_IN_USE báo gợi ý tắt kích hoạt', async () => {
@@ -143,8 +172,8 @@ it('sửa phòng gửi diff; xoá bị 409 ROOM_IN_USE báo gợi ý tắt kích
     ),
   )
   renderWithProviders(<Component />, {
-    path: '/admin/catalogs/:name',
-    route: '/admin/catalogs/rooms',
+    path: '/admin/rooms',
+    route: '/admin/rooms',
   })
   await userEvent.click(await screen.findByRole('button', { name: 'Sửa' }))
   const dialog = within(screen.getByRole('dialog'))

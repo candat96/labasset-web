@@ -10,6 +10,7 @@ import {
   Boxes,
   Building2,
   Calendar,
+  DoorOpen,
   ClipboardCheck,
   ClipboardList,
   Cog,
@@ -170,6 +171,7 @@ export const MENU: MenuGroup[] = [
     roles: ADM,
     items: [
       { path: '/admin/departments', labelKey: 'menu:items.departments', icon: Building2 },
+      { path: '/admin/rooms', labelKey: 'menu:items.rooms', icon: DoorOpen },
       { path: '/admin/users', labelKey: 'menu:items.users', icon: Users },
       { path: '/admin/catalogs', labelKey: 'menu:items.catalogs', icon: Tags },
       { path: '/admin/settings', labelKey: 'menu:items.settings', icon: Settings },

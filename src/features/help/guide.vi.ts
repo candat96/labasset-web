@@ -482,7 +482,7 @@ export const GUIDE: GuideSection[] = [
         items: [
           'Người dùng: tạo tài khoản, gán vai trò và Khoa/Phòng ban, khoá/mở, đặt lại mật khẩu, xem phiên đăng nhập.',
           'Khoa/Phòng ban: mã, tên, loại, trưởng khoa, liên hệ; tab "Phòng" liệt kê các phòng của đơn vị kèm số máy, thêm phòng ngay tại đây.',
-          'Danh mục Phòng (Quản trị → Danh mục → Phòng): mã, tên, Khoa/Phòng ban (để trống = phòng dùng chung), toà nhà, tầng, loại phòng (xét nghiệm, buồng bệnh, phòng mổ, chẩn đoán hình ảnh, văn phòng, kho, khác). Lọc theo Khoa/Phòng ban, nhập/xuất Excel (cột departmentCode trống = dùng chung). Phòng đang có máy không xoá được — tắt "Đang hoạt động" để ẩn khỏi danh sách chọn.',
+          'Phòng (mục riêng ngay dưới Khoa/Phòng ban): tên, Khoa/Phòng ban (chọn "Dùng chung" cho hội trường, kho chung…), toà nhà, tầng, loại phòng (xét nghiệm, buồng bệnh, phòng mổ, chẩn đoán hình ảnh, văn phòng, kho, khác); mã để trống sẽ tự sinh. Bảng có cột Số máy (bấm để xem máy trong phòng); lọc theo Khoa/Phòng ban, loại, trạng thái; nhập/xuất Excel (cột departmentCode trống = dùng chung). Phòng đang có máy không xoá được — tắt "Đang hoạt động" để ẩn khỏi danh sách chọn.',
           'Danh mục khác: nhóm thiết bị, hãng, nhà cung cấp, đơn vị tính, nguồn vốn, kho, đơn vị kiểm định, loại chi phí… (có nhập Excel).',
           'Cấu hình: thông tin viện, quy trình (số cấp duyệt phiếu, SLA sửa chữa theo mức độ), kho (FEFO, cửa sổ huỷ phiếu), cảnh báo (số ngày báo trước), đánh số phiếu, AI, mẫu in.',
           'Nhật ký hệ thống: ai làm gì lúc nào, xem chi tiết trước/sau của mỗi thay đổi.',

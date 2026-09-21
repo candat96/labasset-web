@@ -137,6 +137,9 @@ it('nút "+" tạo phòng nhanh cho khoa đang chọn rồi tự chọn phòng �
         { status: 201 },
       )
     }),
+    http.get('/v1/departments/d1', () =>
+      HttpResponse.json({ id: 'd1', code: 'HH', name: 'Huyết học' }),
+    ),
     http.get('/v1/catalogs/rooms/r9', () =>
       HttpResponse.json({ id: 'r9', code: 'HH-P109', name: 'Phòng mới', departmentId: 'd1' }),
     ),
@@ -159,9 +162,9 @@ it('nút "+" tạo phòng nhanh cho khoa đang chọn rồi tự chọn phòng �
       departmentId: 'd1',
       floor: 'Tầng 2',
       roomType: 'other',
+      code: 'HH-PHONG-MOI',
     }),
   )
-  expect(bodies[0]).not.toHaveProperty('code')
   await waitFor(() =>
     expect(screen.getByRole('combobox', { name: 'Phòng' })).toHaveTextContent('Phòng mới'),
   )

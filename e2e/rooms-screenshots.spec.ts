@@ -10,8 +10,8 @@ const ids: Record<string, string> = JSON.parse(process.env.SHOT_IDS ?? '{}')
 const only = (process.env.SHOT_PAGES ?? '').split(',').filter(Boolean)
 
 const targets: { name: string; path: string; full?: boolean; act?: string }[] = [
-  { name: '14-danh-muc-phong', path: '/admin/catalogs/rooms' },
-  { name: '14-danh-muc-phong-form', path: '/admin/catalogs/rooms', act: 'add' },
+  { name: '14-rooms', path: '/admin/rooms' },
+  { name: '14-rooms-form', path: '/admin/rooms', act: 'add' },
   { name: '14-form-them-may', path: '/equipment/new', act: 'pick-dept' },
   { name: '14-thiet-bi', path: '/equipment' },
   { name: '14-thiet-bi-chi-tiet', path: `/equipment/${ids.equipment}` },
@@ -39,7 +39,7 @@ test('chụp màn Phòng', async ({ page }) => {
     await page.waitForLoadState('networkidle', { timeout: 4_000 }).catch(() => {})
     await page.waitForTimeout(800)
     if (target.act === 'add') {
-      await page.getByRole('button', { name: 'Thêm mới' }).click()
+      await page.getByRole('button', { name: 'Thêm phòng' }).click()
       await page.waitForTimeout(500)
     }
     if (target.act === 'pick-dept') {
