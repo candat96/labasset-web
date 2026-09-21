@@ -5,15 +5,25 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useTranslation } from 'react-i18next'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { Collapsible as CollapsiblePrimitive } from 'radix-ui'
 import { PageHeader } from '@/components/page/PageHeader'
 import { ErrorState } from '@/components/page/ErrorState'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Form } from '@/components/ui/form'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { TextField, NumberField, SwitchField } from '@/components/form/fields'
 import { FormField, FormItem, FormMessage } from '@/components/ui/form'
 import { AsyncSelect } from '@/components/form/async-select'
@@ -21,12 +31,108 @@ import { FileField } from '@/components/form/file-field'
 import { useCan } from '@/app/guards/useCan'
 import { ADM } from '@/routes/roles'
 import { applyServerErrors, isApiError, messageFor } from '@/api/errors'
-import { previewNumber, resolveWarehouse, saveSettings, searchWarehouses } from '../api'
+import {
+  previewNumber,
+  resolveWarehouse,
+  saveSettings,
+  searchWarehouses,
+  testAiSettings,
+} from '../api'
 import { changedSettings, settingField, values } from '../diff'
 import { isValidNumberingTemplate } from '../numbering'
 import { settingsKeys, useSettings } from '../hooks'
 import { settingsSchema, type SettingsForm } from '../schema'
 import { NUMBER_DEFAULTS, NUMBER_TYPES, type NumberingType } from '../types'
+import { CHAT_PRESETS, EMBEDDING_PRESETS, findPreset, type ProviderPreset } from '../ai-providers'
+
+type ChatProtocol = 'openai_compatible' | 'anthropic'
+type EmbeddingProtocol = 'openai_compatible' | 'voyage' | 'none'
+
+interface AiFormState {
+  enabled: boolean
+  chat: {
+    protocol: ChatProtocol
+    baseUrl: string
+    model: string
+    apiKey: string
+    headers: string
+  }
+  embedding: {
+    protocol: EmbeddingProtocol
+    baseUrl: string
+    model: string
+    dimensions: string
+    apiKey: string
+  }
+  monthlyTokenBudget: string
+}
+
+const AI_DEFAULTS = {
+  chatProtocol: 'openai_compatible' as ChatProtocol,
+  chatBaseUrl: 'https://api.openai.com/v1',
+  chatModel: 'gpt-4o-mini',
+  embeddingProtocol: 'openai_compatible' as EmbeddingProtocol,
+  embeddingBaseUrl: 'https://api.openai.com/v1',
+  embeddingModel: 'text-embedding-3-small',
+  dimensions: 1024,
+  monthlyTokenBudget: 0,
+}
+
+const CHAT_PRESET_LABELS: Record<string, string> = {
+  openai: 'presetOpenai',
+  openrouter: 'presetOpenrouter',
+  deepseek: 'presetDeepseek',
+  glm: 'presetGlm',
+  groq: 'presetGroq',
+  ollama: 'presetOllama',
+  anthropic: 'presetAnthropic',
+  custom: 'presetCustom',
+}
+
+const EMBEDDING_PRESET_LABELS: Record<string, string> = {
+  openai: 'presetOpenai',
+  openrouter: 'presetOpenrouter',
+  deepseek: 'presetDeepseek',
+  voyage: 'presetVoyage',
+  ollama: 'presetOllama',
+  custom: 'presetCustom',
+}
+
+function isValidHeadersJson(value: string): boolean {
+  try {
+    const parsed: unknown = JSON.parse(value)
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return false
+    return Object.values(parsed as Record<string, unknown>).every((v) => typeof v === 'string')
+  } catch {
+    return false
+  }
+}
+
+function toChatProtocol(value: unknown): ChatProtocol {
+  return value === 'anthropic' ? 'anthropic' : 'openai_compatible'
+}
+
+function toEmbeddingProtocol(value: unknown): EmbeddingProtocol {
+  return value === 'voyage' || value === 'none' ? (value as EmbeddingProtocol) : 'openai_compatible'
+}
+
+function presetOptions(
+  presets: ProviderPreset[],
+  labels: Record<string, string>,
+  t: (key: string) => string,
+) {
+  return [
+    ...presets.map((preset) => ({
+      value: preset.id,
+      label: t(`ai.${labels[preset.id] ?? 'presetCustom'}`),
+    })),
+    { value: 'custom', label: t('ai.presetCustom') },
+  ]
+}
+
+function presetModels(presets: ProviderPreset[], id: string): string[] {
+  return id === 'custom' ? [] : (presets.find((preset) => preset.id === id)?.models ?? [])
+}
 
 const known = new Set([
   'hospital.name',
@@ -71,15 +177,36 @@ export function Component() {
   }))
   const [previews, setPreviews] = useState<Record<string, string>>({})
   const [templateErrors, setTemplateErrors] = useState<Record<string, string>>({})
-  const [ai, setAi] = useState({
+  const [ai, setAi] = useState<AiFormState>(() => ({
     enabled: false,
-    provider: 'anthropic',
-    model: 'claude-sonnet-5',
-    embeddingProvider: '',
-    embeddingModel: '',
-    monthlyTokenBudget: '0',
-    apiKey: '',
-  })
+    chat: {
+      protocol: AI_DEFAULTS.chatProtocol,
+      baseUrl: AI_DEFAULTS.chatBaseUrl,
+      model: AI_DEFAULTS.chatModel,
+      apiKey: '',
+      headers: '',
+    },
+    embedding: {
+      protocol: AI_DEFAULTS.embeddingProtocol,
+      baseUrl: AI_DEFAULTS.embeddingBaseUrl,
+      model: AI_DEFAULTS.embeddingModel,
+      dimensions: String(AI_DEFAULTS.dimensions),
+      apiKey: '',
+    },
+    monthlyTokenBudget: String(AI_DEFAULTS.monthlyTokenBudget),
+  }))
+  const [chatKeySet, setChatKeySet] = useState(false)
+  const [embeddingKeySet, setEmbeddingKeySet] = useState(false)
+  const [clearChatKey, setClearChatKey] = useState(false)
+  const [clearEmbeddingKey, setClearEmbeddingKey] = useState(false)
+  const [headersError, setHeadersError] = useState('')
+  const [advancedOpen, setAdvancedOpen] = useState(false)
+  const [testState, setTestState] = useState<{
+    status: 'idle' | 'loading' | 'ok' | 'unsupported' | 'error'
+    latencyMs?: number
+    model?: string
+    error?: string
+  }>({ status: 'idle' })
   useEffect(() => {
     if (settings.data) {
       form.reset(values(settings.data))
@@ -93,16 +220,33 @@ export function Component() {
           ]),
         ) as Record<NumberingType, string>,
       )
-      setAi((current) => ({
-        ...current,
-        enabled: Boolean(settings.data?.['ai.enabled']),
-        provider: String(settings.data?.['ai.provider'] ?? 'anthropic'),
-        model: String(settings.data?.['ai.model'] ?? 'claude-sonnet-5'),
-        embeddingProvider: String(settings.data?.['ai.embeddingProvider'] ?? ''),
-        embeddingModel: String(settings.data?.['ai.embeddingModel'] ?? ''),
-        monthlyTokenBudget: String(settings.data?.['ai.monthlyTokenBudget'] ?? '0'),
+      const chat = {
+        protocol: toChatProtocol(settings.data?.['ai.chat.protocol']),
+        baseUrl: String(settings.data?.['ai.chat.baseUrl'] ?? AI_DEFAULTS.chatBaseUrl),
+        model: String(settings.data?.['ai.chat.model'] ?? AI_DEFAULTS.chatModel),
         apiKey: '',
-      }))
+        headers: String(settings.data?.['ai.chat.headers'] ?? ''),
+      }
+      const embedding = {
+        protocol: toEmbeddingProtocol(settings.data?.['ai.embedding.protocol']),
+        baseUrl: String(settings.data?.['ai.embedding.baseUrl'] ?? AI_DEFAULTS.embeddingBaseUrl),
+        model: String(settings.data?.['ai.embedding.model'] ?? AI_DEFAULTS.embeddingModel),
+        dimensions: String(settings.data?.['ai.embedding.dimensions'] ?? AI_DEFAULTS.dimensions),
+        apiKey: '',
+      }
+      const budget = settings.data?.['ai.monthlyTokenBudget']
+      setAi({
+        enabled: Boolean(settings.data?.['ai.enabled']),
+        chat,
+        embedding,
+        monthlyTokenBudget:
+          budget === undefined || budget === null || budget === '' ? '0' : String(budget),
+      })
+      setChatKeySet(Boolean(settings.data?.['ai.chat.apiKeySet']))
+      setEmbeddingKeySet(Boolean(settings.data?.['ai.embedding.apiKeySet']))
+      setClearChatKey(false)
+      setClearEmbeddingKey(false)
+      setHeadersError('')
     }
   }, [settings.data, form])
   const mutation = useMutation({
@@ -133,9 +277,29 @@ export function Component() {
   })
   const other = useMemo(
     () =>
-      Object.fromEntries(Object.entries(settings.data ?? {}).filter(([key]) => !known.has(key))),
+      Object.fromEntries(
+        // Cấu hình AI (`ai.*`) sinh động qua tab AI theo hợp đồng provider 2026-09-21.
+        Object.entries(settings.data ?? {}).filter(
+          ([key]) => !known.has(key) && !key.startsWith('ai.'),
+        ),
+      ),
     [settings.data],
   )
+  const chatPreset = findPreset(CHAT_PRESETS, ai.chat.baseUrl, ai.chat.protocol)?.id ?? 'custom'
+  const embeddingPreset =
+    findPreset(EMBEDDING_PRESETS, ai.embedding.baseUrl, ai.embedding.protocol)?.id ?? 'custom'
+  const runTest = async () => {
+    setTestState({ status: 'loading' })
+    try {
+      const result = await testAiSettings()
+      if (result?.ok)
+        setTestState({ status: 'ok', latencyMs: result.latencyMs, model: result.model })
+      else setTestState({ status: 'error', error: result?.error ?? t('ai.testFailed') })
+    } catch (error) {
+      if (isApiError(error) && error.status === 404) setTestState({ status: 'unsupported' })
+      else setTestState({ status: 'error', error: messageFor(error) })
+    }
+  }
   if (settings.isPending) return <p role="status">{t('loading')}</p>
   if (settings.error)
     return <ErrorState error={settings.error} onRetry={() => void settings.refetch()} />
@@ -153,13 +317,38 @@ export function Component() {
       const previous = original[key] === undefined ? fallback : original[key]
       if (JSON.stringify(previous) !== JSON.stringify(value)) body[key] = value
     }
+    const putAiNumber = (key: string, value: number, fallback: number) => {
+      const raw = original[key]
+      const previous = raw === undefined || raw === null || raw === '' ? fallback : Number(raw)
+      if (previous !== value) body[key] = value
+    }
+    const chatHeaders = ai.chat.headers.trim()
+    if (chatHeaders && !isValidHeadersJson(chatHeaders)) {
+      setHeadersError(t('ai.headersInvalid'))
+      return
+    }
     putAi('ai.enabled', ai.enabled, false)
-    putAi('ai.provider', ai.provider, 'anthropic')
-    putAi('ai.model', ai.model, 'claude-sonnet-5')
-    putAi('ai.embeddingProvider', ai.embeddingProvider, '')
-    putAi('ai.embeddingModel', ai.embeddingModel, '')
-    putAi('ai.monthlyTokenBudget', ai.monthlyTokenBudget, '0')
-    if (ai.apiKey) body['ai.apiKey'] = ai.apiKey
+    putAi('ai.chat.protocol', ai.chat.protocol, AI_DEFAULTS.chatProtocol)
+    putAi('ai.chat.baseUrl', ai.chat.baseUrl, AI_DEFAULTS.chatBaseUrl)
+    putAi('ai.chat.model', ai.chat.model, AI_DEFAULTS.chatModel)
+    if (chatHeaders) putAi('ai.chat.headers', chatHeaders, '')
+    putAi('ai.embedding.protocol', ai.embedding.protocol, AI_DEFAULTS.embeddingProtocol)
+    putAi('ai.embedding.baseUrl', ai.embedding.baseUrl, AI_DEFAULTS.embeddingBaseUrl)
+    putAi('ai.embedding.model', ai.embedding.model, AI_DEFAULTS.embeddingModel)
+    putAiNumber(
+      'ai.embedding.dimensions',
+      Number(ai.embedding.dimensions) || AI_DEFAULTS.dimensions,
+      AI_DEFAULTS.dimensions,
+    )
+    putAiNumber(
+      'ai.monthlyTokenBudget',
+      Math.max(0, Math.floor(Number(ai.monthlyTokenBudget) || 0)),
+      AI_DEFAULTS.monthlyTokenBudget,
+    )
+    if (clearChatKey) body['ai.chat.apiKey'] = ''
+    else if (ai.chat.apiKey) body['ai.chat.apiKey'] = ai.chat.apiKey
+    if (clearEmbeddingKey) body['ai.embedding.apiKey'] = ''
+    else if (ai.embedding.apiKey) body['ai.embedding.apiKey'] = ai.embedding.apiKey
     if (!Object.keys(body).length) {
       toast.message(t('noChange'))
       return
@@ -404,83 +593,380 @@ export function Component() {
               ))}
             </TabsContent>
             <TabsContent value="ai" forceMount className="space-y-4 data-[state=inactive]:hidden">
-              <p className="text-muted-foreground text-sm">
-                {/* TODO(api): D2 chưa có GET /v1/ai/status. Khoá gửi qua PUT /v1/settings. */}
-                {t('ai.note')}
-              </p>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between gap-4 rounded-md border px-3 py-2">
+                <Label htmlFor="ai-enabled">{t('ai.enabled')}</Label>
                 <Switch
                   id="ai-enabled"
                   checked={ai.enabled}
                   onCheckedChange={(value) => setAi((current) => ({ ...current, enabled: value }))}
                 />
-                <Label htmlFor="ai-enabled">{t('ai.enabled')}</Label>
               </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="ai-provider">{t('ai.provider')}</Label>
-                  <Input
-                    id="ai-provider"
-                    value={ai.provider}
-                    onChange={(event) =>
-                      setAi((current) => ({ ...current, provider: event.target.value }))
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="ai-model">{t('ai.model')}</Label>
-                  <Input
-                    id="ai-model"
-                    value={ai.model}
-                    onChange={(event) =>
-                      setAi((current) => ({ ...current, model: event.target.value }))
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="ai-embed-provider">{t('ai.embeddingProvider')}</Label>
-                  <Input
-                    id="ai-embed-provider"
-                    value={ai.embeddingProvider}
-                    onChange={(event) =>
-                      setAi((current) => ({ ...current, embeddingProvider: event.target.value }))
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="ai-embed-model">{t('ai.embeddingModel')}</Label>
-                  <Input
-                    id="ai-embed-model"
-                    value={ai.embeddingModel}
-                    onChange={(event) =>
-                      setAi((current) => ({ ...current, embeddingModel: event.target.value }))
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="ai-budget">{t('ai.budget')}</Label>
-                  <Input
-                    id="ai-budget"
-                    value={ai.monthlyTokenBudget}
-                    onChange={(event) =>
-                      setAi((current) => ({ ...current, monthlyTokenBudget: event.target.value }))
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="ai-key">
-                    {settings.data?.['ai.apiKeySet'] ? t('ai.apiKeySet') : t('ai.apiKeyUnset')}
-                  </Label>
-                  <Input
-                    id="ai-key"
-                    type="password"
-                    autoComplete="new-password"
-                    value={ai.apiKey}
-                    onChange={(event) =>
-                      setAi((current) => ({ ...current, apiKey: event.target.value }))
-                    }
-                  />
-                </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <fieldset className="space-y-3 rounded-md border p-3">
+                  <legend className="px-1 text-sm font-medium">{t('ai.chat')}</legend>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="ai-chat-protocol">{t('ai.protocol')}</Label>
+                      <Select
+                        value={ai.chat.protocol}
+                        onValueChange={(value) =>
+                          setAi((current) => ({
+                            ...current,
+                            chat: { ...current.chat, protocol: toChatProtocol(value) },
+                          }))
+                        }
+                      >
+                        <SelectTrigger id="ai-chat-protocol" className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="openai_compatible">
+                            {t('ai.protocolOpenaiCompatible')}
+                          </SelectItem>
+                          <SelectItem value="anthropic">{t('ai.protocolAnthropic')}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="ai-chat-preset">{t('ai.provider')}</Label>
+                      <Select
+                        value={chatPreset}
+                        onValueChange={(value) => {
+                          const preset = CHAT_PRESETS.find((item) => item.id === value)
+                          setAi((current) => ({
+                            ...current,
+                            chat: {
+                              ...current.chat,
+                              protocol:
+                                value === 'custom'
+                                  ? current.chat.protocol
+                                  : toChatProtocol(preset?.protocol ?? current.chat.protocol),
+                              baseUrl: preset?.baseUrl ?? current.chat.baseUrl,
+                            },
+                          }))
+                        }}
+                      >
+                        <SelectTrigger id="ai-chat-preset" className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {presetOptions(CHAT_PRESETS, CHAT_PRESET_LABELS, t).map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="ai-chat-base-url">{t('ai.baseUrl')}</Label>
+                    <Input
+                      id="ai-chat-base-url"
+                      value={ai.chat.baseUrl}
+                      placeholder={AI_DEFAULTS.chatBaseUrl}
+                      onChange={(event) =>
+                        setAi((current) => ({
+                          ...current,
+                          chat: { ...current.chat, baseUrl: event.target.value },
+                        }))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="ai-chat-model">{t('ai.model')}</Label>
+                    <Input
+                      id="ai-chat-model"
+                      list="ai-chat-model-suggestions"
+                      value={ai.chat.model}
+                      placeholder={t('ai.modelPlaceholder')}
+                      onChange={(event) =>
+                        setAi((current) => ({
+                          ...current,
+                          chat: { ...current.chat, model: event.target.value },
+                        }))
+                      }
+                    />
+                    <datalist id="ai-chat-model-suggestions">
+                      {presetModels(CHAT_PRESETS, chatPreset).map((model) => (
+                        <option key={model} value={model} />
+                      ))}
+                    </datalist>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="ai-chat-key">
+                      {chatKeySet && !clearChatKey ? t('ai.apiKeySet') : t('ai.apiKeyUnset')}
+                    </Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        id="ai-chat-key"
+                        type="password"
+                        autoComplete="new-password"
+                        value={ai.chat.apiKey}
+                        onChange={(event) =>
+                          setAi((current) => ({
+                            ...current,
+                            chat: { ...current.chat, apiKey: event.target.value },
+                          }))
+                        }
+                      />
+                      {chatKeySet && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          disabled={clearChatKey}
+                          onClick={() => setClearChatKey(true)}
+                        >
+                          {t('ai.clearKey')}
+                        </Button>
+                      )}
+                    </div>
+                    {clearChatKey && (
+                      <p className="text-destructive text-xs">{t('ai.keyWillBeCleared')}</p>
+                    )}
+                  </div>
+                  <CollapsiblePrimitive.Root open={advancedOpen} onOpenChange={setAdvancedOpen}>
+                    <CollapsiblePrimitive.Trigger asChild>
+                      <Button type="button" variant="ghost" size="sm" className="px-2">
+                        {t('ai.advanced')}
+                      </Button>
+                    </CollapsiblePrimitive.Trigger>
+                    <CollapsiblePrimitive.Content className="space-y-2 pt-1">
+                      <div className="space-y-2">
+                        <Label htmlFor="ai-chat-headers">{t('ai.headers')}</Label>
+                        <Textarea
+                          id="ai-chat-headers"
+                          rows={3}
+                          value={ai.chat.headers}
+                          placeholder={t('ai.headersPlaceholder')}
+                          aria-invalid={headersError ? true : undefined}
+                          onChange={(event) => {
+                            const value = event.target.value
+                            setAi((current) => ({
+                              ...current,
+                              chat: { ...current.chat, headers: value },
+                            }))
+                            const trimmed = value.trim()
+                            setHeadersError(
+                              trimmed && !isValidHeadersJson(trimmed) ? t('ai.headersInvalid') : '',
+                            )
+                          }}
+                        />
+                        {headersError && <p className="text-destructive text-xs">{headersError}</p>}
+                      </div>
+                    </CollapsiblePrimitive.Content>
+                  </CollapsiblePrimitive.Root>
+                </fieldset>
+                <fieldset className="space-y-3 rounded-md border p-3">
+                  <legend className="px-1 text-sm font-medium">{t('ai.embedding')}</legend>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="ai-embedding-protocol">{t('ai.embeddingProtocol')}</Label>
+                      <Select
+                        value={ai.embedding.protocol}
+                        onValueChange={(value) =>
+                          setAi((current) => ({
+                            ...current,
+                            embedding: {
+                              ...current.embedding,
+                              protocol: toEmbeddingProtocol(value),
+                            },
+                          }))
+                        }
+                      >
+                        <SelectTrigger id="ai-embedding-protocol" className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="openai_compatible">
+                            {t('ai.protocolOpenaiCompatible')}
+                          </SelectItem>
+                          <SelectItem value="voyage">{t('ai.protocolVoyage')}</SelectItem>
+                          <SelectItem value="none">{t('ai.protocolNone')}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="ai-embedding-preset">{t('ai.embeddingProvider')}</Label>
+                      <Select
+                        value={embeddingPreset}
+                        onValueChange={(value) => {
+                          const preset = EMBEDDING_PRESETS.find((item) => item.id === value)
+                          setAi((current) => ({
+                            ...current,
+                            embedding: {
+                              ...current.embedding,
+                              protocol:
+                                value === 'custom'
+                                  ? current.embedding.protocol
+                                  : preset
+                                    ? toEmbeddingProtocol(preset.protocol)
+                                    : current.embedding.protocol,
+                              baseUrl: preset?.baseUrl ?? current.embedding.baseUrl,
+                            },
+                          }))
+                        }}
+                      >
+                        <SelectTrigger id="ai-embedding-preset" className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {presetOptions(EMBEDDING_PRESETS, EMBEDDING_PRESET_LABELS, t).map(
+                            (option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ),
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  {ai.embedding.protocol !== 'none' && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="ai-embedding-base-url">{t('ai.embeddingBaseUrl')}</Label>
+                        <Input
+                          id="ai-embedding-base-url"
+                          value={ai.embedding.baseUrl}
+                          placeholder={AI_DEFAULTS.embeddingBaseUrl}
+                          onChange={(event) =>
+                            setAi((current) => ({
+                              ...current,
+                              embedding: { ...current.embedding, baseUrl: event.target.value },
+                            }))
+                          }
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="ai-embedding-model">{t('ai.embeddingModel')}</Label>
+                        <Input
+                          id="ai-embedding-model"
+                          list="ai-embedding-model-suggestions"
+                          value={ai.embedding.model}
+                          placeholder={t('ai.embeddingModelPlaceholder')}
+                          onChange={(event) =>
+                            setAi((current) => ({
+                              ...current,
+                              embedding: { ...current.embedding, model: event.target.value },
+                            }))
+                          }
+                        />
+                        <datalist id="ai-embedding-model-suggestions">
+                          {presetModels(EMBEDDING_PRESETS, embeddingPreset).map((model) => (
+                            <option key={model} value={model} />
+                          ))}
+                        </datalist>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="ai-embedding-dimensions">{t('ai.dimensions')}</Label>
+                        <Input
+                          id="ai-embedding-dimensions"
+                          type="number"
+                          min={1}
+                          value={ai.embedding.dimensions}
+                          onChange={(event) =>
+                            setAi((current) => ({
+                              ...current,
+                              embedding: {
+                                ...current.embedding,
+                                dimensions: event.target.value,
+                              },
+                            }))
+                          }
+                        />
+                      </div>
+                    </>
+                  )}
+                  <div className="space-y-2">
+                    <Label htmlFor="ai-embedding-key">
+                      {embeddingKeySet && !clearEmbeddingKey
+                        ? t('ai.embeddingApiKeySet')
+                        : t('ai.embeddingApiKeyUnset')}
+                    </Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        id="ai-embedding-key"
+                        type="password"
+                        autoComplete="new-password"
+                        placeholder={
+                          embeddingKeySet ? undefined : t('ai.embeddingApiKeyPlaceholder')
+                        }
+                        value={ai.embedding.apiKey}
+                        onChange={(event) =>
+                          setAi((current) => ({
+                            ...current,
+                            embedding: { ...current.embedding, apiKey: event.target.value },
+                          }))
+                        }
+                      />
+                      {embeddingKeySet && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          disabled={clearEmbeddingKey}
+                          onClick={() => setClearEmbeddingKey(true)}
+                        >
+                          {t('ai.clearKey')}
+                        </Button>
+                      )}
+                    </div>
+                    {clearEmbeddingKey && (
+                      <p className="text-destructive text-xs">{t('ai.keyWillBeCleared')}</p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="ai-budget">{t('ai.budget')}</Label>
+                    <Input
+                      id="ai-budget"
+                      type="number"
+                      min={0}
+                      value={ai.monthlyTokenBudget}
+                      onChange={(event) =>
+                        setAi((current) => ({
+                          ...current,
+                          monthlyTokenBudget: event.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+                </fieldset>
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={testState.status === 'loading'}
+                  onClick={() => void runTest()}
+                >
+                  {testState.status === 'loading' ? t('ai.testing') : t('ai.test')}
+                </Button>
+                {testState.status === 'ok' && (
+                  <Alert className="max-w-md">
+                    <AlertTitle>{t('ai.testOk')}</AlertTitle>
+                    <AlertDescription>
+                      {testState.latencyMs !== undefined && (
+                        <p>{t('ai.testLatency', { latencyMs: testState.latencyMs })}</p>
+                      )}
+                      {testState.model && <p>{t('ai.testModel', { model: testState.model })}</p>}
+                    </AlertDescription>
+                  </Alert>
+                )}
+                {testState.status === 'unsupported' && (
+                  <Alert className="max-w-md">
+                    <AlertTitle>{t('ai.testUnsupported')}</AlertTitle>
+                  </Alert>
+                )}
+                {testState.status === 'error' && (
+                  <Alert variant="destructive" className="max-w-md">
+                    <AlertTitle>{t('ai.testFailed')}</AlertTitle>
+                    {testState.error && (
+                      <AlertDescription>
+                        <p>{testState.error}</p>
+                      </AlertDescription>
+                    )}
+                  </Alert>
+                )}
               </div>
             </TabsContent>
             <TabsContent value="other" forceMount className="data-[state=inactive]:hidden">
