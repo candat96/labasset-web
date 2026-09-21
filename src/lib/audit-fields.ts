@@ -99,6 +99,19 @@ export const AUDIT_FIELD_LABELS: Record<string, string> = {
   suggestedDecision: 'Gợi ý quyết định',
   unitPrice: 'Đơn giá',
   qty: 'Số lượng',
+  buckets: 'Số khoảng chia',
+  returnReason: 'Lý do trả lại',
+  deptApprovedBy: 'Người duyệt khoa',
+  deptApprovedAt: 'Duyệt khoa lúc',
+  consolidatedAt: 'Tổng hợp lúc',
+  qtyByBucket: 'Số lượng theo kỳ',
+  approverNote: 'Ghi chú duyệt',
+  lastUnitPrice: 'Đơn giá gần nhất',
+  consumption12m: 'Tiêu hao 12 tháng',
+  avgMonthly: 'Tiêu hao TB tháng',
+  onHand: 'Tồn toàn viện',
+  runwayDays: 'Số ngày dự trữ',
+  skipUnsubmitted: 'Bỏ qua khoa chưa nộp',
 }
 
 /** Việt hoá giá trị enum theo tên trường (thử lần lượt các map trạng thái đã có). */
@@ -114,6 +127,9 @@ const STATUS_MAPS: StatusMap[] = [
   maps.qcStatusMap,
   maps.componentStatusMap,
   maps.suggestionStatusMap,
+  maps.demandPeriodStatusMap,
+  maps.demandRequestStatusMap,
+  maps.demandDecisionMap,
   maps.commonStatusMap,
 ]
 const VALUE_LABELS: Record<string, enums.EnumLabels[]> = {

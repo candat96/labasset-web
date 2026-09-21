@@ -491,6 +491,45 @@ export const GUIDE: GuideSection[] = [
     ],
   },
   {
+    id: 'du-tru',
+    title: '15. Dự trù (kế hoạch mua sắm theo kỳ)',
+    blocks: [
+      {
+        type: 'flow',
+        steps: [
+          'Quản trị viện mở kỳ dự trù',
+          'Khoa lập phiếu & gửi',
+          'Trưởng khoa duyệt phiếu khoa',
+          'Vật tư – TBYT tổng hợp & chỉnh số duyệt',
+          'Ban giám đốc chốt kỳ (Duyệt → Đóng)',
+        ],
+      },
+      {
+        type: 'steps',
+        items: [
+          'Menu Mua sắm → Dự trù. Kỳ năm chia 12 tháng (mặc định), kỳ quý 4 quý, kỳ đột xuất một tổng; hạn nộp do quản trị đặt (nhắc trước 3 ngày & khi quá hạn).',
+          'Khoa: bấm phiếu của khoa → "Thêm dòng" hoặc "Nhập Excel" (tải mẫu đầy đủ trước). Với vật tư hệ thống tự theo dõi tồn kho sẽ hiện chip "Gợi ý" — bấm để lấy số lượng gợi ý phỏng theo tiêu hao 12 tháng, tồn kho và mức tồn tối thiểu; số lượng chia đều vào các tháng bằng nút "Chia đều". Gửi phiếu để trưởng khoa duyệt.',
+          'Trưởng khoa: "Duyệt (trưởng khoa)" hoặc "Trả lại" (ghi lý do) — khoa sửa lại rồi gửi lại. Nếu khoa không có trưởng khoa, vật tư duyệt thay.',
+          'Vật tư – TBYT: tab Tổng hợp gộp theo vật tư × khoa — sửa tổng số duyệt (hỏi "phân bổ tỷ lệ theo khoa?"), mỗi khoa trong phần mở rộng; quyết định từng dòng: Cần mua / Lấy từ kho / Không duyệt; "Xuất Excel", "Tờ trình PDF", "Tính lại" khi có dữ liệu mới.',
+          'Quản trị viện "Duyệt" (khoá số) → "Đóng kỳ": dòng "Lấy từ kho" tự tạo phiếu yêu cầu cấp phát cho từng khoa; danh mục "Cần mua" giữ cho bước mua sắm (hợp đồng/PO).',
+        ],
+      },
+      {
+        type: 'note',
+        tone: 'success',
+        text: 'Gợi ý số lượng: (tiêu hao trung bình tháng × 12 + 1 tháng dự phòng) − tồn toàn viện, làm tròn lên theo đơn vị; khoa chưa có dữ liệu tiêu hao → dùng mức tồn tối thiểu. Thiết bị mua mới / dịch vụ không gợi ý, do khoa tự nhập thông số và đơn giá ước.',
+      },
+      {
+        type: 'list',
+        items: [
+          'Quyết định: Cần mua — mua mới trong kỳ; Lấy từ kho — tự tạo phiếu yêu cầu cấp phát khi đóng kỳ; Không duyệt — bỏ kèm ghi chú lý do.',
+          'Trạng thái kỳ: Nháp → Đang nhận (khoa lập phiếu) → Đang tổng hợp → Đã duyệt → Đã đóng (chỉ đọc); được Huỷ từ mọi trạng thái trước Duyệt.',
+          'Cột "SL duyệt" từng dòng chỉ phòng Vật tư sửa trên phiếu đã gửi; phiếu khoa chỉ sửa được khi Nháp hoặc Bị trả lại.',
+        ],
+      },
+    ],
+  },
+  {
     id: 'cau-hoi',
     title: '14. Câu hỏi thường gặp',
     blocks: [
