@@ -39,12 +39,12 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton asChild size="lg" tooltip={hospitalName ?? t('app.name')}>
               <NavLink to="/">
-                <div className="bg-primary text-primary-foreground flex size-8 shrink-0 items-center justify-center rounded-md">
+                <div className="bg-sidebar-primary text-sidebar-primary-foreground flex size-8 shrink-0 items-center justify-center rounded-md">
                   <FlaskConical className="size-4" aria-hidden />
                 </div>
                 <div className="grid leading-tight">
-                  <span className="truncate font-semibold">{t('app.name')}</span>
-                  <span className="text-muted-foreground truncate text-xs">
+                  <span className="truncate text-base font-bold text-white">{t('app.name')}</span>
+                  <span className="text-sidebar-foreground/70 truncate text-xs">
                     {hospitalName ?? t('app.tagline')}
                   </span>
                 </div>
