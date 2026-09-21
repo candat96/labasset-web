@@ -38,7 +38,8 @@ import { FormDialog } from '@/components/form/FormDialog'
 import { TextField } from '@/components/form/fields'
 import { DateField } from '@/components/form/date-field'
 import { useConfirm } from '@/components/confirm-dialog'
-import { messageFor } from '@/api/errors'
+import { messageFor, isApiError } from '@/api/errors'
+import { useDepartmentLookup } from '@/api/lookups'
 import { formatVnd } from '@/lib/format/money'
 import { formatQty } from '@/lib/format/number'
 import { formatDate, formatDateTime } from '@/lib/format/date'
@@ -183,16 +184,10 @@ function ConsolidationRow({
           )}
         </TableCell>
         <TableCell className="text-right">
-          {editable ? (
-            <DecimalCell
-              className="w-28 text-right"
-              ariaLabel={`${row.itemName} — Đơn giá kế hoạch`}
-              value={row.unitPricePlan ?? '0'}
-              onCommit={(value) => void patch({ unitPricePlan: value })}
-            />
-          ) : (
-            <span className="tabular-nums">{formatVnd(row.unitPricePlan ?? '')}</span>
-          )}
+          {/* Đơn giá kế hoạch do API tính (trung vị) — PATCH /consolidation không nhận sửa */}
+          <span className="tabular-nums" title={row.unitPricePlan ?? ''}>
+            {formatVnd(row.unitPricePlan ?? '')}
+          </span>
         </TableCell>
         <TableCell className="text-right tabular-nums">{formatVnd(amount.toString())}</TableCell>
         <TableCell>
@@ -508,7 +503,9 @@ export function Component() {
   const { confirm, dialog } = useConfirm()
   const [skipOpen, setSkipOpen] = useState(false)
   const [skipUnsubmitted, setSkipUnsubmitted] = useState(false)
+  const [unsubmitted, setUnsubmitted] = useState<string[] | null>(null)
   const [editOpen, setEditOpen] = useState(false)
+  const allDeptNames = useDepartmentLookup()
 
   const detail = useQuery({
     queryKey: ['demand-period', id],
@@ -535,6 +532,11 @@ export function Component() {
     queryKey: ['demand-consolidation', id],
     queryFn: () => api.listConsolidation(id),
     enabled: !!id && consolidationVisible,
+  })
+  const summary = useQuery({
+    queryKey: ['demand-summary', id],
+    queryFn: () => api.getPeriodSummary(id),
+    enabled: !!id && isStaff && consolidationVisible,
   })
   const editForm = useForm<EditValues>({
     resolver: zodResolver(editSchema),
@@ -563,8 +565,17 @@ export function Component() {
       toast.success(t('updated'))
       setSkipOpen(false)
       setSkipUnsubmitted(false)
+      setUnsubmitted(null)
       invalidate()
     } catch (error) {
+      // 409 DEMAND_UNSUBMITTED_DEPARTMENTS — chi tiết là id khoa chưa nộp,
+      // dialog liệt kê + nút "Bỏ qua khoa chưa nộp" (gửi lại query skipUnsubmitted=true).
+      if (isApiError(error) && error.code === 'DEMAND_UNSUBMITTED_DEPARTMENTS') {
+        const details = error.details as { departmentIds?: string[] } | undefined
+        setSkipOpen(false)
+        setUnsubmitted(details?.departmentIds ?? [])
+        return
+      }
       toast.error(messageFor(error))
     }
   }
@@ -602,7 +613,7 @@ export function Component() {
   const requestsPage = requests.data as DemandRequestSummaryPage | undefined
   const requestRows = requestsPage?.items ?? []
   const progress = requestsPage?.progress ?? row.progress
-  const consolidationRows = (consolidation.data ?? []) as DemandConsolidation[]
+  const consolidationRows = consolidation.data?.items ?? []
   const editable = isStaff && row.status === 'consolidating'
 
   return (
@@ -625,6 +636,32 @@ export function Component() {
             {t('consolidateSkip')}
           </label>
           <p className="text-subtle text-[12.5px]">{t('consolidateSkipHint')}</p>
+        </div>
+      </FormDialog>
+      <FormDialog
+        open={unsubmitted != null}
+        onOpenChange={(open) => !open && setUnsubmitted(null)}
+        title={t('unsubmittedTitle', { defaultValue: 'Còn khoa chưa nộp phiếu' })}
+        form={skipForm}
+        submitLabel={t('unsubmittedSkip', { defaultValue: 'Bỏ qua khoa chưa nộp' })}
+        onSubmit={() => {
+          setUnsubmitted(null)
+          setSkipUnsubmitted(true)
+          void consolidate()
+        }}
+      >
+        <div className="space-y-2 text-[13.5px]">
+          <p>
+            {t('unsubmittedHint', {
+              defaultValue:
+                'Vẫn còn khoa chưa nộp phiếu. Chọn "Bỏ qua" để tổng hợp ngay — phiếu chưa nộp của các khoa này không góp vào Σ duyệt.',
+            })}
+          </p>
+          <ul className="text-subtle ml-4 list-disc">
+            {(unsubmitted ?? []).map((depId) => (
+              <li key={depId}>{allDeptNames.get(depId) ?? depId}</li>
+            ))}
+          </ul>
         </div>
       </FormDialog>
       <FormDialog
@@ -783,11 +820,15 @@ export function Component() {
                     { label: t('accepted'), value: String(progress.accepted) },
                     {
                       label: t('totalRequested'),
-                      value: row.totalRequested ? formatVnd(row.totalRequested) : '—',
+                      value: summary.data?.totalRequested
+                        ? formatVnd(summary.data.totalRequested)
+                        : '—',
                     },
                     {
                       label: t('totalApproved'),
-                      value: row.totalApproved ? formatVnd(row.totalApproved) : '—',
+                      value: summary.data?.totalApproved
+                        ? formatVnd(summary.data.totalApproved)
+                        : '—',
                     },
                   ]}
                 />

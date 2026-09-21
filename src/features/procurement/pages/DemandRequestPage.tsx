@@ -485,10 +485,10 @@ function ImportExcelDialog({
         setBusy(true)
         try {
           const result = await api.importDemandLines(requestId, file)
-          setImported(result.imported)
+          setImported(result.created)
           setErrors(result.errors ?? [])
           if ((result.errors ?? []).length === 0) {
-            toast.success(t('importOk', { n: result.imported }))
+            toast.success(t('importOk', { n: result.created }))
             onImported()
             onOpenChange(false)
           }
@@ -597,6 +597,8 @@ export function Component() {
     try {
       await api.addDemandLine(row.id, {
         itemType: 'supply',
+        priority: 'normal',
+        unitPriceEst: '0',
         qtyByBucket: Array.from({ length: buckets }, () => '0'),
       })
       toast.success(t('added', { defaultValue: 'Đã thêm dòng' }))

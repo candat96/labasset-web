@@ -68,6 +68,17 @@ function setupPeriodHandlers() {
       }
       return HttpResponse.json(period)
     }),
+    http.get('/v1/demand/periods/dp1/summary', () =>
+      HttpResponse.json({
+        total: 15,
+        submitted: 12,
+        deptApproved: 8,
+        accepted: 6,
+        totalRequested: '15000000',
+        totalApproved: '14000000',
+        byItemType: [],
+      }),
+    ),
   )
 }
 

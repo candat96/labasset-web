@@ -6505,6 +6505,14 @@ export interface components {
             totalApproved: string;
             totalRequested: string;
         };
+        DemandTasksDto: {
+            /** @description Phiếu chờ VT tiếp nhận */
+            toAccept: number;
+            /** @description Phiếu chờ trưởng khoa/VT xử lý cấp khoa */
+            toApprove: number;
+            /** @description Phiếu khoa của tôi cần lập/gửi */
+            toSubmit: number;
+        };
         DepartmentPageDto: {
             items: components["schemas"]["DepartmentResponseDto"][];
             limit: number;
@@ -7146,6 +7154,7 @@ export interface components {
         };
         MyTasksResponseDto: {
             alerts: components["schemas"]["AlertTasksDto"];
+            demand: components["schemas"]["DemandTasksDto"];
             maintenance: components["schemas"]["MaintenanceTasksDto"];
             repairs: components["schemas"]["RepairTasksDto"];
             requests: components["schemas"]["RequestTasksDto"];
@@ -8427,35 +8436,12 @@ export interface components {
             } | null;
         };
         SupplyResponseDto: {
-            code: string;
-            /** Format: date-time */
-            createdAt: string;
-            defaultSupplierId?: Record<string, never>;
-            description?: string;
-            groupCode?: string;
-            groupId?: Record<string, never>;
-            /** Format: uuid */
-            id: string;
-            isActive?: boolean;
-            manufacturerCode?: Record<string, never>;
-            manufacturerId?: Record<string, never>;
-            maxStock?: string;
-            minStock?: string;
-            name: string;
-            notes?: Record<string, never>;
-            openVialDays?: Record<string, never>;
-            packaging?: Record<string, never>;
-            refPrice?: string;
-            sortOrder?: number;
-            storageCondition?: Record<string, never>;
-            /** @default false */
-            trackExpiry: boolean;
-            /** @default true */
-            trackLot: boolean;
-            unitCode?: string;
-            unitId?: Record<string, never>;
-            /** Format: date-time */
-            updatedAt: string;
+            equipmentId: string;
+            isPrimary: boolean;
+            normQtyPerDay: string | null;
+            normQtyPerTest: string | null;
+            notes: string | null;
+            supplyId: string;
         };
         SysLoginDto: {
             password: string;
@@ -8591,9 +8577,12 @@ export interface components {
             kind: string;
         };
         TransferDto: {
-            fromWarehouseId: string;
-            items: components["schemas"]["TransferItemDto"][];
-            toWarehouseId: string;
+            reason: string;
+            /** Format: uuid */
+            toDepartmentId: string;
+            toLocation?: string | null;
+            /** Format: uuid */
+            toRoomId?: Record<string, never> | null;
         };
         TransferItemDto: {
             lotId: string;
@@ -8955,7 +8944,18 @@ export interface components {
             visitAt?: string;
         };
         UpdateRequestDto: {
-            notes?: Record<string, never>;
+            /** @description Required for type=repair */
+            equipmentId?: Record<string, never>;
+            items?: components["schemas"]["RequestItemDto"][];
+            /** Format: date */
+            neededBy?: Record<string, never>;
+            /**
+             * @default normal
+             * @enum {string}
+             */
+            priority: "normal" | "urgent";
+            /** @description Required for type=repair */
+            reason?: Record<string, never>;
         };
         UpdateRoomDto: {
             building?: string | null;

@@ -41,7 +41,7 @@ import { useConfirm } from '@/components/confirm-dialog'
 import { ErrorState } from '@/components/page/ErrorState'
 import { EmptyState } from '@/components/page/EmptyState'
 import * as api from '../api'
-import type { DemandPeriod, DemandRequest } from '../paths'
+import type { DemandPeriodListItem, DemandPeriodProgress, DemandRequest } from '../paths'
 import { useTranslation } from 'react-i18next'
 
 const createPeriodSchema = z.object({
@@ -75,7 +75,13 @@ function ProgressLine({
   )
 }
 
-function OpenPeriodCard({ row }: { row: DemandPeriod }) {
+type OpenPeriodRow = DemandPeriodListItem & {
+  progress?: DemandPeriodProgress
+  totalRequested?: string
+  totalApproved?: string
+}
+
+function OpenPeriodCard({ row }: { row: OpenPeriodRow }) {
   const { t } = useTranslation('procurement')
   const qc = useQueryClient()
   const { confirm, dialog } = useConfirm()
@@ -285,7 +291,7 @@ function DemandAdminView() {
   })
   const [createOpen, setCreateOpen] = useState(false)
 
-  const columns = useMemo<ColumnDef<DemandPeriod>[]>(
+  const columns = useMemo<ColumnDef<DemandPeriodListItem>[]>(
     () => [
       {
         accessorKey: 'code',
@@ -321,10 +327,10 @@ function DemandAdminView() {
       {
         id: 'submitted',
         header: t('departmentsSubmitted'),
-        cell: ({ row }) =>
-          row.original.progress
-            ? `${row.original.progress.submitted}/${row.original.progress.total}`
-            : '—',
+        cell: ({ row }) => {
+          const p = (row.original as OpenPeriodRow).progress
+          return p ? `${p.submitted}/${p.total}` : '—'
+        },
         meta: { align: 'right' },
       },
       {
@@ -351,7 +357,17 @@ function DemandAdminView() {
     queryFn: () => api.getPeriod(activeListRow!.id),
     enabled: !!activeListRow,
   })
-  const activeRow = activeDetail.data ?? activeListRow
+  const activeSummary = useQuery({
+    queryKey: ['demand-period-summary', activeListRow?.id],
+    queryFn: () => api.getPeriodSummary(activeListRow!.id),
+    enabled: !!activeListRow,
+  })
+  const activeRow: OpenPeriodRow | undefined = activeListRow && {
+    ...activeListRow,
+    ...activeDetail.data,
+    totalRequested: activeSummary.data?.totalRequested,
+    totalApproved: activeSummary.data?.totalApproved,
+  }
 
   return (
     <>
