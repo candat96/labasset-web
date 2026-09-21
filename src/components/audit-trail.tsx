@@ -40,7 +40,9 @@ export function AuditTrail({ entityType, entityId }: { entityType: string; entit
         const title =
           changes.length > 0
             ? `${auditActionLabel(item.action)}: ${shown.map((c) => c.label).join(', ')}${changes.length > shown.length ? ` +${changes.length - shown.length}` : ''}`
-            : auditActionLabel(item.action)
+            : item.action === 'update'
+              ? `${auditActionLabel(item.action)} (không đổi trường hiển thị)`
+              : auditActionLabel(item.action)
         const summary =
           shown.length > 0
             ? shown.map((c) => `${c.label}: ${c.from} → ${c.to}`).join('\n')

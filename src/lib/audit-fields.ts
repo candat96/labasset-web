@@ -77,16 +77,52 @@ export interface FieldChange {
   to: string
 }
 
-/** Danh sách thay đổi trường giữa before/after, bỏ trường kỹ thuật. */
+/** Chuẩn hoá giá trị để so sánh: object quan hệ {id,name…} → id; mảng object → danh sách id. */
+function normalize(value: unknown): unknown {
+  if (isRecord(value) && 'id' in value) return value.id
+  if (Array.isArray(value)) return value.map(normalize)
+  return value
+}
+
+/** Hiển thị: object quan hệ → name/code; còn lại như `short`. */
+function display(value: unknown): string {
+  if (isRecord(value)) {
+    const name = value.name ?? value.fullName ?? value.code ?? value.username
+    if (typeof name === 'string') return name
+  }
+  if (Array.isArray(value) && value.every((v) => isRecord(v)))
+    return value.length === 0 ? '—' : value.map(display).join(', ')
+  return short(value)
+}
+
+/**
+ * Danh sách thay đổi trường giữa before/after: bỏ trường kỹ thuật, bỏ object quan hệ
+ * trùng với `<key>Id`, so sánh theo giá trị chuẩn hoá (object → id) để không báo giả
+ * khi backend nạp quan hệ ở `after` mà không có ở `before`.
+ */
 export function fieldChanges(before: unknown, after: unknown): FieldChange[] {
   const left = isRecord(before) ? before : {}
   const right = isRecord(after) ? after : {}
-  return [...changedKeys(before, after)]
-    .filter((k) => !HIDDEN.has(k))
-    .map((key) => ({
+  const keys = new Set([...Object.keys(left), ...Object.keys(right)])
+  const out: FieldChange[] = []
+  for (const key of keys) {
+    if (HIDDEN.has(key)) continue
+    const l = left[key]
+    const r = right[key]
+    // Object quan hệ đi kèm `<key>Id` → chỉ xét khoá Id (hiển thị tên lấy từ object nếu có).
+    if ((isRecord(l) || isRecord(r) || l === null || r === null) && keys.has(`${key}Id`)) continue
+    // Một bên không có khoá (backend không trả) → không phải thay đổi thật.
+    if (!(key in left) || !(key in right)) continue
+    if (JSON.stringify(normalize(l)) === JSON.stringify(normalize(r))) continue
+    const base = key.endsWith('Id') ? key.slice(0, -2) : key
+    const relL = left[base]
+    const relR = right[base]
+    out.push({
       key,
-      label: AUDIT_FIELD_LABELS[key] ?? key,
-      from: short(left[key]),
-      to: short(right[key]),
-    }))
+      label: AUDIT_FIELD_LABELS[key] ?? AUDIT_FIELD_LABELS[base] ?? key,
+      from: isRecord(relL) ? display(relL) : display(l),
+      to: isRecord(relR) ? display(relR) : display(r),
+    })
+  }
+  return out
 }
