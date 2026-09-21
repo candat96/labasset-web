@@ -1,10 +1,20 @@
 /**
- * Hợp đồng API tạm cho module Dự trù (E1a) theo spec 2026-09-21-du-tru-design.md §6.
- * Backend chưa xong → type tay kiểu `paths` của openapi-typescript.
- * Khi labasset-api commit T2+ → `npm run api:gen` và chuyển sang `api` +
- * `components['schemas']` thật, xoá file này.
+ * Hợp đồng API module Dự trù (E1a).
+ * - T2 (14f42ca) đã có thật: kỳ, phiếu, dòng, gợi ý, import, my → tham chiếu
+ *   `components['schemas']` từ `src/api/schema.d.ts` (sinh bằng `npm run api:gen`).
+ * - T3–T5 CHƯA có: summary, consolidation, approve/close/consolidate/clone,
+ *   export.xlsx/proposal.pdf, `/v1/me/tasks.demand` → giữ type tay theo spec §6,
+ *   xoá dần khi backend commit T3+ (lệch ghi trong WEB-NOTES).
+ * Lưu ý: một số field trong swagger backend còn bị khai mất schema (sinh ra
+ * `Record<string, never>`), ví dụ `itemName`/`spec`/`supplyId`/`unitPriceEst` —
+ * trong file này chuẩn hoá về type thật (string) để call site dùng bình thường.
  */
 
+import type { components } from '@/api/schema'
+
+type S = components['schemas']
+
+// ==== Types thật (backend T2) ====
 export type DemandPeriodKind = 'annual' | 'quarterly' | 'adhoc'
 export type DemandPeriodStatus =
   'draft' | 'collecting' | 'consolidating' | 'approved' | 'closed' | 'cancelled'
@@ -14,39 +24,39 @@ export type DemandPriority = 'normal' | 'high' | 'urgent'
 export type DemandDecision = 'buy' | 'from_stock' | 'reject'
 export type DemandSuggestionBasis = 'consumption' | 'min_stock'
 
-export interface DemandSuggestion {
-  consumption12m?: string
-  avgMonthly?: string
-  onHand?: string
-  runwayDays?: number
-  minStock?: string
-  maxStock?: string
-  lastUnitPrice?: string
-  basis?: DemandSuggestionBasis
-}
-
-export interface DemandPeriod {
-  id: string
-  code: string
-  name: string
-  kind: DemandPeriodKind
-  year: number
-  quarter?: number
-  /** 12 (12 tháng) | 4 (4 quý) | 1 (tổng) */
-  buckets: 12 | 4 | 1
-  submitDeadline?: string
-  status: DemandPeriodStatus
-  notes?: string
-  approvedBy?: string
-  approvedAt?: string
-  consolidatedAt?: string
-  closedAt?: string
-  createdAt: string
-  updatedAt: string
-  progress?: { departments: number; submitted: number; deptApproved: number; accepted: number }
+/** Kỳ chi tiết (GET /periods/{id}, POST tạo) — T2 thật, thêm totals (T3+) khi có.
+ *  progress bắt buộc ở DetailDto, nhưng item trong danh sách GET /periods không có
+ *  progress → đánh dấu optional để dùng chung một kiểu cho list + detail. */
+export type DemandPeriod = Omit<S['DemandPeriodDetailDto'], 'progress'> & {
+  progress?: S['DemandPeriodProgressDto']
+  /** T3+ (summary) chưa có — tạm undefined; xoá khi backend trả totals */
   totalRequested?: string
   totalApproved?: string
 }
+
+/** Kỳ (danh sách — GET /periods) — không có progress */
+export type DemandPeriodListItem = Pick<
+  S['DemandPeriodResponseDto'],
+  | 'id'
+  | 'code'
+  | 'name'
+  | 'kind'
+  | 'year'
+  | 'quarter'
+  | 'buckets'
+  | 'submitDeadline'
+  | 'status'
+  | 'notes'
+  | 'approvedBy'
+  | 'closedAt'
+> & {
+  /** T3+ — progress rỗng ở list */
+  progress?: { total: number; submitted: number; deptApproved: number; accepted: number }
+  totalApproved?: string
+}
+
+export type DemandPeriodPage = S['DemandPeriodPageDto']
+export type DemandPeriodProgress = S['DemandPeriodProgressDto']
 
 export interface CreateDemandPeriodDto {
   name: string
@@ -63,14 +73,33 @@ export interface UpdateDemandPeriodDto {
   notes?: string
 }
 
-export interface DemandPeriodSummary {
-  departments: number
-  submitted: number
-  deptApproved: number
-  accepted: number
-  totalRequested: string
-  totalApproved: string
-  byItemType: { supply: string; component: string; equipment: string; service: string }
+/** Phiếu các khoa (GET /periods/{id}/requests) — item trong DemandRequestSummaryPageDto */
+export type DemandRequestSummary = S['DemandDepartmentSummaryDto']
+export type DemandRequestSummaryPage = S['DemandRequestSummaryPageDto']
+
+/** Phiếu chi tiết (GET/PATCH /requests/{id}, /my) */
+export type DemandRequest = S['DemandRequestDetailDto']
+export type DemandRequestPage = S['DemandRequestPageDto']
+
+export interface CreateAcceptLineDto {
+  id: string
+  qtyApproved: string
+  approverNote?: string
+}
+/** AcceptRequestDto trong swagger chỉ khai `lines?` không gõ phần tử — chuẩn hoá tay */
+export interface AcceptRequestDto {
+  lines?: CreateAcceptLineDto[]
+}
+
+export interface DemandLineSuggestInput {
+  departmentId: string
+  supplyId: string
+  periodKind: DemandPeriodKind
+}
+
+export interface DemandLineImportResult {
+  imported: number
+  errors: { row?: number; message?: string; field?: string }[]
 }
 
 export interface DemandPeriodOperations {
@@ -83,28 +112,19 @@ export interface DemandDepartmentLite {
   name: string
 }
 
-export interface DemandLine {
-  id: string
-  requestId: string
-  itemType: DemandItemType
-  supplyId?: string
-  supply?: { id: string; code: string; name: string; unit?: string }
-  equipmentId?: string
-  equipment?: { id: string; code: string; name: string }
-  itemName: string
-  spec?: string
-  unit: string
-  qtyByBucket: string[]
-  qtyRequested: string
-  unitPriceEst: string
-  amountEst: string
-  reason?: string
-  priority: DemandPriority
-  suggestedQty?: string
-  suggestion?: DemandSuggestion
-  qtyApproved?: string
-  approverNote?: string
-  sortOrder: number
+/** Dòng dự trù (DemandLineResponseDto) — swagger thiếu nested supply/equipment */
+export interface DemandLine extends Omit<S['DemandLineResponseDto'], 'suggestion'> {
+  suggestion?: {
+    consumption12m?: string
+    avgMonthly?: string
+    onHand?: string
+    runwayDays?: number
+    minStock?: string
+    maxStock?: string
+    lastUnitPrice?: string
+    basis?: DemandSuggestionBasis
+  } | null
+  suggestedQty?: string | null
 }
 
 export interface CreateDemandLineDto {
@@ -125,35 +145,16 @@ export interface UpdateDemandLineRowDto extends CreateDemandLineDto {
   id: string
 }
 
-export interface DemandRequest {
-  id: string
-  periodId: string
-  departmentId: string
-  department: DemandDepartmentLite
-  status: DemandRequestStatus
-  createdBy?: string
-  createdAt: string
-  submittedAt?: string
-  deptApprovedBy?: string
-  deptApprovedAt?: string
-  returnReason?: string
-  totalEstimated: string
-  lineCount?: number
-  notes?: string
-  period?: DemandPeriod
-  lines?: DemandLine[]
-}
+// ==== T3–T5 chưa có — type tay theo spec §6 (khi backend commit → api:gen + xoá) ====
 
-export interface AcceptDemandLineDto {
-  id: string
-  qtyApproved: string
-  approverNote?: string
-}
-
-export interface DemandLineSuggestInput {
-  departmentId: string
-  supplyId: string
-  periodId: string
+export interface DemandPeriodSummary {
+  departments: number
+  submitted: number
+  deptApproved: number
+  accepted: number
+  totalRequested: string
+  totalApproved: string
+  byItemType: { supply: string; component: string; equipment: string; service: string }
 }
 
 export interface DemandConsolidationBreakdown {
@@ -193,31 +194,20 @@ export interface UpdateDemandConsolidationDto {
   note?: string
 }
 
-export interface DemandLineImportResult {
-  imported: number
-  errors: { row: number; message: string }[]
-}
-
 interface DemandPaginated<TItem> {
   items: TItem[]
   total: number
   page: number
   limit: number
 }
-export type DemandPaginated2<TItem> = DemandPaginated<TItem>
 
 export type DemandPaths = {
   '/v1/demand/periods': {
     get: {
       parameters: {
-        query?: {
-          year?: number
-          status?: DemandPeriodStatus
-          page?: number
-          limit?: number
-        }
+        query?: { year?: number; status?: string; page?: number; limit?: number }
       }
-      responses: { 200: DemandPaginated<DemandPeriod> }
+      responses: { 200: DemandPaginated<DemandPeriodListItem> }
     }
     post: {
       requestBody: { content: { 'application/json': CreateDemandPeriodDto } }
@@ -241,6 +231,7 @@ export type DemandPaths = {
       responses: { 200: DemandPeriod }
     }
   }
+  // T3+: consolidate, approve, close, cancel, clone, summary, consolidation, export
   '/v1/demand/periods/{id}/consolidate': {
     post: {
       parameters: { path: { id: string } }
@@ -276,7 +267,7 @@ export type DemandPaths = {
   '/v1/demand/periods/{id}/requests': {
     get: {
       parameters: { path: { id: string } }
-      responses: { 200: DemandRequest[] }
+      responses: { 200: DemandRequestSummaryPage }
     }
   }
   '/v1/demand/periods/{id}/summary': {
@@ -319,15 +310,13 @@ export type DemandPaths = {
       responses: { 200: DemandConsolidation }
     }
   }
+  // T2 thật — GET /my trả trang phiếu của khoa mình (không còn {toSubmit,...})
   '/v1/demand/my': {
     get: {
-      responses: {
-        200: {
-          toSubmit: DemandRequest[]
-          toApprove: DemandRequest[]
-          toAccept: DemandRequest[]
-        }
+      parameters: {
+        query?: { status?: string; page?: number; limit?: number }
       }
+      responses: { 200: DemandRequestPage }
     }
   }
   '/v1/demand/requests/{id}': {
@@ -342,10 +331,10 @@ export type DemandPaths = {
     }
   }
   '/v1/demand/requests/{id}/submit': {
-    post: { parameters: { path: { id: string } }; responses: DemandRequest }
+    post: { parameters: { path: { id: string } }; responses: { 200: DemandRequest } }
   }
   '/v1/demand/requests/{id}/dept-approve': {
-    post: { parameters: { path: { id: string } }; responses: DemandRequest }
+    post: { parameters: { path: { id: string } }; responses: { 200: DemandRequest } }
   }
   '/v1/demand/requests/{id}/return': {
     post: {
@@ -357,17 +346,17 @@ export type DemandPaths = {
   '/v1/demand/requests/{id}/accept': {
     post: {
       parameters: { path: { id: string } }
-      requestBody: { content: { 'application/json': { lines?: AcceptDemandLineDto[] } } }
+      requestBody: { content: { 'application/json': AcceptRequestDto } }
       responses: { 200: DemandRequest }
     }
   }
   '/v1/demand/requests/{id}/suggest-all': {
-    post: { parameters: { path: { id: string } }; responses: DemandRequest }
+    post: { parameters: { path: { id: string } }; responses: { 200: DemandRequest } }
   }
   '/v1/demand/requests/{id}/lines': {
     post: {
       parameters: { path: { id: string } }
-      requestBody: { content: { 'application/json': CreateDemandLineDto } }
+      requestBody: { content: { 'application/json': unknown } }
       responses: { 200: DemandLine }
     }
   }
@@ -379,21 +368,21 @@ export type DemandPaths = {
     }
   }
   '/v1/demand/requests/template': {
-    get: { responses: Blob }
+    get: { responses: { 200: Blob } }
   }
   '/v1/demand/lines/{lineId}': {
     patch: {
       parameters: { path: { lineId: string } }
-      requestBody: { content: { 'application/json': UpdateDemandLineDto } }
+      requestBody: { content: { 'application/json': unknown } }
       responses: { 200: DemandLine }
     }
-    delete: { parameters: { path: { lineId: string } }; responses: void }
+    delete: { parameters: { path: { lineId: string } }; responses: { 200: DemandRequest } }
   }
   '/v1/demand/lines/suggest': {
     post: {
       requestBody: { content: { 'application/json': DemandLineSuggestInput } }
       responses: {
-        200: { suggestedQty: string; qtyByBucket: string[]; suggestion?: DemandSuggestion }
+        200: { suggestedQty: string | null; suggestion?: { [key: string]: unknown } | null }
       }
     }
   }

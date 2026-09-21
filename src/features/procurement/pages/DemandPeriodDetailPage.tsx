@@ -51,8 +51,8 @@ import type {
   DemandConsolidation,
   DemandItemType,
   DemandPeriod,
-  DemandPeriodSummary,
-  DemandRequest,
+  DemandRequestSummary,
+  DemandRequestSummaryPage,
 } from '../paths'
 import { useTranslation } from 'react-i18next'
 
@@ -383,7 +383,7 @@ function ConsolidationTab({
   )
 }
 
-function RequestsTab({ rows, isStaff }: { rows: DemandRequest[]; isStaff: boolean }) {
+function RequestsTab({ rows, isStaff }: { rows: DemandRequestSummary[]; isStaff: boolean }) {
   const { t } = useTranslation('procurement')
   const qc = useQueryClient()
   const { confirm, dialog } = useConfirm()
@@ -391,17 +391,17 @@ function RequestsTab({ rows, isStaff }: { rows: DemandRequest[]; isStaff: boolea
     void qc.invalidateQueries({ queryKey: ['demand-period-requests'] })
     void qc.invalidateQueries({ queryKey: ['demand-period'] })
   }
-  const accept = async (row: DemandRequest) => {
+  const accept = async (row: DemandRequestSummary) => {
     if ((await confirm({ title: t('acceptConfirm') })) === false) return
     try {
-      await api.acceptDemandRequest(row.id)
+      await api.acceptDemandRequest(row.requestId)
       toast.success(t('updated'))
       invalidate()
     } catch (error) {
       toast.error(messageFor(error))
     }
   }
-  const returnRequest = async (row: DemandRequest) => {
+  const returnRequest = async (row: DemandRequestSummary) => {
     const reason = await confirm({
       title: t('returnConfirm'),
       requireReason: true,
@@ -409,7 +409,7 @@ function RequestsTab({ rows, isStaff }: { rows: DemandRequest[]; isStaff: boolea
     })
     if (reason === false) return
     try {
-      await api.returnDemandRequest(row.id, reason)
+      await api.returnDemandRequest(row.requestId, reason)
       toast.success(t('updated'))
       invalidate()
     } catch (error) {
@@ -428,18 +428,17 @@ function RequestsTab({ rows, isStaff }: { rows: DemandRequest[]; isStaff: boolea
                 <TableHead>{t('requestStatus')}</TableHead>
                 <TableHead className="text-right">{t('lineCount')}</TableHead>
                 <TableHead className="text-right">{t('totalMoney')}</TableHead>
-                <TableHead>{t('deptApproved')}</TableHead>
                 <TableHead></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {rows.map((row) => (
                 <TableRow
-                  key={row.id}
+                  key={row.requestId}
                   className={row.status === 'draft' ? 'opacity-60' : undefined}
                 >
                   <TableCell className="pl-5 font-medium">
-                    {row.department?.name ?? row.departmentId}
+                    {row.departmentName ?? row.departmentId ?? '—'}
                     {row.status === 'draft' && (
                       <p className="text-subtle text-[12px]">{t('notSubmitted')}</p>
                     )}
@@ -447,14 +446,13 @@ function RequestsTab({ rows, isStaff }: { rows: DemandRequest[]; isStaff: boolea
                   <TableCell>
                     <StatusBadge value={row.status} map={demandRequestStatusMap} />
                   </TableCell>
-                  <TableCell className="text-right tabular-nums">{row.lineCount ?? 0}</TableCell>
+                  <TableCell className="text-right tabular-nums">{row.lineCount}</TableCell>
                   <TableCell className="text-right tabular-nums">
                     {formatVnd(row.totalEstimated)}
                   </TableCell>
-                  <TableCell className="text-[13px]">{row.deptApprovedBy ?? '—'}</TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
-                      <Link to={`/procurement/demand/requests/${row.id}`}>
+                      <Link to={`/procurement/demand/requests/${row.requestId}`}>
                         <Button size="xs" variant="outline">
                           {t('view')}
                         </Button>
@@ -475,7 +473,7 @@ function RequestsTab({ rows, isStaff }: { rows: DemandRequest[]; isStaff: boolea
               ))}
               {rows.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-muted-foreground text-center text-sm">
+                  <TableCell colSpan={5} className="text-muted-foreground text-center text-sm">
                     {t('noRequests', { defaultValue: 'Chưa có phiếu nào' })}
                   </TableCell>
                 </TableRow>
@@ -503,18 +501,11 @@ export function Component() {
     queryFn: () => api.getPeriod(id),
     enabled: !!id,
   })
-  const summary = useQuery({
-    queryKey: ['demand-period-summary', id],
-    queryFn: () => api.getPeriodSummary(id),
-    enabled: !!id && isStaff,
-  })
   const requests = useQuery({
     queryKey: ['demand-period-requests', id],
     queryFn: () => api.listPeriodRequests(id),
     enabled: !!id && isStaff,
   })
-  const readOnly = ['approved', 'closed', 'cancelled'].includes(detail.data?.status ?? '')
-  void readOnly
   const consolidationVisible = ['consolidating', 'approved', 'closed'].includes(
     detail.data?.status ?? '',
   )
@@ -532,7 +523,6 @@ export function Component() {
     void qc.invalidateQueries({ queryKey: ['demand-period', id] })
     void qc.invalidateQueries({ queryKey: ['demand-periods'] })
     void qc.invalidateQueries({ queryKey: ['demand-period-requests', id] })
-    void qc.invalidateQueries({ queryKey: ['demand-period-summary', id] })
     void qc.invalidateQueries({ queryKey: ['demand-consolidation', id] })
   }
   const run = async (title: string, action: () => Promise<unknown>) => {
@@ -585,11 +575,11 @@ export function Component() {
   if (detail.isPending) return <DetailSkeleton label={t('loadingPeriod')} />
   if (detail.error) return <ErrorState error={detail.error} onRetry={() => void detail.refetch()} />
   const row = detail.data as DemandPeriod
-  const requestRows = (requests.data ?? []) as DemandRequest[]
+  const requestsPage = requests.data as DemandRequestSummaryPage | undefined
+  const requestRows = requestsPage?.items ?? []
+  const progress = requestsPage?.progress ?? row.progress
   const consolidationRows = (consolidation.data ?? []) as DemandConsolidation[]
   const editable = isStaff && row.status === 'consolidating'
-  const s = summary.data as DemandPeriodSummary | undefined
-  void readOnly
 
   return (
     <>
@@ -752,30 +742,28 @@ export function Component() {
                 { label: t('notes'), value: row.notes, full: true },
               ]}
             />
-            {isStaff && s && (
+            {isStaff && progress && (
               <SectionCard title={t('summary')}>
                 <DataList
                   columns={2}
                   items={[
                     {
                       label: t('deptSubmitProgress', {
-                        submitted: s.submitted,
-                        departments: s.departments,
+                        submitted: progress.submitted,
+                        departments: progress.total,
                         defaultValue: '{{submitted}}/{{departments}} khoa đã nộp',
                       }),
-                      value: `${s.submitted}/${s.departments}`,
+                      value: `${progress.submitted}/${progress.total}`,
                     },
-                    { label: t('deptApproved'), value: String(s.deptApproved) },
-                    { label: t('accepted'), value: String(s.accepted) },
-                    { label: t('totalRequested'), value: formatVnd(s.totalRequested) },
-                    { label: t('totalApproved'), value: formatVnd(s.totalApproved) },
+                    { label: t('deptApproved'), value: String(progress.deptApproved) },
+                    { label: t('accepted'), value: String(progress.accepted) },
                     {
-                      label: t('equipmentTab'),
-                      value: formatVnd(s.byItemType?.equipment ?? '0'),
+                      label: t('totalRequested'),
+                      value: row.totalRequested ? formatVnd(row.totalRequested) : '—',
                     },
                     {
-                      label: t('serviceTab'),
-                      value: formatVnd(s.byItemType?.service ?? '0'),
+                      label: t('totalApproved'),
+                      value: row.totalApproved ? formatVnd(row.totalApproved) : '—',
                     },
                   ]}
                 />

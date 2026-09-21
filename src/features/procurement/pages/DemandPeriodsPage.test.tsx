@@ -22,21 +22,33 @@ const period = {
   closedAt: null,
   createdAt: '2026-09-01T00:00:00Z',
   updatedAt: '2026-09-01T00:00:00Z',
-  progress: { departments: 15, submitted: 12, deptApproved: 8, accepted: 6 },
+  progress: { total: 15, submitted: 12, deptApproved: 8, accepted: 6 },
   totalRequested: '15000000',
   totalApproved: '14000000',
 }
 
-const myRequest = {
+const myRequestBase = {
   id: 'dr1',
   periodId: 'dp1',
   departmentId: 'dep1',
   department: { id: 'dep1', code: 'NOI', name: 'Nội' },
   status: 'draft',
+  createdById: 'u1',
   createdAt: '2026-09-02T00:00:00Z',
+  updatedAt: '2026-09-02T00:00:00Z',
   totalEstimated: '500000',
-  lineCount: 3,
-  period: period,
+  notes: null,
+  returnReason: null,
+  submittedAt: null,
+  deptApprovedBy: null,
+  deptApprovedAt: null,
+  createdBy: null,
+  period: { id: 'dp1', code: 'DT-2026', name: 'Dự trù năm 2026', status: 'collecting' },
+}
+
+const myRequest = {
+  ...myRequestBase,
+  lines: [{ id: 'dl1' }, { id: 'dl2' }, { id: 'dl3' }],
 }
 
 function setupPeriodHandlers() {
@@ -45,7 +57,16 @@ function setupPeriodHandlers() {
       if (!request.headers.get('Authorization')?.startsWith('Bearer ')) {
         return HttpResponse.json({ code: 'UNAUTHORIZED' }, { status: 401 })
       }
-      return HttpResponse.json({ items: [period], total: 1, page: 1, limit: 20 })
+      // Danh sách item T2 không progress — card fetch chi tiết riêng.
+      const { progress: _ignored, ...listItem } = period
+      void _ignored
+      return HttpResponse.json({ items: [listItem], total: 1, page: 1, limit: 20 })
+    }),
+    http.get('/v1/demand/periods/dp1', ({ request }) => {
+      if (!request.headers.get('Authorization')?.startsWith('Bearer ')) {
+        return HttpResponse.json({ code: 'UNAUTHORIZED' }, { status: 401 })
+      }
+      return HttpResponse.json(period)
     }),
   )
 }
@@ -58,7 +79,8 @@ beforeEach(() => {
       if (!request.headers.get('Authorization')?.startsWith('Bearer ')) {
         return HttpResponse.json({ code: 'UNAUTHORIZED' }, { status: 401 })
       }
-      return HttpResponse.json({ toSubmit: [myRequest], toApprove: [], toAccept: [] })
+      // T2 thật: trang phẳng {items,total,page,limit} (không còn {toSubmit,...})
+      return HttpResponse.json({ items: [myRequest], total: 1, page: 1, limit: 20 })
     }),
   )
 })
@@ -67,7 +89,7 @@ it('ADM: hiển thị card kỳ đang mở với tiến độ và tổng tiền'
   renderWithProviders(<DemandPeriodsPage />)
   expect((await screen.findAllByText('Dự trù năm 2026')).length).toBeGreaterThan(0)
   expect(await screen.findByText('12/15 khoa đã nộp')).toBeInTheDocument()
-  expect(await screen.findByText('15.000.000')).toBeInTheDocument()
+  await waitFor(() => screen.getByText('15.000.000'))
 })
 
 it('ADM: bảng kỳ có link mã + badge trạng thái', async () => {

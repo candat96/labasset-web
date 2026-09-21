@@ -118,7 +118,11 @@ export function Component() {
                 }))
             : undefined,
       })
-      const saved = editing ? await updateRequest(id, body) : await createRequest(body)
+      // TODO(api): swagger hiện bị trùng tên `UpdateRequestDto` (requests ↔ demand)
+      // nên type này sai — endpoint thật PATCH /v1/requests/:id vẫn nhận body đầy đủ.
+      const saved = editing
+        ? await updateRequest(id, body as unknown as components['schemas']['UpdateRequestDto'])
+        : await createRequest(body)
       if (send) await submitRequest(editing ? id : saved.id)
       toast.success(send ? t('submitted') : t('draftSaved'))
       void qc.invalidateQueries({ queryKey: ['requests'] })

@@ -133,10 +133,10 @@ function OpenPeriodCard({ row }: { row: DemandPeriod }) {
           {row.progress && (
             <ProgressLine
               submitted={row.progress.submitted}
-              departments={row.progress.departments}
+              departments={row.progress.total}
               label={t('deptSubmitProgress', {
                 submitted: row.progress.submitted,
-                departments: row.progress.departments,
+                departments: row.progress.total,
                 defaultValue: '{{submitted}}/{{departments}} khoa đã nộp',
               })}
             />
@@ -278,7 +278,7 @@ function DemandAdminView() {
       api.listPeriods({
         page: table.params.page,
         limit: table.params.limit,
-        year: f.year || undefined,
+        year: f.year ? Number(f.year) : undefined,
         status: f.status,
       }),
     placeholderData: (p) => p,
@@ -323,7 +323,7 @@ function DemandAdminView() {
         header: t('departmentsSubmitted'),
         cell: ({ row }) =>
           row.original.progress
-            ? `${row.original.progress.submitted}/${row.original.progress.departments}`
+            ? `${row.original.progress.submitted}/${row.original.progress.total}`
             : '—',
         meta: { align: 'right' },
       },
@@ -342,9 +342,16 @@ function DemandAdminView() {
     [t],
   )
   const rows = list.data?.items ?? []
-  const activePeriod = rows.find(
+  const activeListRow = rows.find(
     (row) => row.status === 'collecting' || row.status === 'consolidating',
   )
+  // Danh sách không kèm progress/totals — tải chi tiết kỳ đang mở để render card.
+  const activeDetail = useQuery({
+    queryKey: ['demand-period', activeListRow?.id],
+    queryFn: () => api.getPeriod(activeListRow!.id),
+    enabled: !!activeListRow,
+  })
+  const activeRow = activeDetail.data ?? activeListRow
 
   return (
     <>
@@ -359,7 +366,7 @@ function DemandAdminView() {
           </Button>
         }
       />
-      {activePeriod && <OpenPeriodCard row={activePeriod} />}
+      {activeRow && <OpenPeriodCard row={activeRow} />}
       <DataTable
         tableId="demand-periods"
         columns={columns}
@@ -418,11 +425,7 @@ function MyRequestCard({ request }: { request: DemandRequest }) {
           {request.period ? request.period.name : request.periodId}
         </span>
       }
-      description={
-        request.period
-          ? `${request.period.code} · ${enumLabel(demandPeriodKindLabels, request.period.kind)}`
-          : undefined
-      }
+      description={request.period ? request.period.code : undefined}
       actions={
         <Link to={`/procurement/demand/requests/${request.id}`}>
           <Button size="sm" variant={canEdit ? 'default' : 'outline'}>
@@ -433,17 +436,8 @@ function MyRequestCard({ request }: { request: DemandRequest }) {
     >
       <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-[13px]">
         <StatusBadge value={request.status} map={demandRequestStatusMap} />
-        {request.period?.submitDeadline && (
-          <span
-            className={
-              isPast(request.period.submitDeadline) ? 'text-destructive font-medium' : 'text-subtle'
-            }
-          >
-            {t('deadline')}: {formatDate(request.period.submitDeadline)}
-          </span>
-        )}
         <span className="text-subtle">
-          {t('lineCount')}: <strong className="tabular-nums">{request.lineCount ?? 0}</strong>
+          {t('lineCount')}: <strong className="tabular-nums">{request.lines?.length ?? 0}</strong>
         </span>
         <span className="text-subtle">
           {t('totalMoney')}:{' '}
@@ -459,7 +453,15 @@ function MyRequestCard({ request }: { request: DemandRequest }) {
 function DemandMyView() {
   const { t } = useTranslation('procurement')
   const my = useQuery({ queryKey: ['demand-my'], queryFn: () => api.getMyDemand() })
-  const items = my.data?.toSubmit ?? []
+  // T2: GET /my trả trang phẳng phiếu khoa mình (không còn {toSubmit,...} như spec §6)
+  const items = useMemo(
+    () =>
+      [...(my.data?.items ?? [])].sort((a, b) => {
+        const order = ['draft', 'returned', 'submitted', 'dept_approved', 'accepted']
+        return order.indexOf(a.status) - order.indexOf(b.status)
+      }),
+    [my.data],
+  )
   return (
     <>
       <PageHeader

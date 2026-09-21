@@ -1748,6 +1748,278 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/demand/lines/{lineId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["DemandRequestsController_deleteLine"];
+        options?: never;
+        head?: never;
+        patch: operations["DemandRequestsController_updateLine"];
+        trace?: never;
+    };
+    "/v1/demand/lines/suggest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["DemandRequestsController_suggest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/demand/my": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DemandRequestsController_my"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/demand/periods": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DemandPeriodsController_list"];
+        put?: never;
+        post: operations["DemandPeriodsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/demand/periods/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DemandPeriodsController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["DemandPeriodsController_update"];
+        trace?: never;
+    };
+    "/v1/demand/periods/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["DemandPeriodsController_cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/demand/periods/{id}/open": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["DemandPeriodsController_open"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/demand/periods/{id}/requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DemandPeriodsController_requests"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/demand/requests/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DemandRequestsController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["DemandRequestsController_updateNotes"];
+        trace?: never;
+    };
+    "/v1/demand/requests/{id}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["DemandRequestsController_accept"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/demand/requests/{id}/dept-approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["DemandRequestsController_deptApprove"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/demand/requests/{id}/lines": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["DemandRequestsController_createLine"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/demand/requests/{id}/lines/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["DemandRequestsController_importLines"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/demand/requests/{id}/return": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["DemandRequestsController_return"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/demand/requests/{id}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["DemandRequestsController_submit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/demand/requests/{id}/suggest-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["DemandRequestsController_suggestAll"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/demand/requests/template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DemandRequestsController_template"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/departments": {
         parameters: {
             query?: never;
@@ -4752,6 +5024,15 @@ export interface components {
             note?: string;
             rating?: number;
         };
+        AcceptLineDto: {
+            approverNote?: Record<string, never>;
+            id: string;
+            qtyApproved: string;
+        };
+        AcceptRequestDto: {
+            /** @description Bỏ qua = duyệt toàn bộ theo qtyRequested */
+            lines?: components["schemas"]["AcceptLineDto"][];
+        };
         AcceptSuggestionDto: {
             /** Format: uuid */
             mergeIntoFaultId?: string;
@@ -5143,6 +5424,9 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         };
+        CancelPeriodDto: {
+            reason: string;
+        };
         CancelRepairDto: {
             reason: string;
         };
@@ -5533,6 +5817,30 @@ export interface components {
             type: "to_department" | "for_repair" | "for_maintenance" | "dispose" | "return_to_supplier" | "adjust_out";
             warehouseId: string;
         };
+        CreateLineDto: {
+            /** @description Linh kiện/thiết bị gắn máy */
+            equipmentId?: Record<string, never>;
+            /** @description Tự điền theo vật tư khi bỏ trống; bắt buộc với equipment/service */
+            itemName?: Record<string, never>;
+            /** @enum {string} */
+            itemType: "supply" | "component" | "equipment" | "service";
+            /**
+             * @default normal
+             * @enum {string}
+             */
+            priority: "normal" | "high" | "urgent";
+            /** @description Độ dài = buckets của kỳ */
+            qtyByBucket: string[];
+            reason?: Record<string, never>;
+            sortOrder?: number;
+            /** @description Bắt buộc với equipment/service */
+            spec?: Record<string, never>;
+            /** @description Bắt buộc với supply/component */
+            supplyId?: Record<string, never>;
+            unit?: Record<string, never>;
+            /** @default 0 */
+            unitPriceEst: string;
+        };
         CreateManufacturerDto: {
             code: string;
             country?: Record<string, never>;
@@ -5541,6 +5849,17 @@ export interface components {
             name: string;
             sortOrder?: number;
             website?: Record<string, never>;
+        };
+        CreatePeriodDto: {
+            /** @enum {string} */
+            kind: "annual" | "quarterly" | "adhoc";
+            name: string;
+            notes?: Record<string, never>;
+            /** @description Bắt buộc với kind=quarterly */
+            quarter?: number;
+            /** @description Hạn khoa nộp phiếu */
+            submitDeadline?: Record<string, never>;
+            year: number;
         };
         CreateQuotaDto: {
             departmentId: string;
@@ -5804,6 +6123,168 @@ export interface components {
         DeactivatedDto: {
             /** @enum {boolean} */
             deactivated: true;
+        };
+        DemandDepartmentSummaryDto: {
+            departmentCode: string | null;
+            departmentId: string | null;
+            departmentName: string | null;
+            lineCount: number;
+            requestId: string;
+            /** @enum {string} */
+            status: "draft" | "submitted" | "dept_approved" | "returned" | "accepted";
+            totalEstimated: string;
+        };
+        DemandLineResponseDto: {
+            amountEst: string;
+            approverNote: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            equipmentId: string | null;
+            id: string;
+            itemName: string;
+            /** @enum {string} */
+            itemType: "supply" | "component" | "equipment" | "service";
+            /** @enum {string} */
+            priority: "normal" | "high" | "urgent";
+            qtyApproved: string | null;
+            /** @description Số lượng theo bucket (chuỗi Decimal, length = buckets) */
+            qtyByBucket: string[];
+            qtyRequested: string;
+            reason: string | null;
+            requestId: string;
+            sortOrder: number;
+            spec: string | null;
+            suggestedQty: string | null;
+            suggestion?: {
+                [key: string]: unknown;
+            } | null;
+            supplyCode?: string | null;
+            supplyId: string | null;
+            unit: string | null;
+            unitPriceEst: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        DemandPeriodDetailDto: {
+            /** Format: date-time */
+            approvedAt: string | null;
+            approvedBy: string | null;
+            /** @enum {number} */
+            buckets: 12 | 4 | 1;
+            cancelReason: string | null;
+            /** Format: date-time */
+            closedAt: string | null;
+            code: string;
+            /** Format: date-time */
+            consolidatedAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            id: string;
+            /** @enum {string} */
+            kind: "annual" | "quarterly" | "adhoc";
+            name: string;
+            notes: string | null;
+            progress: components["schemas"]["DemandPeriodProgressDto"];
+            quarter: number | null;
+            /** @enum {string} */
+            status: "draft" | "collecting" | "consolidating" | "approved" | "closed" | "cancelled";
+            /** Format: date-time */
+            submitDeadline: string | null;
+            /** Format: date-time */
+            updatedAt: string;
+            year: number;
+        };
+        DemandPeriodPageDto: {
+            items: components["schemas"]["DemandPeriodResponseDto"][];
+            limit: number;
+            page: number;
+            total: number;
+        };
+        DemandPeriodProgressDto: {
+            /** @description Phiếu VT đã tiếp nhận */
+            accepted: number;
+            /** @description Phiếu trưởng khoa đã duyệt */
+            deptApproved: number;
+            /** @description Phiếu đã nộp (submitted+) */
+            submitted: number;
+            total: number;
+        };
+        DemandPeriodResponseDto: {
+            /** Format: date-time */
+            approvedAt: string | null;
+            approvedBy: string | null;
+            /** @enum {number} */
+            buckets: 12 | 4 | 1;
+            cancelReason: string | null;
+            /** Format: date-time */
+            closedAt: string | null;
+            code: string;
+            /** Format: date-time */
+            consolidatedAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            id: string;
+            /** @enum {string} */
+            kind: "annual" | "quarterly" | "adhoc";
+            name: string;
+            notes: string | null;
+            quarter: number | null;
+            /** @enum {string} */
+            status: "draft" | "collecting" | "consolidating" | "approved" | "closed" | "cancelled";
+            /** Format: date-time */
+            submitDeadline: string | null;
+            /** Format: date-time */
+            updatedAt: string;
+            year: number;
+        };
+        DemandRequestDetailDto: {
+            /** Format: date-time */
+            createdAt: string;
+            createdBy: string | null;
+            creator?: {
+                fullName?: string;
+                id?: string;
+            } | null;
+            department?: {
+                code?: string;
+                id?: string;
+                name?: string;
+            } | null;
+            departmentId: string | null;
+            /** Format: date-time */
+            deptApprovedAt: string | null;
+            deptApprovedBy: string | null;
+            id: string;
+            lines: components["schemas"]["DemandLineResponseDto"][];
+            notes: string | null;
+            period?: {
+                code?: string;
+                id?: string;
+                name?: string;
+                status?: string;
+            } | null;
+            periodId: string;
+            returnReason: string | null;
+            /** @enum {string} */
+            status: "draft" | "submitted" | "dept_approved" | "returned" | "accepted";
+            /** Format: date-time */
+            submittedAt: string | null;
+            totalEstimated: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        DemandRequestPageDto: {
+            items: components["schemas"]["DemandRequestDetailDto"][];
+            limit: number;
+            page: number;
+            total: number;
+        };
+        DemandRequestSummaryPageDto: {
+            items: components["schemas"]["DemandDepartmentSummaryDto"][];
+            limit: number;
+            page: number;
+            progress: components["schemas"]["DemandPeriodProgressDto"];
+            total: number;
         };
         DepartmentPageDto: {
             items: components["schemas"]["DepartmentResponseDto"][];
@@ -6307,6 +6788,14 @@ export interface components {
             statusMessage: string | null;
             /** Format: date-time */
             updatedAt: string;
+        };
+        ImportLinesResultDto: {
+            created: number;
+            errors: {
+                field?: string;
+                message?: string;
+                row?: number;
+            }[];
         };
         IssueItemDto: {
             lotId?: Record<string, never>;
@@ -7317,6 +7806,9 @@ export interface components {
             photoFileId?: string;
             value?: (boolean | number | string) | null;
         };
+        ReturnRequestDto: {
+            reason: string;
+        };
         RoomBriefDto: {
             building: string | null;
             code: string;
@@ -7702,6 +8194,18 @@ export interface components {
             updatedAt: string;
             version: number;
             viewCount: number;
+        };
+        SuggestLineDto: {
+            departmentId: string;
+            /** @enum {string} */
+            periodKind: "annual" | "quarterly" | "adhoc";
+            supplyId: string;
+        };
+        SuggestResponseDto: {
+            suggestedQty: string | null;
+            suggestion?: {
+                [key: string]: unknown;
+            } | null;
         };
         SupplyResponseDto: {
             code: string;
@@ -8093,6 +8597,30 @@ export interface components {
             type?: "to_department" | "for_repair" | "for_maintenance" | "dispose" | "return_to_supplier" | "adjust_out";
             warehouseId?: string;
         };
+        UpdateLineDto: {
+            /** @description Linh kiện/thiết bị gắn máy */
+            equipmentId?: Record<string, never>;
+            /** @description Tự điền theo vật tư khi bỏ trống; bắt buộc với equipment/service */
+            itemName?: Record<string, never>;
+            /** @enum {string} */
+            itemType?: "supply" | "component" | "equipment" | "service";
+            /**
+             * @default normal
+             * @enum {string}
+             */
+            priority: "normal" | "high" | "urgent";
+            /** @description Độ dài = buckets của kỳ */
+            qtyByBucket?: string[];
+            reason?: Record<string, never>;
+            sortOrder?: number;
+            /** @description Bắt buộc với equipment/service */
+            spec?: Record<string, never>;
+            /** @description Bắt buộc với supply/component */
+            supplyId?: Record<string, never>;
+            unit?: Record<string, never>;
+            /** @default 0 */
+            unitPriceEst: string;
+        };
         UpdateManufacturerDto: {
             country?: Record<string, never>;
             description?: string;
@@ -8100,6 +8628,12 @@ export interface components {
             name?: string;
             sortOrder?: number;
             website?: Record<string, never>;
+        };
+        UpdatePeriodDto: {
+            name?: string;
+            notes?: Record<string, never>;
+            /** @description Hạn khoa nộp phiếu */
+            submitDeadline?: Record<string, never>;
         };
         UpdatePlanDto: {
             contractNo?: Record<string, never> | null;
@@ -8189,18 +8723,7 @@ export interface components {
             visitAt?: string;
         };
         UpdateRequestDto: {
-            /** @description Required for type=repair */
-            equipmentId?: Record<string, never>;
-            items?: components["schemas"]["RequestItemDto"][];
-            /** Format: date */
-            neededBy?: Record<string, never>;
-            /**
-             * @default normal
-             * @enum {string}
-             */
-            priority: "normal" | "urgent";
-            /** @description Required for type=repair */
-            reason?: Record<string, never>;
+            notes?: Record<string, never>;
         };
         UpdateRoomDto: {
             building?: string | null;
@@ -12595,6 +13118,560 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DashboardResponseDto"];
+                };
+            };
+        };
+    };
+    DemandRequestsController_deleteLine: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                lineId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DemandRequestDetailDto"];
+                };
+            };
+        };
+    };
+    DemandRequestsController_updateLine: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                lineId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateLineDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DemandLineResponseDto"];
+                };
+            };
+        };
+    };
+    DemandRequestsController_suggest: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SuggestLineDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuggestResponseDto"];
+                };
+            };
+        };
+    };
+    DemandRequestsController_my: {
+        parameters: {
+            query?: {
+                limit?: number;
+                page?: number;
+                /** @description Comma-separated */
+                status?: string;
+            };
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DemandRequestPageDto"];
+                };
+            };
+        };
+    };
+    DemandPeriodsController_list: {
+        parameters: {
+            query?: {
+                limit?: number;
+                page?: number;
+                /** @description Comma-separated */
+                status?: string;
+                year?: number;
+            };
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DemandPeriodPageDto"];
+                };
+            };
+        };
+    };
+    DemandPeriodsController_create: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatePeriodDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DemandPeriodDetailDto"];
+                };
+            };
+        };
+    };
+    DemandPeriodsController_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DemandPeriodDetailDto"];
+                };
+            };
+        };
+    };
+    DemandPeriodsController_update: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdatePeriodDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DemandPeriodDetailDto"];
+                };
+            };
+        };
+    };
+    DemandPeriodsController_cancel: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CancelPeriodDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DemandPeriodDetailDto"];
+                };
+            };
+        };
+    };
+    DemandPeriodsController_open: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DemandPeriodDetailDto"];
+                };
+            };
+        };
+    };
+    DemandPeriodsController_requests: {
+        parameters: {
+            query?: {
+                limit?: number;
+                page?: number;
+                /** @description Comma-separated */
+                status?: string;
+                year?: number;
+            };
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DemandRequestSummaryPageDto"];
+                };
+            };
+        };
+    };
+    DemandRequestsController_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DemandRequestDetailDto"];
+                };
+            };
+        };
+    };
+    DemandRequestsController_updateNotes: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateRequestDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DemandRequestDetailDto"];
+                };
+            };
+        };
+    };
+    DemandRequestsController_accept: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AcceptRequestDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DemandRequestDetailDto"];
+                };
+            };
+        };
+    };
+    DemandRequestsController_deptApprove: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DemandRequestDetailDto"];
+                };
+            };
+        };
+    };
+    DemandRequestsController_createLine: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateLineDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DemandLineResponseDto"];
+                };
+            };
+        };
+    };
+    DemandRequestsController_importLines: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportLinesResultDto"];
+                };
+            };
+        };
+    };
+    DemandRequestsController_return: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReturnRequestDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DemandRequestDetailDto"];
+                };
+            };
+        };
+    };
+    DemandRequestsController_submit: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DemandRequestDetailDto"];
+                };
+            };
+        };
+    };
+    DemandRequestsController_suggestAll: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DemandRequestDetailDto"];
+                };
+            };
+        };
+    };
+    DemandRequestsController_template: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
                 };
             };
         };
