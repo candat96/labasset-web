@@ -5,6 +5,7 @@ export const AUDIT_FIELD_LABELS: Record<string, string> = {
   name: 'Tên',
   code: 'Mã',
   status: 'Trạng thái',
+  statusNote: 'Ghi chú trạng thái',
   departmentId: 'Khoa',
   location: 'Vị trí',
   serialNumber: 'Serial',
@@ -43,7 +44,15 @@ export const AUDIT_FIELD_LABELS: Record<string, string> = {
   nextCalibrationAt: 'Kiểm định kế tiếp',
 }
 
-const HIDDEN = new Set(['updatedAt', 'createdAt', 'version', 'id', 'passwordHash', 'apiKeyEnc'])
+const HIDDEN = new Set([
+  'updatedAt',
+  'createdAt',
+  'version',
+  'id',
+  'passwordHash',
+  'apiKeyEnc',
+  'counts',
+])
 
 function short(value: unknown): string {
   if (value === null || value === undefined || value === '') return '—'
