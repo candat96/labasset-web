@@ -1,4 +1,7 @@
 import { isRecord } from '@/lib/audit-entity'
+import * as maps from '@/lib/status-maps'
+import type { StatusMap } from '@/components/status-badge'
+import * as enums from '@/lib/enum-labels'
 
 /** Tên trường Việt hoá cho tóm tắt thay đổi trong audit (không có → giữ key). */
 export const AUDIT_FIELD_LABELS: Record<string, string> = {
@@ -42,6 +45,107 @@ export const AUDIT_FIELD_LABELS: Record<string, string> = {
   lastMaintenanceAt: 'Bảo dưỡng gần nhất',
   nextMaintenanceAt: 'Bảo dưỡng kế tiếp',
   nextCalibrationAt: 'Kiểm định kế tiếp',
+  closedAt: 'Đóng lúc',
+  completedAt: 'Hoàn thành lúc',
+  startedAt: 'Bắt đầu lúc',
+  acceptedAt: 'Tiếp nhận lúc',
+  acceptedByDeptAt: 'Khoa nghiệm thu lúc',
+  submittedAt: 'Gửi lúc',
+  approvedAt: 'Duyệt lúc',
+  issuedAt: 'Cấp lúc',
+  postedAt: 'Ghi sổ lúc',
+  cancelledAt: 'Huỷ lúc',
+  rating: 'Đánh giá (sao)',
+  ratingNote: 'Nhận xét nghiệm thu',
+  rejectedReason: 'Lý do từ chối',
+  cancelReason: 'Lý do huỷ',
+  reason: 'Lý do',
+  errorCode: 'Mã lỗi trên máy',
+  equipmentDown: 'Máy ngừng hoạt động',
+  faultId: 'Lỗi (thư viện)',
+  faultGroupId: 'Nhóm lỗi',
+  postRepairWarrantyUntil: 'Bảo hành sau sửa',
+  calibrationRequired: 'Cần kiểm định sau sửa',
+  totalCost: 'Tổng chi phí',
+  assistantIds: 'Người hỗ trợ',
+  type: 'Loại',
+  result: 'Kết quả',
+  scope: 'Phạm vi',
+  qtyRequested: 'SL yêu cầu',
+  neededBy: 'Cần trước',
+  performedAt: 'Thực hiện lúc',
+  nextDueAt: 'Hạn kế tiếp',
+  certificateNo: 'Số chứng nhận',
+  cost: 'Chi phí',
+  overallPass: 'Đạt',
+  minStock: 'Tồn tối thiểu',
+  maxStock: 'Tồn tối đa',
+  refPrice: 'Giá tham chiếu',
+  expiryDate: 'Hạn dùng',
+  lotNumber: 'Số lô',
+  unitCost: 'Đơn giá',
+}
+
+/** Việt hoá giá trị enum theo tên trường (thử lần lượt các map trạng thái đã có). */
+const STATUS_MAPS: StatusMap[] = [
+  maps.repairStatusMap,
+  maps.equipmentStatusMap,
+  maps.taskStatusMap,
+  maps.calibrationStatusMap,
+  maps.transferStatusMap,
+  maps.faultStatusMap,
+  maps.stockDocStatusMap,
+  maps.lotStatusMap,
+  maps.qcStatusMap,
+  maps.componentStatusMap,
+  maps.suggestionStatusMap,
+  maps.commonStatusMap,
+]
+const VALUE_LABELS: Record<string, enums.EnumLabels[]> = {
+  severity: [enums.faultSeverityLabels],
+  priority: [enums.priorityLabels],
+  type: [
+    enums.issueTypeLabels,
+    enums.receiptTypeLabels,
+    enums.requestTypeLabels,
+    enums.taskTypeLabels,
+    enums.calibrationTypeLabels,
+    enums.stocktakeTypeLabels,
+    enums.alertTypeLabels,
+    enums.deptTypeLabels,
+  ],
+  result: [enums.calibrationResultLabels],
+  scope: [enums.faultScopeLabels, enums.stocktakeScopeLabels],
+  source: [enums.partSourceLabels, enums.counterSourceLabels],
+  roles: [enums.roleLabels],
+}
+function enumValue(key: string, value: unknown): string | null {
+  if (typeof value !== 'string') return null
+  if (key === 'status' || key.endsWith('Status')) {
+    for (const m of STATUS_MAPS) if (m[value]) return m[value]!.label
+    return null
+  }
+  for (const m of VALUE_LABELS[key] ?? []) if (m[value]) return m[value]!
+  if (key === 'resolutionType') {
+    const r: Record<string, string> = {
+      internal: 'Nội bộ',
+      vendor: 'Thuê ngoài',
+      warranty: 'Bảo hành',
+      spare_equipment: 'Máy dự phòng',
+    }
+    return r[value] ?? null
+  }
+  return null
+}
+
+/** camelCase → 'Camel case' khi không có nhãn. */
+function humanize(key: string): string {
+  const words = key
+    .replace(/Id$/, '')
+    .replace(/([A-Z])/g, ' $1')
+    .toLowerCase()
+    .trim()
+  return words.charAt(0).toUpperCase() + words.slice(1)
 }
 
 const HIDDEN = new Set([
@@ -126,11 +230,13 @@ export function fieldChanges(before: unknown, after: unknown): FieldChange[] {
     const base = key.endsWith('Id') ? key.slice(0, -2) : key
     const relL = left[base]
     const relR = right[base]
+    const fromLabel = isRecord(relL) ? display(relL) : (enumValue(key, l) ?? display(l))
+    const toLabel = isRecord(relR) ? display(relR) : (enumValue(key, r) ?? display(r))
     out.push({
       key,
-      label: AUDIT_FIELD_LABELS[key] ?? AUDIT_FIELD_LABELS[base] ?? key,
-      from: isRecord(relL) ? display(relL) : display(l),
-      to: isRecord(relR) ? display(relR) : display(r),
+      label: AUDIT_FIELD_LABELS[key] ?? AUDIT_FIELD_LABELS[base] ?? humanize(key),
+      from: fromLabel,
+      to: toLabel,
     })
   }
   return out
