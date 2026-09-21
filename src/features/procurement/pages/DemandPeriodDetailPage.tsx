@@ -572,6 +572,8 @@ export function Component() {
     }
   }
 
+  // FormDialog yêu cầu form — dialog tổng hợp chỉ có checkbox, không dùng RHF fields.
+  const skipForm = useForm()
   if (detail.isPending) return <DetailSkeleton label={t('loadingPeriod')} />
   if (detail.error) return <ErrorState error={detail.error} onRetry={() => void detail.refetch()} />
   const row = detail.data as DemandPeriod
@@ -588,7 +590,7 @@ export function Component() {
         open={skipOpen}
         onOpenChange={setSkipOpen}
         title={t('consolidateConfirm')}
-        form={undefined as never}
+        form={skipForm}
         submitLabel={t('consolidateConfirm')}
         onSubmit={() => void consolidate()}
       >
