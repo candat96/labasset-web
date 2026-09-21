@@ -17,7 +17,7 @@ ESLint + Prettier · Vitest + Testing Library + msw · Playwright.
 ## Yêu cầu
 
 - Node.js 22, npm
-- `labasset-api` chạy dev tại `http://localhost:3000` (xem README của API: `docker compose up -d postgres`,
+- `labasset-api` chạy dev tại `http://localhost:3969` (xem README của API: `docker compose up -d postgres`,
   `npm run migrate:master`, `npm run provision:tenant -- BVDEMO "Bệnh viện Demo"`, `npm run start:dev`)
 
 ## Chạy dev
@@ -29,7 +29,7 @@ npm run dev                  # http://localhost:2905
 ```
 
 Vite proxy các path `/v1`, `/sys`, `/health`, `/openapi.json` tới `VITE_DEV_PROXY_TARGET`
-(mặc định `http://localhost:3000`).
+(mặc định `http://localhost:3969`).
 
 | Biến                    | Ý nghĩa                                                                  |
 | ----------------------- | ------------------------------------------------------------------------ |
@@ -49,7 +49,7 @@ Lần đầu đăng nhập `mustChangePassword=true` → web bắt buộc vào `
 | `npm run lint`                      | ESLint + Prettier check (`npm run format` để sửa)                                                                                         |
 | `npm run typecheck`                 | `tsc -b --noEmit`                                                                                                                         |
 | `npm test` / `test:watch`           | Vitest (jsdom, msw)                                                                                                                       |
-| `npm run api:gen [url\|file]`       | Sinh `src/api/schema.d.ts` từ OpenAPI. Mặc định `http://localhost:3000/openapi.json`; hoặc `npm run api:gen ../labasset-api/openapi.json` |
+| `npm run api:gen [url\|file]`       | Sinh `src/api/schema.d.ts` từ OpenAPI. Mặc định `http://localhost:3969/openapi.json`; hoặc `npm run api:gen ../labasset-api/openapi.json` |
 | `npm run e2e`                       | Playwright smoke trên API thật (xem dưới)                                                                                                 |
 
 `src/api/schema.d.ts` được commit để CI không cần API. Sau khi API đổi, chạy lại `api:gen` và commit.
@@ -130,7 +130,7 @@ Không đặt `E2E_PASSWORD` thì test tự skip. CI chỉ chạy lint/typecheck
 
 ```bash
 docker build -t labasset-web .
-docker run -p 8080:80 -e API_UPSTREAM=http://api:3000 labasset-web
+docker run -p 8080:80 -e API_UPSTREAM=http://api:3969 labasset-web
 # hoặc ghép với compose của API:
 docker compose -p labasset-onprem \
   -f ../labasset-api/docker-compose.onprem.yml -f docker-compose.web.yml up -d --build

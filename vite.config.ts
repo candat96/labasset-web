@@ -6,7 +6,7 @@ import path from 'node:path'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
-  const target = env.VITE_DEV_PROXY_TARGET || 'http://localhost:3000'
+  const target = env.VITE_DEV_PROXY_TARGET || 'http://localhost:3969'
   const proxy = Object.fromEntries(
     ['/v1', '/sys', '/health', '/openapi.json'].map((p) => [p, { target, changeOrigin: true }]),
   )
