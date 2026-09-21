@@ -8,7 +8,7 @@ export function formatNumber(n: number | string | null | undefined, digits = 0):
 /** Chuỗi số lượng: giữ chính xác cả phần nguyên lớn, không qua Number. */
 export function formatQty(value: string | null | undefined): string {
   if (!value) return ''
-  if (!/^-?\d+(?:\.\d{1,3})?$/.test(value)) return value
+  if (!/^-?\d+(?:\.\d{1,4})?$/.test(value)) return value
   const [integer = '0', fraction = ''] = value.split('.')
   const tail = fraction.replace(/0+$/, '')
   return new Intl.NumberFormat('vi-VN').format(BigInt(integer)) + (tail ? `,${tail}` : '')

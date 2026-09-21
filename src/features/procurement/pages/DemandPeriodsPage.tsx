@@ -129,7 +129,7 @@ function OpenPeriodCard({ row }: { row: OpenPeriodRow }) {
                 variant="outline"
                 onClick={() => void run(t('approveConfirm'), () => api.approvePeriod(row.id))}
               >
-                {t('approveConfirm')}
+                {t('approveAction')}
               </Button>
             )}
           </div>

@@ -34,6 +34,7 @@ import { AsyncSelect } from '@/components/form/async-select'
 import { useConfirm } from '@/components/confirm-dialog'
 import { messageFor } from '@/api/errors'
 import { formatVnd } from '@/lib/format/money'
+import { formatQty } from '@/lib/format/number'
 import { formatDate } from '@/lib/format/date'
 import { demandItemTypeLabels, demandPriorityLabels, enumLabel } from '@/lib/enum-labels'
 import { demandRequestStatusMap } from '@/lib/status-maps'
@@ -75,6 +76,11 @@ function bucketLabels(buckets: number): string[] {
   return Array.from({ length: 12 }, (_, i) => `T${i + 1}`)
 }
 
+/** Decimal(19,4) "30.0000" → "30" (chỉ để HIỂN THỊ, không đổi dữ liệu gửi lên). */
+export function trimZeroTail(value: string): string {
+  return value.includes('.') ? value.replace(/0+$/, '').replace(/\.$/, '') : value
+}
+
 /** Ô số lượng theo bucket — commit khi blur/Enter, ô trống → 0. */
 function BucketCell({
   value,
@@ -88,7 +94,7 @@ function BucketCell({
   ariaLabel: string
 }) {
   const [draft, setDraft] = useState<string | null>(null)
-  const shown = draft ?? (value === '0' ? '' : value)
+  const shown = draft ?? (value === '0' ? '' : trimZeroTail(value))
   return (
     <Input
       aria-label={ariaLabel}
@@ -185,7 +191,7 @@ function LineRow({
   const [spec, setSpec] = useState(line.spec ?? '')
   const [reason, setReason] = useState(line.reason ?? '')
   const [priority, setPriority] = useState(line.priority)
-  const [unitPriceEst, setUnitPriceEst] = useState(line.unitPriceEst)
+  const [unitPriceEst, setUnitPriceEst] = useState(trimZeroTail(line.unitPriceEst))
   const labels = useMemo(() => bucketLabels(buckets), [buckets])
   const zeros = useMemo(() => Array.from({ length: buckets }, () => '0'), [buckets])
   const [qty, setQty] = useState<string[]>(
@@ -308,6 +314,7 @@ function LineRow({
               key={i}
               ariaLabel={`${line.itemName || 'dòng'} ${labels[i]}`}
               value={value}
+              disabled={!editable}
               onCommit={(next) => {
                 const nextQty = [...qty]
                 nextQty[i] = next
@@ -316,31 +323,34 @@ function LineRow({
               }}
             />
           ))}
-          <div className="flex flex-col gap-1">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                const total = window.prompt(t('splitEvenlyHint'), qtySum)
-                if (total) {
-                  setQty(splitEvenly(total, buckets))
-                  void patch({ qtyByBucket: splitEvenly(total, buckets) })
-                }
-              }}
-            >
-              {t('splitEvenly')}
-            </Button>
-            <span className="text-center text-[11.5px] tabular-nums">Σ {qtySum}</span>
-          </div>
+          {editable && (
+            <div className="flex flex-col gap-1">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  const total = window.prompt(t('splitEvenlyHint'), qtySum)
+                  if (total) {
+                    setQty(splitEvenly(total, buckets))
+                    void patch({ qtyByBucket: splitEvenly(total, buckets) })
+                  }
+                }}
+              >
+                {t('splitEvenly')}
+              </Button>
+              <span className="text-center text-[11.5px] tabular-nums">Σ {qtySum}</span>
+            </div>
+          )}
         </div>
       </TableCell>
-      <TableCell className="text-right tabular-nums">{line.qtyRequested}</TableCell>
+      <TableCell className="text-right tabular-nums">{formatQty(line.qtyRequested)}</TableCell>
       <TableCell className="text-right">
         <Input
           aria-label={`${line.itemName || 'dòng'} đơn giá ước`}
           className="w-28 text-right tabular-nums"
           inputMode="decimal"
           value={unitPriceEst}
+          disabled={!editable}
           onChange={(e) => setUnitPriceEst(e.target.value)}
           onBlur={() => {
             if (unitPriceEst !== line.unitPriceEst) void patch({ unitPriceEst })
@@ -363,6 +373,7 @@ function LineRow({
       <TableCell>
         <Select
           value={priority}
+          disabled={!editable}
           onValueChange={(v) => {
             const next = v as DemandLine['priority']
             setPriority(next)
@@ -410,7 +421,9 @@ function LineRow({
 /** VT/ADM chỉnh SL duyệt + ghi chú từng dòng khi phiếu submitted+ (T2: accept {lines}). */
 function ApproveCells({ line, onCommitted }: { line: DemandLine; onCommitted: () => void }) {
   const { t } = useTranslation('procurement')
-  const [qtyApproved, setQtyApproved] = useState(line.qtyApproved ?? line.qtyRequested)
+  const [qtyApproved, setQtyApproved] = useState(
+    trimZeroTail(line.qtyApproved ?? line.qtyRequested),
+  )
   const [note, setNote] = useState(line.approverNote ?? '')
   const commit = async (next: { qtyApproved?: string; approverNote?: string }) => {
     try {
@@ -447,6 +460,204 @@ function ApproveCells({ line, onCommitted }: { line: DemandLine; onCommitted: ()
         onBlur={() => note !== (line.approverNote ?? '') && commit({ approverNote: note })}
       />
     </div>
+  )
+}
+
+/** Dòng mới (chưa có trên backend): chỉ POST khi đã đủ dữ liệu hợp lệ. */
+interface PendingLine {
+  key: number
+  itemType: DemandItemType
+  supplyId: string | null
+  itemName: string
+  spec: string
+  unitPriceEst: string
+  reason: string
+  priority: DemandLine['priority']
+  qty: string[]
+}
+
+function PendingLineRow({
+  pending,
+  requestId,
+  buckets,
+  onChange,
+  onCreated,
+  onDiscard,
+}: {
+  pending: PendingLine
+  requestId: string
+  buckets: number
+  onChange: (next: PendingLine) => void
+  onCreated: () => void
+  onDiscard: () => void
+}) {
+  const { t } = useTranslation('procurement')
+  const labels = useMemo(() => bucketLabels(buckets), [buckets])
+  const set = (patch: Partial<PendingLine>) => onChange({ ...pending, ...patch })
+  const qtySum = sumQty(pending.qty)
+  const amount = useMemo(() => {
+    try {
+      return new Big(pending.unitPriceEst || '0').mul(new Big(qtySum || '0')).toFixed()
+    } catch {
+      return '0'
+    }
+  }, [pending.unitPriceEst, qtySum])
+
+  const create = async (body: Parameters<typeof api.addDemandLine>[1]) => {
+    try {
+      await api.addDemandLine(requestId, body)
+      toast.success(t('added', { defaultValue: 'Đã thêm dòng' }))
+      onCreated()
+    } catch (error) {
+      toast.error(messageFor(error))
+    }
+  }
+
+  /* supply/component: chọn vật tư là đủ điều kiện → tạo dòng (backend tự điền tên/ĐVT). */
+  const chooseSupply = (id: string | null) => {
+    set({ supplyId: id })
+    if (!id) return
+    void create({
+      itemType: pending.itemType,
+      supplyId: id,
+      qtyByBucket: pending.qty,
+      unitPriceEst: pending.unitPriceEst || '0',
+      ...(pending.reason.trim() ? { reason: pending.reason.trim() } : {}),
+      priority: pending.priority,
+    })
+  }
+
+  /* equipment/service: cần tên + thông số (spec) — tạo khi cả hai đã nhập. */
+  const tryCreateManual = () => {
+    if (pending.itemType === 'supply' || pending.itemType === 'component') return
+    if (!pending.itemName.trim() || !pending.spec.trim()) return
+    void create({
+      itemType: pending.itemType,
+      itemName: pending.itemName.trim(),
+      spec: pending.spec.trim(),
+      qtyByBucket: pending.qty,
+      unitPriceEst: pending.unitPriceEst || '0',
+      ...(pending.reason.trim() ? { reason: pending.reason.trim() } : {}),
+      priority: pending.priority,
+    })
+  }
+
+  return (
+    <TableRow>
+      <TableCell className="sticky left-0 bg-card">
+        <div className="min-w-56 space-y-1">
+          <TypeSelect
+            value={pending.itemType}
+            onChange={(v) => set({ itemType: v, supplyId: null })}
+          />
+          {pending.itemType === 'supply' || pending.itemType === 'component' ? (
+            <AsyncSelect
+              label={t('itemName')}
+              queryKey="supplies"
+              loadOptions={supplyOptions}
+              value={pending.supplyId}
+              showLabel={false}
+              onChange={(v) => chooseSupply(typeof v === 'string' ? v : null)}
+            />
+          ) : (
+            <div className="space-y-1">
+              <Input
+                aria-label={`${t('newLine', { defaultValue: 'dòng mới' })} tên`}
+                className="w-56"
+                value={pending.itemName}
+                placeholder={t('itemNamePlaceholder')}
+                onChange={(e) => set({ itemName: e.target.value })}
+                onBlur={tryCreateManual}
+              />
+              <Input
+                aria-label={`${t('newLine', { defaultValue: 'dòng mới' })} thông số`}
+                className="w-56"
+                value={pending.spec}
+                placeholder={t('spec')}
+                onChange={(e) => set({ spec: e.target.value })}
+                onBlur={tryCreateManual}
+              />
+            </div>
+          )}
+        </div>
+      </TableCell>
+      <TableCell className="text-subtle text-[12.5px]">—</TableCell>
+      <TableCell>
+        <div className="flex gap-1 overflow-x-auto">
+          {pending.qty.map((value, i) => (
+            <BucketCell
+              key={i}
+              ariaLabel={`${t('newLine', { defaultValue: 'dòng mới' })} ${labels[i]}`}
+              value={value}
+              onCommit={(next) => {
+                const nextQty = [...pending.qty]
+                nextQty[i] = next
+                set({ qty: nextQty })
+              }}
+            />
+          ))}
+          <div className="flex flex-col gap-1">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                const total = window.prompt(t('splitEvenlyHint'), qtySum)
+                if (total) set({ qty: splitEvenly(total, buckets) })
+              }}
+            >
+              {t('splitEvenly')}
+            </Button>
+            <span className="text-center text-[11.5px] tabular-nums">Σ {qtySum}</span>
+          </div>
+        </div>
+      </TableCell>
+      <TableCell className="text-right tabular-nums">—</TableCell>
+      <TableCell className="text-right">
+        <Input
+          aria-label={`${t('newLine', { defaultValue: 'dòng mới' })} đơn giá ước`}
+          className="w-28 text-right tabular-nums"
+          inputMode="decimal"
+          value={pending.unitPriceEst}
+          onChange={(e) => set({ unitPriceEst: e.target.value })}
+        />
+      </TableCell>
+      <TableCell className="text-right tabular-nums">{formatVnd(amount)}</TableCell>
+      <TableCell>
+        <Input
+          aria-label={`${t('newLine', { defaultValue: 'dòng mới' })} lý do`}
+          className="w-40"
+          value={pending.reason}
+          onChange={(e) => set({ reason: e.target.value })}
+        />
+      </TableCell>
+      <TableCell>
+        <Select
+          value={pending.priority}
+          onValueChange={(v) => set({ priority: v as DemandLine['priority'] })}
+        >
+          <SelectTrigger
+            aria-label={`${t('newLine', { defaultValue: 'dòng mới' })} ưu tiên`}
+            className="w-28"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {Object.entries(demandPriorityLabels).map(([key, label]) => (
+              <SelectItem key={key} value={key}>
+                {label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </TableCell>
+      <TableCell className="text-subtle text-[12px]">{t('pendingHint')}</TableCell>
+      <TableCell>
+        <Button size="icon-sm" variant="ghost" onClick={onDiscard}>
+          <Trash2 />
+          <span className="sr-only">{t('discardLine', { defaultValue: 'Bỏ dòng này' })}</span>
+        </Button>
+      </TableCell>
+    </TableRow>
   )
 }
 
@@ -551,6 +762,7 @@ export function Component() {
   const user = useAuthStore((s) => s.user)
   const { confirm, dialog } = useConfirm()
   const [importOpen, setImportOpen] = useState(false)
+  const [pendings, setPendings] = useState<PendingLine[]>([])
 
   const detail = useQuery({
     queryKey: ['demand-request', id],
@@ -593,19 +805,24 @@ export function Component() {
     }
   }
 
-  const addLine = async () => {
-    try {
-      await api.addDemandLine(row.id, {
+  const addLine = () => {
+    // Dòng mới là bản nháp cục bộ — chỉ POST lên backend khi chọn vật tư
+    // (supply/component) hoặc nhập đủ tên + thông số (equipment/service),
+    // vì API bắt buộc dữ liệu này (DEMAND_LINE_INVALID).
+    setPendings((rows) => [
+      ...rows,
+      {
+        key: Date.now() + rows.length,
         itemType: 'supply',
-        priority: 'normal',
+        supplyId: null,
+        itemName: '',
+        spec: '',
         unitPriceEst: '0',
-        qtyByBucket: Array.from({ length: buckets }, () => '0'),
-      })
-      toast.success(t('added', { defaultValue: 'Đã thêm dòng' }))
-      invalidate()
-    } catch (error) {
-      toast.error(messageFor(error))
-    }
+        reason: '',
+        priority: 'normal',
+        qty: Array.from({ length: buckets }, () => '0'),
+      },
+    ])
   }
   const suggestAll = async () => {
     try {
@@ -766,9 +983,25 @@ export function Component() {
                   onDataChanged={invalidate}
                 />
               ))}
-              {lines.length === 0 && (
+              {pendings.map((pending) => (
+                <PendingLineRow
+                  key={pending.key}
+                  pending={pending}
+                  requestId={row.id}
+                  buckets={buckets}
+                  onChange={(next) =>
+                    setPendings((rows) => rows.map((p) => (p.key === next.key ? next : p)))
+                  }
+                  onCreated={() => {
+                    setPendings((rows) => rows.filter((p) => p.key !== pending.key))
+                    invalidate()
+                  }}
+                  onDiscard={() => setPendings((rows) => rows.filter((p) => p.key !== pending.key))}
+                />
+              ))}
+              {lines.length === 0 && pendings.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={11} className="text-muted-foreground text-center text-sm">
+                  <TableCell colSpan={10} className="text-muted-foreground text-center text-sm">
                     {t('noLines', { defaultValue: 'Chưa có dòng nào — bấm "Thêm dòng"' })}
                   </TableCell>
                 </TableRow>

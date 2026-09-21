@@ -3,8 +3,10 @@ import { formatVnd } from './money'
 it('formats integer string with dot grouping', () => {
   expect(formatVnd('1250000')).toBe('1.250.000 ₫')
 })
-it('keeps decimals with comma', () => {
-  expect(formatVnd('1250000.50')).toBe('1.250.000,50 ₫')
+it('keeps meaningful decimals with comma', () => {
+  expect(formatVnd('1250000.50')).toBe('1.250.000,5 ₫')
+  // Decimal(19,4) của API: bỏ đuôi 0 vô nghĩa ("0.0000" → "0")
+  expect(formatVnd('0.0000')).toBe('0 ₫')
 })
 it('handles negative and empty', () => {
   expect(formatVnd('-1000')).toBe('-1.000 ₫')

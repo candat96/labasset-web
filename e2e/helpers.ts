@@ -12,13 +12,15 @@ export async function login(page: Page) {
   if (await hc.isVisible().catch(() => false)) await hc.fill(e2eCode)
   await page.getByLabel('Tài khoản').fill(e2eUser)
   await page.getByLabel('Mật khẩu').fill(e2ePass)
-  const dashboard = page.getByRole('heading', { name: 'Tổng quan' })
+  // Dashboard hero (12 UI rollout) không còn heading "Tổng quan" — chờ rời /login.
   for (let attempt = 0; attempt < 3; attempt += 1) {
     await page.getByRole('button', { name: 'Đăng nhập' }).click()
-    await dashboard.waitFor({ state: 'visible', timeout: 5_000 }).catch(() => {})
-    if (await dashboard.isVisible().catch(() => false)) return
+    await page
+      .waitForURL((url) => !url.pathname.startsWith('/login'), { timeout: 15_000 })
+      .catch(() => {})
+    if (!page.url().includes('/login')) return
   }
-  await expect(dashboard).toBeVisible({ timeout: 15_000 })
+  await expect(page).not.toHaveURL(/\/login/, { timeout: 15_000 })
 }
 
 /** Mở AsyncSelect/Select theo nhãn (khớp chính xác) và chọn option khớp (mặc định đầu tiên). */

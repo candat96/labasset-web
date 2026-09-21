@@ -218,22 +218,53 @@ it('bảng dòng: bấm chip gợi ý → PATCH qtyByBucket chia đều 12 thán
   expect(sumQty(body.qtyByBucket)).toBe('1200')
 })
 
-it('bảng dòng: nút Thêm dòng → POST /requests/:id/lines body itemType=supply + 12 ô 0', async () => {
+it('bảng dòng: Thêm dòng → hàng nháp cục bộ; chọn vật tư → POST /requests/:id/lines đủ supplyId + 12 ô', async () => {
   const created: unknown[] = []
   server.use(
     http.post('/v1/demand/requests/dr1/lines', async ({ request: req }) => {
       created.push(await req.json())
       return HttpResponse.json(line)
     }),
+    http.post('/v1/demand/lines/suggest', () =>
+      HttpResponse.json({ suggestedQty: null, suggestion: null }),
+    ),
   )
   renderPage()
   await userEvent.click(await screen.findByRole('button', { name: 'Thêm dòng' }))
+  // hàng nháp cục bộ xuất hiện (chưa gọi API)
+  expect(screen.getAllByText('Chọn vật tư / nhập tên để lưu').length).toBeGreaterThan(0)
+  expect(created).toHaveLength(0)
+  // chọn vật tư trong hàng nháp (combobox cuối = hàng nháp) → POST đủ dữ liệu
+  const combos = screen.getAllByRole('combobox', { name: 'Tên hàng / vật tư' })
+  await userEvent.click(combos[combos.length - 1]!)
+  await userEvent.click(await screen.findByRole('option', { name: /Găng tay/ }))
   await waitFor(() => expect(created).toHaveLength(1))
-  const body = created[0] as { itemType: string; qtyByBucket: string[] }
-  expect(body).toMatchObject({ itemType: 'supply' })
+  const body = created[0] as { itemType: string; supplyId: string; qtyByBucket: string[] }
+  expect(body).toMatchObject({ itemType: 'supply', supplyId: 'sp1' })
   expect(body.qtyByBucket).toHaveLength(12)
   expect(body.qtyByBucket.every((v) => v === '0')).toBe(true)
-  expect(screen.getAllByText('Đã thêm dòng').length).toBeGreaterThan(0)
+})
+
+it('bảng dòng: hàng nháp equipment thiếu thông số chưa gửi; đủ tên + thông số → POST', async () => {
+  const created: unknown[] = []
+  server.use(
+    http.post('/v1/demand/requests/dr1/lines', async ({ request: req }) => {
+      created.push(await req.json())
+      return HttpResponse.json({ ...line, itemType: 'equipment', itemName: 'Máy E2E' })
+    }),
+  )
+  renderPage()
+  await userEvent.click(await screen.findByRole('button', { name: 'Thêm dòng' }))
+  // chuyển loại hàng của hàng nháp (combobox cuối) sang Thiết bị
+  const kinds = screen.getAllByRole('combobox', { name: 'Loại hàng' })
+  await userEvent.click(kinds[kinds.length - 1]!)
+  await userEvent.click(await screen.findByRole('option', { name: 'Thiết bị mua mới' }))
+  await userEvent.type(screen.getByLabelText('dòng mới tên'), 'Máy E2E')
+  await userEvent.type(screen.getByLabelText('dòng mới thông số'), '2026')
+  await userEvent.tab() // rời ô thông số → tạo dòng
+  await waitFor(() => expect(created).toHaveLength(1))
+  const body = created[0] as { itemType: string; itemName: string; spec: string }
+  expect(body).toMatchObject({ itemType: 'equipment', itemName: 'Máy E2E', spec: '2026' })
 })
 
 it('VT/ADM: sửa SL duyệt từng dòng → POST accept {lines:[{id, qtyApproved}]}', async () => {

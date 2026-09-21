@@ -79,7 +79,8 @@ function DecimalCell({
   ariaLabel?: string
 }) {
   const [draft, setDraft] = useState<string | null>(null)
-  const shown = draft ?? value
+  // Decimal(19,4) "12.0000" hiển thị gọn "12" (dữ liệu gửi lên vẫn chuỗi thô)
+  const shown = draft ?? (value.includes('.') ? value.replace(/0+$/, '').replace(/\.$/, '') : value)
   return (
     <Input
       aria-label={ariaLabel}
@@ -303,7 +304,9 @@ function ConsolidationTab({
       <div className="flex flex-wrap items-center gap-2">
         {filter == null && (
           <span className="text-subtle text-[13px]">
-            {t('totalPlanRows', { defaultValue: 'Không có dòng nào cần hiển thị' })}
+            {t('totalPlanRows', {
+              defaultValue: 'Gộp theo vật tư × khoa — sửa tổng sẽ phân bổ tỷ lệ theo khoa',
+            })}
           </span>
         )}
         <div className="ml-auto flex flex-wrap gap-2">
@@ -559,9 +562,9 @@ export function Component() {
       toast.error(messageFor(error))
     }
   }
-  const consolidate = async () => {
+  const consolidate = async (skip?: boolean) => {
     try {
-      await api.consolidatePeriod(id, skipUnsubmitted)
+      await api.consolidatePeriod(id, skip ?? skipUnsubmitted)
       toast.success(t('updated'))
       setSkipOpen(false)
       setSkipUnsubmitted(false)
@@ -624,8 +627,8 @@ export function Component() {
         onOpenChange={setSkipOpen}
         title={t('consolidateConfirm')}
         form={skipForm}
-        submitLabel={t('consolidateConfirm')}
-        onSubmit={() => void consolidate()}
+        submitLabel={t('consolidateAction')}
+        onSubmit={() => void consolidate(skipUnsubmitted)}
       >
         <div className="space-y-2">
           <label className="flex items-start gap-2 text-[13.5px]">
@@ -647,7 +650,7 @@ export function Component() {
         onSubmit={() => {
           setUnsubmitted(null)
           setSkipUnsubmitted(true)
-          void consolidate()
+          void consolidate(true)
         }}
       >
         <div className="space-y-2 text-[13.5px]">
@@ -717,14 +720,14 @@ export function Component() {
               isStaff &&
                 row.status === 'collecting' && {
                   key: 'consolidate',
-                  label: t('consolidateConfirm'),
+                  label: t('consolidateAction'),
                   variant: 'primary' as const,
                   onClick: () => setSkipOpen(true),
                 },
               isStaff &&
                 row.status === 'consolidating' && {
                   key: 'approve',
-                  label: t('approveConfirm'),
+                  label: t('approveAction'),
                   variant: 'primary' as const,
                   onClick: () => void run(t('approveConfirm'), () => api.approvePeriod(id)),
                 },
@@ -857,20 +860,6 @@ export function Component() {
                       <div className="flex flex-wrap gap-2">
                         <Button size="sm" variant="outline" onClick={() => void rebuild()}>
                           {t('rebuild')}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => void api.exportDemandSummary(id)}
-                        >
-                          {t('exportExcel')}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => void api.downloadDemandProposal(id)}
-                        >
-                          {t('proposalPdf')}
                         </Button>
                       </div>
                     )}

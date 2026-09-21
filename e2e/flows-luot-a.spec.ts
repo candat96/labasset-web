@@ -11,10 +11,11 @@ test('02 thiết bị: tạo máy → đổi trạng thái → thêm linh kiện
   await login(page)
   const name = `Máy E2E ${Date.now()}`
 
-  // Tạo máy (để trống mã → tự sinh)
+  // Tạo máy (để trống mã → tự sinh; 14: khoa → phòng bắt buộc khi tạo)
   await page.goto('/equipment/new')
   await page.getByLabel('Tên', { exact: true }).fill(name)
   await pickOption(page, 'Khoa/Phòng ban')
+  await pickOption(page, 'Phòng', /Phòng/, { last: true })
   await page.getByRole('button', { name: 'Lưu' }).click()
   await page.waitForURL(/\/equipment\/[0-9a-f-]{36}/, { timeout: 15_000 })
   await expect(page.getByRole('heading', { name })).toBeVisible()
@@ -29,8 +30,8 @@ test('02 thiết bị: tạo máy → đổi trạng thái → thêm linh kiện
   await expect(statusDialog).toBeHidden()
   await expect(page.getByText('Đã đổi trạng thái').first()).toBeVisible()
 
-  // Thêm linh kiện
-  await page.getByRole('tab', { name: 'Linh kiện' }).click()
+  // Thêm linh kiện (12 UI rollout: tab gộp Cấu hình)
+  await page.getByRole('tab', { name: 'Cấu hình' }).click()
   await page.getByRole('button', { name: 'Thêm linh kiện' }).click()
   const compDialog = page.getByRole('dialog', { name: 'Linh kiện' })
   await compDialog.getByLabel('Tên', { exact: true }).fill('Bơm E2E')
@@ -38,9 +39,9 @@ test('02 thiết bị: tạo máy → đổi trạng thái → thêm linh kiện
   await expect(compDialog).toBeHidden()
   await expect(page.getByText('Bơm E2E')).toBeVisible()
 
-  // Điều chuyển (chọn khoa đích khác khoa hiện tại)
-  await page.getByRole('tab', { name: 'Điều chuyển' }).click()
-  await page.getByRole('button', { name: 'Tạo điều chuyển' }).click()
+  // Điều chuyển (12 UI rollout: tab gộp Lịch sử)
+  await page.getByRole('tab', { name: 'Lịch sử' }).click()
+  await page.getByRole('button', { name: 'Tạo điều chuyển' }).first().click()
   const transferDialog = page.getByRole('dialog', { name: 'Điều chuyển' })
   await pickOption(page, 'Khoa đích', undefined, { last: true })
   await transferDialog.getByLabel('Lý do').fill('E2E điều chuyển')

@@ -30,7 +30,8 @@ export function formatVnd(
   if (!m) return String(amount)
   const sign = m[1] ?? ''
   const int = m[2] ?? '0'
-  const dec = m[3]
+  // phần thập phân: bỏ chữ số 0 cuối (Decimal(19,4)_cloud "0.0000" → "0")
+  const dec = m[3]?.replace(/0+$/, '') || ''
   const grouped = int.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
   const body = dec ? `${grouped},${dec}` : grouped
   return `${sign}${body}${opts.symbol === false ? '' : ' ₫'}`
