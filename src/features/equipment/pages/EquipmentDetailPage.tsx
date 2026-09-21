@@ -2294,13 +2294,25 @@ function TimelineTab({ id, userNames }: { id: string; userNames: Map<string, str
   })
   const userName = (value: string | null | undefined) =>
     value ? (userNames.get(value) ?? shortId(value)) : null
+  // Việt hoá tiêu đề backend còn chứa mã trạng thái thô ("Trạng thái: suspended").
+  const localizeTitle = (title: string) =>
+    title.replace(/^Trạng thái:\s*(\w+)$/, (_, st: string) =>
+      t('timeline.statusTo', {
+        defaultValue: 'Trạng thái: {{st}}',
+        st: equipmentStatusMap[st]?.label ?? st,
+      }),
+    )
+  // Đổi trạng thái đã có trong lịch sử trạng thái (from → to) nên bỏ bản sao ở events
+  // khi đang xem "Tất cả".
   const items = [
-    ...(events.data?.items ?? []).map((event) => ({
-      at: event.at,
-      title: event.title,
-      summary: event.summary,
-      by: userName(event.byUserId),
-    })),
+    ...(events.data?.items ?? [])
+      .filter((event) => type !== '' || event.type !== 'status_changed')
+      .map((event) => ({
+        at: event.at,
+        title: localizeTitle(event.title),
+        summary: event.summary,
+        by: userName(event.byUserId),
+      })),
     ...(history.data?.items ?? []).map((row) => ({
       at: row.at,
       title: `${equipmentStatusMap[row.fromStatus]?.label ?? row.fromStatus} → ${

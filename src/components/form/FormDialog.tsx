@@ -36,14 +36,20 @@ export function FormDialog<T extends FieldValues, O extends FieldValues = T>({
   onSubmit: (values: O) => void | Promise<unknown>
   submitting?: boolean
   submitLabel?: string
-  width?: 'md' | 'lg'
+  /** md: 2 cột khi ≥ 4 trường (max 42rem); lg: 2–3 cột (max 64rem); xl: gần full (max 80rem). */
+  width?: 'md' | 'lg' | 'xl'
   children: ReactNode
 }) {
   const { t } = useTranslation()
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className={cn('max-h-[90vh] gap-0 p-0', width === 'lg' ? 'sm:max-w-3xl' : 'sm:max-w-lg')}
+        className={cn(
+          'max-h-[92vh] gap-0 p-0',
+          width === 'xl' && 'sm:max-w-[min(80rem,calc(100vw-3rem))]',
+          width === 'lg' && 'sm:max-w-[min(64rem,calc(100vw-3rem))]',
+          width === 'md' && 'sm:max-w-2xl',
+        )}
       >
         <DialogHeader className="border-divider border-b px-6 py-4">
           <DialogTitle>{title}</DialogTitle>
@@ -61,10 +67,12 @@ export function FormDialog<T extends FieldValues, O extends FieldValues = T>({
           >
             <div
               className={cn(
-                'max-h-[calc(90vh-140px)] overflow-y-auto px-6 py-5',
-                width === 'lg'
-                  ? 'grid gap-x-5 gap-y-4 sm:grid-cols-2 [&>[data-slot=form-item]:has(textarea)]:sm:col-span-2'
-                  : 'space-y-4',
+                'max-h-[calc(92vh-140px)] overflow-y-auto px-6 py-5',
+                // Lưới: textarea/khối con luôn chiếm cả hàng.
+                'grid gap-x-5 gap-y-4 [&>[data-slot=form-item]:has(textarea)]:col-span-full [&>[data-slot=form-item]:has([data-slot=table])]:col-span-full',
+                width === 'md' && '[&:has(>:nth-child(4))]:sm:grid-cols-2',
+                width === 'lg' && 'sm:grid-cols-2 xl:grid-cols-3',
+                width === 'xl' && 'sm:grid-cols-2 xl:grid-cols-4',
               )}
             >
               {children}
