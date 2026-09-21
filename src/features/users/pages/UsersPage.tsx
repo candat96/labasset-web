@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { DataTable, useServerTable } from '@/components/data-table'
-import { FilterBar } from '@/components/filter-bar'
+import { FilterBar, FilterField } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -127,53 +127,60 @@ export function Component() {
         getRowId={(r) => r.id}
         toolbarLeft={
           <FilterBar>
-            <Input
-              aria-label={t('search.label')}
-              placeholder={t('search.placeholder')}
-              value={table.inputQ}
-              onChange={(e) => table.setQ(e.target.value)}
-              className="w-56"
-            />
-            <Select
-              value={filters.role ?? 'all'}
-              onValueChange={(v) => table.setFilter('role', v === 'all' ? undefined : v)}
-            >
-              <SelectTrigger aria-label={t('filter.roleLabel')}>
-                <SelectValue placeholder={t('filter.role')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('filter.allRoles')}</SelectItem>
-                {ROLES.map((r) => (
-                  <SelectItem key={r} value={r}>
-                    {roleLabel(r)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <AsyncSelect
-              label={t('filter.department')}
-              queryKey="departments"
-              loadOptions={departmentOptions}
-              resolveOption={resolveDepartment}
-              value={filters.departmentId ?? null}
-              clearable
-              onChange={(v) =>
-                table.setFilter('departmentId', typeof v === 'string' ? v : undefined)
-              }
-            />
-            <Select
-              value={filters.isActive ?? 'all'}
-              onValueChange={(v) => table.setFilter('isActive', v === 'all' ? undefined : v)}
-            >
-              <SelectTrigger aria-label={t('filter.status')}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('filter.allStatuses')}</SelectItem>
-                <SelectItem value="true">{t('filter.active')}</SelectItem>
-                <SelectItem value="false">{t('filter.locked')}</SelectItem>
-              </SelectContent>
-            </Select>
+            <FilterField label={t('search.label')}>
+              <Input
+                aria-label={t('search.label')}
+                placeholder={t('search.placeholder')}
+                value={table.inputQ}
+                onChange={(e) => table.setQ(e.target.value)}
+              />
+            </FilterField>
+            <FilterField label={t('filter.role')}>
+              <Select
+                value={filters.role ?? 'all'}
+                onValueChange={(v) => table.setFilter('role', v === 'all' ? undefined : v)}
+              >
+                <SelectTrigger aria-label={t('filter.roleLabel')} className="w-full">
+                  <SelectValue placeholder={t('filter.role')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('filter.allRoles')}</SelectItem>
+                  {ROLES.map((r) => (
+                    <SelectItem key={r} value={r}>
+                      {roleLabel(r)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FilterField>
+            <FilterField label={t('filter.department')}>
+              <AsyncSelect
+                label={t('filter.department')}
+                queryKey="departments"
+                loadOptions={departmentOptions}
+                resolveOption={resolveDepartment}
+                value={filters.departmentId ?? null}
+                clearable
+                onChange={(v) =>
+                  table.setFilter('departmentId', typeof v === 'string' ? v : undefined)
+                }
+              />
+            </FilterField>
+            <FilterField label={t('filter.status')}>
+              <Select
+                value={filters.isActive ?? 'all'}
+                onValueChange={(v) => table.setFilter('isActive', v === 'all' ? undefined : v)}
+              >
+                <SelectTrigger aria-label={t('filter.status')} className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('filter.allStatuses')}</SelectItem>
+                  <SelectItem value="true">{t('filter.active')}</SelectItem>
+                  <SelectItem value="false">{t('filter.locked')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </FilterField>
           </FilterBar>
         }
       />

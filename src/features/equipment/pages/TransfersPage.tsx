@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { toast } from 'sonner'
 import { DataTable, useServerTable } from '@/components/data-table'
-import { FilterBar } from '@/components/filter-bar'
+import { FilterBar, FilterField } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page/PageHeader'
 import { Button } from '@/components/ui/button'
 import {
@@ -125,25 +125,27 @@ export function Component() {
         emptyTitle={t('transfers.empty')}
         toolbarLeft={
           <FilterBar>
-            <Select
-              value={status ?? 'all'}
-              onValueChange={(value) =>
-                table.setFilter('status', value === 'all' ? undefined : value)
-              }
-            >
-              <SelectTrigger aria-label={t('transfers.status')} className="w-44">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('filters.all')}</SelectItem>
-                {statuses.map((value) => (
-                  <SelectItem key={value} value={value}>
-                    {transferStatusMap[value]?.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <div className="min-w-48">
+            <FilterField label={t('transfers.status')}>
+              <Select
+                value={status ?? 'all'}
+                onValueChange={(value) =>
+                  table.setFilter('status', value === 'all' ? undefined : value)
+                }
+              >
+                <SelectTrigger aria-label={t('transfers.status')} className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('filters.all')}</SelectItem>
+                  {statuses.map((value) => (
+                    <SelectItem key={value} value={value}>
+                      {transferStatusMap[value]?.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FilterField>
+            <FilterField label={t('fields.department')}>
               <AsyncSelect
                 label={t('fields.department')}
                 queryKey="departments"
@@ -155,7 +157,7 @@ export function Component() {
                 resolveOption={resolveDepartment}
                 clearable
               />
-            </div>
+            </FilterField>
           </FilterBar>
         }
       />

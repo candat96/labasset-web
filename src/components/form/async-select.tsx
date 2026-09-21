@@ -1,4 +1,5 @@
 import { useId, useMemo, useState } from 'react'
+import { useInFilterField } from '@/components/filter-field-context'
 import { useQuery } from '@tanstack/react-query'
 import { Check, ChevronDown, Loader2, X } from 'lucide-react'
 import { useDebounce } from '@/lib/use-debounce'
@@ -51,10 +52,12 @@ export function AsyncSelect({
   selectedOptions = [],
   resolveOption,
   placeholder,
-  showLabel = true,
+  showLabel,
   className,
 }: AsyncSelectProps) {
   const id = useId()
+  const inFilterField = useInFilterField()
+  const visibleLabel = showLabel ?? !inFilterField
   const [q, setQ] = useState('')
   const [open, setOpen] = useState(false)
   const [chosen, setChosen] = useState<ReferenceOption[]>([])
@@ -91,7 +94,7 @@ export function AsyncSelect({
 
   return (
     <div className={cn('space-y-1.5', className)}>
-      {showLabel && <Label htmlFor={id}>{label}</Label>}
+      {visibleLabel && <Label htmlFor={id}>{label}</Label>}
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button

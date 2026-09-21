@@ -84,5 +84,6 @@
   "itemCount": "Số dòng",
   "createdAt": "Tạo lúc",
   "from": "Từ ngày",
-  "to": "Đến ngày"
+  "to": "Đến ngày",
+  "department": "Khoa"
 }

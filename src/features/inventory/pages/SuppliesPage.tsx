@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { toast } from 'sonner'
 import { DataTable, useServerTable } from '@/components/data-table'
-import { FilterBar } from '@/components/filter-bar'
+import { FilterBar, FilterField } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -164,12 +164,14 @@ export function Component() {
         onRowClick={(row) => navigate(`/supplies/${row.id}`)}
         toolbarLeft={
           <FilterBar>
-            <Input
-              aria-label={t('searchSupply')}
-              value={table.inputQ}
-              onChange={(e) => table.setQ(e.target.value)}
-              placeholder={t('searchSupply')}
-            />
+            <FilterField label={t('searchSupply')}>
+              <Input
+                aria-label={t('searchSupply')}
+                value={table.inputQ}
+                onChange={(e) => table.setQ(e.target.value)}
+                placeholder={t('searchSupply')}
+              />
+            </FilterField>
           </FilterBar>
         }
       />

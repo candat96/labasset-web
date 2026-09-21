@@ -2,11 +2,10 @@ import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { DataTable, useServerTable } from '@/components/data-table'
-import { FilterBar } from '@/components/filter-bar'
+import { FilterBar, FilterField } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page/PageHeader'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
-import { Label } from '@/components/ui/label'
 import { formatVnd } from '@/lib/format/money'
 import { formatQty } from '@/lib/format/number'
 import { KpiCard } from '@/components/kpi-card'
@@ -76,19 +75,23 @@ export function Component() {
         onRetry={() => void list.refetch()}
         toolbarLeft={
           <FilterBar>
-            <Input
-              aria-label={t('searchBalance')}
-              value={table.inputQ}
-              onChange={(e) => table.setQ(e.target.value)}
-            />
-            <div className="flex items-center gap-2">
-              <Switch
-                id="belowMin"
-                checked={f.belowMin === 'true'}
-                onCheckedChange={(on) => table.setFilter('belowMin', on ? 'true' : undefined)}
+            <FilterField label={t('searchBalance')}>
+              <Input
+                aria-label={t('searchBalance')}
+                value={table.inputQ}
+                onChange={(e) => table.setQ(e.target.value)}
               />
-              <Label htmlFor="belowMin">{t('belowMin')}</Label>
-            </div>
+            </FilterField>
+            <FilterField label={t('belowMin')}>
+              <div className="flex h-9 items-center">
+                <Switch
+                  id="belowMin"
+                  checked={f.belowMin === 'true'}
+                  onCheckedChange={(on) => table.setFilter('belowMin', on ? 'true' : undefined)}
+                  aria-label={t('belowMin')}
+                />
+              </div>
+            </FilterField>
           </FilterBar>
         }
       />

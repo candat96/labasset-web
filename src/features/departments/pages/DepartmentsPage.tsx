@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { DataTable, useServerTable } from '@/components/data-table'
-import { FilterBar } from '@/components/filter-bar'
+import { FilterBar, FilterField } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page/PageHeader'
 import { ConfirmDialog } from '@/components/page/ConfirmDialog'
 import { useCan } from '@/app/guards/useCan'
@@ -117,32 +117,36 @@ export function Component() {
         getRowId={(d) => d.id}
         toolbarLeft={
           <FilterBar>
-            <div className="relative">
-              <Search
-                className="text-muted-foreground absolute top-1/2 left-2 size-4 -translate-y-1/2"
-                aria-hidden
-              />
-              <Input
-                className="h-8 w-64 pl-8"
-                placeholder={tc('actions.search')}
-                aria-label={tc('actions.search')}
-                value={table.inputQ}
-                onChange={(e) => table.setQ(e.target.value)}
-              />
-            </div>
-            <Select
-              value={isActive ?? 'all'}
-              onValueChange={(v) => table.setFilter('isActive', v === 'all' ? undefined : v)}
-            >
-              <SelectTrigger size="sm" className="w-36" aria-label={t('filter.status')}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{tc('status.all')}</SelectItem>
-                <SelectItem value="true">{tc('status.active')}</SelectItem>
-                <SelectItem value="false">{tc('status.inactive')}</SelectItem>
-              </SelectContent>
-            </Select>
+            <FilterField label={tc('actions.search')}>
+              <div className="relative">
+                <Search
+                  className="text-muted-foreground absolute top-1/2 left-2 size-4 -translate-y-1/2"
+                  aria-hidden
+                />
+                <Input
+                  className="pl-8"
+                  placeholder={tc('actions.search')}
+                  aria-label={tc('actions.search')}
+                  value={table.inputQ}
+                  onChange={(e) => table.setQ(e.target.value)}
+                />
+              </div>
+            </FilterField>
+            <FilterField label={t('filter.status')}>
+              <Select
+                value={isActive ?? 'all'}
+                onValueChange={(v) => table.setFilter('isActive', v === 'all' ? undefined : v)}
+              >
+                <SelectTrigger className="w-full" aria-label={t('filter.status')}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{tc('status.all')}</SelectItem>
+                  <SelectItem value="true">{tc('status.active')}</SelectItem>
+                  <SelectItem value="false">{tc('status.inactive')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </FilterField>
           </FilterBar>
         }
         toolbarRight={

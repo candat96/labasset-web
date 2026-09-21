@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { toast } from 'sonner'
 import { DataTable, useServerTable } from '@/components/data-table'
-import { FilterBar } from '@/components/filter-bar'
+import { FilterBar, FilterField, FilterPreset } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -108,22 +108,7 @@ export function Component() {
   )
   return (
     <>
-      <PageHeader
-        title={t('lotsTitle')}
-        actions={
-          <div className="flex gap-2">
-            {[30, 60, 90].map((days) => (
-              <Button
-                key={days}
-                variant={f.expiringWithinDays === String(days) ? 'default' : 'outline'}
-                onClick={() => table.setFilter('expiringWithinDays', String(days))}
-              >
-                {days} {t('days')}
-              </Button>
-            ))}
-          </div>
-        }
-      />
+      <PageHeader title={t('lotsTitle')} />
       <DataTable
         tableId="stock-lots"
         columns={columns}
@@ -137,13 +122,34 @@ export function Component() {
         onRetry={() => void list.refetch()}
         getRowId={(row) => row.id}
         toolbarLeft={
-          <FilterBar>
-            <Input
-              aria-label={t('searchLot')}
-              value={table.inputQ}
-              onChange={(e) => table.setQ(e.target.value)}
-              placeholder={t('searchLot')}
-            />
+          <FilterBar
+            presets={
+              <>
+                {[30, 60, 90].map((days) => (
+                  <FilterPreset
+                    key={days}
+                    active={f.expiringWithinDays === String(days)}
+                    onClick={() =>
+                      table.setFilter(
+                        'expiringWithinDays',
+                        f.expiringWithinDays === String(days) ? undefined : String(days),
+                      )
+                    }
+                  >
+                    {days} {t('days')}
+                  </FilterPreset>
+                ))}
+              </>
+            }
+          >
+            <FilterField label={t('searchLot')}>
+              <Input
+                aria-label={t('searchLot')}
+                value={table.inputQ}
+                onChange={(e) => table.setQ(e.target.value)}
+                placeholder={t('searchLot')}
+              />
+            </FilterField>
           </FilterBar>
         }
       />

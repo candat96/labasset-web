@@ -2,6 +2,7 @@ import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import type { ColumnDef } from '@tanstack/react-table'
 import { DataTable, useServerTable } from '@/components/data-table'
+import { FilterBar, FilterField } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -96,32 +97,36 @@ export function Component() {
         onRetry={() => void list.refetch()}
         getRowId={(row) => row.id}
         toolbarLeft={
-          <>
-            <Input
-              aria-label={t('hospital.searchLabel')}
-              placeholder={t('hospital.searchPlaceholder')}
-              value={table.inputQ}
-              onChange={(event) => table.setQ(event.target.value)}
-            />
-            <Select
-              value={status ?? 'all'}
-              onValueChange={(value) =>
-                table.setFilter('status', value === 'all' ? undefined : value)
-              }
-            >
-              <SelectTrigger aria-label={t('hospital.fields.status')} className="w-44">
-                <SelectValue placeholder={t('hospital.fields.status')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{tc('status.all')}</SelectItem>
-                {statuses.map((value) => (
-                  <SelectItem key={value} value={value}>
-                    {commonStatusMap[value]?.label ?? value}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </>
+          <FilterBar>
+            <FilterField label={t('hospital.searchLabel')}>
+              <Input
+                aria-label={t('hospital.searchLabel')}
+                placeholder={t('hospital.searchPlaceholder')}
+                value={table.inputQ}
+                onChange={(event) => table.setQ(event.target.value)}
+              />
+            </FilterField>
+            <FilterField label={t('hospital.fields.status')}>
+              <Select
+                value={status ?? 'all'}
+                onValueChange={(value) =>
+                  table.setFilter('status', value === 'all' ? undefined : value)
+                }
+              >
+                <SelectTrigger aria-label={t('hospital.fields.status')} className="w-full">
+                  <SelectValue placeholder={t('hospital.fields.status')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{tc('status.all')}</SelectItem>
+                  {statuses.map((value) => (
+                    <SelectItem key={value} value={value}>
+                      {commonStatusMap[value]?.label ?? value}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FilterField>
+          </FilterBar>
         }
       />
     </>
