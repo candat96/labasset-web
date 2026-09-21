@@ -1,5 +1,5 @@
 import { DetailSkeleton } from '@/components/page/DetailSkeleton'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
@@ -18,9 +18,16 @@ import { AttachmentsPanel } from '@/components/attachments-panel'
 import {
   resolveCatalogItem,
   resolveDepartment,
+  resolveRoom,
   resolveUser,
   departmentOptions,
+  roomOptions,
 } from '@/api/references'
+import { RoomFormDialog } from '@/components/room-form-dialog'
+import { Button } from '@/components/ui/button'
+import { Plus } from 'lucide-react'
+import { useCan } from '@/app/guards/useCan'
+import { STAFF } from '@/routes/roles'
 import type { ReferenceOption } from '@/components/form/async-select'
 import { applyServerErrors, isApiError, messageFor } from '@/api/errors'
 import {
@@ -32,7 +39,7 @@ import {
   diffUpdate,
 } from '../api'
 import { useEquipment, useInvalidateEquipment } from '../hooks'
-import { equipmentSchema, type EquipmentForm } from '../schema'
+import { equipmentCreateSchema, equipmentSchema, type EquipmentForm } from '../schema'
 import type { CreateEquipment } from '../types'
 
 const empty: EquipmentForm = {
@@ -54,6 +61,7 @@ const empty: EquipmentForm = {
   decisionNo: '',
   groupId: null,
   departmentId: null,
+  roomId: null,
   location: '',
   deptContactUserId: null,
   staffInChargeUserId: null,
@@ -89,6 +97,7 @@ function fromDetail(data: NonNullable<ReturnType<typeof useEquipment>['data']>):
     decisionNo: data.decisionNo ?? '',
     groupId: data.groupId,
     departmentId: data.departmentId,
+    roomId: data.roomId,
     location: data.location ?? '',
     deptContactUserId: data.deptContactUserId,
     staffInChargeUserId: data.staffInChargeUserId,
@@ -130,6 +139,7 @@ function toBody(values: EquipmentForm, includeIdentity = true): CreateEquipment 
     purchaseContractNo: values.purchaseContractNo,
     decisionNo: values.decisionNo,
     groupId: values.groupId,
+    roomId: values.roomId,
     location: values.location,
     deptContactUserId: values.deptContactUserId,
     staffInChargeUserId: values.staffInChargeUserId,
@@ -170,23 +180,26 @@ export function Component() {
   const navigate = useNavigate()
   const detail = useEquipment(id)
   const invalidate = useInvalidateEquipment(editing ? id : undefined)
+  const canQuickRoom = useCan(STAFF)
   const form = useForm<EquipmentForm>({
-    resolver: zodResolver(equipmentSchema),
+    resolver: zodResolver(editing ? equipmentSchema : equipmentCreateSchema),
     defaultValues: empty,
     mode: 'onBlur',
   })
   useEffect(() => {
     if (detail.data) form.reset(fromDetail(detail.data))
   }, [detail.data, form])
+  // Phòng phụ thuộc Khoa/Phòng ban: đổi khoa (chỉ có khi tạo mới) → xoá phòng đã chọn.
+  const departmentId = form.watch('departmentId')
+  useEffect(() => {
+    if (!editing && form.getValues('roomId')) form.setValue('roomId', null, { shouldDirty: true })
+  }, [departmentId, editing, form])
+  const [roomDialog, setRoomDialog] = useState(false)
   if (editing && detail.isPending) return <DetailSkeleton label={t('loading')} />
   if (editing && detail.error)
     return <ErrorState error={detail.error} onRetry={() => void detail.refetch()} />
   const company = detail.data
   const submit = async (values: EquipmentForm) => {
-    if (!editing && !values.departmentId) {
-      form.setError('departmentId', { type: 'required', message: t('common:form.required') })
-      return
-    }
     try {
       if (editing) {
         const before = toBody(fromDetail(detail.data!), false)
@@ -206,6 +219,8 @@ export function Component() {
         form.setError('code', { type: 'server', message: messageFor(error) })
       else if (isApiError(error) && error.code === 'EQUIPMENT_SERIAL_TAKEN')
         form.setError('serial', { type: 'server', message: messageFor(error) })
+      else if (isApiError(error) && error.code === 'ROOM_DEPARTMENT_MISMATCH')
+        form.setError('roomId', { type: 'server', message: messageFor(error) })
       else if (!applyServerErrors(form, error)) toast.error(messageFor(error))
     }
   }
@@ -318,6 +333,34 @@ export function Component() {
                   clearable
                 />
               )}
+              <div className="flex items-end gap-2">
+                <div className="min-w-0 flex-1">
+                  <AsyncSelectField
+                    control={form.control}
+                    name="roomId"
+                    label={t('fields.room')}
+                    queryKey={`rooms:${departmentId ?? ''}`}
+                    loadOptions={(q) => roomOptions(q, departmentId)}
+                    selectedOptions={catalogOption(company?.room)}
+                    resolveOption={resolveRoom}
+                    disabled={!departmentId}
+                    clearable
+                  />
+                </div>
+                {canQuickRoom && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    aria-label={t('fields.roomAdd')}
+                    title={t('fields.roomAdd')}
+                    disabled={!departmentId}
+                    onClick={() => setRoomDialog(true)}
+                  >
+                    <Plus />
+                  </Button>
+                )}
+              </div>
               <TextField control={form.control} name="location" label={t('fields.location')} />
               <AsyncSelectField
                 control={form.control}
@@ -395,6 +438,15 @@ export function Component() {
           <FormFooter onCancel={() => navigate(-1)} submitting={form.formState.isSubmitting} />
         </form>
       </Form>
+      <RoomFormDialog
+        open={roomDialog}
+        onOpenChange={setRoomDialog}
+        departmentId={departmentId ?? null}
+        departmentName={company?.department?.name}
+        onCreated={(room) =>
+          form.setValue('roomId', room.id, { shouldDirty: true, shouldValidate: true })
+        }
+      />
     </>
   )
 }

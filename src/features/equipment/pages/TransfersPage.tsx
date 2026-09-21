@@ -24,6 +24,7 @@ import { useCan } from '@/app/guards/useCan'
 import { ADM } from '@/routes/roles'
 import { useConfirm } from '@/components/confirm-dialog'
 import { departmentOptions, resolveDepartment } from '@/api/references'
+import { useRoomLookup } from '@/api/lookups'
 import { messageFor } from '@/api/errors'
 import { approveTransfer, cancelTransfer, listAllTransfers, rejectTransfer } from '../api'
 import { transferKeys } from '../hooks'
@@ -54,6 +55,8 @@ export function Component() {
   const equipmentNames = useEquipmentNames()
   const departmentNames = useDepartmentNames()
   const userNames = useUserNames(isAdm)
+  const roomNames = useRoomLookup()
+  const roomName = (id: string | null) => (id ? (roomNames.get(id)?.name ?? shortId(id)) : '—')
   const [row, setRow] = useState<Transfer | null>(null)
   const qc = useQueryClient()
   const { confirm, dialog } = useConfirm()
@@ -81,6 +84,11 @@ export function Component() {
       header: t('transfers.route'),
       cell: ({ row: r }) =>
         `${departmentName(r.original.fromDepartmentId)} → ${departmentName(r.original.toDepartmentId)}`,
+    },
+    {
+      id: 'toRoom',
+      header: t('transfers.toRoom'),
+      cell: ({ row: r }) => roomName(r.original.toRoomId),
     },
     { accessorKey: 'reason', header: t('transfers.reason') },
     {
@@ -187,6 +195,10 @@ export function Component() {
                 <div>
                   <dt className="text-xs text-muted-foreground">{t('transfers.toDepartment')}</dt>
                   <dd>{departmentName(row.toDepartmentId)}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-muted-foreground">{t('transfers.toRoom')}</dt>
+                  <dd>{roomName(row.toRoomId)}</dd>
                 </div>
                 <div>
                   <dt className="text-xs text-muted-foreground">{t('transfers.toLocation')}</dt>

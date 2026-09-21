@@ -27,6 +27,7 @@ export const equipmentSchema = z.object({
   decisionNo: optionalText,
   groupId: optionalId,
   departmentId: optionalId,
+  roomId: optionalId,
   location: optionalText,
   deptContactUserId: optionalId,
   staffInChargeUserId: optionalId,
@@ -48,6 +49,13 @@ export const equipmentSchema = z.object({
   }),
 })
 export type EquipmentForm = z.infer<typeof equipmentSchema>
+
+/** Tạo mới: Khoa/Phòng ban và Phòng bắt buộc (API không bắt `roomId` — quyết định UX, xem 09-rooms). */
+export const equipmentCreateSchema = equipmentSchema.superRefine((values, ctx) => {
+  if (!values.departmentId)
+    ctx.addIssue({ code: 'custom', path: ['departmentId'], message: 'Bắt buộc' })
+  if (!values.roomId) ctx.addIssue({ code: 'custom', path: ['roomId'], message: 'Bắt buộc' })
+})
 
 export const accessorySchema = z.object({
   code: optionalText,
@@ -138,6 +146,7 @@ export type CloneForm = z.infer<typeof cloneSchema>
 
 export const transferSchema = z.object({
   toDepartmentId: z.string().min(1, 'Bắt buộc'),
+  toRoomId: optionalId,
   toLocation: optionalText,
   reason: z.string().trim().min(1, 'Bắt buộc').max(2000),
 })

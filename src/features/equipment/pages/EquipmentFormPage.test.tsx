@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { server } from '@/test/msw/server'
@@ -11,17 +11,47 @@ beforeEach(() => {
   useAuthStore.getState().setSession(fakeSession())
   server.use(
     http.get('/v1/departments', () =>
-      HttpResponse.json({ items: [{ id: 'd1', code: 'HH', name: 'Huyết học' }] }),
+      HttpResponse.json({
+        items: [
+          { id: 'd1', code: 'HH', name: 'Huyết học' },
+          { id: 'd2', code: 'SH', name: 'Sinh hoá' },
+        ],
+      }),
     ),
+    http.get('/v1/catalogs/rooms', ({ request }) => {
+      roomUrls.push(request.url)
+      const departmentId = new URL(request.url).searchParams.get('departmentId')
+      return HttpResponse.json({
+        items: [
+          ...(departmentId === 'd1'
+            ? [{ id: 'r1', code: 'HH-P101', name: 'Phòng Huyết học', departmentId: 'd1' }]
+            : departmentId === 'd2'
+              ? [{ id: 'r2', code: 'SH-P201', name: 'Phòng Sinh hoá', departmentId: 'd2' }]
+              : []),
+          { id: 'r0', code: 'HT', name: 'Hội trường', departmentId: null },
+        ],
+        total: 2,
+      })
+    }),
     http.get('/v1/catalogs/:name', () => HttpResponse.json([])),
     http.get('/v1/users', () => HttpResponse.json({ items: [], total: 0, page: 1, limit: 50 })),
     http.get('/v1/attachments', () => HttpResponse.json([])),
   )
 })
 
+let roomUrls: string[] = []
+beforeEach(() => {
+  roomUrls = []
+})
+
 const formRoutes = [{ path: '/equipment/:id', element: <div>DETAIL</div> }]
 
-it('tạo máy: bắt buộc tên + khoa, gửi body hợp lệ', async () => {
+async function pickRoom(name: string) {
+  await userEvent.click(screen.getByRole('combobox', { name: 'Phòng' }))
+  await userEvent.click(await screen.findByRole('option', { name: new RegExp(name) }))
+}
+
+it('tạo máy: bắt buộc tên + khoa + phòng, gửi body hợp lệ có roomId', async () => {
   const saved: Record<string, unknown>[] = []
   server.use(
     http.post('/v1/equipment', async ({ request }) => {
@@ -42,17 +72,99 @@ it('tạo máy: bắt buộc tên + khoa, gửi body hợp lệ', async () => {
     route: '/equipment/new',
     routes: formRoutes,
   })
+  // chưa chọn khoa → ô Phòng và nút thêm phòng bị khoá
+  expect(screen.getByRole('combobox', { name: 'Phòng' })).toBeDisabled()
+  expect(screen.getByRole('button', { name: 'Thêm phòng mới' })).toBeDisabled()
   await userEvent.click(screen.getByRole('button', { name: 'Lưu' }))
-  expect(await screen.findByText('Bắt buộc')).toBeVisible()
+  expect((await screen.findAllByText('Bắt buộc')).length).toBeGreaterThanOrEqual(3)
   await userEvent.type(screen.getByLabelText('Tên'), 'Máy mới')
-  await userEvent.click(screen.getByRole('button', { name: 'Lưu' }))
-  await waitFor(() => expect(saved.length).toBe(0))
   await userEvent.click(screen.getByRole('combobox', { name: 'Khoa/Phòng ban' }))
   await userEvent.click(await screen.findByText('HH — Huyết học'))
+  // chọn khoa → phòng mở, còn thiếu phòng vẫn báo lỗi, không gửi
+  expect(screen.getByRole('combobox', { name: 'Phòng' })).toBeEnabled()
+  await userEvent.click(screen.getByRole('button', { name: 'Lưu' }))
+  expect(await screen.findByText('Bắt buộc')).toBeVisible()
+  await waitFor(() => expect(saved.length).toBe(0))
+  // danh sách phòng lọc theo khoa đã chọn (+ dùng chung)
+  await userEvent.click(screen.getByRole('combobox', { name: 'Phòng' }))
+  expect(await screen.findByRole('option', { name: /Phòng Huyết học/ })).toBeVisible()
+  expect(screen.getByRole('option', { name: /Hội trường/ })).toBeVisible()
+  expect(screen.queryByRole('option', { name: /Phòng Sinh hoá/ })).not.toBeInTheDocument()
+  expect(roomUrls.some((url) => url.includes('departmentId=d1'))).toBe(true)
+  await userEvent.click(screen.getByRole('option', { name: /Phòng Huyết học/ }))
+  await userEvent.type(screen.getByLabelText('Vị trí trong phòng'), 'Bàn 2')
   await userEvent.click(screen.getByRole('button', { name: 'Lưu' }))
   await waitFor(() => expect(saved.length).toBe(1))
-  expect(saved[0]).toMatchObject({ name: 'Máy mới', departmentId: 'd1' })
+  expect(saved[0]).toMatchObject({
+    name: 'Máy mới',
+    departmentId: 'd1',
+    roomId: 'r1',
+    location: 'Bàn 2',
+  })
   expect(saved[0]).not.toHaveProperty('code')
+})
+
+it('đổi khoa → xoá phòng đã chọn và nạp phòng của khoa mới', async () => {
+  renderWithProviders(<Component />, {
+    path: '/equipment/new',
+    route: '/equipment/new',
+    routes: formRoutes,
+  })
+  await userEvent.click(screen.getByRole('combobox', { name: 'Khoa/Phòng ban' }))
+  await userEvent.click(await screen.findByText('HH — Huyết học'))
+  await pickRoom('Phòng Huyết học')
+  expect(screen.getByRole('combobox', { name: 'Phòng' })).toHaveTextContent('Phòng Huyết học')
+  await userEvent.click(screen.getByRole('combobox', { name: 'Khoa/Phòng ban' }))
+  await userEvent.click(await screen.findByText('SH — Sinh hoá'))
+  await waitFor(() =>
+    expect(screen.getByRole('combobox', { name: 'Phòng' })).not.toHaveTextContent(
+      'Phòng Huyết học',
+    ),
+  )
+  await userEvent.click(screen.getByRole('combobox', { name: 'Phòng' }))
+  expect(await screen.findByRole('option', { name: /Phòng Sinh hoá/ })).toBeVisible()
+  expect(screen.queryByRole('option', { name: /Phòng Huyết học/ })).not.toBeInTheDocument()
+})
+
+it('nút "+" tạo phòng nhanh cho khoa đang chọn rồi tự chọn phòng đó', async () => {
+  const bodies: Record<string, unknown>[] = []
+  server.use(
+    http.post('/v1/catalogs/rooms', async ({ request }) => {
+      const body = (await request.json()) as Record<string, unknown>
+      bodies.push(body)
+      return HttpResponse.json(
+        { id: 'r9', code: 'HH-P109', name: body.name, departmentId: body.departmentId },
+        { status: 201 },
+      )
+    }),
+    http.get('/v1/catalogs/rooms/r9', () =>
+      HttpResponse.json({ id: 'r9', code: 'HH-P109', name: 'Phòng mới', departmentId: 'd1' }),
+    ),
+  )
+  renderWithProviders(<Component />, {
+    path: '/equipment/new',
+    route: '/equipment/new',
+    routes: formRoutes,
+  })
+  await userEvent.click(screen.getByRole('combobox', { name: 'Khoa/Phòng ban' }))
+  await userEvent.click(await screen.findByText('HH — Huyết học'))
+  await userEvent.click(screen.getByRole('button', { name: 'Thêm phòng mới' }))
+  const dialog = await screen.findByRole('dialog')
+  await userEvent.type(within(dialog).getByLabelText('Tên'), 'Phòng mới')
+  await userEvent.type(within(dialog).getByLabelText('Tầng'), 'Tầng 2')
+  await userEvent.click(within(dialog).getByRole('button', { name: 'Lưu' }))
+  await waitFor(() =>
+    expect(bodies[0]).toMatchObject({
+      name: 'Phòng mới',
+      departmentId: 'd1',
+      floor: 'Tầng 2',
+      roomType: 'other',
+    }),
+  )
+  expect(bodies[0]).not.toHaveProperty('code')
+  await waitFor(() =>
+    expect(screen.getByRole('combobox', { name: 'Phòng' })).toHaveTextContent('Phòng mới'),
+  )
 })
 
 it('gắn lỗi trùng serial vào field', async () => {
@@ -80,6 +192,7 @@ it('gắn lỗi trùng serial vào field', async () => {
   await userEvent.type(screen.getByLabelText('Tên'), 'Máy mới')
   await userEvent.click(screen.getByRole('combobox', { name: 'Khoa/Phòng ban' }))
   await userEvent.click(await screen.findByText('HH — Huyết học'))
+  await pickRoom('Phòng Huyết học')
   await userEvent.type(screen.getByLabelText('Serial'), 'DUP')
   await userEvent.click(screen.getByRole('button', { name: 'Lưu' }))
   expect(await screen.findByText('Số serial đã tồn tại')).toBeVisible()
@@ -107,6 +220,8 @@ it('sửa máy: khoá mã máy và không gửi code/departmentId', async () => 
   const codeInput = await screen.findByLabelText('Mã máy')
   expect(codeInput).toBeDisabled()
   expect(screen.queryByRole('combobox', { name: 'Khoa/Phòng ban' })).not.toBeInTheDocument()
+  // sửa: phòng hiện tại giữ nguyên (không bị xoá bởi reset), chọn được theo khoa của máy
+  expect(screen.getByRole('combobox', { name: 'Phòng' })).toHaveTextContent('Phòng Huyết học')
   await userEvent.clear(screen.getByLabelText('Nguyên giá'))
   await userEvent.type(screen.getByLabelText('Nguyên giá'), '2500000')
   expect(screen.getByLabelText('Nguyên giá')).toHaveValue('2500000')

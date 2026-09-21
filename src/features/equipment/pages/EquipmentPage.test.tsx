@@ -25,7 +25,22 @@ beforeEach(() => {
       urls.push(request.url)
       return HttpResponse.json({ items: [listRow], total: 1, page: 1, limit: 20 })
     }),
-    http.get('/v1/departments', () => HttpResponse.json([])),
+    http.get('/v1/departments', () =>
+      HttpResponse.json([{ id: 'd1', code: 'HH', name: 'Huyết học' }]),
+    ),
+    http.get('/v1/departments/:id', () =>
+      HttpResponse.json({ id: 'd1', code: 'HH', name: 'Huyết học' }),
+    ),
+    http.get('/v1/catalogs/rooms', ({ request }) => {
+      urls.push(request.url)
+      return HttpResponse.json({
+        items: [{ id: 'r1', code: 'HH-P101', name: 'Phòng Huyết học', departmentId: 'd1' }],
+        total: 1,
+      })
+    }),
+    http.get('/v1/catalogs/rooms/:id', () =>
+      HttpResponse.json({ id: 'r1', code: 'HH-P101', name: 'Phòng Huyết học', departmentId: 'd1' }),
+    ),
     http.get('/v1/catalogs/equipment-groups', () => HttpResponse.json([])),
     http.get('/v1/catalogs/manufacturers', () => HttpResponse.json([])),
     http.get('/v1/users', () => HttpResponse.json({ items: [], total: 0, page: 1, limit: 200 })),
@@ -41,6 +56,32 @@ it('lists equipment and keeps filters on the URL', async () => {
   expect(screen.getByText('Máy huyết học')).toBeVisible()
   await userEvent.type(screen.getByLabelText('Tìm máy'), 'huyet')
   await waitFor(() => expect(urls.some((u) => u.includes('q=huyet'))).toBe(true))
+})
+
+it('cột Phòng sau Khoa/Phòng ban, sort=room; lọc Phòng theo khoa đang lọc và reset khi đổi khoa', async () => {
+  const { router } = renderWithProviders(<Component />)
+  await screen.findByRole('link', { name: 'TB-2026-00001' })
+  const headers = screen.getAllByRole('columnheader').map((h) => h.textContent ?? '')
+  expect(headers.indexOf('Phòng')).toBe(headers.indexOf('Khoa/Phòng ban') + 1)
+  expect(screen.getByRole('cell', { name: 'Phòng Huyết học' })).toBeVisible()
+  await userEvent.click(screen.getByRole('button', { name: 'Sắp xếp: Phòng' }))
+  await waitFor(() => expect(urls.at(-1)).toContain('sort=room'))
+
+  await userEvent.click(screen.getByRole('combobox', { name: 'Khoa/Phòng ban' }))
+  await userEvent.click(await screen.findByRole('option', { name: /Huyết học/ }))
+  await waitFor(() => expect(router.state.location.search).toContain('departmentId=d1'))
+  await userEvent.click(screen.getByRole('combobox', { name: 'Phòng' }))
+  await userEvent.click(await screen.findByRole('option', { name: /Phòng Huyết học/ }))
+  await waitFor(() => expect(router.state.location.search).toContain('roomId=r1'))
+  expect(urls.some((u) => u.includes('/v1/catalogs/rooms') && u.includes('departmentId=d1'))).toBe(
+    true,
+  )
+  await waitFor(() =>
+    expect(urls.some((u) => u.includes('/v1/equipment') && u.includes('roomId=r1'))).toBe(true),
+  )
+  // đổi/bỏ khoa → roomId bị xoá
+  await userEvent.click(screen.getByRole('button', { name: 'Bỏ HH — Huyết học' }))
+  await waitFor(() => expect(router.state.location.search).not.toContain('roomId=r1'))
 })
 
 it('chỉ sort các cột API cho phép và cột khoa gửi departmentId', async () => {

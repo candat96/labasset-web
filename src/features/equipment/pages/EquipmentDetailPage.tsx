@@ -24,6 +24,7 @@ import { ErrorState } from '@/components/page/ErrorState'
 import {
   ArrowRightLeft,
   Building2,
+  DoorOpen,
   Copy,
   Cpu,
   FileText,
@@ -86,7 +87,14 @@ import { dayRangeToIso } from '@/lib/format/date-range'
 import { useCan } from '@/app/guards/useCan'
 import { ADM, STAFF } from '@/routes/roles'
 import { applyServerErrors, isApiError, messageFor } from '@/api/errors'
-import { departmentOptions, resolveCatalogItem, resolveDepartment } from '@/api/references'
+import {
+  departmentOptions,
+  resolveCatalogItem,
+  resolveDepartment,
+  resolveRoom,
+  roomOptions,
+} from '@/api/references'
+import { useRoomLookup } from '@/api/lookups'
 import { useAuthStore } from '@/stores/auth.store'
 import { assistantPath } from '@/lib/ai-link'
 import * as api from '../api'
@@ -231,6 +239,7 @@ export function Component() {
             {row.department?.name && (
               <PageMeta icon={<Building2 />}>{row.department.name}</PageMeta>
             )}
+            {row.room?.name && <PageMeta icon={<DoorOpen />}>{row.room.name}</PageMeta>}
             {row.location && <PageMeta icon={<MapPin />}>{row.location}</PageMeta>}
             {row.staffInCharge?.fullName && (
               <PageMeta icon={<User />}>{row.staffInCharge.fullName}</PageMeta>
@@ -330,6 +339,7 @@ export function Component() {
               columns={1}
               items={[
                 { label: t('fields.department'), value: row.department?.name },
+                { label: t('fields.room'), value: row.room?.name },
                 { label: t('fields.location'), value: row.location },
                 { label: t('fields.serial'), value: row.serial },
                 { label: t('fields.manufacturer'), value: row.manufacturer?.name },
@@ -541,6 +551,7 @@ function Overview({ row }: { row: NonNullable<ReturnType<typeof useEquipment>['d
   ]
   const operation: DataListItem[] = [
     { label: t('fields.department'), value: row.department?.name },
+    { label: t('fields.room'), value: row.room?.name },
     { label: t('fields.location'), value: row.location },
     { label: t('fields.deptContact'), value: row.deptContact?.fullName },
     { label: t('fields.staffInCharge'), value: row.staffInCharge?.fullName },
@@ -2126,6 +2137,7 @@ function TransfersTab({
   const { t } = useTranslation('equipment')
   const qc = useQueryClient()
   const { confirm, dialog } = useConfirm()
+  const roomNames = useRoomLookup()
   const list = useQuery({
     queryKey: equipmentKeys.transfers(id),
     queryFn: () => api.listTransfers(id),
@@ -2181,7 +2193,19 @@ function TransfersTab({
                 <ArrowRightLeft className="text-subtle size-3.5" aria-hidden />
                 {departmentName(row.toDepartmentId)}
               </span>
-              {row.toLocation && <span className="text-muted-foreground">· {row.toLocation}</span>}
+              {(row.toRoomId || row.toLocation) && (
+                <span className="text-muted-foreground">
+                  ·{' '}
+                  {[
+                    row.toRoomId
+                      ? (roomNames.get(row.toRoomId)?.name ?? shortId(row.toRoomId))
+                      : null,
+                    row.toLocation,
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')}
+                </span>
+              )}
             </div>
             <p className="mt-1">{row.reason}</p>
             <p className="text-xs text-muted-foreground">
@@ -2562,12 +2586,18 @@ function TransferDialog({
   const qc = useQueryClient()
   const form = useForm<TransferForm>({
     resolver: zodResolver(transferSchema),
-    defaultValues: { toDepartmentId: '', toLocation: '', reason: '' },
+    defaultValues: { toDepartmentId: '', toRoomId: null, toLocation: '', reason: '' },
   })
+  // Phòng đích phụ thuộc khoa đích: đổi khoa → xoá phòng đã chọn.
+  const toDepartmentId = form.watch('toDepartmentId')
+  useEffect(() => {
+    if (form.getValues('toRoomId')) form.setValue('toRoomId', null)
+  }, [toDepartmentId, form])
   const save = useMutation({
     mutationFn: (values: TransferForm) =>
       api.createTransfer(id, {
         toDepartmentId: values.toDepartmentId,
+        toRoomId: values.toRoomId || null,
         toLocation: values.toLocation || null,
         reason: values.reason,
       }),
@@ -2596,6 +2626,16 @@ function TransferDialog({
         queryKey="departments"
         loadOptions={departmentOptions}
         resolveOption={resolveDepartment}
+        clearable
+      />
+      <AsyncSelectField
+        control={form.control}
+        name="toRoomId"
+        label={t('transfers.toRoom')}
+        queryKey={`rooms:${toDepartmentId || ''}`}
+        loadOptions={(q) => roomOptions(q, toDepartmentId || null)}
+        resolveOption={resolveRoom}
+        disabled={!toDepartmentId}
         clearable
       />
       <TextField control={form.control} name="toLocation" label={t('transfers.toLocation')} />

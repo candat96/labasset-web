@@ -22,7 +22,9 @@ import {
   departmentOptions,
   resolveCatalogItem,
   resolveDepartment,
+  resolveRoom,
   resolveUser,
+  roomOptions,
 } from '@/api/references'
 import { messageFor } from '@/api/errors'
 import { catalogOptions, downloadQrLabels, exportEquipment, userOptions } from '../api'
@@ -30,8 +32,16 @@ import { useEquipmentList } from '../hooks'
 import { shortId, useUserNames } from '../components/lookups'
 import { EQUIPMENT_STATUSES, type Equipment, type EquipmentListParams } from '../types'
 
-/** Chỉ 6 cột API cho phép sort (xem `ListEquipmentDto`). */
-const SORT_KEYS = ['code', 'name', 'status', 'departmentId', 'commissionedAt', 'updatedAt'] as const
+/** Chỉ 7 cột API cho phép sort (xem `ListEquipmentDto`). */
+const SORT_KEYS = [
+  'code',
+  'name',
+  'status',
+  'departmentId',
+  'room',
+  'commissionedAt',
+  'updatedAt',
+] as const
 type SortKey = (typeof SORT_KEYS)[number]
 const isSortKey = (value: string | undefined): value is SortKey =>
   !!value && (SORT_KEYS as readonly string[]).includes(value)
@@ -51,6 +61,7 @@ export function Component() {
   const table = useServerTable({
     filterKeys: [
       'departmentId',
+      'roomId',
       'groupId',
       'status',
       'manufacturerId',
@@ -66,6 +77,7 @@ export function Component() {
     limit: table.params.limit,
     q: table.params.q || undefined,
     departmentId: f.departmentId,
+    roomId: f.roomId,
     groupId: f.groupId,
     manufacturerId: f.manufacturerId,
     staffId: f.staffId,
@@ -127,6 +139,13 @@ export function Component() {
         header: t('fields.department'),
         meta: { label: t('fields.department') },
         cell: ({ row }) => row.original.departmentName ?? '—',
+      },
+      {
+        id: 'room',
+        accessorFn: (row) => row.room?.name ?? '',
+        header: t('fields.room'),
+        meta: { label: t('fields.room') },
+        cell: ({ row }) => row.original.room?.name ?? '—',
       },
       {
         accessorKey: 'groupName',
@@ -311,9 +330,26 @@ export function Component() {
                 loadOptions={departmentOptions}
                 value={f.departmentId ?? null}
                 onChange={(value) =>
-                  table.setFilter('departmentId', typeof value === 'string' ? value : undefined)
+                  table.setFilters({
+                    departmentId: typeof value === 'string' ? value : undefined,
+                    roomId: undefined,
+                  })
                 }
                 resolveOption={resolveDepartment}
+                clearable
+                showLabel={false}
+              />
+            </FilterField>
+            <FilterField label={t('filters.room')}>
+              <AsyncSelect
+                label={t('filters.room')}
+                queryKey={`rooms:${f.departmentId ?? ''}`}
+                loadOptions={(q) => roomOptions(q, f.departmentId)}
+                value={f.roomId ?? null}
+                onChange={(value) =>
+                  table.setFilter('roomId', typeof value === 'string' ? value : undefined)
+                }
+                resolveOption={resolveRoom}
                 clearable
                 showLabel={false}
               />

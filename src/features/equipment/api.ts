@@ -235,6 +235,8 @@ export function listTransfers(id: string) {
 // sinh ra là DTO của kho; giữ shape thật của điều chuyển máy ở đây.
 export interface EquipmentTransferBody {
   toDepartmentId: string
+  /** Phòng đích — phải thuộc khoa đích hoặc dùng chung; duyệt → máy gán phòng. */
+  toRoomId?: string | null
   toLocation?: string | null
   reason: string
 }

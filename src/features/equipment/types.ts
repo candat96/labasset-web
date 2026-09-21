@@ -42,6 +42,7 @@ export interface EquipmentListParams {
   limit?: number
   q?: string
   departmentId?: string
+  roomId?: string
   groupId?: string
   manufacturerId?: string
   staffId?: string
@@ -49,7 +50,7 @@ export interface EquipmentListParams {
   maintenanceDueBefore?: string
   calibrationDueBefore?: string
   calibrationOverdue?: boolean
-  sort?: 'code' | 'name' | 'status' | 'departmentId' | 'commissionedAt' | 'updatedAt'
+  sort?: 'code' | 'name' | 'status' | 'departmentId' | 'room' | 'commissionedAt' | 'updatedAt'
   order?: 'asc' | 'desc'
 }
 

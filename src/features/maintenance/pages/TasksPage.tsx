@@ -113,7 +113,10 @@ export function Component() {
       {
         id: 'location',
         header: t('location', { defaultValue: 'Vị trí' }),
-        cell: ({ row }) => equipmentNames.get(row.original.equipmentId)?.location ?? '—',
+        cell: ({ row }) =>
+          [row.original.room?.name, equipmentNames.get(row.original.equipmentId)?.location]
+            .filter(Boolean)
+            .join(' · ') || '—',
       },
       {
         accessorKey: 'type',

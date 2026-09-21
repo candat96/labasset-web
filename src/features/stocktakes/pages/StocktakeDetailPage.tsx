@@ -225,7 +225,9 @@ function CountPanel({
         match ? (
           <p>
             {match.code} · {match.name} {t('bookSuffix')} {formatQty(match.bookQty)}
-            {match.location ? ` · ${match.location}` : ''}
+            {[match.room?.name, match.location].filter(Boolean).length
+              ? ` · ${[match.room?.name, match.location].filter(Boolean).join(' · ')}`
+              : ''}
           </p>
         ) : (
           <p className="text-muted-foreground">{t('notInBook')}</p>

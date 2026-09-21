@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { api, unwrapAs } from './client'
 import { pageQuery } from './paths'
-import { allDepartments, catalogOptions, userOptions } from './references'
+import { allDepartments, catalogOptions, roomOptions, userOptions } from './references'
 import type { components } from './schema'
 
 /**
@@ -46,6 +46,20 @@ export function useDepartmentLookup(enabled = true) {
     staleTime: 300_000,
   })
   return useMemo(() => new Map((query.data ?? []).map((row) => [row.id, row.name])), [query.data])
+}
+
+/** id phòng → `{ name, code }` (mọi phòng đang hoạt động, ≤ 100 — dùng cho cột Phòng đích điều chuyển). */
+export function useRoomLookup(enabled = true) {
+  const query = useQuery({
+    queryKey: ['reference', 'rooms', 'lookup'],
+    queryFn: () => roomOptions('', undefined, true),
+    enabled,
+    staleTime: 300_000,
+  })
+  return useMemo(
+    () => new Map((query.data ?? []).map((row) => [row.id, { name: row.name, code: row.code }])),
+    [query.data],
+  )
 }
 
 /** `GET /v1/users` chỉ mở cho ADM → vai trò khác truyền `enabled=false`. */

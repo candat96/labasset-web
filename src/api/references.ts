@@ -125,3 +125,43 @@ export async function resolveCatalogItem(
     return null
   }
 }
+
+export interface RoomReference extends Reference {
+  departmentId: string | null
+  building?: string | null
+  floor?: string | null
+}
+
+/** Phòng theo Khoa/Phòng ban (+ phòng dùng chung). Không truyền `departmentId` → mọi phòng. */
+export async function roomOptions(
+  q: string,
+  departmentId?: string | null,
+  all = false,
+): Promise<RoomReference[]> {
+  const result = await unwrapAs<{ items: RoomReference[] } | RoomReference[]>(
+    api.GET('/v1/catalogs/rooms', {
+      params: {
+        query: pageQuery({
+          q: q || undefined,
+          page: 1,
+          limit: 100,
+          isActive: true,
+          departmentId: departmentId ?? undefined,
+          includeShared: true,
+          all: all || undefined,
+        }),
+      },
+    }),
+  )
+  return Array.isArray(result) ? result : result.items
+}
+
+export async function resolveRoom(id: string): Promise<RoomReference | null> {
+  try {
+    return await unwrapAs<RoomReference>(
+      api.GET('/v1/catalogs/rooms/{id}', { params: { path: { id } } }),
+    )
+  } catch {
+    return null
+  }
+}

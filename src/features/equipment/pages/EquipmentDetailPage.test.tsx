@@ -443,3 +443,49 @@ it('tổng quan hiện đủ trường thông tin chung', async () => {
   expect((await screen.findAllByText('Giờ chạy'))[0]).toBeVisible()
   expect(await screen.findByText('1.000 ₫')).toBeVisible()
 })
+
+it('tạo điều chuyển: Phòng đích khoá tới khi chọn khoa đích, nạp theo khoa đích và gửi toRoomId', async () => {
+  const bodies: Record<string, unknown>[] = []
+  const roomUrls: string[] = []
+  server.use(
+    http.get('/v1/departments', () =>
+      HttpResponse.json({ items: [{ id: 'd2', code: 'SH', name: 'Sinh hoá' }] }),
+    ),
+    http.get('/v1/catalogs/rooms', ({ request }) => {
+      roomUrls.push(request.url)
+      return HttpResponse.json({
+        items: [{ id: 'r2', code: 'SH-P201', name: 'Phòng Sinh hoá', departmentId: 'd2' }],
+        total: 1,
+      })
+    }),
+    http.post(`${equipmentApi}/transfers`, async ({ request }) => {
+      bodies.push((await request.json()) as Record<string, unknown>)
+      return HttpResponse.json({ ...transfer, id: 't9' }, { status: 201 })
+    }),
+  )
+  render('transfers')
+  await userEvent.click((await screen.findAllByRole('button', { name: 'Điều chuyển' }))[0]!)
+  const dialog = within(await screen.findByRole('dialog'))
+  expect(dialog.getByRole('combobox', { name: 'Phòng đích' })).toBeDisabled()
+  await userEvent.click(dialog.getByRole('combobox', { name: 'Khoa đích' }))
+  await userEvent.click(await screen.findByRole('option', { name: /Sinh hoá/ }))
+  expect(dialog.getByRole('combobox', { name: 'Phòng đích' })).toBeEnabled()
+  await userEvent.click(dialog.getByRole('combobox', { name: 'Phòng đích' }))
+  await userEvent.click(await screen.findByRole('option', { name: /Phòng Sinh hoá/ }))
+  expect(roomUrls.some((url) => url.includes('departmentId=d2'))).toBe(true)
+  await userEvent.type(dialog.getByLabelText('Lý do'), 'Sắp xếp lại')
+  await userEvent.click(dialog.getByRole('button', { name: 'Tạo' }))
+  await waitFor(() =>
+    expect(bodies[0]).toMatchObject({
+      toDepartmentId: 'd2',
+      toRoomId: 'r2',
+      reason: 'Sắp xếp lại',
+    }),
+  )
+})
+
+it('chi tiết hiện chip và dòng Phòng', async () => {
+  render()
+  expect((await screen.findAllByText('Phòng Huyết học')).length).toBeGreaterThanOrEqual(1)
+  expect(screen.getAllByText('Phòng')[0]).toBeVisible()
+})

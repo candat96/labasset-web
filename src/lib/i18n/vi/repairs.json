@@ -246,6 +246,7 @@
     "code": "Mã",
     "equipment": "Máy",
     "department": "Khoa/Phòng ban",
+    "room": "Phòng",
     "severity": "Mức khẩn",
     "equipmentDown": "Ngừng",
     "equipmentDownLabel": "Máy ngừng",

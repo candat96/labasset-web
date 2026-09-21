@@ -28,7 +28,7 @@ test('D18 việc của tôi lấy bộ đếm tổng hợp từ API thật', asy
 test('D1 chạy báo cáo cố định và tải Excel', async ({ page }) => {
   await login(page)
   await page.goto('/reports')
-  await expect(page.locator('aside button')).toHaveCount(18)
+  await expect(page.locator('aside button')).toHaveCount(19)
   await page.getByRole('button', { name: 'Hiện trạng thiết bị' }).click()
   const responsePromise = page.waitForResponse(
     (response) =>

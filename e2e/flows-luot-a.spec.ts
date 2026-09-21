@@ -42,7 +42,7 @@ test('02 thiết bị: tạo máy → đổi trạng thái → thêm linh kiện
   await page.getByRole('tab', { name: 'Điều chuyển' }).click()
   await page.getByRole('button', { name: 'Tạo điều chuyển' }).click()
   const transferDialog = page.getByRole('dialog', { name: 'Điều chuyển' })
-  await pickOption(page, 'Đến khoa', undefined, { last: true })
+  await pickOption(page, 'Khoa đích', undefined, { last: true })
   await transferDialog.getByLabel('Lý do').fill('E2E điều chuyển')
   await transferDialog.getByRole('button', { name: SUBMIT }).click()
   await expect(transferDialog).toBeHidden()

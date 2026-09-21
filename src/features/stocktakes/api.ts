@@ -63,6 +63,7 @@ export type StocktakePackageItem = {
   lotNo?: string
   bookQty?: string
   location?: string
+  room?: { code?: string; name?: string } | null
 }
 
 type PackageRaw = {
@@ -78,6 +79,7 @@ type PackageRaw = {
     lotNo?: string | null
     bookQty?: string | null
     location?: string | null
+    room?: { code?: string; name?: string } | null
   }>
 }
 
@@ -96,6 +98,7 @@ export function stocktakePackage(id: string) {
       lotNo: item.lotNo ?? undefined,
       bookQty: item.bookQty ?? undefined,
       location: item.location ?? undefined,
+      room: item.room ?? null,
     })),
   }))
 }

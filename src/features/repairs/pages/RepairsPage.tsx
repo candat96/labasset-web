@@ -117,6 +117,11 @@ export function Component() {
         cell: ({ row }) => departmentName(row.original.reportedDepartmentId),
       },
       {
+        id: 'room',
+        header: t('columns.room', { defaultValue: 'Phòng' }),
+        cell: ({ row }) => row.original.room?.name ?? '—',
+      },
+      {
         accessorKey: 'severity',
         header: t('columns.severity'),
         cell: ({ row }) => <StatusBadge value={row.original.severity} map={faultSeverityMap} />,

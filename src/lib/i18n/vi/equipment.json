@@ -63,7 +63,10 @@
     "group": "Nhóm",
     "groupEquipment": "Nhóm máy",
     "department": "Khoa/Phòng ban",
-    "location": "Vị trí",
+    "location": "Vị trí trong phòng",
+    "room": "Phòng",
+    "roomAdd": "Thêm phòng mới",
+    "roomLocation": "Phòng · vị trí",
     "deptContact": "Liên hệ khoa",
     "staffInCharge": "Phụ trách VT",
     "testTypes": "Loại xét nghiệm",
@@ -123,7 +126,8 @@
     "dueIn30": "Đến hạn kiểm định 30 ngày",
     "overdue": "Quá hạn kiểm định",
     "selectRow": "Chọn {{code}}",
-    "all": "Tất cả"
+    "all": "Tất cả",
+    "room": "Phòng"
   },
   "tabs": {
     "overview": "Tổng quan",
@@ -309,8 +313,9 @@
     "equipment": "Máy",
     "route": "Từ → đến",
     "fromDepartment": "Từ khoa",
-    "toDepartment": "Đến khoa",
-    "toLocation": "Vị trí đến",
+    "toDepartment": "Khoa đích",
+    "toRoom": "Phòng đích",
+    "toLocation": "Vị trí đến (trong phòng)",
     "reason": "Lý do",
     "status": "Trạng thái",
     "requestedBy": "Người tạo",
