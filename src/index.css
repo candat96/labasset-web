@@ -6,21 +6,24 @@
 /* Token "Clean Enterprise" theo docs/superpowers/handoff/web/10-design-polish.md
    (đồng bộ bộ màu với mobile handoff 08 §1). */
 :root {
-  --background: #f1f5f9;
+  --background: #ffffff;
+  --surface-2: #f6f8fc;
   --foreground: #0f172a;
   --card: #ffffff;
   --card-foreground: #0f172a;
   --popover: #ffffff;
   --popover-foreground: #0f172a;
-  --primary: #0369a1;
+  --primary: #2977ff;
   --primary-foreground: #ffffff;
-  --primary-hover: #075985;
-  --secondary: #e0f2fe;
-  --secondary-foreground: #075985;
-  --muted: #eef2f7;
+  --primary-hover: #1e63e0;
+  --primary-pressed: #1a55c2;
+  --primary-soft: #e8f0ff;
+  --secondary: #e8f0ff;
+  --secondary-foreground: #1747a6;
+  --muted: #eef2f8;
   --muted-foreground: #64748b;
   --subtle: #94a3b8;
-  --accent: #f1f5f9;
+  --accent: #eef2f8;
   --accent-foreground: #0f172a;
   --destructive: #b91c1c;
   --destructive-foreground: #ffffff;
@@ -32,39 +35,49 @@
   --warning: #b45309;
   --warning-bg: #fef3c7;
   --warning-fg: #92400e;
-  --info: #0369a1;
-  --info-bg: #e0f2fe;
-  --info-fg: #075985;
-  --neutral-bg: #f1f5f9;
+  --info: #2977ff;
+  --info-bg: #e8f0ff;
+  --info-fg: #1747a6;
+  --neutral-bg: #eef2f8;
   --neutral-fg: #475569;
   --border: #e2e8f0;
   --divider: #eef2f7;
   --input: #e2e8f0;
-  --ring: #0369a1;
-  --shadow-card: 0 1px 2px rgb(15 23 42 / 0.06), 0 1px 3px rgb(15 23 42 / 0.1);
-  --sidebar: #0f172a;
-  --sidebar-foreground: #cbd5e1;
-  --sidebar-primary: #38bdf8;
-  --sidebar-primary-foreground: #0f172a;
-  --sidebar-accent: #1e293b;
+  --ring: #2977ff;
+  --shadow-card:
+    0 0 0 1px rgb(16 24 40 / 0.06), 0 1px 2px rgb(16 24 40 / 0.04),
+    0 4px 14px -8px rgb(16 24 40 / 0.08);
+  --shadow-card-hover:
+    0 0 0 1px rgb(41 119 255 / 0.25), 0 2px 4px rgb(16 24 40 / 0.05),
+    0 10px 24px -10px rgb(16 24 40 / 0.16);
+  --shadow-pop: 0 8px 24px -8px rgb(16 24 40 / 0.18), 0 0 0 1px rgb(16 24 40 / 0.04);
+  --gradient-brand: linear-gradient(135deg, #2977ff 0%, #5c9bff 100%);
+  --sidebar: #0b1530;
+  --sidebar-foreground: #aab6cf;
+  --sidebar-primary: #5c9bff;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #16234a;
   --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #1c2739;
-  --sidebar-ring: #38bdf8;
-  --radius: 0.5rem;
+  --sidebar-border: #1a2a52;
+  --sidebar-ring: #5c9bff;
+  --radius: 0.625rem;
 }
 
 .dark {
   --background: #0b1220;
+  --surface-2: #0f182a;
   --foreground: #e5eaf2;
   --card: #151e2e;
   --card-foreground: #e5eaf2;
   --popover: #151e2e;
   --popover-foreground: #e5eaf2;
-  --primary: #38bdf8;
-  --primary-foreground: #0b1220;
-  --primary-hover: #7dd3fc;
-  --secondary: #0c2a3f;
-  --secondary-foreground: #bae6fd;
+  --primary: #5c9bff;
+  --primary-foreground: #0b1a33;
+  --primary-hover: #7db0ff;
+  --primary-pressed: #4a8cf5;
+  --primary-soft: #132b57;
+  --secondary: #132b57;
+  --secondary-foreground: #bfd6ff;
   --muted: #1a2434;
   --muted-foreground: #94a3b8;
   --subtle: #64748b;
@@ -80,29 +93,33 @@
   --warning: #fbbf24;
   --warning-bg: #2e2109;
   --warning-fg: #fbbf24;
-  --info: #38bdf8;
-  --info-bg: #0c2a3f;
-  --info-fg: #38bdf8;
+  --info: #5c9bff;
+  --info-bg: #132b57;
+  --info-fg: #7db0ff;
   --neutral-bg: #1a2434;
   --neutral-fg: #94a3b8;
   --border: #22304a;
   --divider: #1c2739;
   --input: #22304a;
-  --ring: #38bdf8;
+  --ring: #5c9bff;
   --shadow-card: 0 0 0 1px var(--border);
-  --sidebar: #0b1220;
-  --sidebar-foreground: #cbd5e1;
-  --sidebar-primary: #38bdf8;
-  --sidebar-primary-foreground: #0b1220;
-  --sidebar-accent: #1a2434;
+  --shadow-card-hover: 0 0 0 1px #2d3d5e;
+  --shadow-pop: 0 8px 24px -8px rgb(0 0 0 / 0.6), 0 0 0 1px var(--border);
+  --gradient-brand: linear-gradient(135deg, #2977ff 0%, #5c9bff 100%);
+  --sidebar: #070d1f;
+  --sidebar-foreground: #aab6cf;
+  --sidebar-primary: #5c9bff;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #131f3f;
   --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #1c2739;
-  --sidebar-ring: #38bdf8;
+  --sidebar-border: #182648;
+  --sidebar-ring: #5c9bff;
 }
 
 @theme inline {
   --font-sans: 'Inter Variable', system-ui, 'Segoe UI', Roboto, Arial, sans-serif;
   --color-background: var(--background);
+  --color-surface-2: var(--surface-2);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
@@ -111,6 +128,8 @@
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary-hover: var(--primary-hover);
+  --color-primary-pressed: var(--primary-pressed);
+  --color-primary-soft: var(--primary-soft);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -146,10 +165,13 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
   --shadow-card: var(--shadow-card);
+  --shadow-card-hover: var(--shadow-card-hover);
+  --shadow-pop: var(--shadow-pop);
   --radius-sm: calc(var(--radius) - 2px);
   --radius-md: var(--radius);
   --radius-lg: calc(var(--radius) + 2px);
   --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
 }
 
 @layer base {
@@ -159,7 +181,30 @@
   body {
     @apply bg-background text-foreground text-sm antialiased;
     font-variant-numeric: tabular-nums;
+    font-feature-settings: 'cv11', 'ss01';
   }
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.01em;
+  }
+  ::selection {
+    background: color-mix(in oklab, var(--primary) 20%, transparent);
+  }
+}
+@utility bg-brand-gradient {
+  background-image: var(--gradient-brand);
+}
+@utility shadow-card {
+  box-shadow: var(--shadow-card);
+}
+@utility shadow-card-hover {
+  box-shadow: var(--shadow-card-hover);
+}
+@utility shadow-pop {
+  box-shadow: var(--shadow-pop);
+}
+@layer base {
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,

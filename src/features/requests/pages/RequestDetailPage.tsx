@@ -6,7 +6,19 @@ import Big from 'big.js'
 import { Link, useNavigate, useParams } from 'react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { PageHeader } from '@/components/page/PageHeader'
+import { PageHeader, PageMeta } from '@/components/page/PageHeader'
+import { SectionCard } from '@/components/page/SectionCard'
+import { DataList } from '@/components/page/DataList'
+import { Timeline } from '@/components/timeline'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { Building2, CalendarClock, User, Wrench, ClipboardList } from 'lucide-react'
 import { ErrorState } from '@/components/page/ErrorState'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -20,7 +32,7 @@ import { StatusBadge } from '@/components/status-badge'
 import { AuditTrail } from '@/components/audit-trail'
 import { useConfirm } from '@/components/confirm-dialog'
 import { requestStatusMap } from '@/lib/status-maps'
-import { formatDateTime } from '@/lib/format/date'
+import { formatDate, formatDateTime } from '@/lib/format/date'
 import { formatQty } from '@/lib/format/number'
 import { useCan } from '@/app/guards/useCan'
 import { ADM, HEADS, STAFF } from '@/routes/roles'
@@ -222,7 +234,31 @@ export function Component() {
         })}
       </FormDialog>
       <PageHeader
+        eyebrow={t('title')}
         title={row.code}
+        meta={
+          <>
+            {row.departmentName && <PageMeta icon={<Building2 />}>{row.departmentName}</PageMeta>}
+            {(row.requesterName ?? row.requester?.fullName) && (
+              <PageMeta icon={<User />}>{row.requesterName ?? row.requester?.fullName}</PageMeta>
+            )}
+            {row.neededBy && (
+              <PageMeta icon={<CalendarClock />}>
+                {t('neededBy')}: {formatDate(row.neededBy)}
+              </PageMeta>
+            )}
+            {row.repairTicketId && (
+              <PageMeta icon={<Wrench />}>
+                <Link
+                  className="text-primary hover:underline"
+                  to={`/repairs/${row.repairTicketId}`}
+                >
+                  {row.repairTicket?.code ?? row.repairTicketId}
+                </Link>
+              </PageMeta>
+            )}
+          </>
+        }
         badge={
           <div className="flex gap-1">
             <StatusBadge value={row.status} map={requestStatusMap} />
@@ -348,61 +384,179 @@ export function Component() {
           </div>
         }
       />
-      {row.repairTicketId && (
-        <p className="mb-2 text-sm">
-          {t('repairTicket')}{' '}
-          <Link className="text-primary hover:underline" to={`/repairs/${row.repairTicketId}`}>
-            {row.repairTicket?.code ?? row.repairTicketId}
-          </Link>
-        </p>
-      )}
-      <table className="mb-4 w-full text-sm">
-        <thead>
-          <tr className="text-left">
-            <th>{t('supply')}</th>
-            <th>{t('qtyRequested')}</th>
-            <th>{t('approve')}</th>
-            <th>{t('qtyIssued')}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {row.items.map((item) => (
-            <tr key={item.id} className="border-t">
-              <td>{item.supply?.name ?? item.supplyId}</td>
-              <td>{formatQty(item.qtyRequested)}</td>
-              <td>{formatQty(item.qtyApproved)}</td>
-              <td>{formatQty(item.qtyIssued)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <h2 className="mb-2 font-medium">{t('comments')}</h2>
-      <ul className="mb-2 space-y-2 text-sm">
-        {row.comments.map((item) => (
-          <li key={item.id}>
-            <span className="text-muted-foreground">{formatDateTime(item.createdAt)}</span>{' '}
-            {item.body}
-          </li>
-        ))}
-      </ul>
-      <Textarea
-        value={comment}
-        onChange={(e) => setComment(e.target.value)}
-        maxLength={2000}
-        aria-label={t('comments')}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
-            event.preventDefault()
-            void sendComment()
-          }
-        }}
-      />
-      <Button className="mt-2" onClick={() => void sendComment()}>
-        {t('send')}
-      </Button>
-      <div className="mt-6">
-        <AuditTrail entityType="request" entityId={id} />
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="min-w-0 space-y-5">
+          <SectionCard
+            title={t('items')}
+            description={`${row.items.length} ${t('supply').toLowerCase()}`}
+            flush
+          >
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="pl-5">{t('supply')}</TableHead>
+                  <TableHead className="text-right">{t('qtyRequested')}</TableHead>
+                  <TableHead className="text-right">{t('approve')}</TableHead>
+                  <TableHead className="pr-5 text-right">{t('qtyIssued')}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {row.items.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell className="pl-5 font-medium">
+                      {item.supply?.name ?? item.supplyId}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {formatQty(item.qtyRequested)}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {item.qtyApproved == null ? (
+                        <span className="text-subtle">—</span>
+                      ) : (
+                        formatQty(item.qtyApproved)
+                      )}
+                    </TableCell>
+                    <TableCell className="pr-5 text-right tabular-nums">
+                      {item.qtyIssued == null || item.qtyIssued === '0' ? (
+                        <span className="text-subtle">—</span>
+                      ) : (
+                        formatQty(item.qtyIssued)
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </SectionCard>
+
+          <SectionCard
+            title={t('comments')}
+            description={`${row.comments.length} ${t('comments').toLowerCase()}`}
+          >
+            <ul className="mb-4 space-y-3 text-sm">
+              {row.comments.map((item) => (
+                <li key={item.id} className="flex gap-3">
+                  <div className="bg-primary-soft text-primary flex size-8 shrink-0 items-center justify-center rounded-full text-[12px] font-bold">
+                    {(item.user?.fullName ?? '?').slice(0, 1).toUpperCase()}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-[13px] font-semibold">
+                        {item.user?.fullName ?? '—'}
+                      </span>
+                      <span className="text-subtle text-[12px]">
+                        {formatDateTime(item.createdAt)}
+                      </span>
+                    </div>
+                    <p className="bg-surface-2 mt-1 rounded-lg px-3 py-2 text-[13.5px] leading-5 whitespace-pre-wrap">
+                      {item.body}
+                    </p>
+                  </div>
+                </li>
+              ))}
+              {row.comments.length === 0 && (
+                <li className="text-muted-foreground text-[13px]">
+                  {t('noComments', { defaultValue: 'Chưa có bình luận' })}
+                </li>
+              )}
+            </ul>
+            <Textarea
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              maxLength={2000}
+              rows={3}
+              placeholder={t('commentPlaceholder', {
+                defaultValue: 'Viết bình luận… (Ctrl+Enter để gửi)',
+              })}
+              aria-label={t('comments')}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+                  event.preventDefault()
+                  void sendComment()
+                }
+              }}
+            />
+            <div className="mt-3 flex justify-end">
+              <Button onClick={() => void sendComment()} disabled={!comment.trim()}>
+                {t('send')}
+              </Button>
+            </div>
+          </SectionCard>
+        </div>
+
+        <div className="space-y-5">
+          <SectionCard title={t('info', { defaultValue: 'Thông tin' })}>
+            <DataList
+              columns={1}
+              items={[
+                {
+                  label: t('type'),
+                  value:
+                    row.type === 'supply'
+                      ? t('typeSupply')
+                      : t('typeRepair', { defaultValue: 'Sửa chữa' }),
+                },
+                {
+                  label: t('priority'),
+                  value:
+                    row.priority === 'urgent'
+                      ? t('urgent')
+                      : t('normal', { defaultValue: 'Bình thường' }),
+                },
+                { label: t('department'), value: row.departmentName },
+                { label: t('requester'), value: row.requesterName ?? row.requester?.fullName },
+                { label: t('neededBy'), value: row.neededBy ? formatDate(row.neededBy) : null },
+                { label: t('createdAt'), value: formatDateTime(row.createdAt) },
+                { label: t('reason'), value: row.reason, full: true },
+                ...(row.rejectedReason
+                  ? [
+                      {
+                        label: t('rejectedReason', { defaultValue: 'Lý do từ chối' }),
+                        value: row.rejectedReason,
+                        full: true,
+                      },
+                    ]
+                  : []),
+              ]}
+            />
+          </SectionCard>
+          <SectionCard title={t('history', { defaultValue: 'Lịch sử' })}>
+            <Timeline
+              events={[
+                {
+                  at: row.createdAt,
+                  title: t('createdAt'),
+                  by: row.requesterName ?? undefined,
+                  tone: 'muted',
+                  icon: <ClipboardList />,
+                },
+                ...(row.submittedAt
+                  ? [{ at: row.submittedAt, title: t('submit'), tone: 'primary' as const }]
+                  : []),
+                ...(row.deptApprovedAt
+                  ? [{ at: row.deptApprovedAt, title: t('deptApprove'), tone: 'success' as const }]
+                  : []),
+                ...(row.approvedAt
+                  ? [{ at: row.approvedAt, title: t('approve'), tone: 'success' as const }]
+                  : []),
+                ...(row.receivedAt
+                  ? [
+                      {
+                        at: row.receivedAt,
+                        title: t('receive'),
+                        tone: 'success' as const,
+                        summary: row.receiveNote,
+                      },
+                    ]
+                  : []),
+              ]}
+            />
+          </SectionCard>
+        </div>
       </div>
+      <SectionCard title={t('audit', { defaultValue: 'Nhật ký thay đổi' })} className="mt-5">
+        <AuditTrail entityType="request" entityId={id} />
+      </SectionCard>
     </>
   )
 }

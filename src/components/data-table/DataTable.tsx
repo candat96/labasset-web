@@ -122,21 +122,21 @@ export function DataTable<T>({
   const hasFilterBar = isValidElement(toolbarLeft) && toolbarLeft.type === FilterBar
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-end justify-between gap-2">
+    <div className="bg-card shadow-card overflow-hidden rounded-xl" data-slot="data-table">
+      <div className="bg-surface-2 border-divider flex items-end justify-between gap-3 border-b px-4 py-3">
         <div className="min-w-0 flex-1">
           {toolbarLeft && (hasFilterBar ? toolbarLeft : <FilterBar>{toolbarLeft}</FilterBar>)}
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
           {toolbarRight}
           <ColumnToggle table={table} />
         </div>
       </div>
-      <div className="bg-card overflow-auto rounded-xl shadow-[var(--shadow-card)] border-0 dark:border dark:border-border">
+      <div className="overflow-auto">
         <Table>
-          <TableHeader className="bg-muted sticky top-0 z-10">
+          <TableHeader className="bg-card sticky top-0 z-10">
             {table.getHeaderGroups().map((hg) => (
-              <TableRow key={hg.id} className="hover:bg-muted border-divider">
+              <TableRow key={hg.id} className="hover:bg-transparent border-divider">
                 {hg.headers.map((h) => {
                   const meta = h.column.columnDef.meta
                   const canSort = h.column.getCanSort()

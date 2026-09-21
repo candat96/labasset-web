@@ -11,16 +11,19 @@ function tokenBlock(selector: string): string {
   return css.slice(start, end)
 }
 
-describe('theme tokens (handoff 10 — Clean Enterprise)', () => {
-  it('dùng primary #0369a1 và không còn #0284c7', () => {
+describe('theme tokens (BRAND-COLOR #2977FF, nền trắng)', () => {
+  it('dùng primary #2977ff (BRAND-COLOR) và không còn màu sky cũ', () => {
     expect(css).not.toContain('#0284c7')
-    expect(tokenBlock(':root')).toContain('--primary: #0369a1')
-    expect(tokenBlock(':root')).toContain('--ring: #0369a1')
+    expect(css).not.toContain('#0369a1')
+    expect(tokenBlock(':root')).toContain('--primary: #2977ff')
+    expect(tokenBlock(':root')).toContain('--primary-hover: #1e63e0')
+    expect(tokenBlock(':root')).toContain('--ring: #2977ff')
   })
 
-  it('nền xám rõ + card trắng, có bóng card', () => {
+  it('nền trắng (người dùng chốt) + surface-2 + card trắng có bóng/viền', () => {
     const root = tokenBlock(':root')
-    expect(root).toContain('--background: #f1f5f9')
+    expect(root).toContain('--background: #ffffff')
+    expect(root).toContain('--surface-2: #f6f8fc')
     expect(root).toContain('--card: #ffffff')
     expect(root).toContain('--shadow-card:')
   })
@@ -35,10 +38,9 @@ describe('theme tokens (handoff 10 — Clean Enterprise)', () => {
 
   it('sidebar tối và có màu accent item active', () => {
     const root = tokenBlock(':root')
-    expect(root).toContain('--sidebar: #0f172a')
-    expect(root).toContain('--sidebar-foreground: #cbd5e1')
-    expect(root).toContain('--sidebar-accent: #1e293b')
-    expect(root).toContain('--sidebar-primary: #38bdf8')
+    expect(root).toContain('--sidebar: #0b1530')
+    expect(root).toContain('--sidebar-accent: #16234a')
+    expect(root).toContain('--sidebar-primary: #5c9bff')
   })
 
   it('dark dùng nền tonal #0b1220, card #151e2e viền #22304a', () => {
@@ -57,7 +59,7 @@ describe('theme tokens (handoff 10 — Clean Enterprise)', () => {
     expect(theme).toContain('--color-divider:')
   })
 
-  it('radius 0.5rem (card 12px, control 8px)', () => {
-    expect(tokenBlock(':root')).toContain('--radius: 0.5rem')
+  it('radius 0.625rem (control 10px, card 14px)', () => {
+    expect(tokenBlock(':root')).toContain('--radius: 0.625rem')
   })
 })

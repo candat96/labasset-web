@@ -34,7 +34,7 @@ export function DataTablePagination({
   const to = Math.min(page * limit, total)
   const pages = Math.max(1, Math.ceil(total / limit))
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 px-1 py-2 text-[13px]">
+    <div className="border-divider flex flex-wrap items-center justify-between gap-3 border-t px-4 py-2.5 text-[13px]">
       <div className="text-muted-foreground flex items-center gap-2">
         <span>
           {t('table.showing', {

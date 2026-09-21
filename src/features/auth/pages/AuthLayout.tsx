@@ -1,7 +1,13 @@
 import { Navigate, Outlet, useLocation } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { FlaskConical } from 'lucide-react'
+import { ShieldCheck, ScanLine, BellRing } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth.store'
+
+const POINTS = [
+  { icon: ShieldCheck, text: 'Hồ sơ máy, bảo dưỡng, kiểm định — một nơi, đúng hạn.' },
+  { icon: ScanLine, text: 'Quét QR nhập/xuất kho, kiểm kê offline trên điện thoại.' },
+  { icon: BellRing, text: 'Cảnh báo hoá chất sắp hết, máy hỏng, phiếu chờ duyệt.' },
+]
 
 export function Component() {
   const { t } = useTranslation()
@@ -11,35 +17,56 @@ export function Component() {
   if (token && pathname !== '/reset-password') return <Navigate to="/" replace />
   return (
     <div className="bg-background flex min-h-svh">
-      {/* Panel trái: wordmark + tagline trên nền primary đậm (≥ lg) */}
-      <div className="bg-primary text-primary-foreground hidden lg:flex lg:w-[42%] xl:w-[46%] flex-col justify-between p-10">
-        <div className="flex items-center gap-2.5">
-          <div className="bg-white/15 flex size-9 items-center justify-center rounded-md">
-            <FlaskConical className="size-5" aria-hidden />
+      {/* Panel trái: gradient thương hiệu + logo + điểm nhấn (≥ lg) */}
+      <div className="bg-brand-gradient relative hidden flex-col justify-between overflow-hidden p-10 text-white lg:flex lg:w-[44%] xl:w-[46%]">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -top-32 -right-24 size-96 rounded-full bg-white/10 blur-3xl"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -bottom-40 -left-20 size-96 rounded-full bg-[#0b1530]/25 blur-3xl"
+        />
+        <div className="relative flex items-center gap-3">
+          <img
+            src="/brand/logo-64.png"
+            alt=""
+            aria-hidden
+            className="size-10 rounded-xl bg-white p-1 shadow-[0_4px_16px_rgb(0_0_0/0.2)]"
+          />
+          <span className="text-[17px] font-bold tracking-[-0.01em]">{t('app.name')}</span>
+        </div>
+        <div className="relative space-y-6">
+          <div className="space-y-2">
+            <h1 className="text-[32px] leading-10 font-bold tracking-[-0.02em]">
+              {t('app.tagline')}
+            </h1>
+            <p className="max-w-md text-[14px] leading-6 text-white/80">
+              Phần mềm nội bộ cho phòng Vật tư – Thiết bị y tế: máy xét nghiệm, vật tư, hoá chất và
+              mọi việc đi kèm.
+            </p>
           </div>
-          <span className="text-base font-bold tracking-tight">{t('app.name')}</span>
+          <ul className="space-y-3">
+            {POINTS.map(({ icon: Icon, text }) => (
+              <li key={text} className="flex items-center gap-3 text-[13.5px] text-white/90">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white/15">
+                  <Icon className="size-4" aria-hidden />
+                </span>
+                {text}
+              </li>
+            ))}
+          </ul>
         </div>
-        <div className="space-y-3">
-          <h1 className="text-[26px] leading-9 font-semibold tracking-[-0.01em]">
-            {t('app.tagline')}
-          </h1>
-          <p className="text-primary-foreground/70 max-w-sm text-[13px]">
-            LabAsset — phần mềm nội bộ quản lý máy xét nghiệm, vật tư và hoá chất cho phòng Vật tư –
-            TBYT.
-          </p>
-        </div>
-        <p className="text-primary-foreground/50 text-xs">
+        <p className="relative text-xs text-white/60">
           © {new Date().getFullYear()} {t('app.name')}
         </p>
       </div>
-      {/* Phải: form card bóng, căn giữa */}
-      <div className="flex flex-1 items-center justify-center p-4">
-        <div className="w-full max-w-sm space-y-6">
-          <div className="flex items-center justify-center gap-2 lg:hidden">
-            <div className="bg-primary text-primary-foreground flex size-9 items-center justify-center rounded-md">
-              <FlaskConical className="size-5" aria-hidden />
-            </div>
-            <div className="text-lg font-semibold">{t('app.name')}</div>
+      {/* Phải: form card, căn giữa */}
+      <div className="flex flex-1 items-center justify-center p-6">
+        <div className="w-full max-w-[400px] space-y-6">
+          <div className="flex items-center justify-center gap-2.5 lg:hidden">
+            <img src="/brand/logo-64.png" alt="" aria-hidden className="size-10" />
+            <div className="text-lg font-bold">{t('app.name')}</div>
           </div>
           <Outlet />
         </div>

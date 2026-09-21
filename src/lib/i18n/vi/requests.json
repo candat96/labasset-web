@@ -85,5 +85,12 @@
   "createdAt": "Tạo lúc",
   "from": "Từ ngày",
   "to": "Đến ngày",
-  "department": "Khoa"
+  "department": "Khoa",
+  "items": "Danh sách vật tư",
+  "info": "Thông tin",
+  "history": "Lịch sử",
+  "audit": "Nhật ký thay đổi",
+  "noComments": "Chưa có bình luận",
+  "commentPlaceholder": "Viết bình luận… (Ctrl+Enter để gửi)",
+  "rejectedReason": "Lý do từ chối"
 }

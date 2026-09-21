@@ -10,9 +10,13 @@ import {
   Wrench,
   type LucideIcon,
 } from 'lucide-react'
-import { Card, CardContent } from '@/components/ui/card'
+import { SectionCard } from '@/components/page/SectionCard'
+import { Button } from '@/components/ui/button'
+import { useAuthStore } from '@/stores/auth.store'
+import { useUiStore } from '@/stores/ui.store'
+import { format } from 'date-fns'
+import { vi } from 'date-fns/locale'
 import { Skeleton } from '@/components/ui/skeleton'
-import { PageHeader } from '@/components/page/PageHeader'
 import { KpiCard } from '@/components/kpi-card'
 import type { StatusTone } from '@/components/page/StatusBadge'
 import { formatNumber } from '@/lib/format/number'
@@ -51,21 +55,64 @@ const TONE: Record<StatusTone, 'success' | 'warning' | 'danger' | 'info' | 'neut
 }
 
 /** Palette biểu đồ Clean Enterprise (handoff 10 §6). */
-const CHART_COLORS = ['#0369a1', '#0ea5e9', '#14b8a6', '#f59e0b', '#ef4444', '#64748b']
+const CHART_COLORS = ['#2977ff', '#60a5fa', '#14b8a6', '#f59e0b', '#ef4444', '#64748b']
 
 export function Component() {
   const { t } = useTranslation('dashboard')
   const q = useDashboard()
+  const user = useAuthStore((s) => s.user)
+  const hospitalName = useUiStore((s) => s.hospitalName)
+  const today = format(new Date(), 'EEEE, dd/MM/yyyy', { locale: vi })
 
   return (
     <>
-      <PageHeader title={t('title')} description={t('desc')} />
+      <section
+        className="bg-brand-gradient relative mb-5 overflow-hidden rounded-2xl px-6 py-5 text-white shadow-[0_12px_32px_-12px_rgb(41_119_255/0.5)]"
+        data-testid="dashboard-hero"
+      >
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -top-24 -right-16 size-72 rounded-full bg-white/10 blur-2xl"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -bottom-28 left-1/3 size-64 rounded-full bg-white/10 blur-2xl"
+        />
+        <div className="relative flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="text-[12.5px] font-medium text-white/75 capitalize">{today}</p>
+            <h1 className="mt-1 text-[26px] leading-8 font-bold tracking-[-0.02em]">
+              Xin chào, {user?.fullName ?? user?.username ?? 'bạn'} 👋
+            </h1>
+            <p className="mt-1 text-[13.5px] text-white/80">
+              {hospitalName ? `${hospitalName} · ` : ''}
+              {t('desc')}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="secondary" className="bg-white text-primary hover:bg-white/90">
+              <Link to="/repairs/new">
+                <Wrench aria-hidden /> Báo hỏng
+              </Link>
+            </Button>
+            <Button
+              asChild
+              variant="outline"
+              className="border-white/40 bg-white/10 text-white hover:bg-white/20 hover:text-white"
+            >
+              <Link to="/requests/new">
+                <FileText aria-hidden /> Tạo phiếu yêu cầu
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </section>
       {q.error && (
         <p role="alert" className="text-destructive mb-3 text-sm">
           Không tải được dashboard.
         </p>
       )}
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {q.isPending
           ? Array.from({ length: 7 }).map((_, i) => <Skeleton key={i} className="h-28" />)
           : q.data?.kpis.map((k) => {
@@ -85,29 +132,41 @@ export function Component() {
       </div>
       {!q.isPending && q.data && (
         <>
-          <div className="mt-4 grid gap-4 lg:grid-cols-2">
-            <Card>
-              <CardContent className="h-72 p-4">
-                <h2 className="mb-2 text-[15px] font-semibold">Sửa chữa 6 tháng</h2>
-                <ResponsiveContainer width="100%" height="90%">
+          <div className="mt-5 grid gap-5 lg:grid-cols-2">
+            <SectionCard title="Sửa chữa 6 tháng" description="Số phiếu theo trạng thái">
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={q.data.kpis
                       .filter((row) => row.key.startsWith('repair.'))
                       .map((row) => ({ name: row.title, value: Number(row.value) }))}
                   >
-                    <CartesianGrid stroke="var(--color-divider)" strokeDasharray="3 3" />
+                    <CartesianGrid stroke="var(--color-divider)" vertical={false} />
                     <XAxis dataKey="name" hide />
-                    <YAxis allowDecimals={false} />
+                    <YAxis
+                      allowDecimals={false}
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 12, fill: 'var(--color-muted-foreground)' }}
+                      width={28}
+                    />
                     <Tooltip />
-                    <Bar dataKey="value" fill={CHART_COLORS[0]} radius={[4, 4, 0, 0]} />
+                    <Bar
+                      dataKey="value"
+                      fill={CHART_COLORS[0]}
+                      radius={[6, 6, 0, 0]}
+                      maxBarSize={40}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="h-72 p-4">
-                <h2 className="mb-2 text-[15px] font-semibold">Cảnh báo kho theo loại</h2>
-                <ResponsiveContainer width="100%" height="90%">
+              </div>
+            </SectionCard>
+            <SectionCard
+              title="Cảnh báo kho theo loại"
+              description="Vật tư dưới mức tối thiểu, sắp hết hạn"
+            >
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
                       data={q.data.kpis
@@ -127,10 +186,10 @@ export function Component() {
                     <Tooltip />
                   </PieChart>
                 </ResponsiveContainer>
-              </CardContent>
-            </Card>
+              </div>
+            </SectionCard>
           </div>
-          <div className="mt-4 grid gap-4 lg:grid-cols-3">
+          <div className="mt-5 grid gap-5 lg:grid-cols-3">
             {[
               { title: 'Việc của tôi', to: '/my-tasks', text: '5 việc ưu tiên' },
               {
@@ -140,19 +199,22 @@ export function Component() {
               },
               { title: 'Thông báo chưa đọc', to: '/notifications', text: '5 thông báo mới nhất' },
             ].map((item) => (
-              <Card key={item.title}>
-                <CardContent className="p-4">
-                  <h2 className="text-[15px] font-semibold">{item.title}</h2>
-                  <p className="text-muted-foreground my-2 text-sm">{item.text}</p>
-                  <Link
-                    className="text-primary inline-flex items-center gap-1 text-[13px] font-medium hover:underline"
-                    to={item.to}
-                  >
-                    Mở danh sách
-                    <ArrowRight className="size-3.5" aria-hidden />
-                  </Link>
-                </CardContent>
-              </Card>
+              <Link
+                key={item.title}
+                to={item.to}
+                className="bg-card shadow-card hover:shadow-card-hover group flex items-center gap-4 rounded-xl p-4 transition-[box-shadow,transform] hover:-translate-y-px"
+              >
+                <div className="bg-primary-soft text-primary flex size-11 shrink-0 items-center justify-center rounded-lg">
+                  <ArrowRight
+                    className="size-5 transition-transform group-hover:translate-x-0.5"
+                    aria-hidden
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-[14.5px] font-semibold">{item.title}</h2>
+                  <p className="text-muted-foreground text-[13px]">{item.text}</p>
+                </div>
+              </Link>
             ))}
           </div>
         </>
