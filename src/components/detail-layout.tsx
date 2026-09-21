@@ -25,7 +25,9 @@ export function DetailLayout({
     <>
       <PageHeader title={name} description={code} badge={badge} actions={actions} />
       <div className="grid gap-4 lg:grid-cols-[280px_1fr]">
-        <aside className="bg-card rounded-lg border p-3">{information}</aside>
+        <aside className="bg-card rounded-xl p-4 shadow-[var(--shadow-card)] border-0 dark:border dark:border-border lg:self-start">
+          {information}
+        </aside>
         <Tabs
           value={current}
           onValueChange={(tab) =>
@@ -36,7 +38,7 @@ export function DetailLayout({
             })
           }
         >
-          <TabsList className="max-w-full overflow-x-auto">
+          <TabsList variant="line" className="max-w-full overflow-x-auto">
             {tabs.map((t) => (
               <TabsTrigger key={t.value} value={t.value}>
                 {t.label}
