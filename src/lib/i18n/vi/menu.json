@@ -57,5 +57,7 @@
     "changePassword": "Đổi mật khẩu",
     "sessions": "Phiên đăng nhập",
     "help": "Hướng dẫn sử dụng"
-  }
+  },
+  "searchPlaceholder": "Tìm chức năng…",
+  "searchEmpty": "Không có chức năng nào khớp"
 }

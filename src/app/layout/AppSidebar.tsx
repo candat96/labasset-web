@@ -1,5 +1,7 @@
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { NavLink, useLocation } from 'react-router'
+import { NavLink, useLocation, useNavigate } from 'react-router'
+import { Search, X } from 'lucide-react'
 import {
   Sidebar,
   SidebarContent,
@@ -24,13 +26,38 @@ function visibleGroups(user: ReturnType<typeof useAuthStore.getState>['user']): 
     .filter((g) => g.items.length > 0)
 }
 
+/** Bỏ dấu tiếng Việt để tìm menu không cần gõ dấu. */
+function fold(text: string): string {
+  return text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .toLowerCase()
+}
+
 export function AppSidebar() {
   const { t } = useTranslation()
   const user = useAuthStore((s) => s.user)
   const hospitalName = useUiStore((s) => s.hospitalName)
   const { pathname } = useLocation()
   const active = findMenuItem(pathname)?.item.path
-  const groups = visibleGroups(user)
+  const navigate = useNavigate()
+  const [q, setQ] = useState('')
+  const allGroups = visibleGroups(user)
+  const groups = useMemo(() => {
+    const term = fold(q.trim())
+    if (!term) return allGroups
+    return allGroups
+      .map((g) => ({
+        ...g,
+        items: g.items.filter(
+          (i) => fold(t(i.labelKey)).includes(term) || fold(t(g.labelKey)).includes(term),
+        ),
+      }))
+      .filter((g) => g.items.length > 0)
+  }, [allGroups, q, t])
+  const first = groups[0]?.items[0]
 
   return (
     <Sidebar collapsible="icon">
@@ -62,8 +89,44 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
+        <div className="relative mt-1 group-data-[collapsible=icon]:hidden">
+          <Search
+            className="text-sidebar-foreground/50 pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2"
+            aria-hidden
+          />
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && first) {
+                navigate(first.path)
+                setQ('')
+              }
+              if (e.key === 'Escape') setQ('')
+            }}
+            placeholder={t('menu:searchPlaceholder', { defaultValue: 'Tìm chức năng…' })}
+            aria-label={t('menu:searchPlaceholder', { defaultValue: 'Tìm chức năng…' })}
+            className="h-8 w-full rounded-md bg-white/6 pr-7 pl-8 text-[13px] text-white placeholder:text-sidebar-foreground/50 outline-none ring-sidebar-ring/60 focus:bg-white/10 focus:ring-2"
+            data-testid="sidebar-search"
+          />
+          {q && (
+            <button
+              type="button"
+              onClick={() => setQ('')}
+              aria-label="Xoá"
+              className="text-sidebar-foreground/60 absolute top-1/2 right-2 -translate-y-1/2 hover:text-white"
+            >
+              <X className="size-3.5" aria-hidden />
+            </button>
+          )}
+        </div>
       </SidebarHeader>
       <SidebarContent className="gap-0 px-2 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/10">
+        {q && groups.length === 0 && (
+          <p className="text-sidebar-foreground/60 px-3 py-4 text-[13px]">
+            {t('menu:searchEmpty', { defaultValue: 'Không có chức năng nào khớp' })}
+          </p>
+        )}
         {groups.map((g) => (
           <SidebarGroup key={g.key} className="py-1.5">
             <SidebarGroupLabel>{t(g.labelKey)}</SidebarGroupLabel>
