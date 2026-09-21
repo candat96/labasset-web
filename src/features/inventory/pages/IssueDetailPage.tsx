@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { PageHeader, PageMeta } from '@/components/page/PageHeader'
 import { SectionCard } from '@/components/page/SectionCard'
+import { ActionMenu } from '@/components/page/ActionMenu'
 import { DataList } from '@/components/page/DataList'
 import { DetailSkeleton } from '@/components/page/DetailSkeleton'
 import { Timeline } from '@/components/timeline'
@@ -18,10 +19,15 @@ import {
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { ErrorState } from '@/components/page/ErrorState'
 import {
+  Ban,
   Building2,
   CalendarDays,
   ClipboardList,
   PackageMinus,
+  Pencil,
+  PenLine,
+  Printer,
+  Trash2,
   TriangleAlert,
   User,
   Warehouse,
@@ -150,79 +156,98 @@ export function Component() {
           </>
         }
         actions={
-          <div className="flex flex-wrap gap-2">
-            {canWrite && row.status === 'draft' && (
-              <Button asChild variant="outline">
-                <Link to={`/stock/issues/${id}/edit`}>{t('edit')}</Link>
-              </Button>
-            )}
-            {canWrite && row.status === 'draft' && (
-              <Button variant="outline" onClick={() => setSignOpen(true)}>
-                {t('receiverSignature')}
-              </Button>
-            )}
-            {canWrite && row.status === 'draft' && (
-              <Button
-                variant="outline"
-                onClick={async () => {
-                  if ((await confirm({ title: t('deleteConfirm'), destructive: true })) === false)
-                    return
-                  try {
-                    await deleteIssue(id)
-                    invalidate()
-                    navigate('/stock/issues')
-                  } catch (error) {
-                    toast.error(messageFor(error))
-                  }
-                }}
-              >
-                {t('delete')}
-              </Button>
-            )}
-            {canWrite && row.status === 'draft' && (
-              <Button
-                onClick={async () => {
-                  if ((await confirm({ title: t('postConfirm') })) === false) return
-                  try {
-                    await postIssue(id)
-                    toast.success(t('posted'))
-                    invalidate()
-                  } catch (error) {
-                    toast.error(messageFor(error))
-                  }
-                }}
-              >
-                {t('post')}
-              </Button>
-            )}
-            {isAdm && row.status === 'posted' && (
-              <Button
-                variant="outline"
-                onClick={async () => {
-                  if ((await confirm({ title: t('cancelConfirm'), destructive: true })) === false)
-                    return
-                  try {
-                    await cancelIssue(id)
-                    invalidate()
-                  } catch (error) {
-                    toast.error(messageFor(error))
-                  }
-                }}
-              >
-                {t('cancel')}
-              </Button>
-            )}
-            <Button
-              variant="outline"
-              onClick={() =>
-                void downloadFile(`/v1/stock/issues/${id}/print.pdf`, {}, `${row.code}.pdf`).catch(
-                  (error) => toast.error(messageFor(error)),
-                )
-              }
-            >
-              {t('print')}
-            </Button>
-          </div>
+          <ActionMenu
+            items={[
+              canWrite &&
+                row.status === 'draft' && {
+                  key: 'post',
+                  label: t('post'),
+                  variant: 'primary' as const,
+                  onClick: () => {
+                    void (async () => {
+                      if ((await confirm({ title: t('postConfirm') })) === false) return
+                      try {
+                        await postIssue(id)
+                        toast.success(t('posted'))
+                        invalidate()
+                      } catch (error) {
+                        toast.error(messageFor(error))
+                      }
+                    })()
+                  },
+                },
+              canWrite &&
+                row.status === 'draft' && {
+                  key: 'edit',
+                  label: t('edit'),
+                  icon: <Pencil />,
+                  to: `/stock/issues/${id}/edit`,
+                },
+              canWrite &&
+                row.status === 'draft' && {
+                  key: 'sign',
+                  label: t('receiverSignature'),
+                  icon: <PenLine />,
+                  onClick: () => setSignOpen(true),
+                },
+              {
+                key: 'print',
+                label: t('print'),
+                icon: <Printer />,
+                onClick: () =>
+                  void downloadFile(
+                    `/v1/stock/issues/${id}/print.pdf`,
+                    {},
+                    `${row.code}.pdf`,
+                  ).catch((error) => toast.error(messageFor(error))),
+              },
+              isAdm &&
+                row.status === 'posted' && {
+                  key: 'cancel',
+                  label: t('cancel'),
+                  variant: 'destructive' as const,
+                  icon: <Ban />,
+                  separator: true,
+                  onClick: () => {
+                    void (async () => {
+                      if (
+                        (await confirm({ title: t('cancelConfirm'), destructive: true })) === false
+                      )
+                        return
+                      try {
+                        await cancelIssue(id)
+                        invalidate()
+                      } catch (error) {
+                        toast.error(messageFor(error))
+                      }
+                    })()
+                  },
+                },
+              canWrite &&
+                row.status === 'draft' && {
+                  key: 'delete',
+                  label: t('delete'),
+                  variant: 'destructive' as const,
+                  icon: <Trash2 />,
+                  separator: true,
+                  onClick: () => {
+                    void (async () => {
+                      if (
+                        (await confirm({ title: t('deleteConfirm'), destructive: true })) === false
+                      )
+                        return
+                      try {
+                        await deleteIssue(id)
+                        invalidate()
+                        navigate('/stock/issues')
+                      } catch (error) {
+                        toast.error(messageFor(error))
+                      }
+                    })()
+                  },
+                },
+            ]}
+          />
         }
       />
       {row.fefoWarning && (

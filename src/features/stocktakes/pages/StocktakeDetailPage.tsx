@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { PageHeader, PageMeta } from '@/components/page/PageHeader'
 import { SectionCard } from '@/components/page/SectionCard'
+import { ActionMenu } from '@/components/page/ActionMenu'
 import { DataList } from '@/components/page/DataList'
 import { DetailSkeleton } from '@/components/page/DetailSkeleton'
 import { EmptyState } from '@/components/page/EmptyState'
@@ -17,7 +18,17 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { ErrorState } from '@/components/page/ErrorState'
-import { CalendarClock, PackageSearch, ScanLine, Users, Warehouse } from 'lucide-react'
+import {
+  Ban,
+  CalendarClock,
+  FileDown,
+  GitCompare,
+  PackageSearch,
+  ScanLine,
+  UserPlus,
+  Users,
+  Warehouse,
+} from 'lucide-react'
 import { formatDateTime } from '@/lib/format/date'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -516,76 +527,87 @@ export function Component() {
           </>
         }
         actions={
-          <div className="flex flex-wrap gap-2">
-            {isStaff && ['draft', 'open'].includes(row.status) && (
-              <Button
-                variant="outline"
-                onClick={() => {
-                  assignForm.reset({ userId: '', locations: '', warehouseIds: [] })
-                  setAssignOpen(true)
-                }}
-              >
-                {t('assign')}
-              </Button>
-            )}
-            {isStaff && row.status === 'draft' && (
-              <Button onClick={() => void run(t('openConfirm'), () => api.openStocktake(id))}>
-                {t('open')}
-              </Button>
-            )}
-            {isStaff && row.status === 'open' && (
-              <Button onClick={() => void run(t('startCountConfirm'), () => api.startCounting(id))}>
-                {t('startCount')}
-              </Button>
-            )}
-            {isStaff && row.status === 'counting' && (
-              <Button onClick={() => void run(t('reviewConfirm'), () => api.reviewStocktake(id))}>
-                {t('review')}
-              </Button>
-            )}
-            {isAdm && row.status === 'review' && (
-              <Button
-                onClick={async () => {
-                  try {
-                    await api.closeStocktake(id)
-                    toast.success(t('updated'))
-                    invalidateSession()
-                  } catch (error) {
-                    if (isApiError(error) && error.code === 'STOCKTAKE_UNRESOLVED_DIFFS')
-                      setTab('items')
-                    if (isApiError(error) && error.code === 'STOCKTAKE_EXTRAS_UNRESOLVED')
-                      setTab('extras')
-                    toast.error(messageFor(error))
-                  }
-                }}
-              >
-                {t('close')}
-              </Button>
-            )}
-            {isStaff && row.status !== 'closed' && row.status !== 'cancelled' && (
-              <Button
-                variant="outline"
-                onClick={() => void run(t('cancelConfirm'), () => api.cancelStocktake(id))}
-              >
-                {t('cancel')}
-              </Button>
-            )}
-            {['review', 'closed'].includes(row.status) && (
-              <Button
-                variant="outline"
-                onClick={() =>
-                  api.downloadStocktakeReport(id).catch((error) => toast.error(messageFor(error)))
-                }
-              >
-                {t('report')}
-              </Button>
-            )}
-            {row.status === 'closed' && (
-              <Button variant="outline" onClick={() => setCompareOpen(true)}>
-                {t('compare')}
-              </Button>
-            )}
-          </div>
+          <ActionMenu
+            items={[
+              isStaff &&
+                row.status === 'draft' && {
+                  key: 'open',
+                  label: t('open'),
+                  variant: 'primary' as const,
+                  onClick: () => void run(t('openConfirm'), () => api.openStocktake(id)),
+                },
+              isStaff &&
+                row.status === 'open' && {
+                  key: 'start',
+                  label: t('startCount'),
+                  variant: 'primary' as const,
+                  onClick: () => void run(t('startCountConfirm'), () => api.startCounting(id)),
+                },
+              isStaff &&
+                row.status === 'counting' && {
+                  key: 'review',
+                  label: t('review'),
+                  variant: 'primary' as const,
+                  onClick: () => void run(t('reviewConfirm'), () => api.reviewStocktake(id)),
+                },
+              isAdm &&
+                row.status === 'review' && {
+                  key: 'close',
+                  label: t('close'),
+                  variant: 'primary' as const,
+                  onClick: () => {
+                    void (async () => {
+                      try {
+                        await api.closeStocktake(id)
+                        toast.success(t('updated'))
+                        invalidateSession()
+                      } catch (error) {
+                        if (isApiError(error) && error.code === 'STOCKTAKE_UNRESOLVED_DIFFS')
+                          setTab('items')
+                        if (isApiError(error) && error.code === 'STOCKTAKE_EXTRAS_UNRESOLVED')
+                          setTab('extras')
+                        toast.error(messageFor(error))
+                      }
+                    })()
+                  },
+                },
+              isStaff &&
+                ['draft', 'open'].includes(row.status) && {
+                  key: 'assign',
+                  label: t('assign'),
+                  icon: <UserPlus />,
+                  onClick: () => {
+                    assignForm.reset({ userId: '', locations: '', warehouseIds: [] })
+                    setAssignOpen(true)
+                  },
+                },
+              ['review', 'closed'].includes(row.status) && {
+                key: 'report',
+                label: t('report'),
+                icon: <FileDown />,
+                onClick: () =>
+                  void api
+                    .downloadStocktakeReport(id)
+                    .catch((error) => toast.error(messageFor(error))),
+              },
+              row.status === 'closed' && {
+                key: 'compare',
+                label: t('compare'),
+                icon: <GitCompare />,
+                onClick: () => setCompareOpen(true),
+              },
+              isStaff &&
+                row.status !== 'closed' &&
+                row.status !== 'cancelled' && {
+                  key: 'cancel',
+                  label: t('cancel'),
+                  variant: 'destructive' as const,
+                  icon: <Ban />,
+                  separator: true,
+                  onClick: () => void run(t('cancelConfirm'), () => api.cancelStocktake(id)),
+                },
+            ]}
+          />
         }
       />
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">

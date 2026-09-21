@@ -18,6 +18,7 @@ export function DetailLayout({
   meta,
   eyebrow,
   asideWidth = 300,
+  aliases,
 }: {
   code: string
   name: string
@@ -28,11 +29,13 @@ export function DetailLayout({
   meta?: ReactNode
   eyebrow?: string
   asideWidth?: number
+  /** Giá trị `?tab=` cũ → tab mới (giữ link/bookmark khi gộp tab). */
+  aliases?: Record<string, string>
 }) {
   const [params, setParams] = useSearchParams()
-  const current = tabs.some((t) => t.value === params.get('tab'))
-    ? params.get('tab')!
-    : tabs[0]?.value
+  const requested = params.get('tab') ?? ''
+  const resolved = aliases?.[requested] ?? requested
+  const current = tabs.some((t) => t.value === resolved) ? resolved : tabs[0]?.value
   return (
     <>
       <PageHeader

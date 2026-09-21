@@ -138,7 +138,10 @@
     "maintenance": "Bảo dưỡng–Kiểm định",
     "transfers": "Điều chuyển",
     "timeline": "Timeline",
-    "audit": "Lịch sử thay đổi"
+    "audit": "Lịch sử thay đổi",
+    "config": "Cấu hình",
+    "service": "Sửa chữa & bảo dưỡng",
+    "history": "Lịch sử"
   },
   "info": {
     "accessories": "Phụ kiện",

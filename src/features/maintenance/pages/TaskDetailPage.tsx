@@ -4,18 +4,25 @@ import { toast } from 'sonner'
 import { PageMeta } from '@/components/page/PageHeader'
 import { DetailLayout } from '@/components/detail-layout'
 import { SectionCard } from '@/components/page/SectionCard'
+import { ActionMenu } from '@/components/page/ActionMenu'
 import { DataList } from '@/components/page/DataList'
 import { DetailSkeleton } from '@/components/page/DetailSkeleton'
 import { EmptyState } from '@/components/page/EmptyState'
 import { Timeline } from '@/components/timeline'
 import { ErrorState } from '@/components/page/ErrorState'
 import {
+  Ban,
   CalendarClock,
   CalendarDays,
   Check,
+  CheckCircle2,
   ClipboardList,
   ListChecks,
   Microscope,
+  PenLine,
+  Printer,
+  Save,
+  UserPlus,
   X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -181,67 +188,87 @@ export function Component() {
           </>
         }
         actions={
-          <div className="flex flex-wrap gap-2">
-            {canStart && (
-              <Button
-                onClick={async () => {
-                  try {
-                    await api.startTask(id)
-                    toast.success(t('taskStarted'))
-                    void invalidate()
-                  } catch (error) {
-                    toast.error(messageFor(error))
-                  }
-                }}
-              >
-                {t('start')}
-              </Button>
-            )}
-            {canSave && <Button onClick={() => void save()}>{t('saveResults')}</Button>}
-            {isStaff && row.status !== 'done' && row.status !== 'skipped' && (
-              <Button variant="outline" onClick={() => setReassignOpen(true)}>
-                {t('reassign')}
-              </Button>
-            )}
-            {['in_progress', 'done'].includes(row.status) && (
-              <Button variant="outline" onClick={() => setSignOpen(true)}>
-                {t('sign')}
-              </Button>
-            )}
-            {canSave && <Button onClick={() => setFinishOpen(true)}>{t('finish')}</Button>}
-            {isAdm && !['done', 'skipped'].includes(row.status) && (
-              <Button
-                variant="outline"
-                onClick={async () => {
-                  const reason = await confirm({
-                    title: t('skipConfirm'),
-                    requireReason: true,
-                    destructive: true,
-                  })
-                  if (reason === false) return
-                  try {
-                    await api.skipTask(id, reason)
-                    toast.success(t('taskSkipped'))
-                    void invalidate()
-                  } catch (error) {
-                    toast.error(messageFor(error))
-                  }
-                }}
-              >
-                {t('skip')}
-              </Button>
-            )}
-            {row.status === 'done' && (
-              <Button
-                variant="outline"
-                onClick={() =>
-                  void api.downloadTaskReport(id, row.code).catch((e) => toast.error(messageFor(e)))
-                }
-              >
-                {t('printReport')}
-              </Button>
-            )}
-          </div>
+          <ActionMenu
+            items={[
+              canStart && {
+                key: 'start',
+                label: t('start'),
+                variant: 'primary' as const,
+                onClick: () => {
+                  void (async () => {
+                    try {
+                      await api.startTask(id)
+                      toast.success(t('taskStarted'))
+                      void invalidate()
+                    } catch (error) {
+                      toast.error(messageFor(error))
+                    }
+                  })()
+                },
+              },
+              canSave && {
+                key: 'finish',
+                label: t('finish'),
+                variant: 'primary' as const,
+                icon: <CheckCircle2 />,
+                onClick: () => setFinishOpen(true),
+              },
+              canSave && {
+                key: 'save',
+                label: t('saveResults'),
+                icon: <Save />,
+                onClick: () => void save(),
+              },
+              ['in_progress', 'done'].includes(row.status) && {
+                key: 'sign',
+                label: t('sign'),
+                icon: <PenLine />,
+                onClick: () => setSignOpen(true),
+              },
+              row.status === 'done' && {
+                key: 'print',
+                label: t('printReport'),
+                icon: <Printer />,
+                onClick: () =>
+                  void api
+                    .downloadTaskReport(id, row.code)
+                    .catch((e) => toast.error(messageFor(e))),
+              },
+              isStaff &&
+                row.status !== 'done' &&
+                row.status !== 'skipped' && {
+                  key: 'reassign',
+                  label: t('reassign'),
+                  icon: <UserPlus />,
+                  onClick: () => setReassignOpen(true),
+                },
+              isAdm &&
+                !['done', 'skipped'].includes(row.status) && {
+                  key: 'skip',
+                  label: t('skip'),
+                  variant: 'destructive' as const,
+                  icon: <Ban />,
+                  separator: true,
+                  onClick: () => {
+                    void (async () => {
+                      const reason = await confirm({
+                        title: t('skipConfirm'),
+                        requireReason: true,
+                        destructive: true,
+                      })
+                      if (reason === false) return
+                      try {
+                        await api.skipTask(id, reason)
+                        toast.success(t('taskSkipped'))
+                        void invalidate()
+                      } catch (error) {
+                        toast.error(messageFor(error))
+                      }
+                    })()
+                  },
+                },
+            ]}
+          />
         }
         information={
           <>

@@ -12,6 +12,7 @@ import { SectionCard } from '@/components/page/SectionCard'
 import { DataList } from '@/components/page/DataList'
 import { DetailSkeleton } from '@/components/page/DetailSkeleton'
 import { EmptyState } from '@/components/page/EmptyState'
+import { ActionMenu } from '@/components/page/ActionMenu'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import {
   Table,
@@ -23,14 +24,21 @@ import {
 } from '@/components/ui/table'
 import { ErrorState } from '@/components/page/ErrorState'
 import {
+  Ban,
   Building2,
   CalendarClock,
   ClipboardList,
   Coins,
   Package,
+  Pencil,
+  Printer,
+  RefreshCw,
+  Sparkles,
+  Stethoscope,
   Truck,
   TriangleAlert,
   User,
+  UserPlus,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/status-badge'
@@ -224,113 +232,114 @@ export function Component() {
           </div>
         }
         actions={
-          <div className="flex flex-wrap gap-2">
-            {row.equipment?.id && (
-              <Button asChild variant="outline">
-                <Link to={assistantPath({ equipmentId: row.equipment.id, repairId: id })}>
-                  {t('detail.actions.askAi')}
-                </Link>
-              </Button>
-            )}
-            {actions.includes('accept') && (
-              <Button
-                onClick={() =>
-                  void run(t('detail.actions.acceptConfirm'), () => api.acceptRepair(id))
-                }
-              >
-                {t('detail.actions.accept')}
-              </Button>
-            )}
-            {actions.includes('assign') && (
-              <Button variant="outline" onClick={() => setOpen('assign')}>
-                {t('detail.actions.assign')}
-              </Button>
-            )}
-            {actions.includes('respond') && (
-              <>
-                <Button
-                  onClick={() =>
-                    void run(t('detail.respond.acceptConfirm'), () =>
-                      api.respondAssignment(id, { response: 'accepted' }),
-                    )
-                  }
-                >
-                  {t('detail.respond.accept')}
-                </Button>
-                <Button variant="outline" onClick={() => setOpen('decline')}>
-                  {t('detail.respond.decline')}
-                </Button>
-              </>
-            )}
-            {actions.includes('diagnosis') && (
-              <Button variant="outline" onClick={() => setOpen('diagnosis')}>
-                {t('detail.actions.diagnosis')}
-              </Button>
-            )}
-            {actions.includes('status') && (
-              <Button variant="outline" onClick={() => setOpen('status')}>
-                {t('detail.actions.status')}
-              </Button>
-            )}
-            {actions.includes('complete') && (
-              <Button onClick={() => setOpen('complete')}>{t('detail.actions.complete')}</Button>
-            )}
-            {actions.includes('acceptance') && (
-              <Button onClick={() => setOpen('acceptance')}>
-                {t('detail.actions.acceptance')}
-              </Button>
-            )}
-            {actions.includes('close') && (
-              <Button
-                variant="outline"
-                onClick={() =>
-                  void run(t('detail.actions.closeConfirm'), () => api.closeRepair(id))
-                }
-              >
-                {t('detail.actions.close')}
-              </Button>
-            )}
-            {actions.includes('cancel') && (
-              <Button
-                variant="outline"
-                onClick={async () => {
-                  const reason = await confirm({
-                    title: t('detail.actions.cancelConfirm'),
-                    requireReason: true,
-                    destructive: true,
-                    confirmLabel: t('detail.actions.cancelConfirmLabel'),
-                  })
-                  if (reason === false) return
-                  try {
-                    await api.cancelRepair(id, reason)
-                    toast.success(t('detail.actions.cancelled'))
-                    invalidate(id)
-                  } catch (error) {
-                    toast.error(messageFor(error))
-                  }
-                }}
-              >
-                {t('detail.actions.cancel')}
-              </Button>
-            )}
-            {actions.includes('edit') && (
-              <Button variant="outline" onClick={() => setOpen('edit')}>
-                {t('detail.actions.edit')}
-              </Button>
-            )}
-            {actions.includes('print') && (
-              <Button
-                variant="outline"
-                onClick={() =>
+          <ActionMenu
+            items={[
+              actions.includes('accept') && {
+                key: 'accept',
+                label: t('detail.actions.accept'),
+                variant: 'primary' as const,
+                onClick: () =>
+                  void run(t('detail.actions.acceptConfirm'), () => api.acceptRepair(id)),
+              },
+              actions.includes('respond') && {
+                key: 'respond-accept',
+                label: t('detail.respond.accept'),
+                variant: 'primary' as const,
+                onClick: () =>
+                  void run(t('detail.respond.acceptConfirm'), () =>
+                    api.respondAssignment(id, { response: 'accepted' }),
+                  ),
+              },
+              actions.includes('respond') && {
+                key: 'respond-decline',
+                label: t('detail.respond.decline'),
+                onClick: () => setOpen('decline'),
+              },
+              actions.includes('complete') && {
+                key: 'complete',
+                label: t('detail.actions.complete'),
+                variant: 'primary' as const,
+                onClick: () => setOpen('complete'),
+              },
+              actions.includes('acceptance') && {
+                key: 'acceptance',
+                label: t('detail.actions.acceptance'),
+                variant: 'primary' as const,
+                onClick: () => setOpen('acceptance'),
+              },
+              actions.includes('close') && {
+                key: 'close',
+                label: t('detail.actions.close'),
+                variant: 'primary' as const,
+                onClick: () =>
+                  void run(t('detail.actions.closeConfirm'), () => api.closeRepair(id)),
+              },
+              actions.includes('diagnosis') && {
+                key: 'diagnosis',
+                label: t('detail.actions.diagnosis'),
+                icon: <Stethoscope />,
+                onClick: () => setOpen('diagnosis'),
+              },
+              actions.includes('status') && {
+                key: 'status',
+                label: t('detail.actions.status'),
+                icon: <RefreshCw />,
+                onClick: () => setOpen('status'),
+              },
+              actions.includes('assign') && {
+                key: 'assign',
+                label: t('detail.actions.assign'),
+                icon: <UserPlus />,
+                onClick: () => setOpen('assign'),
+              },
+              actions.includes('edit') && {
+                key: 'edit',
+                label: t('detail.actions.edit'),
+                icon: <Pencil />,
+                onClick: () => setOpen('edit'),
+              },
+              actions.includes('print') && {
+                key: 'print',
+                label: t('detail.actions.print'),
+                icon: <Printer />,
+                onClick: () =>
                   void api
                     .downloadRepairReport(id, row.code)
-                    .catch((e) => toast.error(messageFor(e)))
-                }
-              >
-                {t('detail.actions.print')}
-              </Button>
-            )}
-          </div>
+                    .catch((e) => toast.error(messageFor(e))),
+              },
+              !!row.equipment?.id && {
+                key: 'ai',
+                label: t('detail.actions.askAi'),
+                icon: <Sparkles />,
+                to: assistantPath({ equipmentId: row.equipment.id, repairId: id }),
+              },
+              actions.includes('cancel') && {
+                key: 'cancel',
+                label: t('detail.actions.cancel'),
+                variant: 'destructive' as const,
+                icon: <Ban />,
+                separator: true,
+                onClick: () => {
+                  void (async () => {
+                    const reason = await confirm({
+                      title: t('detail.actions.cancelConfirm'),
+                      requireReason: true,
+                      destructive: true,
+                      confirmLabel: t('detail.actions.cancelConfirmLabel'),
+                    })
+                    if (reason === false) return
+                    try {
+                      await api.cancelRepair(id, reason)
+                      toast.success(t('detail.actions.cancelled'))
+                      invalidate(id)
+                    } catch (error) {
+                      toast.error(messageFor(error))
+                    }
+                  })()
+                },
+              },
+            ]}
+          />
         }
         information={<RepairInformation row={row} />}
         tabs={[

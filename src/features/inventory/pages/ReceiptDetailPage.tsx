@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { PageHeader, PageMeta } from '@/components/page/PageHeader'
 import { SectionCard } from '@/components/page/SectionCard'
+import { ActionMenu } from '@/components/page/ActionMenu'
 import { DataList } from '@/components/page/DataList'
 import { DetailSkeleton } from '@/components/page/DetailSkeleton'
 import { Timeline } from '@/components/timeline'
@@ -17,7 +18,20 @@ import {
 } from '@/components/ui/table'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { ErrorState } from '@/components/page/ErrorState'
-import { Building2, CalendarDays, FileText, PackagePlus, Truck, Warehouse } from 'lucide-react'
+import {
+  Ban,
+  Building2,
+  CalendarDays,
+  CheckCircle2,
+  FileText,
+  PackagePlus,
+  Pencil,
+  Printer,
+  Trash2,
+  Truck,
+  Warehouse,
+  XCircle,
+} from 'lucide-react'
 import { formatDate } from '@/lib/format/date'
 import { formatQty } from '@/lib/format/number'
 import { Button } from '@/components/ui/button'
@@ -143,109 +157,131 @@ export function Component() {
           </>
         }
         actions={
-          <div className="flex gap-2">
-            {canWrite && row.status === 'draft' && (
-              <>
-                <Button asChild variant="outline">
-                  <Link to={`/stock/receipts/${id}/edit`}>{t('edit')}</Link>
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={async () => {
-                    if ((await confirm({ title: t('deleteConfirm'), destructive: true })) === false)
-                      return
-                    try {
-                      await deleteReceipt(id)
-                      invalidate()
-                      navigate('/stock/receipts')
-                    } catch (error) {
-                      toast.error(messageFor(error))
-                    }
-                  }}
-                >
-                  {t('delete')}
-                </Button>
-                <Button
-                  onClick={async () => {
-                    if ((await confirm({ title: t('postConfirm') })) === false) return
-                    try {
-                      await postReceipt(id)
-                      toast.success(t('posted'))
-                      invalidate()
-                    } catch (error) {
-                      toast.error(messageFor(error))
-                    }
-                  }}
-                >
-                  {t('post')}
-                </Button>
-              </>
-            )}
-            {isAdm && row.status === 'posted' && (
-              <Button
-                variant="outline"
-                onClick={async () => {
-                  if ((await confirm({ title: t('cancelConfirm'), destructive: true })) === false)
-                    return
-                  try {
-                    await cancelReceipt(id)
-                    toast.success(t('cancelled'))
-                    invalidate()
-                  } catch (error) {
-                    toast.error(messageFor(error))
-                  }
-                }}
-              >
-                {t('cancelWithDays', { days: daysRemaining })}
-              </Button>
-            )}
-            {canWrite && row.status === 'posted' && row.qcStatus === 'pending' && (
-              <>
-                <Button
-                  variant="outline"
-                  onClick={async () => {
-                    try {
-                      await qcReceipt(id, { status: 'passed' })
-                      toast.success(t('qcPassed'))
-                      invalidate()
-                    } catch (error) {
-                      toast.error(messageFor(error))
-                    }
-                  }}
-                >
-                  {t('qcPassed')}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={async () => {
-                    const note = await confirm({ title: t('qcFailed'), requireReason: true })
-                    if (note === false) return
-                    try {
-                      await qcReceipt(id, { status: 'failed', note })
-                      toast.success(t('qcFailed'))
-                      invalidate()
-                    } catch (error) {
-                      toast.error(messageFor(error))
-                    }
-                  }}
-                >
-                  {t('qcFailed')}
-                </Button>
-              </>
-            )}
-            <Button
-              variant="outline"
-              onClick={() =>
-                void downloadFile(
-                  `/v1/stock/receipts/${id}/print.pdf`,
-                  {},
-                  `${row.code}.pdf`,
-                ).catch((error) => toast.error(messageFor(error)))
-              }
-            >
-              {t('print')}
-            </Button>
-          </div>
+          <ActionMenu
+            items={[
+              canWrite &&
+                row.status === 'draft' && {
+                  key: 'post',
+                  label: t('post'),
+                  variant: 'primary' as const,
+                  onClick: () => {
+                    void (async () => {
+                      if ((await confirm({ title: t('postConfirm') })) === false) return
+                      try {
+                        await postReceipt(id)
+                        toast.success(t('posted'))
+                        invalidate()
+                      } catch (error) {
+                        toast.error(messageFor(error))
+                      }
+                    })()
+                  },
+                },
+              canWrite &&
+                row.status === 'posted' &&
+                row.qcStatus === 'pending' && {
+                  key: 'qcPass',
+                  label: t('qcPassed'),
+                  variant: 'primary' as const,
+                  icon: <CheckCircle2 />,
+                  onClick: () => {
+                    void (async () => {
+                      try {
+                        await qcReceipt(id, { status: 'passed' })
+                        toast.success(t('qcPassed'))
+                        invalidate()
+                      } catch (error) {
+                        toast.error(messageFor(error))
+                      }
+                    })()
+                  },
+                },
+              canWrite &&
+                row.status === 'posted' &&
+                row.qcStatus === 'pending' && {
+                  key: 'qcFail',
+                  label: t('qcFailed'),
+                  icon: <XCircle />,
+                  onClick: () => {
+                    void (async () => {
+                      const note = await confirm({ title: t('qcFailed'), requireReason: true })
+                      if (note === false) return
+                      try {
+                        await qcReceipt(id, { status: 'failed', note })
+                        toast.success(t('qcFailed'))
+                        invalidate()
+                      } catch (error) {
+                        toast.error(messageFor(error))
+                      }
+                    })()
+                  },
+                },
+              canWrite &&
+                row.status === 'draft' && {
+                  key: 'edit',
+                  label: t('edit'),
+                  icon: <Pencil />,
+                  to: `/stock/receipts/${id}/edit`,
+                },
+              {
+                key: 'print',
+                label: t('print'),
+                icon: <Printer />,
+                onClick: () =>
+                  void downloadFile(
+                    `/v1/stock/receipts/${id}/print.pdf`,
+                    {},
+                    `${row.code}.pdf`,
+                  ).catch((error) => toast.error(messageFor(error))),
+              },
+              isAdm &&
+                row.status === 'posted' && {
+                  key: 'cancel',
+                  label: t('cancelWithDays', { days: daysRemaining }),
+                  variant: 'destructive' as const,
+                  icon: <Ban />,
+                  separator: true,
+                  onClick: () => {
+                    void (async () => {
+                      if (
+                        (await confirm({ title: t('cancelConfirm'), destructive: true })) === false
+                      )
+                        return
+                      try {
+                        await cancelReceipt(id)
+                        toast.success(t('cancelled'))
+                        invalidate()
+                      } catch (error) {
+                        toast.error(messageFor(error))
+                      }
+                    })()
+                  },
+                },
+              canWrite &&
+                row.status === 'draft' && {
+                  key: 'delete',
+                  label: t('delete'),
+                  variant: 'destructive' as const,
+                  icon: <Trash2 />,
+                  separator: true,
+                  onClick: () => {
+                    void (async () => {
+                      if (
+                        (await confirm({ title: t('deleteConfirm'), destructive: true })) === false
+                      )
+                        return
+                      try {
+                        await deleteReceipt(id)
+                        invalidate()
+                        navigate('/stock/receipts')
+                      } catch (error) {
+                        toast.error(messageFor(error))
+                      }
+                    })()
+                  },
+                },
+            ]}
+          />
         }
       />
       {!!extended.warnings?.length && (

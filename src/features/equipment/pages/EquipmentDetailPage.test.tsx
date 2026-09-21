@@ -177,14 +177,15 @@ it('sửa và xoá phụ kiện', async () => {
     }),
   )
   render('accessories')
-  await userEvent.click(await screen.findByRole('button', { name: 'Sửa' }))
+  const section = within(await screen.findByTestId('section-accessories'))
+  await userEvent.click(await section.findByRole('button', { name: 'Sửa' }))
   const name = await screen.findByLabelText('Tên')
   await userEvent.clear(name)
   await userEvent.type(name, 'Cáp nguồn mới')
   await userEvent.click(screen.getByRole('button', { name: 'Lưu' }))
   await waitFor(() => expect(patches).toHaveLength(1))
   expect(patches[0]).toMatchObject({ name: 'Cáp nguồn mới' })
-  await userEvent.click(screen.getByRole('button', { name: 'Xoá' }))
+  await userEvent.click(section.getByRole('button', { name: 'Xoá' }))
   await userEvent.click(await screen.findByRole('button', { name: 'Xác nhận' }))
   await waitFor(() => expect(deletes).toEqual(['a1']))
 })
@@ -219,7 +220,8 @@ it('sửa, nâng cấp phần mềm và xem lịch sử', async () => {
     ),
   )
   render('software')
-  await userEvent.click(await screen.findByRole('button', { name: 'Sửa' }))
+  const section = within(await screen.findByTestId('section-software'))
+  await userEvent.click(await section.findByRole('button', { name: 'Sửa' }))
   const version = await screen.findByLabelText('Phiên bản')
   await userEvent.clear(version)
   await userEvent.type(version, '1.1')
@@ -227,7 +229,7 @@ it('sửa, nâng cấp phần mềm và xem lịch sử', async () => {
   await waitFor(() => expect(patches).toHaveLength(1))
   expect(patches[0]).toMatchObject({ version: '1.1' })
 
-  await userEvent.click(screen.getByRole('button', { name: 'Nâng cấp' }))
+  await userEvent.click(section.getByRole('button', { name: 'Nâng cấp' }))
   const toVersion = await screen.findByLabelText('Phiên bản mới')
   await userEvent.clear(toVersion)
   await userEvent.type(toVersion, '2.0')
@@ -235,7 +237,7 @@ it('sửa, nâng cấp phần mềm và xem lịch sử', async () => {
   await waitFor(() => expect(upgrades).toHaveLength(1))
   expect(upgrades[0]).toMatchObject({ toVersion: '2.0' })
 
-  await userEvent.click(screen.getByRole('button', { name: 'Lịch sử' }))
+  await userEvent.click(section.getByRole('button', { name: 'Lịch sử' }))
   expect(await screen.findByText('Lịch sử nâng cấp · LabOS')).toBeVisible()
   expect(await screen.findByText(/1\.0 →/)).toBeVisible()
 })
@@ -278,7 +280,8 @@ it('thay linh kiện gửi newSerial/cost/phiếu sửa chữa và xem lịch s�
     ),
   )
   render('components')
-  await userEvent.click(await screen.findByRole('button', { name: 'Thay thế' }))
+  const section = within(await screen.findByTestId('section-components'))
+  await userEvent.click(await section.findByRole('button', { name: 'Thay thế' }))
   await userEvent.type(await screen.findByLabelText('Lý do'), 'Mòn')
   await userEvent.type(screen.getByLabelText('Serial mới'), 'P2')
   await userEvent.type(screen.getByLabelText('Chi phí'), '150000')
@@ -293,7 +296,7 @@ it('thay linh kiện gửi newSerial/cost/phiếu sửa chữa và xem lịch s�
     repairTicketId: 'r1',
   })
 
-  await userEvent.click(screen.getByRole('button', { name: 'Lịch sử' }))
+  await userEvent.click(section.getByRole('button', { name: 'Lịch sử' }))
   expect(await screen.findByText('Lịch sử thay linh kiện · Bơm')).toBeVisible()
   expect(await screen.findByText(/150\.000/)).toBeVisible()
 })
@@ -437,6 +440,6 @@ it('tổng quan hiện đủ trường thông tin chung', async () => {
   expect(await screen.findByText('Nguyên giá')).toBeVisible()
   expect(await screen.findByText('Mã tài sản')).toBeVisible()
   expect(await screen.findByText('Nguồn vốn')).toBeVisible()
-  expect(await screen.findByText('Giờ chạy')).toBeVisible()
+  expect((await screen.findAllByText('Giờ chạy'))[0]).toBeVisible()
   expect(await screen.findByText('1.000 ₫')).toBeVisible()
 })

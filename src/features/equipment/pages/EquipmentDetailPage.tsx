@@ -11,6 +11,7 @@ import { SectionCard } from '@/components/page/SectionCard'
 import { DataList, type DataListItem } from '@/components/page/DataList'
 import { CardSkeleton, DetailSkeleton } from '@/components/page/DetailSkeleton'
 import { EmptyState } from '@/components/page/EmptyState'
+import { ActionMenu } from '@/components/page/ActionMenu'
 import {
   Table,
   TableBody,
@@ -23,12 +24,18 @@ import { ErrorState } from '@/components/page/ErrorState'
 import {
   ArrowRightLeft,
   Building2,
+  Copy,
   Cpu,
   FileText,
   Gauge,
   MapPin,
   Package,
+  Pencil,
+  Printer,
   Puzzle,
+  QrCode,
+  Sparkles,
+  Trash2,
   User,
   Wrench,
 } from 'lucide-react'
@@ -239,69 +246,79 @@ export function Component() {
           )
         }
         actions={
-          <>
-            {canWrite && (
-              <Button onClick={() => setStatusOpen(true)} disabled={status === 'disposed'}>
-                {t('actions.changeStatus')}
-              </Button>
-            )}
-            {canWrite && (
-              <Button variant="outline" onClick={() => setTransferOpen(true)}>
-                {t('actions.transfer')}
-              </Button>
-            )}
-            {canWrite && (
-              <Button asChild variant="outline">
-                <Link to={`/equipment/${id}/edit`}>{t('common:actions.edit')}</Link>
-              </Button>
-            )}
-            {canWrite && (
-              <Button variant="outline" onClick={() => setCloneOpen(true)}>
-                {t('actions.clone')}
-              </Button>
-            )}
-            <Button asChild variant="outline">
-              <Link to={assistantPath({ equipmentId: id })}>{t('actions.askAi')}</Link>
-            </Button>
-            <Button
-              variant="outline"
-              onClick={async () => {
-                try {
-                  await api.downloadQrPng(id)
-                  await api.downloadQrLabels([id])
-                } catch (error) {
-                  toast.error(messageFor(error))
-                }
-              }}
-            >
-              {t('actions.print')}
-            </Button>
-            {isAdm && (
-              <Button
-                variant="outline"
-                onClick={() => void run(t('confirm.rotate'), () => api.rotateQr(id))}
-              >
-                {t('actions.rotateQr')}
-              </Button>
-            )}
-            {isAdm && (status === 'retired' || status === 'disposed') && (
-              <Button
-                variant="destructive"
-                onClick={() =>
-                  void run(
-                    t('confirm.delete'),
-                    async () => {
-                      await api.deleteEquipment(id)
-                      navigate('/equipment')
-                    },
-                    true,
-                  )
-                }
-              >
-                {t('common:actions.delete')}
-              </Button>
-            )}
-          </>
+          <ActionMenu
+            items={[
+              canWrite && {
+                key: 'status',
+                label: t('actions.changeStatus'),
+                variant: 'primary',
+                disabled: status === 'disposed',
+                onClick: () => setStatusOpen(true),
+              },
+              canWrite && {
+                key: 'edit',
+                label: t('common:actions.edit'),
+                to: `/equipment/${id}/edit`,
+                icon: <Pencil />,
+              },
+              canWrite && {
+                key: 'transfer',
+                label: t('actions.transfer'),
+                icon: <ArrowRightLeft />,
+                onClick: () => setTransferOpen(true),
+              },
+              canWrite && {
+                key: 'clone',
+                label: t('actions.clone'),
+                icon: <Copy />,
+                onClick: () => setCloneOpen(true),
+              },
+              {
+                key: 'ai',
+                label: t('actions.askAi'),
+                icon: <Sparkles />,
+                to: assistantPath({ equipmentId: id }),
+              },
+              {
+                key: 'print',
+                label: t('actions.print'),
+                icon: <Printer />,
+                onClick: () => {
+                  void (async () => {
+                    try {
+                      await api.downloadQrPng(id)
+                      await api.downloadQrLabels([id])
+                    } catch (error) {
+                      toast.error(messageFor(error))
+                    }
+                  })()
+                },
+              },
+              isAdm && {
+                key: 'rotate',
+                label: t('actions.rotateQr'),
+                icon: <QrCode />,
+                onClick: () => void run(t('confirm.rotate'), () => api.rotateQr(id)),
+              },
+              isAdm &&
+                (status === 'retired' || status === 'disposed') && {
+                  key: 'delete',
+                  label: t('common:actions.delete'),
+                  variant: 'destructive' as const,
+                  icon: <Trash2 />,
+                  separator: true,
+                  onClick: () =>
+                    void run(
+                      t('confirm.delete'),
+                      async () => {
+                        await api.deleteEquipment(id)
+                        navigate('/equipment')
+                      },
+                      true,
+                    ),
+                },
+            ]}
+          />
         }
         information={
           <>
@@ -369,33 +386,54 @@ export function Component() {
             </div>
           </>
         }
+        aliases={{
+          counters: 'overview',
+          network: 'config',
+          accessories: 'config',
+          software: 'config',
+          components: 'config',
+          repairs: 'service',
+          maintenance: 'service',
+          transfers: 'history',
+          timeline: 'history',
+          audit: 'history',
+        }}
         tabs={[
-          { value: 'overview', label: t('tabs.overview'), content: <Overview row={row} /> },
           {
-            value: 'network',
-            label: t('tabs.network'),
-            content: <NetworkTab id={id} canWrite={canWrite} />,
-          },
-          {
-            value: 'accessories',
-            label: t('tabs.accessories'),
-            content: <AccessoriesTab id={id} canWrite={canWrite} />,
-          },
-          {
-            value: 'software',
-            label: t('tabs.software'),
-            content: <SoftwareTab id={id} canWrite={canWrite} />,
-          },
-          {
-            value: 'components',
-            label: t('tabs.components'),
+            value: 'overview',
+            label: t('tabs.overview'),
             content: (
-              <ComponentsTab
-                id={id}
-                canWrite={canWrite}
-                hours={row.currentRunHours}
-                tests={row.currentTestCount}
-              />
+              <>
+                <Overview row={row} />
+                <div data-testid="section-counters">
+                  <CountersTab id={id} canWrite={canWrite} />
+                </div>
+              </>
+            ),
+          },
+          {
+            value: 'config',
+            label: t('tabs.config', { defaultValue: 'Cấu hình' }),
+            content: (
+              <>
+                <div data-testid="section-network">
+                  <NetworkTab id={id} canWrite={canWrite} />
+                </div>
+                <div data-testid="section-accessories">
+                  <AccessoriesTab id={id} canWrite={canWrite} />
+                </div>
+                <div data-testid="section-software">
+                  <SoftwareTab id={id} canWrite={canWrite} />
+                </div>
+                <div data-testid="section-components">
+                  <ComponentsTab
+                    id={id}
+                    canWrite={canWrite}
+                    hours={row.currentRunHours}
+                    tests={row.currentTestCount}
+                  />
+                </div>
+              </>
             ),
           },
           {
@@ -404,9 +442,14 @@ export function Component() {
             content: <SuppliesTab id={id} canWrite={canWrite} />,
           },
           {
-            value: 'counters',
-            label: t('tabs.counters'),
-            content: <CountersTab id={id} canWrite={canWrite} />,
+            value: 'service',
+            label: t('tabs.service', { defaultValue: 'Sửa chữa & bảo dưỡng' }),
+            content: (
+              <>
+                <RepairsTab id={id} />
+                <MaintenanceTab id={id} />
+              </>
+            ),
           },
           {
             value: 'docs',
@@ -417,39 +460,29 @@ export function Component() {
               </SectionCard>
             ),
           },
-          { value: 'repairs', label: t('tabs.repairs'), content: <RepairsTab id={id} /> },
           {
-            value: 'maintenance',
-            label: t('tabs.maintenance'),
-            content: <MaintenanceTab id={id} />,
-          },
-          {
-            value: 'transfers',
-            label: t('tabs.transfers'),
+            value: 'history',
+            label: t('tabs.history', { defaultValue: 'Lịch sử' }),
             content: (
-              <TransfersTab
-                id={id}
-                canWrite={canWrite}
-                isAdm={isAdm}
-                userId={userId}
-                userNames={userNames}
-                departmentNames={departmentNames}
-                onCreate={() => setTransferOpen(true)}
-              />
-            ),
-          },
-          {
-            value: 'timeline',
-            label: t('tabs.timeline'),
-            content: <TimelineTab id={id} userNames={userNames} />,
-          },
-          {
-            value: 'audit',
-            label: t('tabs.audit'),
-            content: (
-              <SectionCard title={t('tabs.audit')}>
-                <AuditTrail entityType="equipment" entityId={id} />
-              </SectionCard>
+              <>
+                <div data-testid="section-transfers">
+                  <TransfersTab
+                    id={id}
+                    canWrite={canWrite}
+                    isAdm={isAdm}
+                    userId={userId}
+                    userNames={userNames}
+                    departmentNames={departmentNames}
+                    onCreate={() => setTransferOpen(true)}
+                  />
+                </div>
+                <div data-testid="section-timeline">
+                  <TimelineTab id={id} userNames={userNames} />
+                </div>
+                <SectionCard title={t('tabs.audit')}>
+                  <AuditTrail entityType="equipment" entityId={id} />
+                </SectionCard>
+              </>
             ),
           },
         ]}

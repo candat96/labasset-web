@@ -5,14 +5,14 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { PageHeader, PageMeta } from '@/components/page/PageHeader'
 import { SectionCard } from '@/components/page/SectionCard'
+import { ActionMenu } from '@/components/page/ActionMenu'
 import { DataList } from '@/components/page/DataList'
 import { DetailSkeleton } from '@/components/page/DetailSkeleton'
-import { Button } from '@/components/ui/button'
 import { ErrorState } from '@/components/page/ErrorState'
 import { StatusBadge } from '@/components/status-badge'
 import { commonStatusMap } from '@/lib/status-maps'
 import { formatDateTime } from '@/lib/format/date'
-import { AtSign, Building2, Clock, ShieldCheck } from 'lucide-react'
+import { AtSign, Building2, Clock, KeyRound, Lock, ShieldCheck, Trash2, Unlock } from 'lucide-react'
 import { TemporaryPasswordDialog } from '@/components/temporary-password-dialog'
 import { useConfirm } from '@/components/confirm-dialog'
 import { useAuthStore } from '@/stores/auth.store'
@@ -98,45 +98,48 @@ export function Component() {
         }
         actions={
           canWrite && (
-            <>
-              <Button onClick={() => setEdit(true)}>{tc('actions.edit')}</Button>
-              <Button
-                variant="outline"
-                disabled={action.isPending}
-                onClick={() => void run('reset-password', confirmKeys.resetPassword)}
-              >
-                {t('actions.resetPassword')}
-              </Button>
-              {!self && (
-                <>
-                  {row.isActive === true && (
-                    <Button
-                      variant="outline"
-                      disabled={action.isPending}
-                      onClick={() => void run('deactivate', confirmKeys.deactivate)}
-                    >
-                      {t('actions.lock')}
-                    </Button>
-                  )}
-                  {row.isActive === false && (
-                    <Button
-                      variant="outline"
-                      disabled={action.isPending}
-                      onClick={() => void run('activate', confirmKeys.activate)}
-                    >
-                      {t('actions.unlock')}
-                    </Button>
-                  )}
-                  <Button
-                    variant="destructive"
-                    disabled={action.isPending}
-                    onClick={() => void run('delete', confirmKeys.delete)}
-                  >
-                    {tc('actions.delete')}
-                  </Button>
-                </>
-              )}
-            </>
+            <ActionMenu
+              items={[
+                {
+                  key: 'edit',
+                  label: tc('actions.edit'),
+                  variant: 'primary' as const,
+                  onClick: () => setEdit(true),
+                },
+                {
+                  key: 'reset',
+                  label: t('actions.resetPassword'),
+                  icon: <KeyRound />,
+                  disabled: action.isPending,
+                  onClick: () => void run('reset-password', confirmKeys.resetPassword),
+                },
+                !self &&
+                  row.isActive === true && {
+                    key: 'lock',
+                    label: t('actions.lock'),
+                    icon: <Lock />,
+                    disabled: action.isPending,
+                    onClick: () => void run('deactivate', confirmKeys.deactivate),
+                  },
+                !self &&
+                  row.isActive === false && {
+                    key: 'unlock',
+                    label: t('actions.unlock'),
+                    icon: <Unlock />,
+                    disabled: action.isPending,
+                    onClick: () => void run('activate', confirmKeys.activate),
+                  },
+                !self && {
+                  key: 'delete',
+                  label: tc('actions.delete'),
+                  variant: 'destructive' as const,
+                  icon: <Trash2 />,
+                  separator: true,
+                  disabled: action.isPending,
+                  onClick: () => void run('delete', confirmKeys.delete),
+                },
+              ]}
+            />
           )
         }
       />

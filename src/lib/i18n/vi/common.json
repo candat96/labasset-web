@@ -1,5 +1,8 @@
 {
-  "app": { "name": "LabAsset", "tagline": "Quản lý thiết bị & vật tư xét nghiệm" },
+  "app": {
+    "name": "LabAsset",
+    "tagline": "Quản lý thiết bị & vật tư xét nghiệm"
+  },
   "actions": {
     "save": "Lưu",
     "cancel": "Huỷ",
@@ -19,9 +22,14 @@
     "more": "Thao tác",
     "markAllRead": "Đánh dấu tất cả đã đọc",
     "viewAll": "Xem tất cả",
-    "noChange": "Không có thay đổi"
+    "noChange": "Không có thay đổi",
+    "moreMenu": "Thêm"
   },
-  "status": { "active": "Hoạt động", "inactive": "Ngừng", "all": "Tất cả" },
+  "status": {
+    "active": "Hoạt động",
+    "inactive": "Ngừng",
+    "all": "Tất cả"
+  },
   "table": {
     "empty": "Chưa có dữ liệu",
     "error": "Không tải được dữ liệu",
@@ -42,7 +50,12 @@
     "notFoundDesc": "Đường dẫn không tồn tại hoặc đã bị thay đổi.",
     "loading": "Đang tải…"
   },
-  "theme": { "label": "Giao diện", "light": "Sáng", "dark": "Tối", "system": "Theo hệ thống" },
+  "theme": {
+    "label": "Giao diện",
+    "light": "Sáng",
+    "dark": "Tối",
+    "system": "Theo hệ thống"
+  },
   "mock": "Dữ liệu mẫu",
   "clearFilters": "Xoá lọc",
   "moreFilters": "Lọc thêm",
@@ -51,6 +64,12 @@
     "hint": "Tìm mã máy, vật tư, số phiếu, serial",
     "unavailable": "Tìm kiếm toàn cục sẽ khả dụng khi API sẵn sàng"
   },
-  "breadcrumb": { "home": "Trang chủ" },
-  "form": { "required": "Bắt buộc", "invalid": "Giá trị không hợp lệ", "none": "— Không —" }
+  "breadcrumb": {
+    "home": "Trang chủ"
+  },
+  "form": {
+    "required": "Bắt buộc",
+    "invalid": "Giá trị không hợp lệ",
+    "none": "— Không —"
+  }
 }

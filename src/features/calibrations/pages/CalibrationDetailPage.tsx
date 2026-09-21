@@ -7,12 +7,21 @@ import { z } from 'zod'
 import { toast } from 'sonner'
 import { PageHeader, PageMeta } from '@/components/page/PageHeader'
 import { SectionCard } from '@/components/page/SectionCard'
+import { ActionMenu } from '@/components/page/ActionMenu'
 import { DataList } from '@/components/page/DataList'
 import { DetailSkeleton } from '@/components/page/DetailSkeleton'
 import { AuditTrail } from '@/components/audit-trail'
 import { ErrorState } from '@/components/page/ErrorState'
-import { Award, CalendarClock, CalendarDays, Microscope, User, Wrench } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import {
+  Award,
+  Ban,
+  CalendarClock,
+  CalendarDays,
+  Microscope,
+  Pencil,
+  User,
+  Wrench,
+} from 'lucide-react'
 import { StatusBadge } from '@/components/status-badge'
 import { Timeline } from '@/components/timeline'
 import { useConfirm } from '@/components/confirm-dialog'
@@ -165,30 +174,41 @@ export function Component() {
           </>
         }
         actions={
-          <div className="flex gap-2">
-            {isStaff && (
-              <Button variant="outline" onClick={() => setEditOpen(true)}>
-                {t('edit')}
-              </Button>
-            )}
-            {isStaff && row.status === 'scheduled' && (
-              <Button onClick={() => setCompleteOpen(true)}>{t('complete')}</Button>
-            )}
-            {isAdm && row.status === 'scheduled' && (
-              <Button
-                variant="outline"
-                onClick={async () => {
-                  if ((await confirm({ title: t('cancelConfirm'), destructive: true })) === false)
-                    return
-                  await cancelCalibration(id)
-                  toast.success(t('cancelled'))
-                  invalidate()
-                }}
-              >
-                {t('cancel')}
-              </Button>
-            )}
-          </div>
+          <ActionMenu
+            items={[
+              isStaff &&
+                row.status === 'scheduled' && {
+                  key: 'complete',
+                  label: t('complete'),
+                  variant: 'primary' as const,
+                  onClick: () => setCompleteOpen(true),
+                },
+              isStaff && {
+                key: 'edit',
+                label: t('edit'),
+                icon: <Pencil />,
+                onClick: () => setEditOpen(true),
+              },
+              isAdm &&
+                row.status === 'scheduled' && {
+                  key: 'cancel',
+                  label: t('cancel'),
+                  variant: 'destructive' as const,
+                  icon: <Ban />,
+                  onClick: () => {
+                    void (async () => {
+                      if (
+                        (await confirm({ title: t('cancelConfirm'), destructive: true })) === false
+                      )
+                        return
+                      await cancelCalibration(id)
+                      toast.success(t('cancelled'))
+                      invalidate()
+                    })()
+                  },
+                },
+            ]}
+          />
         }
       />
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">

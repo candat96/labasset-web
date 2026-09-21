@@ -8,6 +8,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { PageHeader, PageMeta } from '@/components/page/PageHeader'
 import { SectionCard } from '@/components/page/SectionCard'
+import { ActionMenu } from '@/components/page/ActionMenu'
 import { DataList } from '@/components/page/DataList'
 import { Timeline } from '@/components/timeline'
 import {
@@ -18,7 +19,17 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Building2, CalendarClock, User, Wrench, ClipboardList } from 'lucide-react'
+import {
+  Ban,
+  Building2,
+  CalendarClock,
+  ClipboardList,
+  Copy,
+  Pencil,
+  User,
+  Wrench,
+  XCircle,
+} from 'lucide-react'
 import { ErrorState } from '@/components/page/ErrorState'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -277,111 +288,123 @@ export function Component() {
           </div>
         }
         actions={
-          <div className="flex flex-wrap gap-2">
-            {row.status === 'draft' && owner && (
-              <Button asChild>
-                <Link to={`/requests/${id}/edit`}>{t('edit')}</Link>
-              </Button>
-            )}
-            {row.status === 'draft' && (
-              <Button onClick={() => void run(t('submitConfirm'), () => api.submitRequest(id))}>
-                {t('submit')}
-              </Button>
-            )}
-            {['draft', 'submitted', 'dept_approved'].includes(row.status) &&
-              (owner || isAdm || isHead) && (
-                <Button
-                  variant="outline"
-                  onClick={() => void run(t('cancelConfirm'), () => api.cancelRequest(id))}
-                >
-                  {t('cancel')}
-                </Button>
-              )}
-            {row.status === 'submitted' && row.approvalLevels === 2 && (isHead || isAdm) && (
-              <Button onClick={() => void run(t('deptApproveConfirm'), () => api.deptApprove(id))}>
-                {t('deptApprove')}
-              </Button>
-            )}
-            {isStaff && (row.status === 'submitted' || row.status === 'dept_approved') && (
-              <Button
-                onClick={() => {
-                  approvalForm.reset({
-                    items: row.items.map((item) => ({
-                      id: item.id,
-                      qtyApproved: item.qtyRequested,
-                      approverNote: '',
-                    })),
-                  })
-                  setApprovalOpen(true)
-                }}
-              >
-                {t('approve')}
-              </Button>
-            )}
-            {isStaff && (row.status === 'submitted' || row.status === 'dept_approved') && (
-              <Button
-                variant="outline"
-                onClick={async () => {
-                  const reason = await confirm({
-                    title: t('rejectConfirm'),
-                    requireReason: true,
-                    destructive: true,
-                  })
-                  if (reason === false) return
-                  try {
-                    await api.rejectRequest(id, reason)
-                    toast.success(t('rejected'))
-                    invalidate()
-                  } catch (error) {
-                    toast.error(messageFor(error))
-                  }
-                }}
-              >
-                {t('reject')}
-              </Button>
-            )}
-            {isStaff && (row.status === 'approved' || row.status === 'partially_approved') && (
-              <Button
-                onClick={() => {
-                  issueForm.reset({
-                    warehouseId: '',
-                    items: row.items
-                      .filter((item) => new Big(item.qtyApproved ?? '0').gt(item.qtyIssued ?? '0'))
-                      .map((item) => ({
+          <ActionMenu
+            items={[
+              row.status === 'draft' && {
+                key: 'submit',
+                label: t('submit'),
+                variant: 'primary' as const,
+                onClick: () => void run(t('submitConfirm'), () => api.submitRequest(id)),
+              },
+              row.status === 'submitted' &&
+                row.approvalLevels === 2 &&
+                (isHead || isAdm) && {
+                  key: 'deptApprove',
+                  label: t('deptApprove'),
+                  variant: 'primary' as const,
+                  onClick: () => void run(t('deptApproveConfirm'), () => api.deptApprove(id)),
+                },
+              isStaff &&
+                (row.status === 'submitted' || row.status === 'dept_approved') && {
+                  key: 'approve',
+                  label: t('approve'),
+                  variant: 'primary' as const,
+                  onClick: () => {
+                    approvalForm.reset({
+                      items: row.items.map((item) => ({
                         id: item.id,
-                        quantity: new Big(item.qtyApproved ?? '0')
-                          .minus(item.qtyIssued ?? '0')
-                          .toString(),
+                        qtyApproved: item.qtyRequested,
+                        approverNote: '',
                       })),
-                  })
-                  setIssueOpen(true)
-                }}
-              >
-                {t('issue')}
-              </Button>
-            )}
-            {row.status === 'issued' && (
-              <Button onClick={() => void run(t('receiveConfirm'), () => api.receiveRequest(id))}>
-                {t('receive')}
-              </Button>
-            )}
-            {row.type === 'supply' && (
-              <Button
-                variant="outline"
-                onClick={async () => {
-                  try {
-                    const cloned = await api.cloneRequest(id)
-                    invalidate()
-                    navigate(`/requests/${cloned.id}/edit`)
-                  } catch (error) {
-                    toast.error(messageFor(error))
-                  }
-                }}
-              >
-                {t('clone')}
-              </Button>
-            )}
-          </div>
+                    })
+                    setApprovalOpen(true)
+                  },
+                },
+              isStaff &&
+                (row.status === 'approved' || row.status === 'partially_approved') && {
+                  key: 'issue',
+                  label: t('issue'),
+                  variant: 'primary' as const,
+                  onClick: () => {
+                    issueForm.reset({
+                      warehouseId: '',
+                      items: row.items
+                        .filter((item) =>
+                          new Big(item.qtyApproved ?? '0').gt(item.qtyIssued ?? '0'),
+                        )
+                        .map((item) => ({
+                          id: item.id,
+                          quantity: new Big(item.qtyApproved ?? '0')
+                            .minus(item.qtyIssued ?? '0')
+                            .toString(),
+                        })),
+                    })
+                    setIssueOpen(true)
+                  },
+                },
+              row.status === 'issued' && {
+                key: 'receive',
+                label: t('receive'),
+                variant: 'primary' as const,
+                onClick: () => void run(t('receiveConfirm'), () => api.receiveRequest(id)),
+              },
+              row.status === 'draft' &&
+                owner && {
+                  key: 'edit',
+                  label: t('edit'),
+                  icon: <Pencil />,
+                  to: `/requests/${id}/edit`,
+                },
+              isStaff &&
+                (row.status === 'submitted' || row.status === 'dept_approved') && {
+                  key: 'reject',
+                  label: t('reject'),
+                  icon: <XCircle />,
+                  onClick: () => {
+                    void (async () => {
+                      const reason = await confirm({
+                        title: t('rejectConfirm'),
+                        requireReason: true,
+                        destructive: true,
+                      })
+                      if (reason === false) return
+                      try {
+                        await api.rejectRequest(id, reason)
+                        toast.success(t('rejected'))
+                        invalidate()
+                      } catch (error) {
+                        toast.error(messageFor(error))
+                      }
+                    })()
+                  },
+                },
+              row.type === 'supply' && {
+                key: 'clone',
+                label: t('clone'),
+                icon: <Copy />,
+                onClick: () => {
+                  void (async () => {
+                    try {
+                      const cloned = await api.cloneRequest(id)
+                      invalidate()
+                      navigate(`/requests/${cloned.id}/edit`)
+                    } catch (error) {
+                      toast.error(messageFor(error))
+                    }
+                  })()
+                },
+              },
+              ['draft', 'submitted', 'dept_approved'].includes(row.status) &&
+                (owner || isAdm || isHead) && {
+                  key: 'cancel',
+                  label: t('cancel'),
+                  variant: 'destructive' as const,
+                  icon: <Ban />,
+                  separator: true,
+                  onClick: () => void run(t('cancelConfirm'), () => api.cancelRequest(id)),
+                },
+            ]}
+          />
         }
       />
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">

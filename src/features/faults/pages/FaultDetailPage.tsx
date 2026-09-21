@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router'
+import { useNavigate, useParams } from 'react-router'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { PageHeader, PageMeta } from '@/components/page/PageHeader'
 import { SectionCard } from '@/components/page/SectionCard'
+import { ActionMenu } from '@/components/page/ActionMenu'
 import { DataList } from '@/components/page/DataList'
 import { DetailSkeleton } from '@/components/page/DetailSkeleton'
 import { EmptyState } from '@/components/page/EmptyState'
@@ -12,7 +13,9 @@ import { Timeline } from '@/components/timeline'
 import { ErrorState } from '@/components/page/ErrorState'
 import {
   AlertTriangle,
+  Archive,
   CalendarClock,
+  Pencil,
   Eye,
   Hash,
   ListChecks,
@@ -230,38 +233,46 @@ export function Component() {
           </div>
         }
         actions={
-          <div className="flex flex-wrap gap-2">
-            {canEdit && (
-              <Button variant="outline" asChild>
-                <Link to={`/faults/${id}/edit`}>{tc('actions.edit')}</Link>
-              </Button>
-            )}
-            {isAdm && (row.status === 'draft' || row.status === 'archived') && (
-              <Button
-                onClick={async () => {
-                  if ((await confirm({ title: t('detail.publishConfirm') })) === false) return
-                  publish.mutate(id)
-                }}
-              >
-                {t('detail.publish')}
-              </Button>
-            )}
-            {isAdm && row.status === 'published' && (
-              <Button
-                variant="outline"
-                onClick={async () => {
-                  if (
-                    (await confirm({ title: t('detail.archiveConfirm'), destructive: true })) ===
-                    false
-                  )
-                    return
-                  archive.mutate(id)
-                }}
-              >
-                {t('detail.archive')}
-              </Button>
-            )}
-          </div>
+          <ActionMenu
+            items={[
+              isAdm &&
+                (row.status === 'draft' || row.status === 'archived') && {
+                  key: 'publish',
+                  label: t('detail.publish'),
+                  variant: 'primary' as const,
+                  onClick: () => {
+                    void (async () => {
+                      if ((await confirm({ title: t('detail.publishConfirm') })) === false) return
+                      publish.mutate(id)
+                    })()
+                  },
+                },
+              canEdit && {
+                key: 'edit',
+                label: tc('actions.edit'),
+                icon: <Pencil />,
+                to: `/faults/${id}/edit`,
+              },
+              isAdm &&
+                row.status === 'published' && {
+                  key: 'archive',
+                  label: t('detail.archive'),
+                  icon: <Archive />,
+                  onClick: () => {
+                    void (async () => {
+                      if (
+                        (await confirm({
+                          title: t('detail.archiveConfirm'),
+                          destructive: true,
+                        })) === false
+                      )
+                        return
+                      archive.mutate(id)
+                    })()
+                  },
+                },
+            ]}
+          />
         }
       />
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
