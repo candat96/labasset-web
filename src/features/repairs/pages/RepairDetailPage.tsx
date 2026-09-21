@@ -844,6 +844,36 @@ function OverviewTab({
   )
 }
 
+/** Nhãn tiếng Việt cho `action` của nhật ký sửa chữa (backend ghi mã: accepted, status:<x>, assignment:<x>…). */
+function logActionLabel(
+  action: string,
+  t: (k: string, o?: Record<string, unknown>) => string,
+): string {
+  const [kind, value] = action.split(':')
+  if (kind === 'status' && value) {
+    const st = repairStatusMap[value]?.label ?? value
+    return t('detail.logs.actions.status', { defaultValue: 'Chuyển trạng thái: {{st}}', st })
+  }
+  if (kind === 'assignment' && value) {
+    const map: Record<string, string> = { accepted: 'nhận việc', rejected: 'từ chối việc' }
+    return t('detail.logs.actions.assignment', {
+      defaultValue: 'Phản hồi phân công: {{r}}',
+      r: map[value] ?? value,
+    })
+  }
+  const labels: Record<string, string> = {
+    accepted: 'Tiếp nhận phiếu',
+    assigned: 'Phân công',
+    diagnosis: 'Chẩn đoán',
+    cancelled: 'Huỷ phiếu',
+    closed: 'Đóng phiếu',
+    completed: 'Hoàn thành',
+    note: 'Ghi chú',
+    work: 'Xử lý',
+  }
+  return t(`detail.logs.actions.${kind}`, { defaultValue: labels[kind] ?? action })
+}
+
 function LogsTab({
   logs,
   canWrite,
@@ -871,7 +901,7 @@ function LogsTab({
         <Timeline
           events={logs.map((item) => ({
             at: item.at,
-            title: item.action,
+            title: logActionLabel(item.action, t),
             summary: [
               item.note,
               item.durationMinutes != null
