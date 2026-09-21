@@ -180,3 +180,20 @@ export const jobStatusMap: StatusMap = {
   done: { label: 'Xong', tone: 'success' },
   failed: { label: 'Lỗi', tone: 'danger' },
 }
+
+export const demandPeriodStatusMap: StatusMap = {
+  draft: { label: 'Nháp', tone: 'muted' },
+  collecting: { label: 'Đang nhận', tone: 'info' },
+  consolidating: { label: 'Đang tổng hợp', tone: 'warning' },
+  approved: { label: 'Đã duyệt', tone: 'success' },
+  closed: { label: 'Đã đóng', tone: 'muted' },
+  cancelled: { label: 'Đã huỷ', tone: 'danger' },
+}
+
+export const demandRequestStatusMap: StatusMap = {
+  draft: { label: 'Nháp', tone: 'muted' },
+  submitted: { label: 'Đã gửi', tone: 'info' },
+  dept_approved: { label: 'Trưởng khoa đã duyệt', tone: 'info' },
+  returned: { label: 'Bị trả lại', tone: 'danger' },
+  accepted: { label: 'Đã tiếp nhận', tone: 'success' },
+}

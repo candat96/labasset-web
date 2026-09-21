@@ -78,7 +78,7 @@ export function refreshTokens(): Promise<boolean> {
 // Bản sao request (body chưa đọc) để gửi lại sau khi refresh.
 const clones = new WeakMap<Request, Request>()
 
-const authMiddleware: Middleware = {
+export const authMiddleware: Middleware = {
   onRequest({ request }) {
     const path = new URL(request.url).pathname
     if (isPublicPath(path)) return request

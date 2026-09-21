@@ -33,6 +33,7 @@ import {
   QrCode,
   Scale,
   Settings,
+  ShoppingCart,
   Table2,
   Tags,
   Truck,
@@ -149,6 +150,11 @@ export const MENU: MenuGroup[] = [
     key: 'stocktake',
     labelKey: 'menu:groups.stocktake',
     items: [{ path: '/stocktakes', labelKey: 'menu:items.stocktakes', icon: ClipboardCheck }],
+  },
+  {
+    key: 'procurement',
+    labelKey: 'menu:groups.procurement',
+    items: [{ path: '/procurement/demand', labelKey: 'menu:items.demand', icon: ShoppingCart }],
   },
   {
     key: 'reports',

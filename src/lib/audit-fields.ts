@@ -84,6 +84,21 @@ export const AUDIT_FIELD_LABELS: Record<string, string> = {
   expiryDate: 'Hạn dùng',
   lotNumber: 'Số lô',
   unitCost: 'Đơn giá',
+  submitDeadline: 'Hạn nộp',
+  kind: 'Loại kỳ',
+  year: 'Năm',
+  quarter: 'Quý',
+  totalEstimated: 'Tổng tiền ước',
+  totalRequested: 'Tổng yêu cầu',
+  totalApproved: 'Tổng duyệt',
+  unitPriceEst: 'Đơn giá ước',
+  unitPricePlan: 'Đơn giá kế hoạch',
+  amountEst: 'Thành tiền',
+  amountPlan: 'Thành tiền kế hoạch',
+  decision: 'Quyết định',
+  suggestedDecision: 'Gợi ý quyết định',
+  unitPrice: 'Đơn giá',
+  qty: 'Số lượng',
 }
 
 /** Việt hoá giá trị enum theo tên trường (thử lần lượt các map trạng thái đã có). */

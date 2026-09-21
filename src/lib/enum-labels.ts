@@ -259,6 +259,36 @@ export const auditActionLabels: EnumLabels = {
   get: 'Xem',
 }
 
+export const demandPeriodKindLabels: EnumLabels = {
+  annual: 'Kỳ năm',
+  quarterly: 'Kỳ quý',
+  adhoc: 'Đột xuất',
+}
+
+export const demandItemTypeLabels: EnumLabels = {
+  supply: 'Vật tư/hoá chất',
+  component: 'Linh kiện thay thế',
+  equipment: 'Thiết bị mua mới',
+  service: 'Dịch vụ',
+}
+
+export const demandPriorityLabels: EnumLabels = {
+  normal: 'Thường',
+  high: 'Cao',
+  urgent: 'Khẩn',
+}
+
+export const demandDecisionLabels: EnumLabels = {
+  buy: 'Cần mua',
+  from_stock: 'Lấy từ kho',
+  reject: 'Không duyệt',
+}
+
+export const demandSuggestionBasisLabels: EnumLabels = {
+  consumption: 'Theo tiêu hao',
+  min_stock: 'Theo tồn tối thiểu',
+}
+
 const KINDS = {
   issueType: issueTypeLabels,
   receiptType: receiptTypeLabels,
