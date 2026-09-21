@@ -117,7 +117,10 @@ export function AsyncSelect({
                       multiple && 'bg-muted rounded px-1.5 py-0.5 text-xs',
                     )}
                   >
-                    <span className="truncate">{optionLabel(option)}</span>
+                    <span className="truncate" title={optionLabel(option)}>
+                      <span className="sr-only">{optionLabel(option)}</span>
+                      <span aria-hidden>{option.name}</span>
+                    </span>
                     {(clearable || multiple) && (
                       <span
                         role="button"
@@ -150,7 +153,10 @@ export function AsyncSelect({
             <ChevronDown className="text-muted-foreground ml-2 size-4 shrink-0" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-(--radix-popover-trigger-width) p-0" align="start">
+        <PopoverContent
+          className="w-[max(var(--radix-popover-trigger-width),26rem)] max-w-[min(92vw,40rem)] p-0"
+          align="start"
+        >
           <Command shouldFilter={false}>
             <CommandInput value={q} onValueChange={setQ} placeholder="Tìm theo mã hoặc tên" />
             <CommandList>
@@ -181,6 +187,8 @@ export function AsyncSelect({
                   <CommandItem
                     key={option.id}
                     value={option.id}
+                    className="items-start"
+                    keywords={[option.code, option.name]}
                     onSelect={() => {
                       setChosen((prev) => [...prev.filter((item) => item.id !== option.id), option])
                       onChange(
@@ -193,8 +201,21 @@ export function AsyncSelect({
                       if (!multiple) setOpen(false)
                     }}
                   >
-                    <Check className={cn('size-4', selected ? 'opacity-100' : 'opacity-0')} />
-                    <span className="truncate">{optionLabel(option)}</span>
+                    <Check
+                      className={cn(
+                        'mt-0.5 size-4 shrink-0',
+                        selected ? 'opacity-100' : 'opacity-0',
+                      )}
+                    />
+                    <span className="sr-only">{optionLabel(option)}</span>
+                    <span className="flex min-w-0 flex-col leading-5 whitespace-normal" aria-hidden>
+                      <span className="text-[13.5px] font-medium">{option.name}</span>
+                      {option.code && (
+                        <span className="text-muted-foreground font-mono text-[11px]">
+                          {option.code}
+                        </span>
+                      )}
+                    </span>
                   </CommandItem>
                 )
               })}

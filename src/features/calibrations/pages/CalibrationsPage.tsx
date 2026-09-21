@@ -45,7 +45,7 @@ import i18n from '@/lib/i18n'
 
 type Row = components['schemas']['CalibrationResponseDto']
 const schema = z.object({
-  equipmentId: z.string().min(1, i18n.t('common:form.required')),
+  equipmentIds: z.array(z.string()).min(1, i18n.t('common:form.required')),
   type: z.enum(['inspection', 'calibration']),
   mode: z.enum(['schedule', 'result']),
   scheduledAt: z.string(),
@@ -92,7 +92,7 @@ export function Component() {
   const form = useForm<Form>({
     resolver: zodResolver(schema),
     defaultValues: {
-      equipmentId: '',
+      equipmentIds: [],
       type: 'inspection',
       mode: 'schedule',
       scheduledAt: new Date().toISOString(),
@@ -333,9 +333,10 @@ export function Component() {
         form={form}
         onSubmit={async (values) => {
           try {
-            const created = await createCalibration(
-              apiBody({
-                equipmentId: values.equipmentId,
+            // Mỗi máy đã chọn → một phiếu kiểm định riêng (cùng thông số).
+            const payload = (equipmentId: string) =>
+              apiBody<components['schemas']['CreateCalibrationDto']>({
+                equipmentId,
                 type: values.type,
                 scheduledAt: values.mode === 'schedule' ? values.scheduledAt : undefined,
                 performedAt: values.mode === 'result' ? values.performedAt : undefined,
@@ -350,12 +351,30 @@ export function Component() {
                   ? (values.performedByUserId ?? undefined)
                   : undefined,
                 nextDueAt: values.nextDueAt || undefined,
-              }),
+              })
+            const results = await Promise.allSettled(
+              values.equipmentIds.map((id) => createCalibration(payload(id))),
             )
-            toast.success(t('saved'))
+            const ok = results.filter((r) => r.status === 'fulfilled')
+            const failed = results.length - ok.length
+            if (ok.length === 0) throw (results[0] as PromiseRejectedResult).reason
+            toast.success(
+              failed
+                ? t('savedMany', {
+                    defaultValue: 'Đã tạo {{n}} phiếu, {{f}} lỗi',
+                    n: ok.length,
+                    f: failed,
+                  })
+                : ok.length > 1
+                  ? t('savedManyOk', { defaultValue: 'Đã tạo {{n}} phiếu kiểm định', n: ok.length })
+                  : t('saved'),
+            )
             setOpen(false)
             void qc.invalidateQueries({ queryKey: ['calibrations'] })
-            navigate(`/calibrations/${created.id}`)
+            if (ok.length === 1)
+              navigate(
+                `/calibrations/${(ok[0] as PromiseFulfilledResult<{ id: string }>).value.id}`,
+              )
           } catch (error) {
             if (!applyServerErrors(form, error)) toast.error(messageFor(error))
           }
@@ -363,15 +382,19 @@ export function Component() {
       >
         <FormField
           control={form.control}
-          name="equipmentId"
+          name="equipmentIds"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="sm:col-span-full">
               <AsyncSelect
-                label={t('equipment')}
+                label={t('equipmentMulti', { defaultValue: 'Máy (chọn được nhiều)' })}
                 queryKey="equipment"
                 loadOptions={equipmentOptions}
-                value={field.value || null}
-                onChange={(v) => field.onChange(typeof v === 'string' ? v : '')}
+                multiple
+                value={field.value}
+                onChange={(v) => field.onChange(Array.isArray(v) ? v : v ? [v] : [])}
+                placeholder={t('equipmentMultiPlaceholder', {
+                  defaultValue: 'Chọn một hoặc nhiều máy — mỗi máy một phiếu',
+                })}
               />
               <FormMessage />
             </FormItem>

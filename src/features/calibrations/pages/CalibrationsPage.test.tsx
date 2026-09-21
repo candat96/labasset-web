@@ -71,7 +71,7 @@ it('creates a calibration with a body validated like the API', async () => {
     routes: [{ path: '/calibrations/:id', element: <div>DETAIL</div> }],
   })
   await userEvent.click(await screen.findByRole('button', { name: 'Lên lịch / Ghi kết quả' }))
-  await userEvent.type(await screen.findByLabelText('Máy'), 'TB-1')
+  await userEvent.type(await screen.findByLabelText('Máy (chọn được nhiều)'), 'TB-1')
   await userEvent.click(await screen.findByRole('option', { name: /Máy XN/ }))
   await userEvent.click(screen.getByRole('button', { name: 'Lưu' }))
   await waitFor(() => expect(saved[0]).toMatchObject({ equipmentId: 'e1', type: 'inspection' }))
