@@ -1,4 +1,4 @@
-import { api, unwrap, unwrapAs } from '@/api/client'
+import { api, unwrap, unwrapAs, untypedApi } from '@/api/client'
 import { pageQuery } from '@/api/paths'
 import type { Settings } from './types'
 
@@ -6,6 +6,18 @@ export type { Settings }
 
 export const getSettings = () => unwrapAs<Settings>(api.GET('/v1/settings'))
 export const saveSettings = (body: Settings) => unwrap(api.PUT('/v1/settings', { body }))
+
+// Hợp đồng: POST /v1/ai/settings/test không nhận body — backend test cấu hình đã lưu.
+// TODO(api): D2 đang làm song song — endpoint chưa có trong OpenAPI.
+export interface AiSettingsTestResult {
+  ok: boolean
+  latencyMs?: number
+  model?: string
+  error?: string
+}
+
+export const testAiSettings = () =>
+  unwrapAs<AiSettingsTestResult>(untypedApi.POST('/v1/ai/settings/test'))
 
 // TODO(api): preview does not accept an unsaved template; it previews the persisted setting only.
 export type NumberPreview = { template: string; example: string; nextValue: number }
