@@ -6,7 +6,33 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import { DetailLayout } from '@/components/detail-layout'
+import { PageMeta } from '@/components/page/PageHeader'
+import { SectionCard } from '@/components/page/SectionCard'
+import { DataList, type DataListItem } from '@/components/page/DataList'
+import { CardSkeleton, DetailSkeleton } from '@/components/page/DetailSkeleton'
+import { EmptyState } from '@/components/page/EmptyState'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { ErrorState } from '@/components/page/ErrorState'
+import {
+  ArrowRightLeft,
+  Building2,
+  Cpu,
+  FileText,
+  Gauge,
+  MapPin,
+  Package,
+  Puzzle,
+  User,
+  Wrench,
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -129,6 +155,15 @@ const emptyReplace: ReplaceComponentForm = {
   replacedAt: '',
 }
 
+function TabSkeleton({ label }: { label: string }) {
+  return (
+    <div role="status" aria-label={label}>
+      <CardSkeleton table rows={4} />
+      <span className="sr-only">{label}</span>
+    </div>
+  )
+}
+
 const optionLabel = (option?: ReferenceOption) => (option ? `${option.code} — ${option.name}` : '—')
 
 export function Component() {
@@ -146,7 +181,7 @@ export function Component() {
   const [statusOpen, setStatusOpen] = useState(false)
   const [cloneOpen, setCloneOpen] = useState(false)
   const [transferOpen, setTransferOpen] = useState(false)
-  if (detail.isPending) return <p role="status">{t('loading')}</p>
+  if (detail.isPending) return <DetailSkeleton label={t('loading')} />
   if (detail.error) return <ErrorState error={detail.error} onRetry={() => void detail.refetch()} />
   const row = detail.data
   const status = (EQUIPMENT_STATUSES.find((s) => s === row.status) ?? 'active') as EquipmentStatus
@@ -178,8 +213,22 @@ export function Component() {
     <>
       {dialog}
       <DetailLayout
+        eyebrow={t('title', { defaultValue: 'Hồ sơ thiết bị' })}
         code={row.code}
         name={row.name}
+        meta={
+          <>
+            <PageMeta icon={<Cpu />}>{row.code}</PageMeta>
+            {row.model && <PageMeta icon={<Package />}>{row.model}</PageMeta>}
+            {row.department?.name && (
+              <PageMeta icon={<Building2 />}>{row.department.name}</PageMeta>
+            )}
+            {row.location && <PageMeta icon={<MapPin />}>{row.location}</PageMeta>}
+            {row.staffInCharge?.fullName && (
+              <PageMeta icon={<User />}>{row.staffInCharge.fullName}</PageMeta>
+            )}
+          </>
+        }
         badge={
           row.status === 'disposed' ? (
             <s>
@@ -255,28 +304,70 @@ export function Component() {
           </>
         }
         information={
-          <dl className="space-y-2 text-sm">
-            <div>
-              <dt className="text-xs text-muted-foreground">{t('fields.department')}</dt>
-              <dd>{row.department?.name ?? '—'}</dd>
+          <>
+            <h2 className="mb-3 text-[15px] leading-6 font-semibold">
+              {t('info.title', { defaultValue: 'Thông tin nhanh' })}
+            </h2>
+            <DataList
+              columns={1}
+              items={[
+                { label: t('fields.department'), value: row.department?.name },
+                { label: t('fields.location'), value: row.location },
+                { label: t('fields.serial'), value: row.serial },
+                { label: t('fields.manufacturer'), value: row.manufacturer?.name },
+                {
+                  label: t('fields.nextMaintenanceAt'),
+                  value: formatDate(row.nextMaintenanceAt) || null,
+                },
+                {
+                  label: t('fields.nextCalibrationAt'),
+                  value: formatDate(row.nextCalibrationAt) || null,
+                },
+              ]}
+            />
+            <div className="border-divider mt-4 grid grid-cols-3 gap-2 border-t pt-4">
+              {[
+                { label: t('info.accessories'), value: row.counts.accessories, icon: Puzzle },
+                {
+                  label: t('info.componentsDue'),
+                  value: row.counts.componentsDue,
+                  icon: Gauge,
+                  warn: row.counts.componentsDue > 0,
+                },
+                {
+                  label: t('info.openRepairs'),
+                  value: row.counts.openRepairs,
+                  icon: Wrench,
+                  warn: row.counts.openRepairs > 0,
+                },
+              ].map((stat) => (
+                <div
+                  key={stat.label}
+                  className={cn(
+                    'bg-surface-2 rounded-lg px-2 py-2 text-center',
+                    stat.warn && 'bg-warning-bg',
+                  )}
+                >
+                  <stat.icon
+                    className={cn(
+                      'text-muted-foreground mx-auto size-4',
+                      stat.warn && 'text-warning-fg',
+                    )}
+                    aria-hidden
+                  />
+                  <p
+                    className={cn(
+                      'mt-1 text-[18px] leading-6 font-bold tabular-nums',
+                      stat.warn && 'text-warning-fg',
+                    )}
+                  >
+                    {stat.value}
+                  </p>
+                  <p className="text-muted-foreground text-[11px] leading-4">{stat.label}</p>
+                </div>
+              ))}
             </div>
-            <div>
-              <dt className="text-xs text-muted-foreground">{t('fields.location')}</dt>
-              <dd>{row.location ?? '—'}</dd>
-            </div>
-            <div>
-              <dt className="text-xs text-muted-foreground">{t('info.accessories')}</dt>
-              <dd>{row.counts.accessories}</dd>
-            </div>
-            <div>
-              <dt className="text-xs text-muted-foreground">{t('info.componentsDue')}</dt>
-              <dd>{row.counts.componentsDue}</dd>
-            </div>
-            <div>
-              <dt className="text-xs text-muted-foreground">{t('info.openRepairs')}</dt>
-              <dd>{row.counts.openRepairs}</dd>
-            </div>
-          </dl>
+          </>
         }
         tabs={[
           { value: 'overview', label: t('tabs.overview'), content: <Overview row={row} /> },
@@ -320,7 +411,11 @@ export function Component() {
           {
             value: 'docs',
             label: t('tabs.docs'),
-            content: <AttachmentsPanel entityType="equipment" entityId={id} kinds={kinds} />,
+            content: (
+              <SectionCard title={t('tabs.docs')}>
+                <AttachmentsPanel entityType="equipment" entityId={id} kinds={kinds} />
+              </SectionCard>
+            ),
           },
           { value: 'repairs', label: t('tabs.repairs'), content: <RepairsTab id={id} /> },
           {
@@ -351,7 +446,11 @@ export function Component() {
           {
             value: 'audit',
             label: t('tabs.audit'),
-            content: <AuditTrail entityType="equipment" entityId={id} />,
+            content: (
+              <SectionCard title={t('tabs.audit')}>
+                <AuditTrail entityType="equipment" entityId={id} />
+              </SectionCard>
+            ),
           },
         ]}
       />
@@ -375,73 +474,95 @@ export function Component() {
 function Overview({ row }: { row: NonNullable<ReturnType<typeof useEquipment>['data']> }) {
   const { t } = useTranslation('equipment')
   const warrantyLeft = row.warrantyUntil && new Date(row.warrantyUntil) >= new Date()
-  const fields: [string, string][] = [
-    [t('fields.assetCode'), row.assetCode ?? '—'],
-    [t('fields.model'), row.model ?? '—'],
-    [t('fields.serial'), row.serial ?? '—'],
-    [t('fields.manufacturer'), row.manufacturer?.name ?? '—'],
-    [t('fields.supplierShort'), row.supplier?.name ?? '—'],
-    [t('fields.fundingSource'), row.fundingSource?.name ?? '—'],
-    [t('fields.group'), row.group?.name ?? '—'],
-    [t('fields.countryOfOrigin'), row.countryOfOrigin ?? '—'],
-    [t('fields.manufactureYearShort'), row.manufactureYear ? String(row.manufactureYear) : '—'],
-    [t('fields.receivedAt'), formatDate(row.receivedAt) || '—'],
-    [t('fields.commissionedAt'), formatDate(row.commissionedAt) || '—'],
-    [t('fields.originalValue'), formatVnd(row.originalValue) || '—'],
-    [
-      t('fields.warranty'),
-      row.warrantyUntil
-        ? `${formatDate(row.warrantyUntil)} · ${warrantyLeft ? t('fields.inWarranty') : t('fields.outWarranty')}`
-        : '—',
-    ],
-    [t('fields.purchaseContractNo'), row.purchaseContractNo ?? '—'],
-    [t('fields.decisionNo'), row.decisionNo ?? '—'],
-    [t('fields.department'), row.department?.name ?? '—'],
-    [t('fields.location'), row.location ?? '—'],
-    [t('fields.deptContact'), row.deptContact?.fullName ?? '—'],
-    [t('fields.staffInCharge'), row.staffInCharge?.fullName ?? '—'],
-    [t('fields.testTypes'), row.testTypes.length ? row.testTypes.join(', ') : '—'],
-    [
-      t('fields.throughputPerHour'),
-      row.throughputPerHour == null ? '—' : formatNumber(row.throughputPerHour),
-    ],
-    [t('fields.currentRunHours'), formatQty(row.currentRunHours) || '0'],
-    [t('fields.currentTestCount'), formatNumber(row.currentTestCount)],
-    [t('fields.nextMaintenanceAt'), formatDate(row.nextMaintenanceAt) || '—'],
-    [t('fields.lastMaintenanceAt'), formatDate(row.lastMaintenanceAt) || '—'],
-    [t('fields.nextCalibrationAt'), formatDate(row.nextCalibrationAt) || '—'],
-    [t('fields.lastCalibrationAt'), formatDate(row.lastCalibrationAt) || '—'],
-    [t('fields.notes'), row.notes ?? '—'],
-    [t('fields.statusNote'), row.statusNote ?? '—'],
-    [t('fields.voltage'), row.specs?.voltage ?? '—'],
-    [t('fields.power'), row.specs?.power ?? '—'],
-    [t('fields.dimensions'), row.specs?.dimensions ?? '—'],
-    [t('fields.weight'), row.specs?.weight ?? '—'],
-    [t('fields.envTemp'), row.specs?.env?.temp ?? '—'],
-    [t('fields.envHumidity'), row.specs?.env?.humidity ?? '—'],
-    [t('fields.envUps'), row.specs?.env?.ups ?? '—'],
-    [t('fields.envWater'), row.specs?.env?.water ?? '—'],
-    [t('fields.envGas'), row.specs?.env?.gas ?? '—'],
-    [t('fields.createdAt'), formatDateTime(row.createdAt)],
-    [t('fields.updatedAt'), formatDateTime(row.updatedAt)],
+  const general: DataListItem[] = [
+    { label: t('fields.assetCode'), value: row.assetCode },
+    { label: t('fields.model'), value: row.model },
+    { label: t('fields.serial'), value: row.serial },
+    { label: t('fields.manufacturer'), value: row.manufacturer?.name },
+    { label: t('fields.group'), value: row.group?.name },
+    { label: t('fields.countryOfOrigin'), value: row.countryOfOrigin },
+    {
+      label: t('fields.manufactureYearShort'),
+      value: row.manufactureYear ? String(row.manufactureYear) : null,
+    },
+    { label: t('fields.testTypes'), value: row.testTypes.length ? row.testTypes.join(', ') : null },
+  ]
+  const purchase: DataListItem[] = [
+    { label: t('fields.supplierShort'), value: row.supplier?.name },
+    { label: t('fields.fundingSource'), value: row.fundingSource?.name },
+    { label: t('fields.originalValue'), value: formatVnd(row.originalValue) || null },
+    { label: t('fields.receivedAt'), value: formatDate(row.receivedAt) || null },
+    { label: t('fields.commissionedAt'), value: formatDate(row.commissionedAt) || null },
+    {
+      label: t('fields.warranty'),
+      value: row.warrantyUntil ? (
+        <span className={warrantyLeft ? undefined : 'text-destructive'}>
+          {formatDate(row.warrantyUntil)} ·{' '}
+          {warrantyLeft ? t('fields.inWarranty') : t('fields.outWarranty')}
+        </span>
+      ) : null,
+    },
+    { label: t('fields.purchaseContractNo'), value: row.purchaseContractNo },
+    { label: t('fields.decisionNo'), value: row.decisionNo },
+  ]
+  const operation: DataListItem[] = [
+    { label: t('fields.department'), value: row.department?.name },
+    { label: t('fields.location'), value: row.location },
+    { label: t('fields.deptContact'), value: row.deptContact?.fullName },
+    { label: t('fields.staffInCharge'), value: row.staffInCharge?.fullName },
+    {
+      label: t('fields.throughputPerHour'),
+      value: row.throughputPerHour == null ? null : formatNumber(row.throughputPerHour),
+    },
+    { label: t('fields.currentRunHours'), value: formatQty(row.currentRunHours) || '0' },
+    { label: t('fields.currentTestCount'), value: formatNumber(row.currentTestCount) },
+  ]
+  const upkeep: DataListItem[] = [
+    { label: t('fields.lastMaintenanceAt'), value: formatDate(row.lastMaintenanceAt) || null },
+    { label: t('fields.nextMaintenanceAt'), value: formatDate(row.nextMaintenanceAt) || null },
+    { label: t('fields.lastCalibrationAt'), value: formatDate(row.lastCalibrationAt) || null },
+    { label: t('fields.nextCalibrationAt'), value: formatDate(row.nextCalibrationAt) || null },
+  ]
+  const specs: DataListItem[] = [
+    { label: t('fields.voltage'), value: row.specs?.voltage },
+    { label: t('fields.power'), value: row.specs?.power },
+    { label: t('fields.dimensions'), value: row.specs?.dimensions },
+    { label: t('fields.weight'), value: row.specs?.weight },
+    { label: t('fields.envTemp'), value: row.specs?.env?.temp },
+    { label: t('fields.envHumidity'), value: row.specs?.env?.humidity },
+    { label: t('fields.envUps'), value: row.specs?.env?.ups },
+    { label: t('fields.envWater'), value: row.specs?.env?.water },
+    { label: t('fields.envGas'), value: row.specs?.env?.gas },
+  ]
+  const notes: DataListItem[] = [
+    { label: t('fields.notes'), value: row.notes, full: true },
+    { label: t('fields.statusNote'), value: row.statusNote, full: true },
+    { label: t('fields.createdAt'), value: formatDateTime(row.createdAt) },
+    { label: t('fields.updatedAt'), value: formatDateTime(row.updatedAt) },
   ]
   return (
-    <dl className="grid gap-3 text-sm sm:grid-cols-2">
-      {fields.map(([k, v]) => (
-        <div key={k}>
-          <dt className="text-xs text-muted-foreground">{k}</dt>
-          <dd
-            className={
-              k === t('fields.warranty') && row.warrantyUntil && !warrantyLeft
-                ? 'text-destructive'
-                : undefined
-            }
-          >
-            {v}
-          </dd>
-        </div>
-      ))}
-    </dl>
+    <>
+      <SectionCard title={t('overview.general', { defaultValue: 'Thông tin chung' })}>
+        <DataList columns={3} items={general} />
+      </SectionCard>
+      <div className="grid gap-4 xl:grid-cols-2">
+        <SectionCard title={t('overview.purchase', { defaultValue: 'Mua sắm & bảo hành' })}>
+          <DataList columns={2} items={purchase} />
+        </SectionCard>
+        <SectionCard title={t('overview.operation', { defaultValue: 'Vận hành' })}>
+          <DataList columns={2} items={operation} />
+        </SectionCard>
+        <SectionCard title={t('overview.upkeep', { defaultValue: 'Bảo dưỡng & hiệu chuẩn' })}>
+          <DataList columns={2} items={upkeep} />
+        </SectionCard>
+        <SectionCard title={t('overview.specs', { defaultValue: 'Thông số kỹ thuật' })}>
+          <DataList columns={2} items={specs} />
+        </SectionCard>
+      </div>
+      <SectionCard title={t('overview.notes', { defaultValue: 'Ghi chú' })}>
+        <DataList columns={2} items={notes} />
+      </SectionCard>
+    </>
   )
 }
 
@@ -500,82 +621,94 @@ function NetworkTab({ id, canWrite }: { id: string; canWrite: boolean }) {
     onError: (e) => toast.error(messageFor(e)),
   })
   return (
-    <Form {...form}>
-      <form
-        className="grid max-w-xl gap-4 sm:grid-cols-2"
-        onSubmit={form.handleSubmit(() => save.mutate())}
-      >
-        <TextField control={form.control} name="ip" label={t('network.ip')} disabled={!canWrite} />
-        <TextField
-          control={form.control}
-          name="mac"
-          label={t('network.mac')}
-          disabled={!canWrite}
-        />
-        <NumberField
-          control={form.control}
-          name="port"
-          label={t('network.port')}
-          disabled={!canWrite}
-        />
-        <SelectField
-          control={form.control}
-          name="protocol"
-          label={t('network.protocol')}
-          disabled={!canWrite}
-          emptyLabel="—"
-          options={[
-            { value: 'HL7', label: 'HL7' },
-            { value: 'ASTM', label: 'ASTM' },
-            { value: 'other', label: t('network.other') },
-          ]}
-        />
-        <SwitchField
-          control={form.control}
-          name="lisConnected"
-          label={t('network.lisConnected')}
-          disabled={!canWrite}
-        />
-        <TextField
-          control={form.control}
-          name="lisNote"
-          label={t('network.lisNote')}
-          disabled={!canWrite}
-        />
-        <TextField
-          control={form.control}
-          name="hostPcName"
-          label={t('network.hostPcName')}
-          disabled={!canWrite}
-        />
-        <TextField
-          control={form.control}
-          name="hostPcSpec"
-          label={t('network.hostPcSpec')}
-          disabled={!canWrite}
-        />
-        <FormField
-          control={form.control}
-          name="diagramFileId"
-          render={({ field }) => (
-            <FormItem className="sm:col-span-2">
-              <FileField
-                label={t('network.diagram')}
-                value={field.value}
-                onChange={field.onChange}
-                disabled={!canWrite}
-              />
-              <FormMessage />
-            </FormItem>
+    <SectionCard
+      title={t('tabs.network')}
+      description={t('network.hint', { defaultValue: 'Kết nối mạng, LIS và máy tính chủ' })}
+    >
+      <Form {...form}>
+        <form
+          className="grid max-w-2xl gap-4 sm:grid-cols-2"
+          onSubmit={form.handleSubmit(() => save.mutate())}
+        >
+          <TextField
+            control={form.control}
+            name="ip"
+            label={t('network.ip')}
+            disabled={!canWrite}
+          />
+          <TextField
+            control={form.control}
+            name="mac"
+            label={t('network.mac')}
+            disabled={!canWrite}
+          />
+          <NumberField
+            control={form.control}
+            name="port"
+            label={t('network.port')}
+            disabled={!canWrite}
+          />
+          <SelectField
+            control={form.control}
+            name="protocol"
+            label={t('network.protocol')}
+            disabled={!canWrite}
+            emptyLabel="—"
+            options={[
+              { value: 'HL7', label: 'HL7' },
+              { value: 'ASTM', label: 'ASTM' },
+              { value: 'other', label: t('network.other') },
+            ]}
+          />
+          <SwitchField
+            control={form.control}
+            name="lisConnected"
+            label={t('network.lisConnected')}
+            disabled={!canWrite}
+          />
+          <TextField
+            control={form.control}
+            name="lisNote"
+            label={t('network.lisNote')}
+            disabled={!canWrite}
+          />
+          <TextField
+            control={form.control}
+            name="hostPcName"
+            label={t('network.hostPcName')}
+            disabled={!canWrite}
+          />
+          <TextField
+            control={form.control}
+            name="hostPcSpec"
+            label={t('network.hostPcSpec')}
+            disabled={!canWrite}
+          />
+          <FormField
+            control={form.control}
+            name="diagramFileId"
+            render={({ field }) => (
+              <FormItem className="sm:col-span-2">
+                <FileField
+                  label={t('network.diagram')}
+                  value={field.value}
+                  onChange={field.onChange}
+                  disabled={!canWrite}
+                />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          {canWrite && (
+            <div className="sm:col-span-2">
+              <Button type="submit" disabled={save.isPending}>
+                {t('actions.saveNetwork')}
+              </Button>
+            </div>
           )}
-        />
-        {canWrite && (
-          <Button type="submit" disabled={save.isPending}>
-            {t('actions.saveNetwork')}
-          </Button>
-        )}
-      </form>
-    </Form>
+        </form>
+      </Form>
+    </SectionCard>
   )
 }
 
@@ -645,43 +778,43 @@ function AccessoriesTab({ id, canWrite }: { id: string; canWrite: boolean }) {
     })
     setOpen(true)
   }
-  if (list.isPending) return <p role="status">{t('accessories.loading')}</p>
+  if (list.isPending) return <TabSkeleton label={t('accessories.loading')} />
   if (list.error) return <ErrorState error={list.error} onRetry={() => void list.refetch()} />
   return (
-    <div>
+    <SectionCard
+      title={t('tabs.accessories')}
+      description={t('countItems', { defaultValue: '{{n}} mục', n: list.data.length })}
+      actions={canWrite && <Button onClick={openCreate}>{t('actions.addAccessory')}</Button>}
+      flush
+    >
       {dialog}
-      {canWrite && (
-        <Button className="mb-3" onClick={openCreate}>
-          {t('actions.addAccessory')}
-        </Button>
-      )}
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="text-left">
-            <th>{t('accessories.code')}</th>
-            <th>{t('accessories.name')}</th>
-            <th>{t('accessories.type')}</th>
-            <th>{t('accessories.quantity')}</th>
-            <th>{t('accessories.condition')}</th>
-            <th>{t('accessories.replacedAt')}</th>
-            <th>{t('accessories.notes')}</th>
-            {canWrite && <th>{tc('actions.more')}</th>}
-          </tr>
-        </thead>
-        <tbody>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>{t('accessories.code')}</TableHead>
+            <TableHead>{t('accessories.name')}</TableHead>
+            <TableHead>{t('accessories.type')}</TableHead>
+            <TableHead>{t('accessories.quantity')}</TableHead>
+            <TableHead>{t('accessories.condition')}</TableHead>
+            <TableHead>{t('accessories.replacedAt')}</TableHead>
+            <TableHead>{t('accessories.notes')}</TableHead>
+            {canWrite && <TableHead>{tc('actions.more')}</TableHead>}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {list.data.map((row) => (
-            <tr key={row.id} className="border-t">
-              <td>{row.code ?? '—'}</td>
-              <td>{row.name}</td>
-              <td>{t(`accessories.types.${row.type}`)}</td>
-              <td>{row.quantity}</td>
-              <td>
+            <TableRow key={row.id}>
+              <TableCell>{row.code ?? '—'}</TableCell>
+              <TableCell>{row.name}</TableCell>
+              <TableCell>{t(`accessories.types.${row.type}`)}</TableCell>
+              <TableCell>{row.quantity}</TableCell>
+              <TableCell>
                 <StatusBadge value={row.condition} map={accessoryConditionMap} />
-              </td>
-              <td>{formatDate(row.replacedAt) || '—'}</td>
-              <td>{row.notes ?? '—'}</td>
+              </TableCell>
+              <TableCell>{formatDate(row.replacedAt) || '—'}</TableCell>
+              <TableCell>{row.notes ?? '—'}</TableCell>
               {canWrite && (
-                <td className="whitespace-nowrap">
+                <TableCell className="whitespace-nowrap">
                   <Button size="sm" variant="ghost" onClick={() => openEdit(row)}>
                     {tc('actions.edit')}
                   </Button>
@@ -700,19 +833,19 @@ function AccessoriesTab({ id, canWrite }: { id: string; canWrite: boolean }) {
                   >
                     {tc('actions.delete')}
                   </Button>
-                </td>
+                </TableCell>
               )}
-            </tr>
+            </TableRow>
           ))}
           {list.data.length === 0 && (
-            <tr>
-              <td colSpan={8} className="text-muted-foreground py-3">
+            <TableRow>
+              <TableCell colSpan={8} className="text-muted-foreground py-8 text-center">
                 {t('accessories.empty')}
-              </td>
-            </tr>
+              </TableCell>
+            </TableRow>
           )}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
       <FormDialog
         open={open}
         onOpenChange={(value) => {
@@ -751,7 +884,7 @@ function AccessoriesTab({ id, canWrite }: { id: string; canWrite: boolean }) {
         <DateField control={form.control} name="replacedAt" label={t('accessories.replacedAt')} />
         <TextField control={form.control} name="notes" label={t('accessories.notes')} />
       </FormDialog>
-    </div>
+    </SectionCard>
   )
 }
 
@@ -827,42 +960,46 @@ function SoftwareTab({ id, canWrite }: { id: string; canWrite: boolean }) {
     })
     setOpen(true)
   }
-  if (list.isPending) return <p role="status">{t('software.loading')}</p>
+  if (list.isPending) return <TabSkeleton label={t('software.loading')} />
   if (list.error) return <ErrorState error={list.error} onRetry={() => void list.refetch()} />
   return (
-    <div>
+    <SectionCard
+      title={t('tabs.software')}
+      description={t('countItems', { defaultValue: '{{n}} mục', n: list.data.length })}
+      actions={canWrite && <Button onClick={openCreate}>{t('actions.addSoftware')}</Button>}
+      flush
+    >
       {dialog}
-      {canWrite && (
-        <Button className="mb-3" onClick={openCreate}>
-          {t('actions.addSoftware')}
-        </Button>
-      )}
       {key && (
-        <p className="bg-muted mb-2 rounded p-2 font-mono text-sm">
-          {key}{' '}
-          <Button size="sm" onClick={() => void navigator.clipboard.writeText(key)}>
+        <div className="bg-surface-2 mx-5 mb-3 flex items-center justify-between gap-3 rounded-lg px-3 py-2 font-mono text-[13px]">
+          <span className="truncate">{key}</span>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => void navigator.clipboard.writeText(key)}
+          >
             {t('actions.copy')}
           </Button>
-        </p>
+        </div>
       )}
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="text-left">
-            <th>{t('software.name')}</th>
-            <th>{t('software.version')}</th>
-            <th>{t('software.updatedOn')}</th>
-            <th>{t('software.licenseExpiresAt')}</th>
-            <th>{t('software.notes')}</th>
-            {canWrite && <th>{tc('actions.more')}</th>}
-          </tr>
-        </thead>
-        <tbody>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>{t('software.name')}</TableHead>
+            <TableHead>{t('software.version')}</TableHead>
+            <TableHead>{t('software.updatedOn')}</TableHead>
+            <TableHead>{t('software.licenseExpiresAt')}</TableHead>
+            <TableHead>{t('software.notes')}</TableHead>
+            {canWrite && <TableHead>{tc('actions.more')}</TableHead>}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {list.data.map((row) => (
-            <tr key={row.id} className="border-t">
-              <td>{row.name}</td>
-              <td>{row.version ?? '—'}</td>
-              <td>{formatDate(row.updatedOn) || '—'}</td>
-              <td
+            <TableRow key={row.id}>
+              <TableCell>{row.name}</TableCell>
+              <TableCell>{row.version ?? '—'}</TableCell>
+              <TableCell>{formatDate(row.updatedOn) || '—'}</TableCell>
+              <TableCell
                 className={
                   row.licenseExpiresAt && new Date(row.licenseExpiresAt) < new Date()
                     ? 'text-destructive'
@@ -870,10 +1007,10 @@ function SoftwareTab({ id, canWrite }: { id: string; canWrite: boolean }) {
                 }
               >
                 {formatDate(row.licenseExpiresAt) || '—'}
-              </td>
-              <td>{row.notes ?? '—'}</td>
+              </TableCell>
+              <TableCell>{row.notes ?? '—'}</TableCell>
               {canWrite && (
-                <td className="whitespace-nowrap">
+                <TableCell className="whitespace-nowrap">
                   {row.hasLicenseKey && (
                     <Button
                       size="sm"
@@ -912,19 +1049,19 @@ function SoftwareTab({ id, canWrite }: { id: string; canWrite: boolean }) {
                   >
                     {tc('actions.delete')}
                   </Button>
-                </td>
+                </TableCell>
               )}
-            </tr>
+            </TableRow>
           ))}
           {list.data.length === 0 && (
-            <tr>
-              <td colSpan={6} className="text-muted-foreground py-3">
+            <TableRow>
+              <TableCell colSpan={6} className="text-muted-foreground py-8 text-center">
                 {t('software.empty')}
-              </td>
-            </tr>
+              </TableCell>
+            </TableRow>
           )}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
       <FormDialog
         open={open}
         onOpenChange={(value) => {
@@ -958,7 +1095,7 @@ function SoftwareTab({ id, canWrite }: { id: string; canWrite: boolean }) {
       {historyRow && (
         <SoftwareHistoryDrawer id={id} row={historyRow} onClose={() => setHistoryRow(null)} />
       )}
-    </div>
+    </SectionCard>
   )
 }
 
@@ -1031,7 +1168,7 @@ function SoftwareHistoryDrawer({
             <ErrorState error={history.error} onRetry={() => void history.refetch()} />
           )}
           {history.data?.map((item) => (
-            <div key={item.id} className="rounded border p-2">
+            <div key={item.id} className="border-divider rounded-lg border p-3">
               <p>
                 {t('software.historyFrom')}: {item.fromVersion ?? '—'} → {t('software.historyTo')}:{' '}
                 {item.toVersion}
@@ -1144,28 +1281,27 @@ function ComponentsTab({
     })
     setOpen(true)
   }
-  if (list.isPending) return <p role="status">{t('components.loading')}</p>
+  if (list.isPending) return <TabSkeleton label={t('components.loading')} />
   if (list.error) return <ErrorState error={list.error} onRetry={() => void list.refetch()} />
   return (
-    <div>
+    <SectionCard
+      title={t('tabs.components')}
+      description={t('countItems', { defaultValue: '{{n}} mục', n: list.data.length })}
+      actions={canWrite && <Button onClick={openCreate}>{t('actions.addComponent')}</Button>}
+    >
       {dialog}
-      {canWrite && (
-        <Button className="mb-3" onClick={openCreate}>
-          {t('actions.addComponent')}
-        </Button>
-      )}
       <ul className="space-y-3">
         {list.data.map((row) => {
           const pct = api.usedPct(row, { currentRunHours: hours, currentTestCount: tests })
           const bar = Math.min(100, Math.round(pct * 100))
           const color = bar >= 100 ? 'bg-destructive' : bar >= 80 ? 'bg-warning' : 'bg-success'
           return (
-            <li key={row.id} className="rounded border p-2 text-sm">
+            <li key={row.id} className="border-divider rounded-xl border p-4 text-sm">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="font-medium">{row.name}</span>
+                <span className="text-[14px] font-semibold">{row.name}</span>
                 <StatusBadge value={row.status} map={componentStatusMap} />
               </div>
-              <dl className="text-muted-foreground mt-2 grid gap-2 text-xs sm:grid-cols-3">
+              <dl className="mt-3 grid gap-x-4 gap-y-2 text-[13px] sm:grid-cols-3 [&_dd]:font-medium [&_dt]:text-[12px] [&_dt]:text-muted-foreground">
                 <div>
                   <dt>{t('components.componentType')}</dt>
                   <dd>{typeName(row.componentTypeId)}</dd>
@@ -1195,10 +1331,10 @@ function ComponentsTab({
                   <dd>{row.notes ?? '—'}</dd>
                 </div>
               </dl>
-              <div className="bg-muted mt-2 h-2 rounded">
+              <div className="bg-muted mt-3 h-2 overflow-hidden rounded-full">
                 <div
                   data-testid={`usedpct-${row.id}`}
-                  className={`h-2 rounded ${color}`}
+                  className={`h-2 rounded-full ${color}`}
                   style={{ width: `${bar}%` }}
                 />
               </div>
@@ -1237,7 +1373,9 @@ function ComponentsTab({
           )
         })}
         {list.data.length === 0 && (
-          <li className="text-muted-foreground">{t('components.empty')}</li>
+          <li>
+            <EmptyState icon={Puzzle} title={t('components.empty')} />
+          </li>
         )}
       </ul>
       <FormDialog
@@ -1298,7 +1436,7 @@ function ComponentsTab({
       {historyRow && (
         <ReplacementsDrawer id={id} row={historyRow} onClose={() => setHistoryRow(null)} />
       )}
-    </div>
+    </SectionCard>
   )
 }
 
@@ -1393,7 +1531,7 @@ function ReplacementsDrawer({
             <ErrorState error={history.error} onRetry={() => void history.refetch()} />
           )}
           {history.data?.map((item) => (
-            <div key={item.id} className="rounded border p-2">
+            <div key={item.id} className="border-divider rounded-lg border p-3">
               <p className="font-medium">{formatDateTime(item.replacedAt)}</p>
               <p>
                 {t('components.historyReason')}: {item.reason}
@@ -1488,10 +1626,16 @@ function SuppliesTab({ id, canWrite }: { id: string; canWrite: boolean }) {
       { supplyId, normQtyPerDay: '', normQtyPerTest: '', isPrimary: false, notes: '' },
     ])
   }
-  if (list.isPending) return <p role="status">{t('supplies.loading')}</p>
+  if (list.isPending) return <TabSkeleton label={t('supplies.loading')} />
   if (list.error) return <ErrorState error={list.error} onRetry={() => void list.refetch()} />
   return (
-    <div className="space-y-3">
+    <SectionCard
+      title={t('tabs.supplies')}
+      description={t('supplies.hint', {
+        defaultValue: 'Định mức tiêu hao và số ngày còn dùng được theo tồn kho',
+      })}
+      bodyClassName="space-y-4"
+    >
       {canWrite && (
         <div className="max-w-sm">
           <AsyncSelect
@@ -1509,18 +1653,18 @@ function SuppliesTab({ id, canWrite }: { id: string; canWrite: boolean }) {
       )}
       <Form {...form}>
         <form onSubmit={form.handleSubmit(() => save.mutate())} noValidate>
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left">
-                <th>{t('supplies.supply')}</th>
-                <th>{t('supplies.normPerDay')}</th>
-                <th>{t('supplies.normPerTest')}</th>
-                <th>{t('supplies.primary')}</th>
-                <th>{t('supplies.runway')}</th>
-                {canWrite && <th>{tc('actions.more')}</th>}
-              </tr>
-            </thead>
-            <tbody>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t('supplies.supply')}</TableHead>
+                <TableHead>{t('supplies.normPerDay')}</TableHead>
+                <TableHead>{t('supplies.normPerTest')}</TableHead>
+                <TableHead>{t('supplies.primary')}</TableHead>
+                <TableHead>{t('supplies.runway')}</TableHead>
+                {canWrite && <TableHead>{tc('actions.more')}</TableHead>}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {rows.map((row, index) => {
                 const run = runway.data?.items.find((item) => item.supplyId === row.supplyId)
                 const days = run?.daysLeft
@@ -1533,25 +1677,25 @@ function SuppliesTab({ id, canWrite }: { id: string; canWrite: boolean }) {
                         ? 'text-warning'
                         : ''
                 return (
-                  <tr key={row.supplyId} className="border-t align-top">
-                    <td className="py-2">{nameOf(row.supplyId)}</td>
-                    <td>
+                  <TableRow key={row.supplyId} className="align-top">
+                    <TableCell className="py-2">{nameOf(row.supplyId)}</TableCell>
+                    <TableCell>
                       <QtyField
                         control={form.control}
                         name={`rows.${index}.normQtyPerDay`}
                         label={t('supplies.normPerDay')}
                         disabled={!canWrite}
                       />
-                    </td>
-                    <td>
+                    </TableCell>
+                    <TableCell>
                       <QtyField
                         control={form.control}
                         name={`rows.${index}.normQtyPerTest`}
                         label={t('supplies.normPerTest')}
                         disabled={!canWrite}
                       />
-                    </td>
-                    <td>
+                    </TableCell>
+                    <TableCell>
                       <FormField
                         control={form.control}
                         name={`rows.${index}.isPrimary`}
@@ -1566,14 +1710,14 @@ function SuppliesTab({ id, canWrite }: { id: string; canWrite: boolean }) {
                           </FormItem>
                         )}
                       />
-                    </td>
-                    <td className={tone}>
+                    </TableCell>
+                    <TableCell className={tone}>
                       {days == null
                         ? '—'
                         : `${t('supplies.days', { days: formatNumber(days) })} (${t(`supplies.runwayBasis.${run?.basis ?? 'unknown'}`)})`}
-                    </td>
+                    </TableCell>
                     {canWrite && (
-                      <td>
+                      <TableCell>
                         <Button
                           type="button"
                           size="sm"
@@ -1589,28 +1733,28 @@ function SuppliesTab({ id, canWrite }: { id: string; canWrite: boolean }) {
                         >
                           {t('supplies.remove')}
                         </Button>
-                      </td>
+                      </TableCell>
                     )}
-                  </tr>
+                  </TableRow>
                 )
               })}
               {rows.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="text-muted-foreground py-3">
+                <TableRow>
+                  <TableCell colSpan={6} className="text-muted-foreground py-8 text-center">
                     {t('supplies.empty')}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               )}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
           {canWrite && (
-            <Button className="mt-3" type="submit" disabled={save.isPending}>
+            <Button className="mt-4" type="submit" disabled={save.isPending}>
               {t('actions.saveSupplies')}
             </Button>
           )}
         </form>
       </Form>
-    </div>
+    </SectionCard>
   )
 }
 
@@ -1645,7 +1789,7 @@ function CountersTab({ id, canWrite }: { id: string; canWrite: boolean }) {
       if (!applyServerErrors(form, e)) toast.error(messageFor(e))
     },
   })
-  if (list.isPending) return <p role="status">{t('counters.loading')}</p>
+  if (list.isPending) return <TabSkeleton label={t('counters.loading')} />
   if (list.error) return <ErrorState error={list.error} onRetry={() => void list.refetch()} />
   const points = list.data.items
   const maxH = Math.max(...points.map((p) => Number(p.runHours ?? 0)), 1)
@@ -1658,100 +1802,111 @@ function CountersTab({ id, canWrite }: { id: string; canWrite: boolean }) {
       )
       .join(' ')
   return (
-    <div>
-      {canWrite && (
-        <Button
-          className="mb-3"
-          onClick={() => {
-            form.reset({ recordedAt: '', runHours: '', testCount: '', note: '' })
-            setOpen(true)
-          }}
-        >
-          {t('actions.recordCounter')}
-        </Button>
-      )}
-      <div className="mb-3 max-w-lg space-y-1">
-        <svg
-          viewBox="0 0 320 80"
-          className="w-full"
-          role="img"
-          aria-label={t('counters.runHoursChart')}
-        >
-          <polyline
-            fill="none"
-            className="text-primary"
-            stroke="currentColor"
-            strokeWidth="2"
-            points={line((point) => Number(point.runHours ?? 0), maxH)}
-          />
-        </svg>
-        <svg
-          viewBox="0 0 320 80"
-          className="w-full"
-          role="img"
-          aria-label={t('counters.testCountChart')}
-        >
-          <polyline
-            fill="none"
-            className="text-info"
-            stroke="currentColor"
-            strokeWidth="2"
-            points={line((point) => point.testCount ?? 0, maxT)}
-          />
-        </svg>
+    <>
+      <div className="grid gap-4 md:grid-cols-2">
+        <SectionCard title={t('counters.runHoursChart')} bodyClassName="pt-0">
+          <svg
+            viewBox="0 0 320 80"
+            className="w-full"
+            role="img"
+            aria-label={t('counters.runHoursChart')}
+          >
+            <polyline
+              fill="none"
+              className="text-primary"
+              stroke="currentColor"
+              strokeWidth="2"
+              points={line((point) => Number(point.runHours ?? 0), maxH)}
+            />
+          </svg>
+        </SectionCard>
+        <SectionCard title={t('counters.testCountChart')} bodyClassName="pt-0">
+          <svg
+            viewBox="0 0 320 80"
+            className="w-full"
+            role="img"
+            aria-label={t('counters.testCountChart')}
+          >
+            <polyline
+              fill="none"
+              className="text-info"
+              stroke="currentColor"
+              strokeWidth="2"
+              points={line((point) => point.testCount ?? 0, maxT)}
+            />
+          </svg>
+        </SectionCard>
       </div>
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="text-left">
-            <th>{t('counters.recordedAt')}</th>
-            <th>{t('counters.runHours')}</th>
-            <th>{t('counters.testCount')}</th>
-            <th>{t('counters.source')}</th>
-            <th>{t('counters.note')}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {points.map((row) => (
-            <tr key={row.id} className="border-t">
-              <td>{formatDateTime(row.recordedAt)}</td>
-              <td>{formatQty(row.runHours) || '—'}</td>
-              <td>{row.testCount ?? '—'}</td>
-              <td>{row.source}</td>
-              <td>{row.note ?? '—'}</td>
-            </tr>
-          ))}
-          {points.length === 0 && (
-            <tr>
-              <td colSpan={5} className="text-muted-foreground py-3">
-                {t('counters.empty')}
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-      <FormDialog
-        open={open}
-        onOpenChange={setOpen}
-        title={t('actions.recordCounter')}
-        form={form}
-        submitting={save.isPending}
-        onSubmit={(v) => save.mutate(v)}
+      <SectionCard
+        title={t('tabs.counters')}
+        description={t('countItems', { defaultValue: '{{n}} mục', n: points.length })}
+        actions={
+          canWrite && (
+            <Button
+              onClick={() => {
+                form.reset({ recordedAt: '', runHours: '', testCount: '', note: '' })
+                setOpen(true)
+              }}
+            >
+              {t('actions.recordCounter')}
+            </Button>
+          )
+        }
+        flush
       >
-        <DatetimeField
-          control={form.control}
-          name="recordedAt"
-          label={t('counters.recordedAtLabel')}
-        />
-        <QtyField control={form.control} name="runHours" label={t('counters.runHours')} />
-        <NumberField
-          control={form.control}
-          name="testCount"
-          label={t('counters.testCount')}
-          min={0}
-        />
-        <TextField control={form.control} name="note" label={t('counters.note')} />
-      </FormDialog>
-    </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t('counters.recordedAt')}</TableHead>
+              <TableHead>{t('counters.runHours')}</TableHead>
+              <TableHead>{t('counters.testCount')}</TableHead>
+              <TableHead>{t('counters.source')}</TableHead>
+              <TableHead>{t('counters.note')}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {points.map((row) => (
+              <TableRow key={row.id}>
+                <TableCell>{formatDateTime(row.recordedAt)}</TableCell>
+                <TableCell>{formatQty(row.runHours) || '—'}</TableCell>
+                <TableCell>{row.testCount ?? '—'}</TableCell>
+                <TableCell>{row.source}</TableCell>
+                <TableCell>{row.note ?? '—'}</TableCell>
+              </TableRow>
+            ))}
+            {points.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={5} className="text-muted-foreground py-8 text-center">
+                  {t('counters.empty')}
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+        <FormDialog
+          open={open}
+          onOpenChange={setOpen}
+          title={t('actions.recordCounter')}
+          form={form}
+          submitting={save.isPending}
+          onSubmit={(v) => save.mutate(v)}
+        >
+          <DatetimeField
+            control={form.control}
+            name="recordedAt"
+            label={t('counters.recordedAtLabel')}
+          />
+          <QtyField control={form.control} name="runHours" label={t('counters.runHours')} />
+          <NumberField
+            control={form.control}
+            name="testCount"
+            label={t('counters.testCount')}
+            min={0}
+          />
+          <TextField control={form.control} name="note" label={t('counters.note')} />
+        </FormDialog>
+      </SectionCard>
+    </>
   )
 }
 
@@ -1761,24 +1916,52 @@ function RepairsTab({ id }: { id: string }) {
     queryKey: equipmentKeys.repairs(id),
     queryFn: () => api.listRepairsForEquipment(id),
   })
-  if (list.isPending) return <p role="status">{t('repairs.loading')}</p>
+  if (list.isPending) return <TabSkeleton label={t('repairs.loading')} />
   if (list.error) return <ErrorState error={list.error} onRetry={() => void list.refetch()} />
   return (
-    <ul className="space-y-2 text-sm">
-      {list.data.items.map((row) => (
-        <li key={row.id} className="flex flex-wrap items-center gap-2">
-          <Link className="text-primary hover:underline" to={`/repairs/${row.id}`}>
-            {row.code}
-          </Link>
-          <StatusBadge value={row.status} map={repairStatusMap} />
-          <span className="text-xs text-muted-foreground">{formatDate(row.createdAt)}</span>
-          <span>{row.assignee?.fullName ?? '—'}</span>
-        </li>
-      ))}
-      {list.data.items.length === 0 && (
-        <li className="text-muted-foreground">{t('repairs.empty')}</li>
+    <SectionCard
+      title={t('tabs.repairs')}
+      description={t('countItems', { defaultValue: '{{n}} mục', n: list.data.items.length })}
+      flush
+    >
+      {list.data.items.length === 0 ? (
+        <EmptyState icon={Wrench} title={t('repairs.empty')} />
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="pl-5">
+                {t('repairs.code', { defaultValue: 'Mã phiếu' })}
+              </TableHead>
+              <TableHead>{t('repairs.status', { defaultValue: 'Trạng thái' })}</TableHead>
+              <TableHead>{t('repairs.createdAt', { defaultValue: 'Ngày tạo' })}</TableHead>
+              <TableHead className="pr-5">
+                {t('repairs.assignee', { defaultValue: 'Kỹ thuật viên' })}
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {list.data.items.map((row) => (
+              <TableRow key={row.id}>
+                <TableCell className="pl-5">
+                  <Link
+                    className="text-primary font-semibold hover:underline"
+                    to={`/repairs/${row.id}`}
+                  >
+                    {row.code}
+                  </Link>
+                </TableCell>
+                <TableCell>
+                  <StatusBadge value={row.status} map={repairStatusMap} />
+                </TableCell>
+                <TableCell className="tabular-nums">{formatDate(row.createdAt)}</TableCell>
+                <TableCell className="pr-5">{row.assignee?.fullName ?? '—'}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       )}
-    </ul>
+    </SectionCard>
   )
 }
 
@@ -1792,49 +1975,99 @@ function MaintenanceTab({ id }: { id: string }) {
     queryKey: equipmentKeys.calibrations(id),
     queryFn: () => api.listCalibrationHistory(id),
   })
+  const taskRows = tasks.data?.items ?? []
+  const calRows = cals.data ?? []
   return (
-    <div className="grid gap-4 text-sm sm:grid-cols-2">
-      <div>
-        <h3 className="mb-2 font-medium">{t('maintenance.tasks')}</h3>
-        {tasks.isPending && <p role="status">{t('maintenance.loading')}</p>}
+    <div className="grid gap-4 xl:grid-cols-2">
+      <SectionCard title={t('maintenance.tasks')} flush={taskRows.length > 0}>
+        {tasks.isPending && (
+          <p role="status" className="text-muted-foreground text-[13px]">
+            {t('maintenance.loading')}
+          </p>
+        )}
         {tasks.error && <ErrorState error={tasks.error} onRetry={() => void tasks.refetch()} />}
-        <ul className="space-y-2">
-          {(tasks.data?.items ?? []).map((row) => (
-            <li key={row.id} className="flex flex-wrap items-center gap-2">
-              <Link className="text-primary hover:underline" to={`/maintenance/tasks/${row.id}`}>
-                {row.code}
-              </Link>
-              <StatusBadge value={row.status} map={taskStatusMap} />
-              <span className="text-xs text-muted-foreground">{formatDate(row.dueAt)}</span>
-            </li>
-          ))}
-          {tasks.data && tasks.data.items.length === 0 && (
-            <li className="text-muted-foreground">{t('maintenance.emptyTasks')}</li>
-          )}
-        </ul>
-      </div>
-      <div>
-        <h3 className="mb-2 font-medium">{t('maintenance.calibrations')}</h3>
-        {cals.isPending && <p role="status">{t('maintenance.loading')}</p>}
+        {tasks.data && taskRows.length === 0 && (
+          <EmptyState icon={Wrench} title={t('maintenance.emptyTasks')} />
+        )}
+        {taskRows.length > 0 && (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="pl-5">{t('repairs.code', { defaultValue: 'Mã' })}</TableHead>
+                <TableHead>{t('repairs.status', { defaultValue: 'Trạng thái' })}</TableHead>
+                <TableHead className="pr-5">
+                  {t('maintenance.dueAt', { defaultValue: 'Hạn' })}
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {taskRows.map((row) => (
+                <TableRow key={row.id}>
+                  <TableCell className="pl-5">
+                    <Link
+                      className="text-primary font-semibold hover:underline"
+                      to={`/maintenance/tasks/${row.id}`}
+                    >
+                      {row.code}
+                    </Link>
+                  </TableCell>
+                  <TableCell>
+                    <StatusBadge value={row.status} map={taskStatusMap} />
+                  </TableCell>
+                  <TableCell className="pr-5 tabular-nums">{formatDate(row.dueAt)}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </SectionCard>
+      <SectionCard title={t('maintenance.calibrations')} flush={calRows.length > 0}>
+        {cals.isPending && (
+          <p role="status" className="text-muted-foreground text-[13px]">
+            {t('maintenance.loading')}
+          </p>
+        )}
         {cals.error && <ErrorState error={cals.error} onRetry={() => void cals.refetch()} />}
-        <ul className="space-y-2">
-          {(cals.data ?? []).map((row) => (
-            <li key={row.id} className="flex flex-wrap items-center gap-2">
-              <Link className="text-primary hover:underline" to={`/calibrations/${row.id}`}>
-                {row.code}
-              </Link>
-              <StatusBadge value={row.status} map={calibrationStatusMap} />
-              {row.result && <StatusBadge value={row.result} map={calibrationResultMap} />}
-              <span className="text-xs text-muted-foreground">
-                {formatDate(row.performedAt) || '—'}
-              </span>
-            </li>
-          ))}
-          {cals.data && cals.data.length === 0 && (
-            <li className="text-muted-foreground">{t('maintenance.emptyCalibrations')}</li>
-          )}
-        </ul>
-      </div>
+        {cals.data && calRows.length === 0 && (
+          <EmptyState icon={FileText} title={t('maintenance.emptyCalibrations')} />
+        )}
+        {calRows.length > 0 && (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="pl-5">{t('repairs.code', { defaultValue: 'Mã' })}</TableHead>
+                <TableHead>{t('repairs.status', { defaultValue: 'Trạng thái' })}</TableHead>
+                <TableHead className="pr-5">
+                  {t('maintenance.performedAt', { defaultValue: 'Thực hiện' })}
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {calRows.map((row) => (
+                <TableRow key={row.id}>
+                  <TableCell className="pl-5">
+                    <Link
+                      className="text-primary font-semibold hover:underline"
+                      to={`/calibrations/${row.id}`}
+                    >
+                      {row.code}
+                    </Link>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-1">
+                      <StatusBadge value={row.status} map={calibrationStatusMap} />
+                      {row.result && <StatusBadge value={row.result} map={calibrationResultMap} />}
+                    </div>
+                  </TableCell>
+                  <TableCell className="pr-5 tabular-nums">
+                    {formatDate(row.performedAt) || '—'}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </SectionCard>
     </div>
   )
 }
@@ -1891,27 +2124,28 @@ function TransfersTab({
     },
     onError: (e) => toast.error(messageFor(e)),
   })
-  if (list.isPending) return <p role="status">{t('transfers.loading')}</p>
+  if (list.isPending) return <TabSkeleton label={t('transfers.loading')} />
   if (list.error) return <ErrorState error={list.error} onRetry={() => void list.refetch()} />
   const departmentName = (departmentId: string | null) =>
     departmentId ? (departmentNames.get(departmentId) ?? shortId(departmentId)) : '—'
   const userName = (value: string | null) =>
     value ? (userNames.get(value) ?? shortId(value)) : '—'
   return (
-    <div>
+    <SectionCard
+      title={t('tabs.transfers')}
+      description={t('countItems', { defaultValue: '{{n}} mục', n: list.data.items.length })}
+      actions={canWrite && <Button onClick={onCreate}>{t('transfers.create')}</Button>}
+    >
       {dialog}
-      {canWrite && (
-        <Button className="mb-3" onClick={onCreate}>
-          {t('transfers.create')}
-        </Button>
-      )}
-      <ul className="space-y-2 text-sm">
+      <ul className="space-y-3 text-sm">
         {list.data.items.map((row) => (
-          <li key={row.id} className="rounded border p-2">
+          <li key={row.id} className="border-divider rounded-xl border p-4">
             <div className="flex flex-wrap items-center gap-2">
               <StatusBadge value={row.status} map={transferStatusMap} />
-              <span>
-                {departmentName(row.fromDepartmentId)} → {departmentName(row.toDepartmentId)}
+              <span className="inline-flex items-center gap-1.5 text-[14px] font-semibold">
+                {departmentName(row.fromDepartmentId)}
+                <ArrowRightLeft className="text-subtle size-3.5" aria-hidden />
+                {departmentName(row.toDepartmentId)}
               </span>
               {row.toLocation && <span className="text-muted-foreground">· {row.toLocation}</span>}
             </div>
@@ -1967,10 +2201,22 @@ function TransfersTab({
           </li>
         ))}
         {list.data.items.length === 0 && (
-          <li className="text-muted-foreground">{t('transfers.empty')}</li>
+          <li>
+            <EmptyState
+              icon={ArrowRightLeft}
+              title={t('transfers.empty')}
+              action={
+                canWrite && (
+                  <Button variant="outline" onClick={onCreate}>
+                    {t('transfers.create')}
+                  </Button>
+                )
+              }
+            />
+          </li>
         )}
       </ul>
-    </div>
+    </SectionCard>
   )
 }
 
@@ -2043,49 +2289,54 @@ function TimelineTab({ id, userNames }: { id: string; userNames: Map<string, str
     onError: (e) => toast.error(messageFor(e)),
   })
   return (
-    <div className="space-y-3">
-      <div className="flex flex-wrap items-end gap-2">
-        <div className="w-52">
-          <Select
-            value={type || 'all'}
-            onValueChange={(value) => {
-              setType(value === 'all' ? '' : value)
+    <SectionCard
+      title={t('tabs.timeline')}
+      actions={
+        <div className="flex flex-wrap items-end gap-2">
+          <div className="w-48">
+            <Select
+              value={type || 'all'}
+              onValueChange={(value) => {
+                setType(value === 'all' ? '' : value)
+                setPage(1)
+              }}
+            >
+              <SelectTrigger aria-label={t('timeline.type')} className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('timeline.all')}</SelectItem>
+                {EVENT_TYPES.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {t(`timeline.types.${option.key}`)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <DatePicker
+            ariaLabel={t('timeline.from')}
+            className="w-40"
+            value={from}
+            onChange={(value) => {
+              setFrom(value ?? '')
               setPage(1)
             }}
-          >
-            <SelectTrigger aria-label={t('timeline.type')} className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('timeline.all')}</SelectItem>
-              {EVENT_TYPES.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {t(`timeline.types.${option.key}`)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          />
+          <DatePicker
+            ariaLabel={t('timeline.to')}
+            className="w-40"
+            value={to}
+            onChange={(value) => {
+              setTo(value ?? '')
+              setPage(1)
+            }}
+          />
         </div>
-        <DatePicker
-          ariaLabel={t('timeline.from')}
-          className="w-40"
-          value={from}
-          onChange={(value) => {
-            setFrom(value ?? '')
-            setPage(1)
-          }}
-        />
-        <DatePicker
-          ariaLabel={t('timeline.to')}
-          className="w-40"
-          value={to}
-          onChange={(value) => {
-            setTo(value ?? '')
-            setPage(1)
-          }}
-        />
-      </div>
-      <div className="flex gap-2">
+      }
+      bodyClassName="space-y-4"
+    >
+      <div className="bg-surface-2 flex gap-2 rounded-lg p-2">
         <Input
           aria-label={t('actions.addNote')}
           value={note}
@@ -2097,7 +2348,9 @@ function TimelineTab({ id, userNames }: { id: string; userNames: Map<string, str
         </Button>
       </div>
       {events.isPending ? (
-        <p role="status">{t('timeline.loading')}</p>
+        <p role="status" className="text-muted-foreground text-[13px]">
+          {t('timeline.loading')}
+        </p>
       ) : (
         <Timeline events={items} />
       )}
@@ -2122,7 +2375,7 @@ function TimelineTab({ id, userNames }: { id: string; userNames: Map<string, str
           {t('timeline.next')}
         </Button>
       </div>
-    </div>
+    </SectionCard>
   )
 }
 

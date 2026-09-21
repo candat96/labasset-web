@@ -3,9 +3,16 @@ import { useNavigate, useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { PageHeader } from '@/components/page/PageHeader'
+import { PageHeader, PageMeta } from '@/components/page/PageHeader'
+import { SectionCard } from '@/components/page/SectionCard'
+import { DataList } from '@/components/page/DataList'
+import { DetailSkeleton } from '@/components/page/DetailSkeleton'
 import { Button } from '@/components/ui/button'
 import { ErrorState } from '@/components/page/ErrorState'
+import { StatusBadge } from '@/components/status-badge'
+import { commonStatusMap } from '@/lib/status-maps'
+import { formatDateTime } from '@/lib/format/date'
+import { AtSign, Building2, Clock, ShieldCheck } from 'lucide-react'
 import { TemporaryPasswordDialog } from '@/components/temporary-password-dialog'
 import { useConfirm } from '@/components/confirm-dialog'
 import { useAuthStore } from '@/stores/auth.store'
@@ -46,7 +53,7 @@ export function Component() {
     },
     onError: (e) => toast.error(messageFor(e)),
   })
-  if (list.isPending) return <p role="status">{t('loading')}</p>
+  if (list.isPending) return <DetailSkeleton label={t('loading')} />
   if (list.error) return <ErrorState error={list.error} onRetry={() => void list.refetch()} />
   const row = list.data
   const run = async (name: Parameters<typeof action.mutate>[0], title: string) => {
@@ -58,6 +65,9 @@ export function Component() {
     )
       action.mutate(name)
   }
+  const departmentName =
+    departments.data?.find((d) => d.id === row.departmentId)?.name ?? row.departmentId
+  const roles = row.roles.map((r) => roleLabel(r)).join(', ')
   const confirmKeys = {
     resetPassword: t('confirm.resetPassword', { name: row.fullName }),
     deactivate: t('confirm.deactivate', { name: row.fullName }),
@@ -67,8 +77,25 @@ export function Component() {
   return (
     <>
       <PageHeader
+        eyebrow={t('title')}
         title={row.fullName}
-        description={row.username}
+        badge={
+          row.isActive === undefined ? undefined : (
+            <StatusBadge value={row.isActive ? 'active' : 'inactive'} map={commonStatusMap} />
+          )
+        }
+        meta={
+          <>
+            <PageMeta icon={<AtSign />}>{row.username}</PageMeta>
+            {departmentName && <PageMeta icon={<Building2 />}>{departmentName}</PageMeta>}
+            <PageMeta icon={<ShieldCheck />}>{roles}</PageMeta>
+            {row.lastLoginAt && (
+              <PageMeta icon={<Clock />}>
+                {t('fields.lastLoginAt')}: {formatDateTime(row.lastLoginAt)}
+              </PageMeta>
+            )}
+          </>
+        }
         actions={
           canWrite && (
             <>
@@ -100,9 +127,6 @@ export function Component() {
                       {t('actions.unlock')}
                     </Button>
                   )}
-                  {row.isActive === undefined && (
-                    <p className="text-muted-foreground text-sm">{t('detail.statusMissing')}</p>
-                  )}
                   <Button
                     variant="destructive"
                     disabled={action.isPending}
@@ -116,22 +140,46 @@ export function Component() {
           )
         }
       />
-      <dl className="bg-card grid gap-4 rounded-lg border p-4 sm:grid-cols-2">
-        {[
-          [t('fields.email'), row.email],
-          [t('fields.phone'), row.phone],
-          [
-            t('fields.department'),
-            departments.data?.find((d) => d.id === row.departmentId)?.name ?? row.departmentId,
-          ],
-          [t('fields.roles'), row.roles.map((r) => roleLabel(r)).join(', ')],
-        ].map(([label, value]) => (
-          <div key={label}>
-            <dt className="text-muted-foreground">{label}</dt>
-            <dd>{value || '—'}</dd>
-          </div>
-        ))}
-      </dl>
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <SectionCard title={t('info', { defaultValue: 'Thông tin tài khoản' })}>
+          <DataList
+            columns={2}
+            items={[
+              { label: t('fields.username'), value: row.username },
+              { label: t('fields.fullName'), value: row.fullName },
+              { label: t('fields.email'), value: row.email },
+              { label: t('fields.phone'), value: row.phone },
+              { label: t('fields.department'), value: departmentName },
+              { label: t('fields.roles'), value: roles },
+            ]}
+          />
+        </SectionCard>
+        <SectionCard title={t('fields.isActive')}>
+          <DataList
+            columns={1}
+            items={[
+              {
+                label: t('fields.isActive'),
+                value:
+                  row.isActive === undefined ? (
+                    <span className="text-muted-foreground font-normal">
+                      {t('detail.statusMissing')}
+                    </span>
+                  ) : (
+                    <StatusBadge
+                      value={row.isActive ? 'active' : 'inactive'}
+                      map={commonStatusMap}
+                    />
+                  ),
+              },
+              {
+                label: t('fields.lastLoginAt'),
+                value: row.lastLoginAt ? formatDateTime(row.lastLoginAt) : null,
+              },
+            ]}
+          />
+        </SectionCard>
+      </div>
       <UserFormDialog open={edit} onOpenChange={setEdit} user={row} onPassword={setPassword} />
       <TemporaryPasswordDialog password={password} onClose={() => setPassword(null)} />
       {dialog}

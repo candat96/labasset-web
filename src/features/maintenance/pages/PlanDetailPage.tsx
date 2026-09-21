@@ -4,8 +4,21 @@ import { useQuery } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
-import { PageHeader } from '@/components/page/PageHeader'
+import { PageHeader, PageMeta } from '@/components/page/PageHeader'
+import { SectionCard } from '@/components/page/SectionCard'
+import { DataList } from '@/components/page/DataList'
+import { DetailSkeleton } from '@/components/page/DetailSkeleton'
+import { EmptyState } from '@/components/page/EmptyState'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { ErrorState } from '@/components/page/ErrorState'
+import { CalendarDays, CalendarRange, ClipboardCheck, Repeat, Wrench } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { StatusBadge } from '@/components/status-badge'
@@ -69,87 +82,210 @@ export function Component() {
       isActive: row.isActive,
     })
   }, [detail.data, form])
-  if (detail.isPending) return <p role="status">{t('loadingPlan')}</p>
+  if (detail.isPending) return <DetailSkeleton label={t('loadingPlan')} />
   if (detail.error) return <ErrorState error={detail.error} onRetry={() => void detail.refetch()} />
   const row = detail.data
   const previewRows = Array.isArray(preview.data)
     ? preview.data
     : ((preview.data as { items?: unknown[] } | undefined)?.items ?? [])
+  const cycleLabel = row.cycleMonths
+    ? t('cycleMonthsValue', { count: row.cycleMonths })
+    : t('cycleDaysValue', { count: row.cycleDays ?? '—' })
+  const taskRows = tasks.data?.items ?? []
   return (
     <>
       <PageHeader
+        eyebrow={t('plansTitle')}
         title={row.name}
         badge={<StatusBadge value={row.isActive ? 'active' : 'inactive'} map={commonStatusMap} />}
+        meta={
+          <>
+            <PageMeta icon={<Repeat />}>{cycleLabel}</PageMeta>
+            <PageMeta icon={<CalendarDays />}>
+              {t('start')}: {formatDate(row.startDate)}
+              {row.endDate ? ` → ${formatDate(row.endDate)}` : ''}
+            </PageMeta>
+            <PageMeta icon={<Wrench />}>
+              {row.source === 'vendor_contract' ? t('sourceVendor') : t('sourceInternal')}
+            </PageMeta>
+          </>
+        }
         actions={canWrite && <Button onClick={() => setEditOpen(true)}>{t('editPlan')}</Button>}
       />
-      <dl className="mb-4 grid gap-2 text-sm sm:grid-cols-2">
-        <div>
-          <dt className="text-muted-foreground">{t('cycle')}</dt>
-          <dd>
-            {row.cycleMonths
-              ? t('cycleMonthsValue', { count: row.cycleMonths })
-              : t('cycleDaysValue', { count: row.cycleDays ?? '—' })}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-muted-foreground">{t('start')}</dt>
-          <dd>{formatDate(row.startDate) || '—'}</dd>
-        </div>
-      </dl>
-      <section className="mb-6 rounded-lg border p-3">
-        <div className="mb-3 flex flex-wrap items-end gap-2">
-          <Input
-            type="number"
-            aria-label={t('year')}
-            className="w-28"
-            value={year}
-            onChange={(e) => setYear(e.target.value)}
-          />
-          <Button
-            onClick={async () => {
-              try {
-                const result = await generatePlan(id, Number(year))
-                toast.success(
-                  t('planGenerated', {
-                    created: result.created ?? 0,
-                    skipped: result.skipped ?? 0,
-                  }),
-                )
-                void invalidatePlans()
-                invalidateTasks()
-              } catch (error) {
-                toast.error(messageFor(error))
-              }
-            }}
-          >
-            {t('generateYear')} {year}
-          </Button>
-        </div>
-        <h2 className="mb-2 font-medium">{t('previewTitle')}</h2>
-        <ul className="space-y-1 text-sm">
-          {previewRows.map((item, index) => {
-            if (typeof item === 'string') {
-              return (
-                <li key={item}>
-                  {formatDate(item) || item}
-                  {t('previewWillCreate')}
-                </li>
-              )
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="min-w-0 space-y-5">
+          <SectionCard
+            title={t('previewTitle')}
+            description={t('previewHint', {
+              defaultValue: 'Các mốc bảo dưỡng dự kiến trong năm; bấm sinh để tạo công việc.',
+            })}
+            actions={
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  aria-label={t('year')}
+                  className="w-24"
+                  value={year}
+                  onChange={(e) => setYear(e.target.value)}
+                />
+                <Button
+                  onClick={async () => {
+                    try {
+                      const result = await generatePlan(id, Number(year))
+                      toast.success(
+                        t('planGenerated', {
+                          created: result.created ?? 0,
+                          skipped: result.skipped ?? 0,
+                        }),
+                      )
+                      void invalidatePlans()
+                      invalidateTasks()
+                    } catch (error) {
+                      toast.error(messageFor(error))
+                    }
+                  }}
+                >
+                  {t('generateYear')} {year}
+                </Button>
+              </div>
             }
-            const rec = item as Record<string, unknown>
-            return (
-              <li key={index}>
-                {String(rec.equipmentCode ?? rec.equipmentId ?? t('equipment'))} ·{' '}
-                {String(rec.scheduledAt ?? rec.date ?? '')}
-                {rec.exists || rec.hasTask ? t('previewExists') : t('previewWillCreate')}
-              </li>
-            )
-          })}
-          {previewRows.length === 0 && (
-            <li className="text-muted-foreground">{t('previewEmpty')}</li>
-          )}
-        </ul>
-      </section>
+            flush={previewRows.length > 0}
+          >
+            {previewRows.length === 0 ? (
+              <EmptyState icon={CalendarRange} title={t('previewEmpty')} />
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="pl-5">{t('equipment')}</TableHead>
+                    <TableHead>{t('scheduledAt', { defaultValue: 'Ngày dự kiến' })}</TableHead>
+                    <TableHead className="pr-5">
+                      {t('status', { defaultValue: 'Trạng thái' })}
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {previewRows.map((item, index) => {
+                    if (typeof item === 'string') {
+                      return (
+                        <TableRow key={item}>
+                          <TableCell className="pl-5 font-medium">{t('equipment')}</TableCell>
+                          <TableCell className="tabular-nums">{formatDate(item) || item}</TableCell>
+                          <TableCell className="pr-5">
+                            <StatusBadge
+                              value="new"
+                              map={{
+                                new: {
+                                  label: t('previewNew', { defaultValue: 'Sẽ tạo' }),
+                                  tone: 'info',
+                                },
+                              }}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      )
+                    }
+                    const rec = item as Record<string, unknown>
+                    const exists = Boolean(rec.exists || rec.hasTask)
+                    const when = String(rec.scheduledAt ?? rec.date ?? '')
+                    return (
+                      <TableRow key={index}>
+                        <TableCell className="pl-5 font-medium">
+                          {String(rec.equipmentCode ?? rec.equipmentId ?? t('equipment'))}
+                        </TableCell>
+                        <TableCell className="tabular-nums">{formatDate(when) || when}</TableCell>
+                        <TableCell className="pr-5">
+                          <StatusBadge
+                            value={exists ? 'exists' : 'new'}
+                            map={{
+                              exists: {
+                                label: t('previewHas', { defaultValue: 'Đã có task' }),
+                                tone: 'muted',
+                              },
+                              new: {
+                                label: t('previewNew', { defaultValue: 'Sẽ tạo' }),
+                                tone: 'info',
+                              },
+                            }}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            )}
+          </SectionCard>
+          <SectionCard
+            title={t('generatedTasks')}
+            description={t('taskCount', { defaultValue: '{{n}} công việc', n: taskRows.length })}
+            flush={taskRows.length > 0}
+          >
+            {taskRows.length === 0 ? (
+              <EmptyState
+                icon={ClipboardCheck}
+                title={t('noTasks', { defaultValue: 'Chưa sinh công việc nào' })}
+              />
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="pl-5">{t('code', { defaultValue: 'Mã' })}</TableHead>
+                    <TableHead>{t('scheduledAt', { defaultValue: 'Ngày dự kiến' })}</TableHead>
+                    <TableHead>{t('dueAt', { defaultValue: 'Hạn' })}</TableHead>
+                    <TableHead className="pr-5">
+                      {t('status', { defaultValue: 'Trạng thái' })}
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {taskRows.map((task) => (
+                    <TableRow key={task.id}>
+                      <TableCell className="pl-5">
+                        <Link
+                          className="text-primary font-semibold hover:underline"
+                          to={`/maintenance/tasks/${task.id}`}
+                        >
+                          {task.code}
+                        </Link>
+                      </TableCell>
+                      <TableCell className="tabular-nums">{formatDate(task.scheduledAt)}</TableCell>
+                      <TableCell className="tabular-nums">{formatDate(task.dueAt)}</TableCell>
+                      <TableCell className="pr-5">
+                        <StatusBadge value={task.status} map={taskStatusMap} />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </SectionCard>
+        </div>
+        <div className="space-y-5">
+          <SectionCard title={t('info', { defaultValue: 'Thông tin' })}>
+            <DataList
+              columns={1}
+              items={[
+                { label: t('cycle'), value: cycleLabel },
+                { label: t('start'), value: formatDate(row.startDate) || null },
+                { label: t('endDate'), value: row.endDate ? formatDate(row.endDate) : null },
+                {
+                  label: t('target'),
+                  value: row.equipmentId ? t('equipment') : t('group'),
+                },
+                {
+                  label: t('source'),
+                  value: row.source === 'vendor_contract' ? t('sourceVendor') : t('sourceInternal'),
+                },
+                ...(row.source === 'vendor_contract'
+                  ? [{ label: t('contractNo'), value: row.contractNo }]
+                  : []),
+                { label: 'Checklist ID', value: row.templateId },
+              ]}
+            />
+          </SectionCard>
+        </div>
+      </div>
       <FormDialog
         open={editOpen}
         onOpenChange={setEditOpen}
@@ -294,19 +430,6 @@ export function Component() {
         )}
         <SwitchField control={form.control} name="isActive" label={t('isActive')} />
       </FormDialog>
-      <section>
-        <h2 className="mb-2 font-medium">{t('generatedTasks')}</h2>
-        <ul className="space-y-1 text-sm">
-          {(tasks.data?.items ?? []).map((task) => (
-            <li key={task.id}>
-              <Link className="text-primary hover:underline" to={`/maintenance/tasks/${task.id}`}>
-                {task.code}
-              </Link>{' '}
-              <StatusBadge value={task.status} map={taskStatusMap} />
-            </li>
-          ))}
-        </ul>
-      </section>
     </>
   )
 }

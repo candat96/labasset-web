@@ -3,8 +3,22 @@ import { useNavigate, useParams } from 'react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
-import { PageHeader } from '@/components/page/PageHeader'
+import { PageHeader, PageMeta } from '@/components/page/PageHeader'
+import { SectionCard } from '@/components/page/SectionCard'
+import { DataList } from '@/components/page/DataList'
+import { DetailSkeleton } from '@/components/page/DetailSkeleton'
+import { EmptyState } from '@/components/page/EmptyState'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { ErrorState } from '@/components/page/ErrorState'
+import { CalendarClock, PackageSearch, ScanLine, Users, Warehouse } from 'lucide-react'
+import { formatDateTime } from '@/lib/format/date'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -187,13 +201,10 @@ function CountPanel({
           />
         </div>
         <div className="flex flex-wrap gap-2 sm:col-span-2">
-          <Button type="submit">Ghi</Button>
-          <Button
-            type="button"
-            variant="outline"
-            disabled={!batch.length || sending}
-            onClick={() => void gui()}
-          >
+          <Button type="submit" variant="outline">
+            Ghi
+          </Button>
+          <Button type="button" disabled={!batch.length || sending} onClick={() => void gui()}>
             {t('sendPrefix')}
             {batch.length})
           </Button>
@@ -210,11 +221,13 @@ function CountPanel({
         )
       ) : null}
       {batch.length > 0 && (
-        <ul>
+        <ul className="divide-divider bg-surface-2 divide-y rounded-lg px-3">
           {batch.map((line) => (
-            <li key={line.clientId}>
-              {line.code} · {formatQty(line.countedQty)}
-              {line.extra ? t('extraSuffix') : ''}
+            <li key={line.clientId} className="flex items-center gap-2 py-2">
+              <ScanLine className="text-subtle size-3.5" aria-hidden />
+              <span className="font-medium">{line.code}</span>
+              <span className="text-muted-foreground">· {formatQty(line.countedQty)}</span>
+              {line.extra ? <span className="text-warning-fg">{t('extraSuffix')}</span> : ''}
             </li>
           ))}
         </ul>
@@ -227,22 +240,22 @@ function CountPanel({
             {result.extras.length}
           </p>
           {result.conflicts.length > 0 && (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left">
-                  <th>clientId</th>
-                  <th>{t('newerCount')}</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>clientId</TableHead>
+                  <TableHead>{t('newerCount')}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {result.conflicts.map((row) => (
-                  <tr key={row.clientId} className="border-t">
-                    <td>{row.clientId}</td>
-                    <td>{row.keptCountedAt ?? row.itemId}</td>
-                  </tr>
+                  <TableRow key={row.clientId}>
+                    <TableCell>{row.clientId}</TableCell>
+                    <TableCell>{row.keptCountedAt ?? row.itemId}</TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           )}
         </div>
       )}
@@ -299,7 +312,7 @@ export function Component() {
   const extraForm = useForm({ defaultValues: { itemId: '' } })
   const compareForm = useForm({ defaultValues: { withSessionId: '' } })
   const { confirm, dialog } = useConfirm()
-  if (detail.isPending) return <p role="status">{t('loading')}</p>
+  if (detail.isPending) return <DetailSkeleton label={t('loading')} />
   if (detail.error) return <ErrorState error={detail.error} onRetry={() => void detail.refetch()} />
   const row = detail.data
   const assignments = row.assignments as Array<{ userId?: string }>
@@ -483,9 +496,25 @@ export function Component() {
         />
       </FormDialog>
       <PageHeader
+        eyebrow={`${t('title', { defaultValue: 'Kiểm kê' })} · ${row.code}`}
         title={row.name}
-        description={row.code}
         badge={<StatusBadge value={row.status} map={stocktakeStatusMap} />}
+        meta={
+          <>
+            <PageMeta icon={<Warehouse />}>
+              {row.scopeType}
+              {row.scopeId ? ` · ${row.scopeId.slice(0, 8)}` : ''}
+            </PageMeta>
+            {row.snapshotAt && (
+              <PageMeta icon={<CalendarClock />}>
+                {t('snapshotAt')}: {formatDateTime(row.snapshotAt)}
+              </PageMeta>
+            )}
+            <PageMeta icon={<Users />}>
+              {t('assigneeCount', { defaultValue: '{{n}} người kiểm kê', n: assignments.length })}
+            </PageMeta>
+          </>
+        }
         actions={
           <div className="flex flex-wrap gap-2">
             {isStaff && ['draft', 'open'].includes(row.status) && (
@@ -559,203 +588,290 @@ export function Component() {
           </div>
         }
       />
-      <dl className="mb-4 grid gap-2 text-sm sm:grid-cols-4">
-        <div>
-          <dt className="text-muted-foreground">{t('scope')}</dt>
-          <dd>
-            {row.scopeType}
-            {row.scopeId ? ` · ${row.scopeId.slice(0, 8)}` : ''}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-muted-foreground">{t('snapshotAt')}</dt>
-          <dd>{row.snapshotAt ?? '—'}</dd>
-        </div>
-        <div>
-          <dt className="text-muted-foreground">{t('createdBy')}</dt>
-          <dd>{row.createdBy?.slice(0, 8) ?? '—'}</dd>
-        </div>
-      </dl>
-      <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="flex-wrap">
-          <TabsTrigger value="progress">{t('progress')}</TabsTrigger>
-          <TabsTrigger value="items">{t('items')}</TabsTrigger>
-          {row.status === 'counting' && canCount && (
-            <TabsTrigger value="count">{t('countWeb')}</TabsTrigger>
-          )}
-          <TabsTrigger value="extras">{t('extras')}</TabsTrigger>
-          <TabsTrigger value="audit">{t('history')}</TabsTrigger>
-        </TabsList>
-        <TabsContent value="progress">
-          <p className="text-sm">
-            {t('countedOf')} {progress.data?.counted ?? 0}/{progress.data?.total ?? 0} (
-            {progress.data?.percent ?? 0}%)
-          </p>
-          <table className="mt-3 w-full text-sm">
-            <thead>
-              <tr className="text-left">
-                <th>{t('assignee')}</th>
-                <th>{t('total')}</th>
-                <th>{t('counted')}</th>
-                <th>%</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(
-                (
-                  progress.data as
-                    | {
-                        byAssignee?: Array<{
-                          userId?: string
-                          fullName?: string
-                          total?: number
-                          counted?: number
-                          percent?: number
-                        }>
-                        unassigned?: { total?: number; counted?: number; percent?: number }
-                      }
-                    | undefined
-                )?.byAssignee ?? []
-              ).map((entry) => (
-                <tr key={entry.userId} className="border-t">
-                  <td>{entry.fullName ?? entry.userId?.slice(0, 8)}</td>
-                  <td>{entry.total ?? 0}</td>
-                  <td>{entry.counted ?? 0}</td>
-                  <td>{entry.percent ?? 0}%</td>
-                </tr>
-              ))}
-              {!!(progress.data as { unassigned?: { total?: number } } | undefined)?.unassigned
-                ?.total && (
-                <tr className="border-t">
-                  <td>{t('unassigned')}</td>
-                  <td>{(progress.data as { unassigned: { total: number } }).unassigned.total}</td>
-                  <td>
-                    {(progress.data as { unassigned: { counted?: number } }).unassigned.counted ??
-                      0}
-                  </td>
-                  <td>
-                    {(progress.data as { unassigned: { percent?: number } }).unassigned.percent ??
-                      0}
-                    %
-                  </td>
-                </tr>
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
+        <div className="min-w-0">
+          <Tabs value={tab} onValueChange={setTab}>
+            <TabsList variant="line" className="mb-4 max-w-full flex-wrap">
+              <TabsTrigger value="progress">{t('progress')}</TabsTrigger>
+              <TabsTrigger value="items">{t('items')}</TabsTrigger>
+              {row.status === 'counting' && canCount && (
+                <TabsTrigger value="count">{t('countWeb')}</TabsTrigger>
               )}
-            </tbody>
-          </table>
-        </TabsContent>
-        <TabsContent value="items">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left">
-                <th>{t('code')}</th>
-                <th>{t('book')}</th>
-                <th>{t('count')}</th>
-                <th>{t('diff')}</th>
-                <th>{t('moved')}</th>
-                <th>{t('countedBy')}</th>
-                <th>{t('reasonResolution')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(
-                (
-                  items.data as
-                    | {
-                        items?: {
-                          id: string
-                          code?: string
-                          bookQty?: string
-                          countedQty?: string | null
-                          diffQty?: string
-                          movedDuringSession?: boolean
-                          countedBy?: string | null
-                          countedAt?: string | null
-                          diffReason?: string | null
-                          resolution?: string | null
-                        }[]
-                      }
-                    | undefined
-                )?.items ?? []
-              ).map((item) => (
-                <tr key={item.id} className="border-t">
-                  <td>{item.code ?? item.id}</td>
-                  <td>{formatQty(item.bookQty)}</td>
-                  <td>{item.countedQty == null ? t('notCounted') : formatQty(item.countedQty)}</td>
-                  <td
-                    className={
-                      item.diffQty?.startsWith('-')
-                        ? 'text-destructive'
-                        : item.diffQty && item.diffQty !== '0.000'
-                          ? 'text-success'
-                          : undefined
-                    }
-                  >
-                    {item.countedQty == null ? t('notCounted') : formatQty(item.diffQty)}
-                  </td>
-                  <td title={item.movedDuringSession ? t('movedHint') : undefined}>
-                    {item.movedDuringSession ? '⚠' : ''}
-                  </td>
-                  <td>
-                    {item.countedBy?.slice(0, 8) ?? '—'}
-                    {item.countedAt ? ` · ${item.countedAt}` : ''}
-                  </td>
-                  <td>
-                    {item.diffReason ?? '—'} / {item.resolution ?? '—'}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </TabsContent>
-        {row.status === 'counting' && canCount && (
-          <TabsContent value="count">
-            {pkg.isSuccess ? (
-              <CountPanel sessionId={id} items={pkg.data.items} onSent={invalidateSession} />
-            ) : (
-              <p role="status">{t('loadingPackage')}</p>
+              <TabsTrigger value="extras">{t('extras')}</TabsTrigger>
+              <TabsTrigger value="audit">{t('history')}</TabsTrigger>
+            </TabsList>
+            <TabsContent value="progress">
+              <SectionCard
+                title={t('progress')}
+                description={`${t('countedOf')} ${progress.data?.counted ?? 0}/${progress.data?.total ?? 0} (${progress.data?.percent ?? 0}%)`}
+                flush
+              >
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="pl-5">{t('assignee')}</TableHead>
+                      <TableHead className="text-right">{t('total')}</TableHead>
+                      <TableHead className="text-right">{t('counted')}</TableHead>
+                      <TableHead className="pr-5 text-right">%</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {(
+                      (
+                        progress.data as
+                          | {
+                              byAssignee?: Array<{
+                                userId?: string
+                                fullName?: string
+                                total?: number
+                                counted?: number
+                                percent?: number
+                              }>
+                              unassigned?: { total?: number; counted?: number; percent?: number }
+                            }
+                          | undefined
+                      )?.byAssignee ?? []
+                    ).map((entry) => (
+                      <TableRow key={entry.userId}>
+                        <TableCell className="pl-5 font-medium">
+                          {entry.fullName ?? entry.userId?.slice(0, 8)}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {entry.total ?? 0}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {entry.counted ?? 0}
+                        </TableCell>
+                        <TableCell className="pr-5 text-right">
+                          <span className="inline-flex items-center gap-2">
+                            <span className="bg-muted h-1.5 w-16 overflow-hidden rounded-full">
+                              <span
+                                className="bg-primary block h-full rounded-full"
+                                style={{ width: `${Math.min(100, entry.percent ?? 0)}%` }}
+                              />
+                            </span>
+                            <span className="w-10 text-right tabular-nums">
+                              {entry.percent ?? 0}%
+                            </span>
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {!!(progress.data as { unassigned?: { total?: number } } | undefined)
+                      ?.unassigned?.total && (
+                      <TableRow>
+                        <TableCell className="pl-5 font-medium">{t('unassigned')}</TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {(progress.data as { unassigned: { total: number } }).unassigned.total}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {(progress.data as { unassigned: { counted?: number } }).unassigned
+                            .counted ?? 0}
+                        </TableCell>
+                        <TableCell className="pr-5 text-right tabular-nums">
+                          {(progress.data as { unassigned: { percent?: number } }).unassigned
+                            .percent ?? 0}
+                          %
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </SectionCard>
+            </TabsContent>
+            <TabsContent value="items">
+              <SectionCard title={t('items')} flush>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="pl-5">{t('code')}</TableHead>
+                      <TableHead className="text-right">{t('book')}</TableHead>
+                      <TableHead className="text-right">{t('count')}</TableHead>
+                      <TableHead className="text-right">{t('diff')}</TableHead>
+                      <TableHead>{t('moved')}</TableHead>
+                      <TableHead>{t('countedBy')}</TableHead>
+                      <TableHead className="pr-5">{t('reasonResolution')}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {(
+                      (
+                        items.data as
+                          | {
+                              items?: {
+                                id: string
+                                code?: string
+                                bookQty?: string
+                                countedQty?: string | null
+                                diffQty?: string
+                                movedDuringSession?: boolean
+                                countedBy?: string | null
+                                countedAt?: string | null
+                                diffReason?: string | null
+                                resolution?: string | null
+                              }[]
+                            }
+                          | undefined
+                      )?.items ?? []
+                    ).map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell className="pl-5 font-medium">{item.code ?? item.id}</TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {formatQty(item.bookQty)}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {item.countedQty == null ? (
+                            <span className="text-subtle">{t('notCounted')}</span>
+                          ) : (
+                            formatQty(item.countedQty)
+                          )}
+                        </TableCell>
+                        <TableCell
+                          className={`text-right font-medium tabular-nums ${
+                            item.diffQty?.startsWith('-')
+                              ? 'text-destructive'
+                              : item.diffQty && item.diffQty !== '0.000'
+                                ? 'text-success'
+                                : ''
+                          }`}
+                        >
+                          {item.countedQty == null ? t('notCounted') : formatQty(item.diffQty)}
+                        </TableCell>
+                        <TableCell title={item.movedDuringSession ? t('movedHint') : undefined}>
+                          {item.movedDuringSession ? '⚠' : ''}
+                        </TableCell>
+                        <TableCell>
+                          {item.countedBy?.slice(0, 8) ?? '—'}
+                          {item.countedAt ? ` · ${item.countedAt}` : ''}
+                        </TableCell>
+                        <TableCell className="pr-5">
+                          {item.diffReason ?? '—'} / {item.resolution ?? '—'}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </SectionCard>
+            </TabsContent>
+            {row.status === 'counting' && canCount && (
+              <TabsContent value="count">
+                <SectionCard
+                  title={t('countWeb')}
+                  description={t('countWebHint', {
+                    defaultValue: 'Quét mã hoặc nhập tay, ghi từng dòng rồi gửi theo lô.',
+                  })}
+                >
+                  {pkg.isSuccess ? (
+                    <CountPanel sessionId={id} items={pkg.data.items} onSent={invalidateSession} />
+                  ) : (
+                    <p role="status" className="text-muted-foreground text-[13px]">
+                      {t('loadingPackage')}
+                    </p>
+                  )}
+                </SectionCard>
+              </TabsContent>
             )}
-          </TabsContent>
-        )}
-        <TabsContent value="extras">
-          <ul className="space-y-2 text-sm">
-            {extraRows(extras.data).map((item) => (
-              <li key={item.id} className="flex flex-wrap items-center gap-2">
-                <span>
-                  {item.lotNo ?? item.qrToken ?? item.supplyCode ?? item.id}
-                  {item.countedQty ? ` · ${formatQty(item.countedQty)}` : ''}
-                  {item.status ? ` · ${item.status}` : ''}
-                </span>
-                {item.status !== 'linked' && item.status !== 'ignored' && isStaff && (
-                  <>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        extraForm.reset({ itemId: '' })
-                        setExtraToLink(item.id)
-                      }}
-                    >
-                      {t('linkItem')}
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => void resolve(item.id, { ignore: true })}
-                    >
-                      {t('ignore')}
-                    </Button>
-                  </>
+            <TabsContent value="extras">
+              <SectionCard
+                title={t('extras')}
+                description={t('countItems', {
+                  defaultValue: '{{n}} mục',
+                  n: extraRows(extras.data).length,
+                })}
+              >
+                {extraRows(extras.data).length === 0 && (
+                  <EmptyState
+                    icon={PackageSearch}
+                    title={t('noExtras', { defaultValue: 'Không có hàng ngoài sổ' })}
+                  />
                 )}
-              </li>
-            ))}
-          </ul>
-        </TabsContent>
-        <TabsContent value="audit">
-          <AuditTrail entityType="stocktake_session" entityId={id} />
-        </TabsContent>
-      </Tabs>
+                <ul className="divide-divider divide-y text-sm">
+                  {extraRows(extras.data).map((item) => (
+                    <li
+                      key={item.id}
+                      className="flex flex-wrap items-center gap-2 py-2.5 first:pt-0 last:pb-0"
+                    >
+                      <span className="flex-1 font-medium">
+                        {item.lotNo ?? item.qrToken ?? item.supplyCode ?? item.id}
+                        {item.countedQty ? ` · ${formatQty(item.countedQty)}` : ''}
+                        {item.status ? (
+                          <span className="text-muted-foreground font-normal">
+                            {' '}
+                            · {item.status}
+                          </span>
+                        ) : (
+                          ''
+                        )}
+                      </span>
+                      {item.status !== 'linked' && item.status !== 'ignored' && isStaff && (
+                        <>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              extraForm.reset({ itemId: '' })
+                              setExtraToLink(item.id)
+                            }}
+                          >
+                            {t('linkItem')}
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => void resolve(item.id, { ignore: true })}
+                          >
+                            {t('ignore')}
+                          </Button>
+                        </>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </SectionCard>
+            </TabsContent>
+            <TabsContent value="audit">
+              <SectionCard title={t('history')}>
+                <AuditTrail entityType="stocktake_session" entityId={id} />
+              </SectionCard>
+            </TabsContent>
+          </Tabs>
+        </div>
+        <aside className="space-y-5 lg:sticky lg:top-[72px] lg:self-start">
+          <SectionCard title={t('info', { defaultValue: 'Thông tin' })}>
+            <DataList
+              columns={1}
+              items={[
+                { label: t('code'), value: row.code },
+                {
+                  label: t('scope'),
+                  value: `${row.scopeType}${row.scopeId ? ` · ${row.scopeId.slice(0, 8)}` : ''}`,
+                },
+                {
+                  label: t('snapshotAt'),
+                  value: row.snapshotAt ? formatDateTime(row.snapshotAt) : null,
+                },
+                { label: t('createdBy'), value: row.createdBy?.slice(0, 8) },
+              ]}
+            />
+          </SectionCard>
+          <SectionCard title={t('progress')}>
+            <p className="text-[28px] leading-8 font-bold tracking-[-0.02em] tabular-nums">
+              {progress.data?.percent ?? 0}%
+            </p>
+            <p className="text-muted-foreground mt-1 text-[13px]">
+              {t('countedOf')} {progress.data?.counted ?? 0}/{progress.data?.total ?? 0}
+            </p>
+            <div className="bg-muted mt-3 h-2 overflow-hidden rounded-full">
+              <div
+                className="bg-primary h-full rounded-full transition-[width]"
+                style={{ width: `${Math.min(100, progress.data?.percent ?? 0)}%` }}
+              />
+            </div>
+          </SectionCard>
+        </aside>
+      </div>
     </>
   )
 }

@@ -1,8 +1,24 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Link, useParams, useSearchParams } from 'react-router'
+import { Link, useParams } from 'react-router'
 import { toast } from 'sonner'
-import { PageHeader } from '@/components/page/PageHeader'
+import { PageMeta } from '@/components/page/PageHeader'
+import { DetailLayout } from '@/components/detail-layout'
+import { SectionCard } from '@/components/page/SectionCard'
+import { DataList } from '@/components/page/DataList'
+import { DetailSkeleton } from '@/components/page/DetailSkeleton'
+import { EmptyState } from '@/components/page/EmptyState'
+import { Timeline } from '@/components/timeline'
 import { ErrorState } from '@/components/page/ErrorState'
+import {
+  CalendarClock,
+  CalendarDays,
+  Check,
+  ClipboardList,
+  ListChecks,
+  Microscope,
+  X,
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -16,7 +32,6 @@ import { useCan } from '@/app/guards/useCan'
 import { ADM, STAFF } from '@/routes/roles'
 import { isApiError, messageFor } from '@/api/errors'
 import { useAuthStore } from '@/stores/auth.store'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Dialog,
   DialogContent,
@@ -51,7 +66,6 @@ export function Component() {
   const isStaff = useCan(STAFF)
   const userId = useAuthStore((s) => s.user?.id)
   const { confirm, dialog } = useConfirm()
-  const [searchParams, setSearchParams] = useSearchParams()
   const [results, setResults] = useState<Record<string, ResultRow>>({})
   const [finishOpen, setFinishOpen] = useState(false)
   const [overallPass, setOverallPass] = useState<'pass' | 'fail'>('pass')
@@ -113,7 +127,7 @@ export function Component() {
     }, 30000)
     return () => clearInterval(timer)
   }, [detail.data, save])
-  if (detail.isPending) return <p role="status">{t('loadingTask')}</p>
+  if (detail.isPending) return <DetailSkeleton label={t('loadingTask')} />
   if (detail.error) return <ErrorState error={detail.error} onRetry={() => void detail.refetch()} />
   const row = detail.data
   const assignee = isStaff || row.assigneeId === userId
@@ -130,14 +144,41 @@ export function Component() {
   return (
     <>
       {dialog}
-      <PageHeader
-        title={row.code}
-        description={row.equipment?.name}
+      <DetailLayout
+        eyebrow={t('tasksTitle')}
+        code={row.code}
+        name={row.code}
         badge={
           <div className="flex gap-1">
             <StatusBadge value={row.status} map={taskStatusMap} />
             <StatusBadge value={row.type} map={taskTypeMap} />
           </div>
+        }
+        meta={
+          <>
+            <PageMeta icon={<Microscope />}>
+              <Link className="text-primary hover:underline" to={`/equipment/${row.equipmentId}`}>
+                {row.equipment?.code ? `${row.equipment.code} – ` : ''}
+                {row.equipment?.name ?? t('equipment')}
+              </Link>
+            </PageMeta>
+            <PageMeta icon={<CalendarClock />}>
+              {t('schedule')} {formatDateTime(row.scheduledAt)}
+            </PageMeta>
+            <PageMeta icon={<CalendarDays />}>
+              {t('due', { defaultValue: 'Hạn' })} {formatDateTime(row.dueAt)}
+            </PageMeta>
+            {row.planId && (
+              <PageMeta icon={<ClipboardList />}>
+                <Link
+                  className="text-primary hover:underline"
+                  to={`/maintenance/plans/${row.planId}`}
+                >
+                  {t('plan')}
+                </Link>
+              </PageMeta>
+            )}
+          </>
         }
         actions={
           <div className="flex flex-wrap gap-2">
@@ -202,208 +243,284 @@ export function Component() {
             )}
           </div>
         }
-      />
-      <p className="text-muted-foreground mb-4 text-sm">
-        {t('schedule')} {formatDateTime(row.scheduledAt)} {t('dueLabel')}{' '}
-        {formatDateTime(row.dueAt)}
-        {row.planId && (
+        information={
           <>
-            {' '}
-            ·{' '}
-            <Link className="text-primary hover:underline" to={`/maintenance/plans/${row.planId}`}>
-              {t('plan')}
-            </Link>
+            <h2 className="mb-3 text-[15px] leading-6 font-semibold">
+              {t('info', { defaultValue: 'Thông tin' })}
+            </h2>
+            <DataList
+              columns={1}
+              items={[
+                {
+                  label: t('equipment'),
+                  value: (
+                    <Link
+                      className="text-primary hover:underline"
+                      to={`/equipment/${row.equipmentId}`}
+                    >
+                      {row.equipment?.code} – {row.equipment?.name}
+                    </Link>
+                  ),
+                },
+                { label: t('type'), value: <StatusBadge value={row.type} map={taskTypeMap} /> },
+                { label: t('schedule'), value: formatDateTime(row.scheduledAt) },
+                { label: t('due', { defaultValue: 'Hạn' }), value: formatDateTime(row.dueAt) },
+                {
+                  label: t('result'),
+                  value: row.overallPass == null ? null : row.overallPass ? t('pass') : t('fail'),
+                },
+                { label: t('notes'), value: row.notes, full: true },
+              ]}
+            />
+            <h2 className="mt-5 mb-3 text-[15px] leading-6 font-semibold">{t('tabHistory')}</h2>
+            <Timeline
+              events={[
+                {
+                  at: row.createdAt,
+                  title: t('createdAt', { defaultValue: 'Tạo công việc' }),
+                  tone: 'muted',
+                },
+                ...(row.startedAt
+                  ? [{ at: row.startedAt, title: t('start'), tone: 'primary' as const }]
+                  : []),
+                ...(row.finishedAt
+                  ? [
+                      {
+                        at: row.finishedAt,
+                        title: t('finish'),
+                        tone:
+                          row.overallPass === false ? ('danger' as const) : ('success' as const),
+                      },
+                    ]
+                  : []),
+              ]}
+            />
           </>
-        )}
-        {' · '}
-        <Link className="text-primary hover:underline" to={`/equipment/${row.equipmentId}`}>
-          {t('equipment')}
-        </Link>
-      </p>
-      <Tabs
-        value={searchParams.get('tab') ?? 'checklist'}
-        onValueChange={(tab) => setSearchParams(tab === 'checklist' ? {} : { tab })}
-      >
-        <TabsList>
-          <TabsTrigger value="checklist">Checklist</TabsTrigger>
-          <TabsTrigger value="docs">{t('tabDocs')}</TabsTrigger>
-          <TabsTrigger value="audit">{t('tabHistory')}</TabsTrigger>
-        </TabsList>
-        <TabsContent value="checklist" className="space-y-3">
-          {row.templateItems.map((item) => {
-            const result = results[item.key] ?? { key: item.key }
-            const measure = typeof result.value === 'number' ? result.value : Number(result.value)
-            const inRange =
-              item.type === 'measure' &&
-              Number.isFinite(measure) &&
-              (item.min == null || measure >= item.min) &&
-              (item.max == null || measure <= item.max)
-            return (
-              <div
-                key={item.key}
-                className={
-                  missingKeys.has(item.key)
-                    ? 'rounded border border-destructive bg-destructive/5 p-3'
-                    : 'rounded border p-3'
-                }
-              >
-                <p className="font-medium">
-                  {item.label}
-                  {item.optional ? '' : ' *'}
-                </p>
-                {item.type === 'check' && (
-                  <div className="mt-2 flex gap-3">
-                    <Button
-                      size="sm"
-                      variant={result.pass === true ? 'default' : 'outline'}
-                      onClick={() => patch(item.key, { pass: true, value: true })}
-                    >
-                      {t('pass')}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={result.pass === false ? 'default' : 'outline'}
-                      onClick={() => patch(item.key, { pass: false, value: false })}
-                    >
-                      {t('fail')}
-                    </Button>
-                  </div>
-                )}
-                {item.type === 'measure' && (
-                  <div className="mt-2">
-                    <Input
-                      aria-label={item.label}
-                      type="number"
-                      placeholder={`${item.unit}${item.min != null || item.max != null ? ` (${item.min ?? '—'}–${item.max ?? '—'})` : ''}`}
-                      value={result.value == null ? '' : String(result.value)}
-                      onChange={(e) => {
-                        const value = e.target.value === '' ? null : Number(e.target.value)
-                        const pass =
-                          value == null
-                            ? undefined
-                            : (item.min == null || value >= item.min) &&
-                              (item.max == null || value <= item.max)
-                        patch(item.key, { value, pass })
-                      }}
+        }
+        tabs={[
+          {
+            value: 'checklist',
+            label: 'Checklist',
+            count: row.templateItems.length,
+            content: (
+              <>
+                {row.templateItems.length === 0 && (
+                  <SectionCard>
+                    <EmptyState
+                      icon={ListChecks}
+                      title={t('noChecklist', { defaultValue: 'Công việc này không có checklist' })}
                     />
-                    {inRange && <span className="sr-only">{t('inRange')}</span>}
-                  </div>
+                  </SectionCard>
                 )}
-                {item.type === 'text' && (
-                  <Textarea
-                    className="mt-2"
-                    aria-label={item.label}
-                    value={typeof result.value === 'string' ? result.value : ''}
-                    onChange={(e) =>
-                      patch(item.key, { value: e.target.value, pass: !!e.target.value })
-                    }
-                  />
-                )}
-                <Input
-                  className="mt-2"
-                  placeholder={t('notes')}
-                  value={result.note ?? ''}
-                  onChange={(e) => patch(item.key, { note: e.target.value })}
-                />
-                <FileField
-                  label={t('attachmentPhoto')}
-                  value={result.photoFileId ?? null}
-                  onChange={(photoFileId) =>
-                    patch(item.key, { photoFileId: photoFileId ?? undefined })
+                {row.templateItems.map((item) => {
+                  const result = results[item.key] ?? { key: item.key }
+                  const measure =
+                    typeof result.value === 'number' ? result.value : Number(result.value)
+                  const inRange =
+                    item.type === 'measure' &&
+                    Number.isFinite(measure) &&
+                    (item.min == null || measure >= item.min) &&
+                    (item.max == null || measure <= item.max)
+                  return (
+                    <div
+                      key={item.key}
+                      className={cn(
+                        'border-divider rounded-xl border p-4 transition-colors',
+                        missingKeys.has(item.key) && 'border-destructive bg-destructive-bg/40',
+                        result.pass === true && 'border-success/40 bg-success-bg/30',
+                        result.pass === false && 'border-destructive/40 bg-destructive-bg/30',
+                      )}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <p className="text-[14px] leading-5 font-semibold">
+                          {item.label}
+                          {item.optional ? '' : <span className="text-destructive"> *</span>}
+                        </p>
+                        {result.pass === true && (
+                          <Check className="text-success size-4 shrink-0" aria-hidden />
+                        )}
+                        {result.pass === false && (
+                          <X className="text-destructive size-4 shrink-0" aria-hidden />
+                        )}
+                      </div>
+                      {item.type === 'check' && (
+                        <div className="mt-2 flex gap-3">
+                          <Button
+                            size="sm"
+                            variant={result.pass === true ? 'default' : 'outline'}
+                            onClick={() => patch(item.key, { pass: true, value: true })}
+                          >
+                            {t('pass')}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant={result.pass === false ? 'default' : 'outline'}
+                            onClick={() => patch(item.key, { pass: false, value: false })}
+                          >
+                            {t('fail')}
+                          </Button>
+                        </div>
+                      )}
+                      {item.type === 'measure' && (
+                        <div className="mt-2">
+                          <Input
+                            aria-label={item.label}
+                            type="number"
+                            placeholder={`${item.unit}${item.min != null || item.max != null ? ` (${item.min ?? '—'}–${item.max ?? '—'})` : ''}`}
+                            value={result.value == null ? '' : String(result.value)}
+                            onChange={(e) => {
+                              const value = e.target.value === '' ? null : Number(e.target.value)
+                              const pass =
+                                value == null
+                                  ? undefined
+                                  : (item.min == null || value >= item.min) &&
+                                    (item.max == null || value <= item.max)
+                              patch(item.key, { value, pass })
+                            }}
+                          />
+                          {inRange && <span className="sr-only">{t('inRange')}</span>}
+                        </div>
+                      )}
+                      {item.type === 'text' && (
+                        <Textarea
+                          className="mt-2"
+                          aria-label={item.label}
+                          value={typeof result.value === 'string' ? result.value : ''}
+                          onChange={(e) =>
+                            patch(item.key, { value: e.target.value, pass: !!e.target.value })
+                          }
+                        />
+                      )}
+                      <Input
+                        className="mt-2"
+                        placeholder={t('notes')}
+                        value={result.note ?? ''}
+                        onChange={(e) => patch(item.key, { note: e.target.value })}
+                      />
+                      <FileField
+                        label={t('attachmentPhoto')}
+                        value={result.photoFileId ?? null}
+                        onChange={(photoFileId) =>
+                          patch(item.key, { photoFileId: photoFileId ?? undefined })
+                        }
+                      />
+                    </div>
+                  )
+                })}
+                <SectionCard
+                  title={t('suppliesUsed')}
+                  actions={
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        setSuppliesUsed((current) => [...current, { supplyId: '', quantity: 1 }])
+                      }
+                    >
+                      {t('addSupply')}
+                    </Button>
                   }
+                  bodyClassName="space-y-3"
+                >
+                  {suppliesUsed.map((supply, index) => (
+                    <div key={`${supply.supplyId}-${index}`} className="grid gap-2 md:grid-cols-3">
+                      <AsyncSelect
+                        label={t('supply')}
+                        queryKey="supplies"
+                        loadOptions={supplyOptions}
+                        value={supply.supplyId || null}
+                        onChange={(value) =>
+                          setSuppliesUsed((current) =>
+                            current.map((item, itemIndex) =>
+                              itemIndex === index
+                                ? { ...item, supplyId: typeof value === 'string' ? value : '' }
+                                : item,
+                            ),
+                          )
+                        }
+                      />
+                      <Input
+                        aria-label={t('quantity')}
+                        type="number"
+                        min="0"
+                        step="0.001"
+                        value={supply.quantity}
+                        onChange={(event) =>
+                          setSuppliesUsed((current) =>
+                            current.map((item, itemIndex) =>
+                              itemIndex === index
+                                ? { ...item, quantity: event.target.valueAsNumber || 0 }
+                                : item,
+                            ),
+                          )
+                        }
+                      />
+                      <div className="flex gap-2">
+                        <Input
+                          aria-label={t('lotNo')}
+                          placeholder={t('lotNo')}
+                          value={supply.lotNo ?? ''}
+                          onChange={(event) =>
+                            setSuppliesUsed((current) =>
+                              current.map((item, itemIndex) =>
+                                itemIndex === index ? { ...item, lotNo: event.target.value } : item,
+                              ),
+                            )
+                          }
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          onClick={() =>
+                            setSuppliesUsed((current) =>
+                              current.filter((_, itemIndex) => itemIndex !== index),
+                            )
+                          }
+                        >
+                          {t('remove')}
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                  {suppliesUsed.length === 0 && (
+                    <p className="text-muted-foreground text-[13px]">
+                      {t('noSuppliesUsed', { defaultValue: 'Chưa ghi vật tư tiêu hao' })}
+                    </p>
+                  )}
+                </SectionCard>
+              </>
+            ),
+          },
+          {
+            value: 'docs',
+            label: t('tabDocs'),
+            content: (
+              <SectionCard title={t('tabDocs')}>
+                <AttachmentsPanel
+                  entityType="maintenance_task"
+                  entityId={id}
+                  kinds={[
+                    { value: 'photo', label: t('attachmentPhoto') },
+                    { value: 'signature_technician', label: t('attachmentSignatureTechnician') },
+                    { value: 'signature_department', label: t('attachmentSignatureDepartment') },
+                    { value: 'report', label: t('attachmentReport') },
+                  ]}
                 />
-              </div>
-            )
-          })}
-          <section className="space-y-2 rounded border p-3">
-            <h2 className="font-medium">{t('suppliesUsed')}</h2>
-            {suppliesUsed.map((supply, index) => (
-              <div key={`${supply.supplyId}-${index}`} className="grid gap-2 md:grid-cols-3">
-                <AsyncSelect
-                  label={t('supply')}
-                  queryKey="supplies"
-                  loadOptions={supplyOptions}
-                  value={supply.supplyId || null}
-                  onChange={(value) =>
-                    setSuppliesUsed((current) =>
-                      current.map((item, itemIndex) =>
-                        itemIndex === index
-                          ? { ...item, supplyId: typeof value === 'string' ? value : '' }
-                          : item,
-                      ),
-                    )
-                  }
-                />
-                <Input
-                  aria-label={t('quantity')}
-                  type="number"
-                  min="0"
-                  step="0.001"
-                  value={supply.quantity}
-                  onChange={(event) =>
-                    setSuppliesUsed((current) =>
-                      current.map((item, itemIndex) =>
-                        itemIndex === index
-                          ? { ...item, quantity: event.target.valueAsNumber || 0 }
-                          : item,
-                      ),
-                    )
-                  }
-                />
-                <div className="flex gap-2">
-                  <Input
-                    aria-label={t('lotNo')}
-                    placeholder={t('lotNo')}
-                    value={supply.lotNo ?? ''}
-                    onChange={(event) =>
-                      setSuppliesUsed((current) =>
-                        current.map((item, itemIndex) =>
-                          itemIndex === index ? { ...item, lotNo: event.target.value } : item,
-                        ),
-                      )
-                    }
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() =>
-                      setSuppliesUsed((current) =>
-                        current.filter((_, itemIndex) => itemIndex !== index),
-                      )
-                    }
-                  >
-                    {t('remove')}
-                  </Button>
-                </div>
-              </div>
-            ))}
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() =>
-                setSuppliesUsed((current) => [...current, { supplyId: '', quantity: 1 }])
-              }
-            >
-              {t('addSupply')}
-            </Button>
-          </section>
-        </TabsContent>
-        <TabsContent value="docs">
-          <AttachmentsPanel
-            entityType="maintenance_task"
-            entityId={id}
-            kinds={[
-              { value: 'photo', label: t('attachmentPhoto') },
-              { value: 'signature_technician', label: t('attachmentSignatureTechnician') },
-              { value: 'signature_department', label: t('attachmentSignatureDepartment') },
-              { value: 'report', label: t('attachmentReport') },
-            ]}
-          />
-        </TabsContent>
-        <TabsContent value="audit">
-          <AuditTrail entityType="maintenance_task" entityId={id} />
-        </TabsContent>
-      </Tabs>
+              </SectionCard>
+            ),
+          },
+          {
+            value: 'audit',
+            label: t('tabHistory'),
+            content: (
+              <SectionCard title={t('audit', { defaultValue: 'Nhật ký thay đổi' })}>
+                <AuditTrail entityType="maintenance_task" entityId={id} />
+              </SectionCard>
+            ),
+          },
+        ]}
+      />
       <Dialog open={finishOpen} onOpenChange={setFinishOpen}>
         <DialogContent>
           <DialogHeader>

@@ -41,5 +41,8 @@
   "certificate": "Chứng nhận",
   "repairTicket": "Phiếu sửa",
   "equipmentHistory": "Lịch sử máy",
-  "findings": "Nhận xét"
+  "findings": "Nhận xét",
+  "info": "Thông tin phiếu",
+  "audit": "Nhật ký thay đổi",
+  "equipmentHistoryHint": "Các lần kiểm định/hiệu chuẩn của máy này"
 }

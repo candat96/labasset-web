@@ -7,7 +7,31 @@ import { useTranslation } from 'react-i18next'
 import Big from 'big.js'
 import { toast } from 'sonner'
 import { DetailLayout } from '@/components/detail-layout'
+import { PageMeta } from '@/components/page/PageHeader'
+import { SectionCard } from '@/components/page/SectionCard'
+import { DataList } from '@/components/page/DataList'
+import { DetailSkeleton } from '@/components/page/DetailSkeleton'
+import { EmptyState } from '@/components/page/EmptyState'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { ErrorState } from '@/components/page/ErrorState'
+import {
+  Building2,
+  CalendarClock,
+  ClipboardList,
+  Coins,
+  Package,
+  Truck,
+  TriangleAlert,
+  User,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/status-badge'
 import { FormDialog } from '@/components/form/FormDialog'
@@ -166,7 +190,7 @@ export function Component() {
     }
   }
 
-  if (detail.isPending) return <p role="status">{t('detail.loading')}</p>
+  if (detail.isPending) return <DetailSkeleton label={t('detail.loading')} />
   if (detail.error) return <ErrorState error={detail.error} onRetry={() => void detail.refetch()} />
   if (!row) return null
 
@@ -177,8 +201,10 @@ export function Component() {
     <>
       {dialog}
       <DetailLayout
+        eyebrow={`${t('title', { defaultValue: 'Phiếu sửa chữa' })} · ${row.code}`}
         code={row.code}
         name={row.equipment ? `${row.equipment.code} – ${row.equipment.name}` : row.code}
+        meta={<RepairMeta row={row} />}
         badge={
           <div className="flex flex-wrap gap-1">
             <StatusBadge value={row.status} map={repairStatusMap} />
@@ -420,10 +446,14 @@ export function Component() {
             value: 'docs',
             label: t('detail.tabs.docs'),
             content: (
-              <div className="space-y-3">
-                {(canSignTechnician || canSignDepartment) && (
-                  <Button onClick={() => setOpen('sign')}>{t('detail.docs.sign')}</Button>
-                )}
+              <SectionCard
+                title={t('detail.tabs.docs')}
+                actions={
+                  (canSignTechnician || canSignDepartment) && (
+                    <Button onClick={() => setOpen('sign')}>{t('detail.docs.sign')}</Button>
+                  )
+                }
+              >
                 <AttachmentsPanel
                   entityType="repair_ticket"
                   entityId={id}
@@ -443,13 +473,17 @@ export function Component() {
                     { value: 'other', label: t('detail.attachments.other') },
                   ]}
                 />
-              </div>
+              </SectionCard>
             ),
           },
           {
             value: 'audit',
             label: t('detail.tabs.audit'),
-            content: <AuditTrail entityType="repair_ticket" entityId={id} />,
+            content: (
+              <SectionCard title={t('detail.tabs.audit')}>
+                <AuditTrail entityType="repair_ticket" entityId={id} />
+              </SectionCard>
+            ),
           },
         ]}
       />
@@ -553,40 +587,120 @@ export function Component() {
   )
 }
 
-function RepairInformation({ row }: { row: NonNullable<ReturnType<typeof useRepair>['data']> }) {
+function RepairMeta({ row }: { row: NonNullable<ReturnType<typeof useRepair>['data']> }) {
   const { t } = useTranslation('repairs')
   const departmentName = useDepartmentNames()
   return (
-    <dl className="space-y-2 text-sm">
-      <div>
-        <dt className="text-muted-foreground">{t('detail.equipment')}</dt>
-        <dd>
-          {row.equipment ? (
-            <Link className="text-primary hover:underline" to={`/equipment/${row.equipmentId}`}>
-              {row.equipment.code} – {row.equipment.name}
-            </Link>
-          ) : (
-            row.equipmentId
-          )}
-        </dd>
-      </div>
-      <div>
-        <dt className="text-muted-foreground">{t('detail.overview.department')}</dt>
-        <dd>{departmentName(row.reportedDepartmentId)}</dd>
-      </div>
-      <div>
-        <dt className="text-muted-foreground">{t('detail.assignee')}</dt>
-        <dd>{row.assignee?.fullName ?? '—'}</dd>
-      </div>
-      <div>
-        <dt className="text-muted-foreground">{t('detail.dueAt')}</dt>
-        <dd>{formatDateTime(row.dueAt) || '—'}</dd>
-      </div>
-      <div>
-        <dt className="text-muted-foreground">{t('detail.cost')}</dt>
-        <dd>{formatVnd(row.totalCost) || '—'}</dd>
-      </div>
-    </dl>
+    <>
+      {row.reportedDepartmentId && (
+        <PageMeta icon={<Building2 />}>{departmentName(row.reportedDepartmentId)}</PageMeta>
+      )}
+      {row.assignee?.fullName && <PageMeta icon={<User />}>{row.assignee.fullName}</PageMeta>}
+      <PageMeta icon={<CalendarClock />}>
+        {t('detail.dueAt')}: {formatDateTime(row.dueAt)}
+      </PageMeta>
+      {row.totalCost && row.totalCost !== '0' && (
+        <PageMeta icon={<Coins />}>{formatVnd(row.totalCost)}</PageMeta>
+      )}
+    </>
+  )
+}
+
+function RepairInformation({ row }: { row: NonNullable<ReturnType<typeof useRepair>['data']> }) {
+  const { t } = useTranslation('repairs')
+  const departmentName = useDepartmentNames()
+  const timeline = [
+    {
+      at: row.createdAt,
+      title: t('detail.timeline.created', { defaultValue: 'Tạo phiếu' }),
+      tone: 'muted' as const,
+      icon: <ClipboardList />,
+    },
+    ...(row.startedAt
+      ? [
+          {
+            at: row.startedAt,
+            title: t('detail.timeline.started', { defaultValue: 'Bắt đầu xử lý' }),
+            tone: 'primary' as const,
+          },
+        ]
+      : []),
+    ...(row.completedAt
+      ? [
+          {
+            at: row.completedAt,
+            title: t('detail.timeline.completed', { defaultValue: 'Hoàn thành' }),
+            tone: 'success' as const,
+          },
+        ]
+      : []),
+    ...(row.acceptedByDeptAt
+      ? [
+          {
+            at: row.acceptedByDeptAt,
+            title: t('detail.timeline.acceptedByDept', { defaultValue: 'Khoa nghiệm thu' }),
+            tone: 'success' as const,
+          },
+        ]
+      : []),
+    ...(row.acceptedAt
+      ? [
+          {
+            at: row.acceptedAt,
+            title: t('detail.timeline.accepted', { defaultValue: 'Nghiệm thu' }),
+            tone: 'success' as const,
+          },
+        ]
+      : []),
+    ...(row.closedAt
+      ? [
+          {
+            at: row.closedAt,
+            title: t('detail.timeline.closed', { defaultValue: 'Đóng phiếu' }),
+            tone: 'muted' as const,
+          },
+        ]
+      : []),
+  ]
+  return (
+    <>
+      <h2 className="mb-3 text-[15px] leading-6 font-semibold">
+        {t('detail.info', { defaultValue: 'Thông tin' })}
+      </h2>
+      <DataList
+        columns={1}
+        items={[
+          {
+            label: t('detail.equipment'),
+            value: row.equipment ? (
+              <Link className="text-primary hover:underline" to={`/equipment/${row.equipmentId}`}>
+                {row.equipment.code} – {row.equipment.name}
+              </Link>
+            ) : (
+              row.equipmentId
+            ),
+          },
+          {
+            label: t('detail.overview.department'),
+            value: departmentName(row.reportedDepartmentId),
+          },
+          { label: t('detail.assignee'), value: row.assignee?.fullName },
+          {
+            label: t('detail.dueAt'),
+            value: (
+              <span className={row.isOverdue ? 'text-destructive' : undefined}>
+                {formatDateTime(row.dueAt) || '—'}
+              </span>
+            ),
+          },
+          { label: t('detail.cost'), value: formatVnd(row.totalCost) || null },
+        ]}
+      />
+      <h2 className="mt-5 mb-3 text-[15px] leading-6 font-semibold">
+        {t('detail.timeline.title', { defaultValue: 'Tiến trình' })}
+      </h2>
+      <Timeline events={timeline} />
+    </>
   )
 }
 
@@ -600,100 +714,124 @@ function OverviewTab({
   const { t } = useTranslation('repairs')
   const userName = useUserNames()
   return (
-    <dl className="grid gap-3 text-sm sm:grid-cols-2">
-      <div className="sm:col-span-2">
-        <dt className="text-muted-foreground">{t('detail.overview.description')}</dt>
-        <dd className="whitespace-pre-wrap">{row.description}</dd>
-      </div>
-      <div>
-        <dt className="text-muted-foreground">{t('detail.overview.errorCode')}</dt>
-        <dd>{row.errorCode ?? '—'}</dd>
-      </div>
-      <div>
-        <dt className="text-muted-foreground">{t('detail.overview.fault')}</dt>
-        <dd>
-          {row.faultId ? (
-            <Link className="text-primary hover:underline" to={`/faults/${row.faultId}`}>
-              {faultTitle ?? row.faultId}
-            </Link>
-          ) : (
-            '—'
-          )}
-        </dd>
-      </div>
-      <div className="sm:col-span-2">
-        <dt className="text-muted-foreground">{t('detail.overview.diagnosis')}</dt>
-        <dd className="whitespace-pre-wrap">{row.diagnosis ?? '—'}</dd>
-      </div>
-      <div>
-        <dt className="text-muted-foreground">{t('detail.overview.resolutionType')}</dt>
-        <dd>
-          {row.resolutionType &&
-          (RESOLUTION_TYPES as readonly string[]).includes(row.resolutionType)
-            ? t(`detail.resolution.${row.resolutionType}`)
-            : (row.resolutionType ?? '—')}
-        </dd>
-      </div>
-      <div>
-        <dt className="text-muted-foreground">{t('detail.overview.resolutionSummary')}</dt>
-        <dd>{row.resolutionSummary ?? '—'}</dd>
-      </div>
-      <div>
-        <dt className="text-muted-foreground">{t('detail.overview.warranty')}</dt>
-        <dd>{formatDate(row.postRepairWarrantyUntil) || '—'}</dd>
-      </div>
-      <div>
-        <dt className="text-muted-foreground">{t('detail.overview.calibration')}</dt>
-        <dd>
-          {row.calibrationRequired ? (
-            <StatusBadge
-              value="yes"
-              map={{ yes: { label: t('detail.overview.yes'), tone: 'warning' } }}
-            />
-          ) : (
-            t('detail.overview.no')
-          )}
-        </dd>
-      </div>
-      <div>
-        <dt className="text-muted-foreground">{t('detail.overview.acceptance')}</dt>
-        <dd>
-          {row.rating != null ? `${row.rating}/5` : '—'}
-          {row.ratingNote ? ` — ${row.ratingNote}` : ''}
-        </dd>
-      </div>
-      <div className="sm:col-span-2">
-        <dt className="text-muted-foreground mb-1">{t('detail.overview.assignments')}</dt>
-        <dd>
-          <table className="w-full">
-            <thead>
-              <tr className="text-left">
-                <th>{t('detail.overview.person')}</th>
-                <th>{t('detail.overview.role')}</th>
-                <th>{t('detail.overview.response')}</th>
-                <th>{t('detail.overview.note')}</th>
-              </tr>
-            </thead>
-            <tbody>
+    <>
+      <SectionCard title={t('detail.overview.problem', { defaultValue: 'Sự cố' })}>
+        <DataList
+          columns={2}
+          items={[
+            {
+              label: t('detail.overview.description'),
+              value: <span className="whitespace-pre-wrap">{row.description}</span>,
+              full: true,
+            },
+            { label: t('detail.overview.errorCode'), value: row.errorCode },
+            {
+              label: t('detail.overview.fault'),
+              value: row.faultId ? (
+                <Link className="text-primary hover:underline" to={`/faults/${row.faultId}`}>
+                  {faultTitle ?? row.faultId}
+                </Link>
+              ) : null,
+            },
+            {
+              label: t('detail.overview.equipmentDown', { defaultValue: 'Máy ngừng hoạt động' }),
+              value: row.equipmentDown ? (
+                <StatusBadge
+                  value="down"
+                  map={{ down: { label: t('detail.overview.yes'), tone: 'danger' } }}
+                />
+              ) : (
+                t('detail.overview.no')
+              ),
+            },
+          ]}
+        />
+      </SectionCard>
+      <SectionCard title={t('detail.overview.resolution', { defaultValue: 'Chẩn đoán & xử lý' })}>
+        <DataList
+          columns={2}
+          items={[
+            {
+              label: t('detail.overview.diagnosis'),
+              value: row.diagnosis ? (
+                <span className="whitespace-pre-wrap">{row.diagnosis}</span>
+              ) : null,
+              full: true,
+            },
+            {
+              label: t('detail.overview.resolutionType'),
+              value:
+                row.resolutionType &&
+                (RESOLUTION_TYPES as readonly string[]).includes(row.resolutionType)
+                  ? t(`detail.resolution.${row.resolutionType}`)
+                  : row.resolutionType,
+            },
+            { label: t('detail.overview.resolutionSummary'), value: row.resolutionSummary },
+            {
+              label: t('detail.overview.warranty'),
+              value: formatDate(row.postRepairWarrantyUntil) || null,
+            },
+            {
+              label: t('detail.overview.calibration'),
+              value: row.calibrationRequired ? (
+                <StatusBadge
+                  value="yes"
+                  map={{ yes: { label: t('detail.overview.yes'), tone: 'warning' } }}
+                />
+              ) : (
+                t('detail.overview.no')
+              ),
+            },
+            {
+              label: t('detail.overview.acceptance'),
+              value:
+                row.rating != null
+                  ? `${row.rating}/5${row.ratingNote ? ` — ${row.ratingNote}` : ''}`
+                  : null,
+            },
+          ]}
+        />
+      </SectionCard>
+      <SectionCard
+        title={t('detail.overview.assignments')}
+        description={t('countPeople', { defaultValue: '{{n}} người', n: row.assignments.length })}
+        flush={row.assignments.length > 0}
+      >
+        {row.assignments.length === 0 ? (
+          <EmptyState
+            icon={User}
+            title={t('detail.overview.noAssignments', { defaultValue: 'Chưa phân công' })}
+          />
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="pl-5">{t('detail.overview.person')}</TableHead>
+                <TableHead>{t('detail.overview.role')}</TableHead>
+                <TableHead>{t('detail.overview.response')}</TableHead>
+                <TableHead className="pr-5">{t('detail.overview.note')}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {row.assignments.map((item) => (
-                <tr key={item.id} className="border-t">
-                  <td>{userName(item.userId)}</td>
-                  <td>
+                <TableRow key={item.id}>
+                  <TableCell className="pl-5 font-medium">{userName(item.userId)}</TableCell>
+                  <TableCell>
                     {item.role === 'primary'
                       ? t('detail.overview.primary')
                       : t('detail.overview.assistant')}
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     <StatusBadge value={item.response} map={assignmentResponseMap} />
-                  </td>
-                  <td>{item.responseNote ?? '—'}</td>
-                </tr>
+                  </TableCell>
+                  <TableCell className="pr-5">{item.responseNote ?? '—'}</TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
-        </dd>
-      </div>
-    </dl>
+            </TableBody>
+          </Table>
+        )}
+      </SectionCard>
+    </>
   )
 }
 
@@ -709,24 +847,35 @@ function LogsTab({
   const { t } = useTranslation('repairs')
   const userName = useUserNames()
   return (
-    <div className="space-y-3">
-      {canWrite && <Button onClick={onAdd}>{t('detail.logs.add')}</Button>}
-      <Timeline
-        events={logs.map((item) => ({
-          at: item.at,
-          title: item.action,
-          summary: [
-            item.note,
-            item.durationMinutes != null
-              ? t('detail.logs.minutes', { n: item.durationMinutes })
-              : null,
-          ]
-            .filter(Boolean)
-            .join(' · '),
-          by: userName(item.byUserId),
-        }))}
-      />
-    </div>
+    <SectionCard
+      title={t('detail.tabs.logs')}
+      description={t('countItems', { defaultValue: '{{n}} mục', n: logs.length })}
+      actions={canWrite && <Button onClick={onAdd}>{t('detail.logs.add')}</Button>}
+    >
+      {logs.length === 0 && (
+        <EmptyState
+          icon={ClipboardList}
+          title={t('detail.logs.empty', { defaultValue: 'Chưa có nhật ký xử lý' })}
+        />
+      )}
+      {logs.length > 0 && (
+        <Timeline
+          events={logs.map((item) => ({
+            at: item.at,
+            title: item.action,
+            summary: [
+              item.note,
+              item.durationMinutes != null
+                ? t('detail.logs.minutes', { n: item.durationMinutes })
+                : null,
+            ]
+              .filter(Boolean)
+              .join(' · '),
+            by: userName(item.byUserId),
+          }))}
+        />
+      )}
+    </SectionCard>
   )
 }
 
@@ -746,52 +895,65 @@ function PartsTab({
   const { t } = useTranslation('repairs')
   const lotName = useStockLotNames(parts)
   return (
-    <div className="space-y-3">
-      {canWrite && <Button onClick={onAdd}>{t('detail.parts.add')}</Button>}
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="text-left">
-            <th>{t('detail.parts.source')}</th>
-            <th>{t('detail.parts.name')}</th>
-            <th>{t('detail.parts.quantity')}</th>
-            <th>{t('detail.parts.unitCost')}</th>
-            <th>{t('detail.parts.total')}</th>
-            <th>{t('detail.parts.lot')}</th>
-            <th>{t('detail.parts.invoice')}</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {parts.map((row) => (
-            <tr key={row.id} className="border-t">
-              <td>
-                <StatusBadge value={row.source} map={partSourceMap} />
-              </td>
-              <td>{row.name}</td>
-              <td>{formatQty(row.quantity)}</td>
-              <td>{formatVnd(row.unitCost)}</td>
-              <td>{formatVnd(row.totalCost)}</td>
-              <td>{lotName(row.stockLotId)}</td>
-              <td>
-                <FileLink fileId={row.invoiceFileId} label={t('detail.parts.invoice')} />
-              </td>
-              <td>
-                {canWrite && (
-                  <div className="flex gap-1">
-                    <Button size="sm" variant="ghost" onClick={() => onEdit(row)}>
-                      {t('detail.actions.edit')}
-                    </Button>
-                    <Button size="sm" variant="ghost" onClick={() => onDelete(row.id)}>
-                      {t('detail.parts.delete')}
-                    </Button>
-                  </div>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <SectionCard
+      title={t('detail.tabs.parts')}
+      description={t('countItems', { defaultValue: '{{n}} mục', n: parts.length })}
+      actions={canWrite && <Button onClick={onAdd}>{t('detail.parts.add')}</Button>}
+      flush
+    >
+      {parts.length === 0 ? (
+        <EmptyState
+          icon={Package}
+          title={t('detail.parts.empty', { defaultValue: 'Chưa ghi linh kiện/vật tư' })}
+        />
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="pl-5">{t('detail.parts.source')}</TableHead>
+              <TableHead>{t('detail.parts.name')}</TableHead>
+              <TableHead>{t('detail.parts.quantity')}</TableHead>
+              <TableHead>{t('detail.parts.unitCost')}</TableHead>
+              <TableHead>{t('detail.parts.total')}</TableHead>
+              <TableHead>{t('detail.parts.lot')}</TableHead>
+              <TableHead>{t('detail.parts.invoice')}</TableHead>
+              <TableHead className="pr-5"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {parts.map((row) => (
+              <TableRow key={row.id}>
+                <TableCell className="pl-5">
+                  <StatusBadge value={row.source} map={partSourceMap} />
+                </TableCell>
+                <TableCell className="font-medium">{row.name}</TableCell>
+                <TableCell className="tabular-nums">{formatQty(row.quantity)}</TableCell>
+                <TableCell className="tabular-nums">{formatVnd(row.unitCost)}</TableCell>
+                <TableCell className="font-medium tabular-nums">
+                  {formatVnd(row.totalCost)}
+                </TableCell>
+                <TableCell>{lotName(row.stockLotId)}</TableCell>
+                <TableCell>
+                  <FileLink fileId={row.invoiceFileId} label={t('detail.parts.invoice')} />
+                </TableCell>
+                <TableCell className="pr-5">
+                  {canWrite && (
+                    <div className="flex justify-end gap-1">
+                      <Button size="sm" variant="ghost" onClick={() => onEdit(row)}>
+                        {t('detail.actions.edit')}
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => onDelete(row.id)}>
+                        {t('detail.parts.delete')}
+                      </Button>
+                    </div>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
+    </SectionCard>
   )
 }
 
@@ -811,28 +973,55 @@ function VendorsTab({
   const { t } = useTranslation('repairs')
   const supplierName = useSupplierNames(vendors.map((row) => row.supplierId))
   return (
-    <div className="space-y-3">
-      {canWrite && <Button onClick={onAdd}>{t('detail.vendors.add')}</Button>}
-      <ul className="space-y-2 text-sm">
+    <SectionCard
+      title={t('detail.tabs.vendors')}
+      description={t('countItems', { defaultValue: '{{n}} mục', n: vendors.length })}
+      actions={canWrite && <Button onClick={onAdd}>{t('detail.vendors.add')}</Button>}
+    >
+      {vendors.length === 0 && (
+        <EmptyState
+          icon={Truck}
+          title={t('detail.vendors.empty', { defaultValue: 'Chưa có nhà thầu' })}
+        />
+      )}
+      <ul className="space-y-3 text-sm">
         {vendors.map((row) => (
-          <li key={row.id} className="rounded border p-3">
-            <p>
-              {t('detail.vendors.supplier')}: {supplierName(row.supplierId)}
-            </p>
-            <p>
-              {row.engineerName} {row.engineerPhone}
-            </p>
-            <p>
-              {t('detail.vendors.quotation')}: {formatVnd(row.quotationAmount) || '—'}
-            </p>
-            <p>
-              {t('detail.vendors.contract')}: {row.contractNo ?? '—'}
-            </p>
-            <p>
-              <FileLink fileId={row.quotationFileId} label={t('detail.vendors.quotationFile')} />
-            </p>
+          <li key={row.id} className="border-divider rounded-xl border p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <span className="bg-primary-soft text-primary flex size-9 shrink-0 items-center justify-center rounded-lg">
+                  <Truck className="size-4" aria-hidden />
+                </span>
+                <div>
+                  <p className="text-[14px] font-semibold">{supplierName(row.supplierId)}</p>
+                  <p className="text-muted-foreground text-[13px]">
+                    {[row.engineerName, row.engineerPhone].filter(Boolean).join(' · ') || '—'}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <DataList
+              className="mt-3"
+              columns={3}
+              items={[
+                {
+                  label: t('detail.vendors.quotation'),
+                  value: formatVnd(row.quotationAmount) || null,
+                },
+                { label: t('detail.vendors.contract'), value: row.contractNo },
+                {
+                  label: t('detail.vendors.quotationFile'),
+                  value: row.quotationFileId ? (
+                    <FileLink
+                      fileId={row.quotationFileId}
+                      label={t('detail.vendors.quotationFile')}
+                    />
+                  ) : null,
+                },
+              ]}
+            />
             {canWrite && (
-              <div className="flex gap-1">
+              <div className="mt-3 flex gap-1">
                 <Button size="sm" variant="ghost" onClick={() => onEdit(row)}>
                   {t('detail.actions.edit')}
                 </Button>
@@ -844,7 +1033,7 @@ function VendorsTab({
           </li>
         ))}
       </ul>
-    </div>
+    </SectionCard>
   )
 }
 
@@ -931,61 +1120,83 @@ function CostsTab({
     }
   }
   return (
-    <div className="space-y-3">
-      {canWrite && <Button onClick={onAdd}>{t('detail.costs.add')}</Button>}
-      {warning &&
-        (percent && originalValue ? (
-          <p className="text-destructive text-sm">
-            {t('detail.costOverThreshold', {
-              total: formatVnd(total) || total,
-              original: formatVnd(originalValue) || originalValue,
-              pct: percent,
-            })}
-          </p>
+    <>
+      {warning && (
+        <Alert variant="destructive" role="alert">
+          <TriangleAlert />
+          <AlertDescription>
+            {percent && originalValue
+              ? t('detail.costOverThreshold', {
+                  total: formatVnd(total) || total,
+                  original: formatVnd(originalValue) || originalValue,
+                  pct: percent,
+                })
+              : t('detail.costOverThresholdGeneric')}
+          </AlertDescription>
+        </Alert>
+      )}
+      <SectionCard
+        title={t('detail.tabs.costs')}
+        description={t('countItems', { defaultValue: '{{n}} mục', n: costs.length })}
+        actions={canWrite && <Button onClick={onAdd}>{t('detail.costs.add')}</Button>}
+        flush
+        footer={
+          <div className="flex items-center justify-between">
+            <span className="text-muted-foreground text-[13px]">
+              {t('detail.costs.totalLabel', { defaultValue: 'Tổng chi phí' })}
+            </span>
+            <span className="text-[16px] font-bold tabular-nums">
+              {t('detail.costs.total', { amount: formatVnd(total) || '0 ₫' })}
+            </span>
+          </div>
+        }
+      >
+        {costs.length === 0 ? (
+          <EmptyState
+            icon={Coins}
+            title={t('detail.costs.empty', { defaultValue: 'Chưa ghi chi phí' })}
+          />
         ) : (
-          <p className="text-destructive text-sm">{t('detail.costOverThresholdGeneric')}</p>
-        ))}
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="text-left">
-            <th>{t('detail.costs.category')}</th>
-            <th>{t('detail.costs.description')}</th>
-            <th>{t('detail.costs.amount')}</th>
-            <th>{t('detail.costs.invoiceNo')}</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {costs.map((row) => (
-            <tr key={row.id} className="border-t">
-              <td>
-                <StatusBadge value={row.category} map={costCategoryMap} />
-              </td>
-              <td>{row.description}</td>
-              <td>{formatVnd(row.amount)}</td>
-              <td>
-                <CostAttachments costId={row.id} canWrite={canWrite} />
-              </td>
-              <td>
-                {canWrite && (
-                  <div className="flex gap-1">
-                    <Button size="sm" variant="ghost" onClick={() => onEdit(row)}>
-                      {t('detail.actions.edit')}
-                    </Button>
-                    <Button size="sm" variant="ghost" onClick={() => onDelete(row.id)}>
-                      {t('detail.parts.delete')}
-                    </Button>
-                  </div>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <p className="font-medium">
-        {t('detail.costs.total', { amount: formatVnd(total) || '0 ₫' })}
-      </p>
-    </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="pl-5">{t('detail.costs.category')}</TableHead>
+                <TableHead>{t('detail.costs.description')}</TableHead>
+                <TableHead className="text-right">{t('detail.costs.amount')}</TableHead>
+                <TableHead>{t('detail.costs.invoiceNo')}</TableHead>
+                <TableHead className="pr-5"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {costs.map((row) => (
+                <TableRow key={row.id}>
+                  <TableCell className="pl-5">
+                    <StatusBadge value={row.category} map={costCategoryMap} />
+                  </TableCell>
+                  <TableCell className="font-medium">{row.description}</TableCell>
+                  <TableCell className="text-right tabular-nums">{formatVnd(row.amount)}</TableCell>
+                  <TableCell>
+                    <CostAttachments costId={row.id} canWrite={canWrite} />
+                  </TableCell>
+                  <TableCell className="pr-5">
+                    {canWrite && (
+                      <div className="flex justify-end gap-1">
+                        <Button size="sm" variant="ghost" onClick={() => onEdit(row)}>
+                          {t('detail.actions.edit')}
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => onDelete(row.id)}>
+                          {t('detail.parts.delete')}
+                        </Button>
+                      </div>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </SectionCard>
+    </>
   )
 }
 
@@ -1320,7 +1531,7 @@ function ProposeFields({ control }: { control: Control<CompleteForm> }) {
       <div className="space-y-2">
         <p className="text-sm font-medium">{t('detail.complete.proposeSteps')}</p>
         {steps.fields.map((field, index) => (
-          <div key={field.id} className="space-y-2 rounded border p-2">
+          <div key={field.id} className="border-divider space-y-2 rounded-lg border p-3">
             <div className="flex items-center justify-between">
               <p className="text-sm">{t('detail.complete.step', { n: index + 1 })}</p>
               <Button type="button" size="sm" variant="ghost" onClick={() => steps.remove(index)}>

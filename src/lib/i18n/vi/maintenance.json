@@ -123,5 +123,17 @@
   "sourceVendor": "Hợp đồng nhà thầu",
   "cycleMonthsValue": "{{count}} tháng",
   "cycleDaysValue": "{{count}} ngày",
-  "planGenerated": "Đã tạo {{created}}, bỏ qua {{skipped}}"
+  "planGenerated": "Đã tạo {{created}}, bỏ qua {{skipped}}",
+  "previewHint": "Các mốc bảo dưỡng dự kiến trong năm; bấm sinh để tạo công việc.",
+  "scheduledAt": "Ngày dự kiến",
+  "previewNew": "Sẽ tạo",
+  "previewHas": "Đã có task",
+  "taskCount": "{{n}} công việc",
+  "noTasks": "Chưa sinh công việc nào",
+  "dueAt": "Hạn",
+  "info": "Thông tin",
+  "createdAt": "Tạo công việc",
+  "noChecklist": "Công việc này không có checklist",
+  "noSuppliesUsed": "Chưa ghi vật tư tiêu hao",
+  "audit": "Nhật ký thay đổi"
 }

@@ -58,9 +58,16 @@ export function DetailLayout({
             })
           }
         >
-          <TabsList variant="line" className="mb-4 max-w-full overflow-x-auto">
+          <TabsList
+            className="bg-surface-2 mb-4 flex h-auto w-full flex-wrap justify-start gap-1 rounded-xl p-1"
+            data-slot="detail-tabs"
+          >
             {tabs.map((t) => (
-              <TabsTrigger key={t.value} value={t.value} className="gap-1.5">
+              <TabsTrigger
+                key={t.value}
+                value={t.value}
+                className="h-8 flex-none gap-1.5 rounded-lg px-3 text-[13px] font-medium after:hidden data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-[0_1px_2px_rgb(16_24_40/0.08),0_0_0_1px_rgb(16_24_40/0.06)]"
+              >
                 {t.label}
                 {typeof t.count === 'number' && (
                   <span

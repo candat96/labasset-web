@@ -5,8 +5,13 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
-import { PageHeader } from '@/components/page/PageHeader'
+import { PageHeader, PageMeta } from '@/components/page/PageHeader'
+import { SectionCard } from '@/components/page/SectionCard'
+import { DataList } from '@/components/page/DataList'
+import { DetailSkeleton } from '@/components/page/DetailSkeleton'
+import { AuditTrail } from '@/components/audit-trail'
 import { ErrorState } from '@/components/page/ErrorState'
+import { Award, CalendarClock, CalendarDays, Microscope, User, Wrench } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/status-badge'
 import { Timeline } from '@/components/timeline'
@@ -113,13 +118,14 @@ export function Component() {
     queryFn: () => calibrationHistory(detail.data!.equipmentId),
     enabled: !!detail.data?.equipmentId,
   })
-  if (detail.isPending) return <p role="status">{t('loading')}</p>
+  if (detail.isPending) return <DetailSkeleton label={t('loading')} />
   if (detail.error) return <ErrorState error={detail.error} onRetry={() => void detail.refetch()} />
   const row = detail.data
   return (
     <>
       {dialog}
       <PageHeader
+        eyebrow={t('title')}
         title={row.code}
         badge={
           <div className="flex gap-1">
@@ -127,6 +133,36 @@ export function Component() {
             <StatusBadge value={row.type} map={calibrationTypeMap} />
             {row.result && <StatusBadge value={row.result} map={calibrationResultMap} />}
           </div>
+        }
+        meta={
+          <>
+            <PageMeta icon={<Microscope />}>
+              <Link className="text-primary hover:underline" to={`/equipment/${row.equipmentId}`}>
+                {row.equipment?.code} – {row.equipment?.name}
+              </Link>
+            </PageMeta>
+            {row.scheduledAt && (
+              <PageMeta icon={<CalendarClock />}>
+                {t('schedule')}: {formatDateTime(row.scheduledAt)}
+              </PageMeta>
+            )}
+            {row.performerName && <PageMeta icon={<User />}>{row.performerName}</PageMeta>}
+            {row.nextDueAt && (
+              <PageMeta icon={<CalendarDays />}>
+                {t('nextDue')}: {formatDate(row.nextDueAt)}
+              </PageMeta>
+            )}
+            {row.repairTicketId && (
+              <PageMeta icon={<Wrench />}>
+                <Link
+                  className="text-primary hover:underline"
+                  to={`/repairs/${row.repairTicketId}`}
+                >
+                  {t('repairTicket')}
+                </Link>
+              </PageMeta>
+            )}
+          </>
         }
         actions={
           <div className="flex gap-2">
@@ -155,53 +191,93 @@ export function Component() {
           </div>
         }
       />
-      <dl className="grid gap-2 text-sm sm:grid-cols-2">
-        <div>
-          <dt className="text-muted-foreground">{t('equipment')}</dt>
-          <dd>
-            <Link className="text-primary hover:underline" to={`/equipment/${row.equipmentId}`}>
-              {row.equipment?.code} – {row.equipment?.name}
-            </Link>
-          </dd>
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="min-w-0 space-y-5">
+          <SectionCard title={t('info', { defaultValue: 'Thông tin phiếu' })}>
+            <DataList
+              columns={2}
+              items={[
+                {
+                  label: t('equipment'),
+                  value: (
+                    <Link
+                      className="text-primary hover:underline"
+                      to={`/equipment/${row.equipmentId}`}
+                    >
+                      {row.equipment?.code} – {row.equipment?.name}
+                    </Link>
+                  ),
+                },
+                {
+                  label: t('type'),
+                  value: <StatusBadge value={row.type} map={calibrationTypeMap} />,
+                },
+                { label: t('schedule'), value: formatDateTime(row.scheduledAt) || null },
+                { label: t('performedAt'), value: formatDateTime(row.performedAt) || null },
+                { label: t('performedBy'), value: row.performerName },
+                { label: t('cycleMonths'), value: row.cycleMonths },
+                {
+                  label: t('result'),
+                  value: row.result ? (
+                    <StatusBadge value={row.result} map={calibrationResultMap} />
+                  ) : null,
+                },
+                { label: t('nextDue'), value: formatDate(row.nextDueAt) || null },
+                { label: t('certificateNo'), value: row.certificateNo },
+                { label: t('cost'), value: formatVnd(row.cost) || null },
+                { label: t('findings'), value: row.findings, full: true },
+                ...(row.repairTicketId
+                  ? [
+                      {
+                        label: t('repairTicket'),
+                        value: (
+                          <Link
+                            className="text-primary hover:underline"
+                            to={`/repairs/${row.repairTicketId}`}
+                          >
+                            {row.repairTicketId}
+                          </Link>
+                        ),
+                      },
+                    ]
+                  : []),
+              ]}
+            />
+          </SectionCard>
+          <SectionCard title={t('audit', { defaultValue: 'Nhật ký thay đổi' })}>
+            <AuditTrail entityType="calibration" entityId={id} />
+          </SectionCard>
         </div>
-        <div>
-          <dt className="text-muted-foreground">{t('schedule')}</dt>
-          <dd>{formatDateTime(row.scheduledAt)}</dd>
+        <div className="space-y-5">
+          <SectionCard
+            title={t('equipmentHistory')}
+            description={t('equipmentHistoryHint', {
+              defaultValue: 'Các lần kiểm định/hiệu chuẩn của máy này',
+            })}
+          >
+            <Timeline
+              events={(history.data ?? []).map((item) => ({
+                at: item.performedAt ?? item.scheduledAt ?? item.createdAt,
+                title: item.code,
+                summary: item.result
+                  ? (calibrationResultMap[item.result]?.label ?? item.result)
+                  : (calibrationStatusMap[item.status]?.label ?? item.status),
+                tone:
+                  item.result === 'pass'
+                    ? ('success' as const)
+                    : item.result === 'fail'
+                      ? ('danger' as const)
+                      : item.result === 'conditional'
+                        ? ('warning' as const)
+                        : item.id === row.id
+                          ? ('primary' as const)
+                          : ('muted' as const),
+                icon: item.result ? <Award /> : undefined,
+              }))}
+            />
+          </SectionCard>
         </div>
-        <div>
-          <dt className="text-muted-foreground">{t('performedAt')}</dt>
-          <dd>{formatDateTime(row.performedAt)}</dd>
-        </div>
-        <div>
-          <dt className="text-muted-foreground">{t('certificate')}</dt>
-          <dd>{row.certificateNo ?? '—'}</dd>
-        </div>
-        <div>
-          <dt className="text-muted-foreground">{t('cost')}</dt>
-          <dd>{formatVnd(row.cost) || '—'}</dd>
-        </div>
-        <div>
-          <dt className="text-muted-foreground">{t('nextDue')}</dt>
-          <dd>{formatDate(row.nextDueAt) || '—'}</dd>
-        </div>
-        {row.repairTicketId && (
-          <div>
-            <dt className="text-muted-foreground">{t('repairTicket')}</dt>
-            <dd>
-              <Link className="text-primary hover:underline" to={`/repairs/${row.repairTicketId}`}>
-                {row.repairTicketId}
-              </Link>
-            </dd>
-          </div>
-        )}
-      </dl>
-      <h2 className="mt-6 mb-2 font-medium">{t('equipmentHistory')}</h2>
-      <Timeline
-        events={(history.data ?? []).map((item) => ({
-          at: item.performedAt ?? item.scheduledAt ?? item.createdAt,
-          title: `${item.code} · ${item.result ?? item.status}`,
-        }))}
-      />
+      </div>
       <FormDialog
         open={completeOpen}
         onOpenChange={setCompleteOpen}

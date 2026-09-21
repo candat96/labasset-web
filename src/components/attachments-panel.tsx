@@ -38,7 +38,7 @@ function AttachmentItem({
     staleTime: 600000,
   })
   return (
-    <li className="flex items-center gap-3 rounded border p-2">
+    <li className="border-divider flex items-center gap-3 rounded-lg border p-2.5">
       {url.data && isImage && (
         <button
           type="button"
@@ -149,7 +149,9 @@ export function AttachmentsPanel({
       )}
       {groups.map((kind) => (
         <section key={kind.value} className="space-y-2">
-          <h3 className="font-medium">{kind.label}</h3>
+          <h3 className="text-muted-foreground text-[12.5px] font-semibold tracking-[0.04em] uppercase">
+            {kind.label}
+          </h3>
           <ul className="space-y-2">
             {list.data
               ?.filter((r) => r.kind === kind.value)

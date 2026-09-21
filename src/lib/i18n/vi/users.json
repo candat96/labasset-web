@@ -56,5 +56,6 @@
     "deactivate": "Khoá {{name}}?",
     "activate": "Mở khoá {{name}}?",
     "delete": "Xoá {{name}}?"
-  }
+  },
+  "info": "Thông tin tài khoản"
 }

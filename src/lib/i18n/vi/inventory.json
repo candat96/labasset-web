@@ -168,5 +168,18 @@
   "signatureSaved": "Đã lưu chữ ký",
   "days": "ngày",
   "warehouseSame": "Kho nguồn và kho đích phải khác nhau",
-  "severity": "Mức"
+  "severity": "Mức",
+  "request": "Phiếu yêu cầu",
+  "fefoWarningHint": "Có lô hạn dùng gần hơn chưa được xuất trước.",
+  "items": "Vật tư xuất",
+  "noItems": "Chưa có dòng vật tư",
+  "attachments": "Đính kèm",
+  "info": "Thông tin",
+  "history": "Lịch sử",
+  "audit": "Nhật ký thay đổi",
+  "expiresAt": "Hạn dùng",
+  "lineTotalLabel": "Thành tiền",
+  "lotCount": "{{n}} lô",
+  "noCardRows": "Chưa có giao dịch",
+  "noCompatibleEquipment": "Chưa gắn máy tương thích"
 }
