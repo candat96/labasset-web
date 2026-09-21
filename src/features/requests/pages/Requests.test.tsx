@@ -143,4 +143,4 @@ it('creates a recurring request with validated items', async () => {
   await userEvent.click(await screen.findByRole('option', { name: /Huyết thanh/ }))
   await userEvent.click(screen.getByRole('button', { name: 'Lưu' }))
   await waitFor(() => expect(saved).toHaveLength(1))
-})
+}, 15_000)

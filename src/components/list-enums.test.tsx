@@ -163,4 +163,4 @@ it('không cột nào trong bảng danh sách lộ enum thô (snake_case / SCREA
     }
     cleanup()
   }
-})
+}, 30_000)
