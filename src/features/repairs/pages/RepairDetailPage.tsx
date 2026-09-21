@@ -849,7 +849,7 @@ function logActionLabel(
   action: string,
   t: (k: string, o?: Record<string, unknown>) => string,
 ): string {
-  const [kind, value] = action.split(':')
+  const [kind = action, value] = action.split(':')
   if (kind === 'status' && value) {
     const st = repairStatusMap[value]?.label ?? value
     return t('detail.logs.actions.status', { defaultValue: 'Chuyển trạng thái: {{st}}', st })
