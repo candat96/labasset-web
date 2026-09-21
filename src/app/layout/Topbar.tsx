@@ -5,6 +5,7 @@ import { SidebarTrigger } from '@/components/ui/sidebar'
 import { Breadcrumbs } from './Breadcrumbs'
 import { GlobalSearch } from './GlobalSearch'
 import { UserMenu } from './UserMenu'
+import { AiButton } from './AiButton'
 import { cn } from '@/lib/utils'
 
 export function Topbar({ notifications }: { notifications?: ReactNode }) {
@@ -29,6 +30,7 @@ export function Topbar({ notifications }: { notifications?: ReactNode }) {
         <Breadcrumbs />
       </div>
       <GlobalSearch />
+      <AiButton />
       {notifications}
       <UserMenu />
     </header>
