@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { toast } from 'sonner'
 import { DataTable, useServerTable } from '@/components/data-table'
-import { FilterBar } from '@/components/filter-bar'
+import { FilterBar, FilterPreset } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page/PageHeader'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/status-badge'
@@ -90,25 +90,7 @@ export function Component() {
   )
   return (
     <>
-      <PageHeader
-        title={t('alertsTitle')}
-        actions={
-          <div className="flex gap-2">
-            <Button
-              variant={resolved ? 'outline' : 'default'}
-              onClick={() => table.setFilter('resolved', undefined)}
-            >
-              {t('openAlerts')}
-            </Button>
-            <Button
-              variant={resolved ? 'default' : 'outline'}
-              onClick={() => table.setFilter('resolved', 'true')}
-            >
-              {t('resolved')}
-            </Button>
-          </div>
-        }
-      />
+      <PageHeader title={t('alertsTitle')} />
       <DataTable
         tableId="stock-alerts"
         columns={columns}
@@ -121,7 +103,25 @@ export function Component() {
         error={list.error}
         onRetry={() => void list.refetch()}
         getRowId={(row) => row.id}
-        toolbarLeft={<FilterBar>{null}</FilterBar>}
+        toolbarLeft={
+          <FilterBar
+            presets={
+              <>
+                <FilterPreset
+                  active={!resolved}
+                  onClick={() => table.setFilter('resolved', undefined)}
+                >
+                  {t('openAlerts')}
+                </FilterPreset>
+                <FilterPreset active={resolved} onClick={() => table.setFilter('resolved', 'true')}>
+                  {t('resolved')}
+                </FilterPreset>
+              </>
+            }
+          >
+            {null}
+          </FilterBar>
+        }
       />
     </>
   )

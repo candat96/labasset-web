@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import type { ColumnDef } from '@tanstack/react-table'
 import { toast } from 'sonner'
 import { DataTable, useServerTable } from '@/components/data-table'
-import { FilterBar, FilterPreset, MoreFilters } from '@/components/filter-bar'
+import { FilterBar, FilterField, FilterPreset, MoreFilters } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page/PageHeader'
 import { Button } from '@/components/ui/button'
 import {
@@ -161,73 +161,81 @@ export function Component() {
             }
             onClear={Object.values(f).some(Boolean) ? table.reset : undefined}
           >
-            <MultiSelect
-              value={f.status?.split(',').filter(Boolean) ?? []}
-              onChange={(values) =>
-                table.setFilter('status', values.length ? values.join(',') : undefined)
-              }
-              placeholder={t('status')}
-              options={Object.entries(taskStatusMap).map(([value, option]) => ({
-                value,
-                label: option.label,
-              }))}
-            />
-            <Select
-              value={f.type ?? '__all__'}
-              onValueChange={(value) =>
-                table.setFilter('type', value === '__all__' ? undefined : value)
-              }
-            >
-              <SelectTrigger aria-label={t('type')}>
-                <SelectValue placeholder={t('type')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__all__">{t('type')}</SelectItem>
-                {Object.entries(taskTypeMap).map(([value, option]) => (
-                  <SelectItem key={value} value={value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <AsyncSelect
-              label={t('filterEquipment')}
-              placeholder={t('equipment')}
-              showLabel={false}
-              queryKey="equipment"
-              loadOptions={equipmentOptions}
-              value={f.equipmentId ?? null}
-              clearable
-              onChange={(value) =>
-                table.setFilter('equipmentId', typeof value === 'string' ? value : undefined)
-              }
-            />
-            <DatePicker
-              ariaLabel={t('from')}
-              placeholder={t('from')}
-              value={f.from ?? ''}
-              onChange={(value) => table.setFilter('from', value)}
-            />
-            <DatePicker
-              ariaLabel={t('to')}
-              placeholder={t('to')}
-              value={f.to ?? ''}
-              onChange={(value) => table.setFilter('to', value)}
-            />
+            <FilterField label={t('status')}>
+              <MultiSelect
+                value={f.status?.split(',').filter(Boolean) ?? []}
+                onChange={(values) =>
+                  table.setFilter('status', values.length ? values.join(',') : undefined)
+                }
+                placeholder={t('status')}
+                options={Object.entries(taskStatusMap).map(([value, option]) => ({
+                  value,
+                  label: option.label,
+                }))}
+              />
+            </FilterField>
+            <FilterField label={t('type')}>
+              <Select
+                value={f.type ?? '__all__'}
+                onValueChange={(value) =>
+                  table.setFilter('type', value === '__all__' ? undefined : value)
+                }
+              >
+                <SelectTrigger aria-label={t('type')} className="w-full">
+                  <SelectValue placeholder={t('type')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">{t('type')}</SelectItem>
+                  {Object.entries(taskTypeMap).map(([value, option]) => (
+                    <SelectItem key={value} value={value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FilterField>
+            <FilterField label={t('filterEquipment')}>
+              <AsyncSelect
+                label={t('filterEquipment')}
+                placeholder={t('equipment')}
+                queryKey="equipment"
+                loadOptions={equipmentOptions}
+                value={f.equipmentId ?? null}
+                clearable
+                onChange={(value) =>
+                  table.setFilter('equipmentId', typeof value === 'string' ? value : undefined)
+                }
+              />
+            </FilterField>
+            <FilterField label={t('from')}>
+              <DatePicker
+                ariaLabel={t('from')}
+                value={f.from ?? ''}
+                onChange={(value) => table.setFilter('from', value)}
+              />
+            </FilterField>
+            <FilterField label={t('to')}>
+              <DatePicker
+                ariaLabel={t('to')}
+                value={f.to ?? ''}
+                onChange={(value) => table.setFilter('to', value)}
+              />
+            </FilterField>
             <MoreFilters>
               {canListUsers && (
-                <AsyncSelect
-                  label={t('filterAssignee')}
-                  placeholder={t('assignee')}
-                  showLabel={false}
-                  queryKey="staff-users"
-                  loadOptions={staffUserOptions}
-                  value={f.assigneeId === 'me' ? null : (f.assigneeId ?? null)}
-                  clearable
-                  onChange={(value) =>
-                    table.setFilter('assigneeId', typeof value === 'string' ? value : undefined)
-                  }
-                />
+                <FilterField label={t('filterAssignee')}>
+                  <AsyncSelect
+                    label={t('filterAssignee')}
+                    placeholder={t('assignee')}
+                    queryKey="staff-users"
+                    loadOptions={staffUserOptions}
+                    value={f.assigneeId === 'me' ? null : (f.assigneeId ?? null)}
+                    clearable
+                    onChange={(value) =>
+                      table.setFilter('assigneeId', typeof value === 'string' ? value : undefined)
+                    }
+                  />
+                </FilterField>
               )}
             </MoreFilters>
           </FilterBar>

@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { DataTable, useServerTable } from '@/components/data-table'
-import { FilterBar } from '@/components/filter-bar'
+import { FilterBar, FilterField } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page/PageHeader'
 import { StatusBadge } from '@/components/status-badge'
 import { commonStatusMap } from '@/lib/status-maps'
@@ -185,28 +185,31 @@ export function CatalogPage({ slug }: { slug: CatalogSlug }) {
         getRowId={(row) => row.id}
         toolbarLeft={
           <FilterBar>
-            <Input
-              aria-label={t('search.label')}
-              value={table.inputQ}
-              onChange={(event) => table.setQ(event.target.value)}
-              placeholder={t('search.placeholder')}
-              className="w-64"
-            />
-            <Select
-              value={active ?? 'all'}
-              onValueChange={(value) =>
-                table.setFilter('isActive', value === 'all' ? undefined : value)
-              }
-            >
-              <SelectTrigger aria-label={t('filter.status')}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('filter.allStatuses')}</SelectItem>
-                <SelectItem value="true">{t('filter.active')}</SelectItem>
-                <SelectItem value="false">{t('filter.inactive')}</SelectItem>
-              </SelectContent>
-            </Select>
+            <FilterField label={t('search.label')}>
+              <Input
+                aria-label={t('search.label')}
+                value={table.inputQ}
+                onChange={(event) => table.setQ(event.target.value)}
+                placeholder={t('search.placeholder')}
+              />
+            </FilterField>
+            <FilterField label={t('filter.status')}>
+              <Select
+                value={active ?? 'all'}
+                onValueChange={(value) =>
+                  table.setFilter('isActive', value === 'all' ? undefined : value)
+                }
+              >
+                <SelectTrigger aria-label={t('filter.status')} className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('filter.allStatuses')}</SelectItem>
+                  <SelectItem value="true">{t('filter.active')}</SelectItem>
+                  <SelectItem value="false">{t('filter.inactive')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </FilterField>
           </FilterBar>
         }
         toolbarRight={

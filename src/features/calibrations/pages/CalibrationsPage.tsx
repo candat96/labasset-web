@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { toast } from 'sonner'
 import { DataTable, useServerTable } from '@/components/data-table'
-import { FilterBar, FilterPreset } from '@/components/filter-bar'
+import { FilterBar, FilterField, FilterPreset } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page/PageHeader'
 import { Button } from '@/components/ui/button'
 import { DatePicker } from '@/components/date-picker'
@@ -216,71 +216,77 @@ export function Component() {
             }
             onClear={Object.values(f).some(Boolean) ? table.reset : undefined}
           >
-            <AsyncSelect
-              label={t('filterEquipment')}
-              placeholder={t('equipment')}
-              showLabel={false}
-              queryKey="equipment"
-              loadOptions={equipmentOptions}
-              value={f.equipmentId ?? null}
-              clearable
-              onChange={(value) =>
-                table.setFilter('equipmentId', typeof value === 'string' ? value : undefined)
-              }
-            />
-            {[
-              [
-                'type',
-                t('type'),
-                [
-                  ['inspection', t('typeInspection')],
-                  ['calibration', t('typeCalibration')],
-                ],
-              ],
-              [
-                'status',
-                t('status'),
-                [
-                  ['scheduled', t('scheduled')],
-                  ['done', t('done')],
-                  ['cancelled', t('cancelled')],
-                ],
-              ],
-              [
-                'result',
-                t('result'),
-                [
-                  ['pass', t('pass')],
-                  ['fail', t('fail')],
-                  ['conditional', t('conditional')],
-                ],
-              ],
-            ].map(([key, label, options]) => (
-              <Select
-                key={key as string}
-                value={f[key as string] ?? '__all__'}
-                onValueChange={(value) =>
-                  table.setFilter(key as string, value === '__all__' ? undefined : value)
+            <FilterField label={t('filterEquipment')}>
+              <AsyncSelect
+                label={t('filterEquipment')}
+                placeholder={t('equipment')}
+                queryKey="equipment"
+                loadOptions={equipmentOptions}
+                value={f.equipmentId ?? null}
+                clearable
+                onChange={(value) =>
+                  table.setFilter('equipmentId', typeof value === 'string' ? value : undefined)
                 }
-              >
-                <SelectTrigger aria-label={label as string}>
-                  <SelectValue placeholder={label as string} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__all__">{label as string}</SelectItem>
-                  {(options as string[][]).map(([value, text]) => (
-                    <SelectItem key={value} value={value!}>
-                      {text}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              />
+            </FilterField>
+            {(
+              [
+                [
+                  'type',
+                  t('type'),
+                  [
+                    ['inspection', t('typeInspection')],
+                    ['calibration', t('typeCalibration')],
+                  ],
+                ],
+                [
+                  'status',
+                  t('status'),
+                  [
+                    ['scheduled', t('scheduled')],
+                    ['done', t('done')],
+                    ['cancelled', t('cancelled')],
+                  ],
+                ],
+                [
+                  'result',
+                  t('result'),
+                  [
+                    ['pass', t('pass')],
+                    ['fail', t('fail')],
+                    ['conditional', t('conditional')],
+                  ],
+                ],
+              ] as const
+            ).map(([key, label, options]) => (
+              <FilterField key={key} label={label}>
+                <Select
+                  value={f[key] ?? '__all__'}
+                  onValueChange={(value) =>
+                    table.setFilter(key, value === '__all__' ? undefined : value)
+                  }
+                >
+                  <SelectTrigger aria-label={label} className="w-full">
+                    <SelectValue placeholder={label} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__all__">{label}</SelectItem>
+                    {options.map(([value, text]) => (
+                      <SelectItem key={value} value={value}>
+                        {text}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FilterField>
             ))}
-            <DatePicker
-              ariaLabel={t('dueBefore')}
-              value={f.dueBefore ?? ''}
-              onChange={(value) => table.setFilter('dueBefore', value || undefined)}
-            />
+            <FilterField label={t('dueBefore')}>
+              <DatePicker
+                ariaLabel={t('dueBefore')}
+                value={f.dueBefore ?? ''}
+                onChange={(value) => table.setFilter('dueBefore', value || undefined)}
+              />
+            </FilterField>
           </FilterBar>
         }
       />

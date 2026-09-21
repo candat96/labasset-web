@@ -3,7 +3,7 @@ import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import type { ColumnDef } from '@tanstack/react-table'
 import { DataTable, useServerTable } from '@/components/data-table'
-import { FilterBar } from '@/components/filter-bar'
+import { FilterBar, FilterField } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page/PageHeader'
 import { Input } from '@/components/ui/input'
 import { AsyncSelect } from '@/components/form/async-select'
@@ -111,17 +111,21 @@ export function Component() {
         getRowId={(row) => row.id}
         toolbarLeft={
           <FilterBar>
-            <DatePicker
-              ariaLabel={t('filter.from')}
-              value={filters.from ?? ''}
-              onChange={(value) => table.setFilter('from', value)}
-            />
-            <DatePicker
-              ariaLabel={t('filter.to')}
-              value={filters.to ?? ''}
-              onChange={(value) => table.setFilter('to', value)}
-            />
-            <div className="min-w-56">
+            <FilterField label={t('filter.from')}>
+              <DatePicker
+                ariaLabel={t('filter.from')}
+                value={filters.from ?? ''}
+                onChange={(value) => table.setFilter('from', value)}
+              />
+            </FilterField>
+            <FilterField label={t('filter.to')}>
+              <DatePicker
+                ariaLabel={t('filter.to')}
+                value={filters.to ?? ''}
+                onChange={(value) => table.setFilter('to', value)}
+              />
+            </FilterField>
+            <FilterField label={t('filter.user')}>
               <AsyncSelect
                 label={t('filter.user')}
                 queryKey="audit-users"
@@ -137,13 +141,15 @@ export function Component() {
                   name: user.fullName,
                 }))}
               />
-            </div>
-            <Input
-              aria-label={t('filter.entityType')}
-              placeholder={t('filter.entityTypePlaceholder')}
-              value={filters.entityType ?? ''}
-              onChange={(event) => table.setFilter('entityType', event.target.value || undefined)}
-            />
+            </FilterField>
+            <FilterField label={t('filter.entityType')}>
+              <Input
+                aria-label={t('filter.entityType')}
+                placeholder={t('filter.entityTypePlaceholder')}
+                value={filters.entityType ?? ''}
+                onChange={(event) => table.setFilter('entityType', event.target.value || undefined)}
+              />
+            </FilterField>
           </FilterBar>
         }
       />

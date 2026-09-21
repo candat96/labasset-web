@@ -14,10 +14,9 @@ import { useNavigate } from 'react-router'
 import type { ColumnDef } from '@tanstack/react-table'
 import { CheckCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { DataTable, useServerTable } from '@/components/data-table'
-import { FilterBar } from '@/components/filter-bar'
+import { FilterBar, FilterField } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page/PageHeader'
 import { StatusBadge } from '@/components/page/StatusBadge'
 import { formatDateTime } from '@/lib/format/date'
@@ -120,30 +119,40 @@ export function Component() {
         }}
         toolbarLeft={
           <FilterBar>
-            <Select
-              value={table.params.filters.type ?? 'all'}
-              onValueChange={(value) =>
-                table.setFilter('type', value === 'all' ? undefined : value)
-              }
-            >
-              <SelectTrigger id="notification-type" className="w-56" aria-label="Loại thông báo">
-                <SelectValue placeholder="Tất cả loại" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tất cả loại</SelectItem>
-                {Object.entries(NOTIFICATION_TYPES).map(([type, label]) => (
-                  <SelectItem key={type} value={type}>
-                    {label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Switch
-              id="only-unread"
-              checked={onlyUnread}
-              onCheckedChange={(v) => table.setFilter('unread', v ? 'true' : undefined)}
-            />
-            <Label htmlFor="only-unread">{t('onlyUnread')}</Label>
+            <FilterField label={t('filterType')}>
+              <Select
+                value={table.params.filters.type ?? 'all'}
+                onValueChange={(value) =>
+                  table.setFilter('type', value === 'all' ? undefined : value)
+                }
+              >
+                <SelectTrigger
+                  id="notification-type"
+                  className="w-full"
+                  aria-label={t('filterType')}
+                >
+                  <SelectValue placeholder={t('allTypes')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('allTypes')}</SelectItem>
+                  {Object.entries(NOTIFICATION_TYPES).map(([type, label]) => (
+                    <SelectItem key={type} value={type}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FilterField>
+            <FilterField label={t('onlyUnread')}>
+              <div className="flex h-9 items-center">
+                <Switch
+                  id="only-unread"
+                  checked={onlyUnread}
+                  onCheckedChange={(v) => table.setFilter('unread', v ? 'true' : undefined)}
+                  aria-label={t('onlyUnread')}
+                />
+              </div>
+            </FilterField>
           </FilterBar>
         }
       />

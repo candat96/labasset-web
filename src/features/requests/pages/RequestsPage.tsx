@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { toast } from 'sonner'
 import { DataTable, useServerTable } from '@/components/data-table'
-import { FilterBar } from '@/components/filter-bar'
+import { FilterBar, FilterField } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -278,77 +278,87 @@ export function Component() {
         onRowClick={(row) => navigate(`/requests/${row.id}`)}
         toolbarLeft={
           <FilterBar>
-            <Input
-              aria-label={t('searchRequest')}
-              value={table.inputQ}
-              onChange={(e) => table.setQ(e.target.value)}
-              placeholder={t('searchRequest')}
-            />
-            <Select
-              value={f.status ?? 'all'}
-              onValueChange={(value) =>
-                table.setFilter('status', value === 'all' ? undefined : value)
-              }
-            >
-              <SelectTrigger aria-label={t('status')}>
-                <SelectValue placeholder={t('status')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('all')}</SelectItem>
-                {[
-                  'draft',
-                  'submitted',
-                  'dept_approved',
-                  'approved',
-                  'partially_approved',
-                  'issued',
-                  'received',
-                  'rejected',
-                  'cancelled',
-                ].map((status) => (
-                  <SelectItem key={status} value={status}>
-                    {requestStatusMap[status]?.label ?? status}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select
-              value={f.type ?? 'all'}
-              onValueChange={(value) =>
-                table.setFilter('type', value === 'all' ? undefined : value)
-              }
-            >
-              <SelectTrigger aria-label={t('type')}>
-                <SelectValue placeholder={t('type')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('all')}</SelectItem>
-                <SelectItem value="supply">{t('typeSupply')}</SelectItem>
-                <SelectItem value="repair">{t('typeRepair')}</SelectItem>
-              </SelectContent>
-            </Select>
-            <AsyncSelect
-              label="Khoa"
-              queryKey="request-departments"
-              loadOptions={departmentOptions}
-              value={f.departmentId ?? null}
-              onChange={(value) =>
-                table.setFilter('departmentId', typeof value === 'string' ? value : undefined)
-              }
-              clearable
-            />
-            <DatePicker
-              ariaLabel={t('from')}
-              value={f.from}
-              onChange={(value) => table.setFilter('from', value)}
-              placeholder={t('from')}
-            />
-            <DatePicker
-              ariaLabel={t('to')}
-              value={f.to}
-              onChange={(value) => table.setFilter('to', value)}
-              placeholder={t('to')}
-            />
+            <FilterField label={t('searchRequest')}>
+              <Input
+                aria-label={t('searchRequest')}
+                value={table.inputQ}
+                onChange={(e) => table.setQ(e.target.value)}
+                placeholder={t('searchRequest')}
+              />
+            </FilterField>
+            <FilterField label={t('status')}>
+              <Select
+                value={f.status ?? 'all'}
+                onValueChange={(value) =>
+                  table.setFilter('status', value === 'all' ? undefined : value)
+                }
+              >
+                <SelectTrigger aria-label={t('status')} className="w-full">
+                  <SelectValue placeholder={t('status')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('all')}</SelectItem>
+                  {[
+                    'draft',
+                    'submitted',
+                    'dept_approved',
+                    'approved',
+                    'partially_approved',
+                    'issued',
+                    'received',
+                    'rejected',
+                    'cancelled',
+                  ].map((status) => (
+                    <SelectItem key={status} value={status}>
+                      {requestStatusMap[status]?.label ?? status}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FilterField>
+            <FilterField label={t('type')}>
+              <Select
+                value={f.type ?? 'all'}
+                onValueChange={(value) =>
+                  table.setFilter('type', value === 'all' ? undefined : value)
+                }
+              >
+                <SelectTrigger aria-label={t('type')} className="w-full">
+                  <SelectValue placeholder={t('type')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('all')}</SelectItem>
+                  <SelectItem value="supply">{t('typeSupply')}</SelectItem>
+                  <SelectItem value="repair">{t('typeRepair')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </FilterField>
+            <FilterField label={t('department')}>
+              <AsyncSelect
+                label={t('department')}
+                queryKey="request-departments"
+                loadOptions={departmentOptions}
+                value={f.departmentId ?? null}
+                onChange={(value) =>
+                  table.setFilter('departmentId', typeof value === 'string' ? value : undefined)
+                }
+                clearable
+              />
+            </FilterField>
+            <FilterField label={t('from')}>
+              <DatePicker
+                ariaLabel={t('from')}
+                value={f.from}
+                onChange={(value) => table.setFilter('from', value)}
+              />
+            </FilterField>
+            <FilterField label={t('to')}>
+              <DatePicker
+                ariaLabel={t('to')}
+                value={f.to}
+                onChange={(value) => table.setFilter('to', value)}
+              />
+            </FilterField>
           </FilterBar>
         }
       />

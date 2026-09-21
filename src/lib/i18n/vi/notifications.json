@@ -4,6 +4,8 @@
   "unread": "Chưa đọc",
   "read": "Đã đọc",
   "onlyUnread": "Chỉ chưa đọc",
+  "filterType": "Loại thông báo",
+  "allTypes": "Tất cả loại",
   "empty": "Không có thông báo",
   "time": "Thời gian",
   "titleCol": "Tiêu đề",

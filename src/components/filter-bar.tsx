@@ -3,8 +3,12 @@ import { ChevronDown, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { InFilterFieldContext } from '@/components/filter-field-context'
 import { cn } from '@/lib/utils'
+
+export { useInFilterField } from '@/components/filter-field-context'
 
 export function FilterBar({
   children,
@@ -23,8 +27,13 @@ export function FilterBar({
 }) {
   const { t } = useTranslation('common')
   return (
-    <div className={cn('col-span-full w-full space-y-2', className)}>
-      <div className="grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-5">{children}</div>
+    <div className={cn('col-span-full w-full space-y-2', className)} data-slot="filter-bar">
+      <div
+        className="grid grid-cols-2 items-end gap-2 md:grid-cols-3 xl:grid-cols-5"
+        data-slot="filter-grid"
+      >
+        {children}
+      </div>
       {(presets || actions || activeFilters?.length || onClear) && (
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex flex-wrap items-center gap-1.5">
@@ -59,15 +68,25 @@ export function FilterField({
   className?: string
 }) {
   return (
-    <div
-      className={cn(
-        'min-w-0 [&_[data-slot=select-trigger]]:h-9 [&_[data-slot=select-trigger]]:w-full [&_[data-slot=popover-trigger]]:w-full [&_button]:min-h-9 [&_input]:h-9 [&_[data-slot=label]]:sr-only [&>div]:space-y-0',
-        className,
-      )}
-      data-filter-label={label}
-    >
-      {children}
-    </div>
+    <InFilterFieldContext.Provider value={true}>
+      <div
+        className={cn(
+          'min-w-0 [&_[data-slot=select-trigger]]:h-9 [&_[data-slot=select-trigger]]:w-full [&_[data-slot=popover-trigger]]:w-full [&_button]:min-h-9 [&_input]:h-9 [&_input]:w-full [&>div]:space-y-0',
+          className,
+        )}
+        data-filter-label={label}
+      >
+        <Label className="flex min-w-0 flex-col items-stretch font-medium">
+          <span
+            data-slot="filter-title"
+            className="mb-1 block text-xs font-medium text-muted-foreground"
+          >
+            {label}
+          </span>
+          {children}
+        </Label>
+      </div>
+    </InFilterFieldContext.Provider>
   )
 }
 
@@ -76,7 +95,12 @@ export function MoreFilters({ children }: { children: ReactNode }) {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button type="button" variant="outline" className="h-9 justify-between font-normal">
+        <Button
+          type="button"
+          variant="outline"
+          data-slot="more-filters"
+          className="h-9 w-full justify-between font-normal"
+        >
           {t('moreFilters')}
           <ChevronDown className="size-4" aria-hidden />
         </Button>

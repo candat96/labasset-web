@@ -241,7 +241,7 @@ export function Component() {
                   table.setFilter('severity', value === '__all__' ? undefined : value)
                 }
               >
-                <SelectTrigger aria-label={t('filters.severity')} className="w-40">
+                <SelectTrigger aria-label={t('filters.severity')} className="w-full">
                   <SelectValue placeholder={t('filters.severity')} />
                 </SelectTrigger>
                 <SelectContent>
