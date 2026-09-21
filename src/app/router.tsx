@@ -183,6 +183,12 @@ function guarded(route: RouteObject): RouteObject {
       const roles = item.roles ?? g.roles
       if (!roles) return route
       const Lazy = route.lazy
+      // Route tĩnh (element, ví dụ Navigate) không có lazy → bọc element trực tiếp.
+      if (typeof Lazy !== 'function') {
+        return route.element
+          ? { ...route, element: <RequireRole roles={roles}>{route.element}</RequireRole> }
+          : route
+      }
       return {
         ...route,
         lazy: async () => {
