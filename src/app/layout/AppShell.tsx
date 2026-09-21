@@ -27,10 +27,12 @@ export function AppShell() {
       <SidebarInset className="min-w-0">
         <Topbar notifications={<NotificationBell />} />
         <AnnouncementBanner />
-        <main className="flex-1 p-4 lg:p-6">
-          <Suspense fallback={<PageSkeleton />}>
-            <Outlet />
-          </Suspense>
+        <main className="flex-1">
+          <div className="mx-auto w-full max-w-[1440px] px-6 py-5">
+            <Suspense fallback={<PageSkeleton />}>
+              <Outlet />
+            </Suspense>
+          </div>
         </main>
       </SidebarInset>
     </SidebarProvider>

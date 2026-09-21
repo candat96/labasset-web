@@ -21,7 +21,7 @@ const base = {
 
 it('shows skeleton while loading', () => {
   renderWithProviders(<DataTable {...base} data={undefined} total={0} isLoading />)
-  expect(screen.getAllByRole('row', { busy: true }).length).toBe(5)
+  expect(screen.getAllByRole('row', { busy: true }).length).toBe(10)
 })
 
 it('shows error with retry', async () => {
