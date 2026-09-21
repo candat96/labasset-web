@@ -56,5 +56,7 @@
     "deactivate": "Khoá {{name}}?",
     "activate": "Mở khoá {{name}}?",
     "delete": "Xoá {{name}}?"
-  }
+  },
+  "info": "Thông tin tài khoản",
+  "listHint": "Tài khoản người dùng và vai trò trong viện."
 }

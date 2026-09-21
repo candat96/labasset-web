@@ -1,9 +1,14 @@
+import { PageSkeleton } from '@/components/page/DetailSkeleton'
 import { useEffect, useReducer, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import ReactMarkdown from 'react-markdown'
 import { useTranslation } from 'react-i18next'
-import { PageHeader } from '@/components/page/PageHeader'
+import { PageHeader, PageMeta } from '@/components/page/PageHeader'
+import { SectionCard } from '@/components/page/SectionCard'
+import { EmptyState } from '@/components/page/EmptyState'
+import { Bot, Coins, Gauge, MessageSquarePlus, Microscope, Sparkles, Trash2 } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -99,18 +104,25 @@ export function Component() {
     }
   }
 
-  if (status.isPending) return <p role="status">{t('checking')}</p>
+  if (status.isPending) return <PageSkeleton label={t('checking')} kpis={0} />
   if (status.error) return <ErrorState error={status.error} onRetry={() => void status.refetch()} />
   if (!status.data?.enabled)
     return (
       <>
         <PageHeader title={t('title')} />
-        <p role="status">{t('disabled')}</p>
-        {isAdm && (
-          <Button asChild variant="outline">
-            <Link to="/admin/settings?tab=ai">Cấu hình AI</Link>
-          </Button>
-        )}
+        <SectionCard>
+          <EmptyState
+            icon={Bot}
+            title={t('disabled')}
+            action={
+              isAdm && (
+                <Button asChild variant="outline">
+                  <Link to="/admin/settings?tab=ai">Cấu hình AI</Link>
+                </Button>
+              )
+            }
+          />
+        </SectionCard>
       </>
     )
   const filtered = (conversations.data ?? []).filter((row) =>
@@ -121,70 +133,107 @@ export function Component() {
     <>
       <PageHeader
         title={t('title')}
+        meta={
+          <>
+            <PageMeta icon={<Microscope />}>
+              {params.get('equipmentId')
+                ? t('equipmentContext', { id: params.get('equipmentId') })
+                : t('selectContext')}
+            </PageMeta>
+            <PageMeta icon={<Coins />}>
+              Ngân sách còn: {status.data.budget?.remaining ?? '—'}
+            </PageMeta>
+            <PageMeta icon={<Gauge />}>Hạn mức: {status.data.rateLimit?.remaining ?? '—'}</PageMeta>
+          </>
+        }
         actions={
           <Button asChild variant="outline">
             <Link to="/assistant/digest">{t('digest')}</Link>
           </Button>
         }
       />
-      <div className="mb-3 flex flex-wrap gap-2 text-sm">
-        <span>
-          {params.get('equipmentId')
-            ? t('equipmentContext', { id: params.get('equipmentId') })
-            : t('selectContext')}
-        </span>
-        <span className="text-muted-foreground">
-          Ngân sách còn: {status.data.budget?.remaining ?? '—'} · Hạn mức:{' '}
-          {status.data.rateLimit?.remaining ?? '—'}
-        </span>
-      </div>
-      <div className="grid min-h-[560px] gap-4 lg:grid-cols-[260px_1fr]">
-        <aside className="space-y-2 rounded-lg border p-3">
-          <Button
-            className="w-full"
-            onClick={() => {
-              setConversationId(undefined)
-              dispatch({ type: 'replace', messages: [] })
-            }}
-          >
-            {t('new')}
-          </Button>
+      <div className="grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
+        <SectionCard
+          title={t('conversations', { defaultValue: 'Hội thoại' })}
+          className="h-[calc(100vh-180px)]"
+          bodyClassName="flex min-h-0 flex-1 flex-col gap-3"
+          actions={
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                setConversationId(undefined)
+                dispatch({ type: 'replace', messages: [] })
+              }}
+            >
+              <MessageSquarePlus />
+              {t('new')}
+            </Button>
+          }
+        >
           <Input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Tìm hội thoại"
           />
-          <ul className="space-y-1">
+          <ul className="-mx-2 min-h-0 flex-1 space-y-0.5 overflow-y-auto">
             {filtered.map((row) => (
-              <li key={row.id} className="flex items-center gap-1">
-                <Button
-                  className="min-w-0 flex-1 justify-start truncate"
-                  variant={conversationId === row.id ? 'secondary' : 'ghost'}
+              <li key={row.id} className="group/conv flex items-center gap-1">
+                <button
+                  type="button"
+                  className={cn(
+                    'hover:bg-muted/70 min-w-0 flex-1 truncate rounded-lg px-2.5 py-1.5 text-left text-[13.5px] transition-colors',
+                    conversationId === row.id && 'bg-primary-soft text-primary font-semibold',
+                  )}
                   onClick={() => setConversationId(row.id)}
                 >
                   {row.title}
-                </Button>
+                </button>
                 <Button
                   variant="ghost"
                   size="sm"
+                  className="text-subtle opacity-0 group-hover/conv:opacity-100 focus-visible:opacity-100"
                   aria-label={`Xoá ${row.title}`}
                   onClick={() => remove.mutate(row.id)}
                 >
-                  ⋯
+                  <Trash2 />
                 </Button>
               </li>
             ))}
+            {filtered.length === 0 && (
+              <li className="text-muted-foreground px-2.5 py-2 text-[13px]">
+                {t('noConversations', { defaultValue: 'Chưa có hội thoại' })}
+              </li>
+            )}
           </ul>
-        </aside>
-        <section className="flex min-w-0 flex-col rounded-lg border p-4">
-          <div className="flex-1 space-y-3 overflow-auto" aria-live="polite">
+        </SectionCard>
+        <section className="bg-card shadow-card flex h-[calc(100vh-180px)] min-w-0 flex-col rounded-xl">
+          <div className="flex-1 space-y-4 overflow-auto p-5" aria-live="polite">
             {messages.length === 0 && (
-              <div className="flex flex-wrap gap-2">
-                {SUGGESTIONS.map((text) => (
-                  <Button key={text} variant="outline" size="sm" onClick={() => void submit(text)}>
-                    {text}
-                  </Button>
-                ))}
+              <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
+                <div className="bg-primary-soft text-primary flex size-14 items-center justify-center rounded-2xl">
+                  <Sparkles className="size-7" aria-hidden />
+                </div>
+                <div>
+                  <p className="text-[16px] font-semibold">
+                    {t('emptyTitle', { defaultValue: 'Hỏi trợ lý về máy, lỗi, vật tư…' })}
+                  </p>
+                  <p className="text-muted-foreground mt-1 text-[13px]">
+                    {t('emptyHint', { defaultValue: 'Chọn một gợi ý hoặc nhập câu hỏi bên dưới.' })}
+                  </p>
+                </div>
+                <div className="flex max-w-xl flex-wrap justify-center gap-2">
+                  {SUGGESTIONS.map((text) => (
+                    <Button
+                      key={text}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => void submit(text)}
+                    >
+                      {text}
+                    </Button>
+                  ))}
+                </div>
               </div>
             )}
             {messages.map((message) => (
@@ -192,8 +241,8 @@ export function Component() {
                 key={message.id}
                 className={
                   message.role === 'user'
-                    ? 'ml-auto max-w-[80%] rounded-lg bg-primary p-3 text-primary-foreground'
-                    : 'max-w-[90%] rounded-lg bg-muted p-3'
+                    ? 'bg-primary-soft text-foreground ml-auto max-w-[80%] rounded-2xl rounded-br-md px-4 py-3 text-[14px] leading-6'
+                    : 'bg-surface-2 max-w-[90%] rounded-2xl rounded-bl-md px-4 py-3 text-[14px] leading-6 [&_p+p]:mt-2 [&_ul]:list-disc [&_ul]:pl-5'
                 }
               >
                 <ReactMarkdown>{message.content}</ReactMarkdown>
@@ -205,13 +254,16 @@ export function Component() {
                     source.link ? (
                       <Link
                         key={source.title}
-                        className="rounded-full border px-2 py-1 text-xs"
+                        className="bg-card border-divider hover:text-primary rounded-full border px-2 py-0.5 text-[12px]"
                         to={source.link}
                       >
                         Nguồn: {source.title}
                       </Link>
                     ) : (
-                      <span key={source.title} className="rounded-full border px-2 py-1 text-xs">
+                      <span
+                        key={source.title}
+                        className="bg-card border-divider rounded-full border px-2 py-0.5 text-[12px]"
+                      >
                         Nguồn: {source.title}
                       </span>
                     ),
@@ -245,32 +297,39 @@ export function Component() {
               </article>
             ))}
           </div>
-          {status.data.budget?.remaining === 0 && (
-            <Alert className="mb-2">
-              <AlertTitle>Hết ngân sách tháng</AlertTitle>
-              <AlertDescription>Liên hệ quản trị để tăng hạn mức.</AlertDescription>
-            </Alert>
-          )}
-          <Textarea
-            value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-            aria-label={t('question')}
-            placeholder={t('question')}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault()
-                void submit()
-              }
-            }}
-          />
-          <div className="mt-2 flex gap-2">
-            {streaming ? (
-              <Button variant="destructive" onClick={() => abortRef.current?.abort()}>
-                Dừng
-              </Button>
-            ) : (
-              <Button onClick={() => void submit()}>{t('send')}</Button>
+          <div className="border-divider border-t p-4">
+            {status.data.budget?.remaining === 0 && (
+              <Alert variant="warning" className="mb-3">
+                <AlertTitle>Hết ngân sách tháng</AlertTitle>
+                <AlertDescription>Liên hệ quản trị để tăng hạn mức.</AlertDescription>
+              </Alert>
             )}
+            <div className="flex items-end gap-2">
+              <Textarea
+                className="min-h-11 flex-1 resize-none"
+                rows={2}
+                value={draft}
+                onChange={(event) => setDraft(event.target.value)}
+                aria-label={t('question')}
+                placeholder={t('question')}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' && !event.shiftKey) {
+                    event.preventDefault()
+                    void submit()
+                  }
+                }}
+              />
+              {streaming ? (
+                <Button variant="destructive" onClick={() => abortRef.current?.abort()}>
+                  Dừng
+                </Button>
+              ) : (
+                <Button onClick={() => void submit()}>{t('send')}</Button>
+              )}
+            </div>
+            <p className="text-subtle mt-2 text-[12px]">
+              {t('enterHint', { defaultValue: 'Enter để gửi · Shift+Enter xuống dòng' })}
+            </p>
           </div>
         </section>
       </div>

@@ -1,3 +1,4 @@
+import { DetailSkeleton } from '@/components/page/DetailSkeleton'
 import { Navigate, useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
@@ -16,7 +17,7 @@ export function Component() {
     enabled: !!token,
     retry: false,
   })
-  if (result.isPending) return <p role="status">{t('byQr.loading')}</p>
+  if (result.isPending) return <DetailSkeleton label={t('byQr.loading')} />
   if (result.error) {
     const notFound =
       isApiError(result.error) &&

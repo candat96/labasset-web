@@ -4,7 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { PageHeader } from '@/components/page/PageHeader'
-import { Button } from '@/components/ui/button'
+import { SectionCard } from '@/components/page/SectionCard'
+import { FormFooter } from '@/components/page/FormFooter'
 import { Form } from '@/components/ui/form'
 import { FormField, FormItem, FormMessage } from '@/components/ui/form'
 import { TextField, SelectField, SwitchField } from '@/components/form/fields'
@@ -24,7 +25,6 @@ import { REPAIR_SEVERITIES } from '../types'
 
 export function Component() {
   const { t } = useTranslation('repairs')
-  const { t: tc } = useTranslation()
   const navigate = useNavigate()
   const canPickDept = useCan(STAFF)
   const settings = usePublicRepairSettings()
@@ -67,86 +67,99 @@ export function Component() {
   }
   return (
     <>
-      <PageHeader title={t('form.title')} />
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+      <PageHeader
+        eyebrow={t('title', { defaultValue: 'Phiếu sửa chữa' })}
+        title={t('form.title')}
+        description={t('form.hint', {
+          defaultValue: 'Chọn máy, mô tả sự cố và mức độ; hệ thống gợi ý lỗi tương tự bên phải.',
+        })}
+      />
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
         <Form {...form}>
-          <form className="max-w-xl space-y-4" noValidate onSubmit={form.handleSubmit(submit)}>
-            <FormField
-              control={form.control}
-              name="equipmentId"
-              render={({ field }) => (
-                <FormItem>
-                  <AsyncSelect
-                    label={t('form.equipment')}
-                    queryKey="equipment"
-                    loadOptions={equipmentOptions}
-                    value={field.value || null}
-                    onChange={(value) => field.onChange(typeof value === 'string' ? value : '')}
+          <form className="min-w-0 space-y-5" noValidate onSubmit={form.handleSubmit(submit)}>
+            <SectionCard title={t('form.info', { defaultValue: 'Thông tin sự cố' })}>
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                <FormField
+                  control={form.control}
+                  name="equipmentId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <AsyncSelect
+                        label={t('form.equipment')}
+                        queryKey="equipment"
+                        loadOptions={equipmentOptions}
+                        value={field.value || null}
+                        onChange={(value) => field.onChange(typeof value === 'string' ? value : '')}
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem className="col-span-full">
+                      <FormLabel>{t('form.description')}</FormLabel>
+                      <FormControl>
+                        <Textarea {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <TextField control={form.control} name="errorCode" label={t('form.errorCode')} />
+                <SelectField
+                  control={form.control}
+                  name="severity"
+                  label={t('form.severity')}
+                  options={REPAIR_SEVERITIES.map((item) => ({
+                    value: item,
+                    label: faultSeverityMap[item]?.label ?? item,
+                  }))}
+                />
+                <p className="text-muted-foreground text-[13px] col-span-full">
+                  {Number.isFinite(slaHours)
+                    ? t('form.sla', { hours: slaHours })
+                    : t('form.slaHint')}
+                </p>
+                <SwitchField
+                  control={form.control}
+                  name="equipmentDown"
+                  label={t('form.equipmentDown')}
+                />
+                {canPickDept && (
+                  <FormField
+                    control={form.control}
+                    name="reportedDepartmentId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <AsyncSelect
+                          label={t('form.reportedDepartment')}
+                          queryKey="departments"
+                          loadOptions={departmentOptions}
+                          value={field.value}
+                          onChange={field.onChange}
+                          clearable
+                        />
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('form.description')}</FormLabel>
-                  <FormControl>
-                    <Textarea {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <TextField control={form.control} name="errorCode" label={t('form.errorCode')} />
-            <SelectField
-              control={form.control}
-              name="severity"
-              label={t('form.severity')}
-              options={REPAIR_SEVERITIES.map((item) => ({
-                value: item,
-                label: faultSeverityMap[item]?.label ?? item,
-              }))}
-            />
-            <p className="text-muted-foreground -mt-2 text-sm">
-              {Number.isFinite(slaHours) ? t('form.sla', { hours: slaHours }) : t('form.slaHint')}
-            </p>
-            <SwitchField
-              control={form.control}
-              name="equipmentDown"
-              label={t('form.equipmentDown')}
-            />
-            {canPickDept && (
-              <FormField
-                control={form.control}
-                name="reportedDepartmentId"
-                render={({ field }) => (
-                  <FormItem>
-                    <AsyncSelect
-                      label={t('form.reportedDepartment')}
-                      queryKey="departments"
-                      loadOptions={departmentOptions}
-                      value={field.value}
-                      onChange={field.onChange}
-                      clearable
-                    />
-                    <FormMessage />
-                  </FormItem>
                 )}
-              />
-            )}
-            <div className="flex gap-2">
-              <Button type="button" variant="outline" onClick={() => navigate(-1)}>
-                {tc('actions.cancel')}
-              </Button>
-              <Button type="submit">{t('form.create')}</Button>
-            </div>
+              </div>
+            </SectionCard>
+            <FormFooter
+              onCancel={() => navigate(-1)}
+              submitting={form.formState.isSubmitting}
+              saveLabel={t('form.create')}
+            />
           </form>
         </Form>
-        <aside className="rounded-lg border p-3">
-          <h2 className="mb-2 font-medium">{t('form.suggestions')}</h2>
+        <SectionCard
+          title={t('form.suggestions')}
+          className="lg:sticky lg:top-[72px] lg:self-start"
+        >
           <FaultSuggestBox
             equipmentId={equipmentId || undefined}
             errorCode={errorCode || undefined}
@@ -154,7 +167,7 @@ export function Component() {
             value={form.watch('faultId')}
             onSelect={(id) => form.setValue('faultId', id)}
           />
-        </aside>
+        </SectionCard>
       </div>
     </>
   )

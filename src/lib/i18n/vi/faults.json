@@ -2,7 +2,11 @@
   "title": "Thư viện lỗi",
   "create": "Thêm lỗi",
   "edit": "Sửa lỗi",
-  "scope": { "model": "Model", "group": "Nhóm", "all": "Tất cả" },
+  "scope": {
+    "model": "Model",
+    "group": "Nhóm",
+    "all": "Tất cả"
+  },
   "columns": {
     "errorCode": "Mã lỗi",
     "title": "Tiêu đề",
@@ -61,9 +65,16 @@
     "feedbackLocked": "Chỉ gửi phản hồi cho lỗi đã ban hành",
     "feedbackSent": "Đã gửi phản hồi",
     "publishConfirm": "Ban hành lỗi này?",
-    "archiveConfirm": "Lưu trữ lỗi này?"
+    "archiveConfirm": "Lưu trữ lỗi này?",
+    "description": "Mô tả lỗi",
+    "stepCount": "{{n}} bước xử lý",
+    "estMinutes": "~{{n}} phút",
+    "createdAt": "Tạo"
   },
-  "attachments": { "stepImage": "Ảnh bước", "reference": "Tài liệu tham khảo" },
+  "attachments": {
+    "stepImage": "Ảnh bước",
+    "reference": "Tài liệu tham khảo"
+  },
   "form": {
     "loading": "Đang tải lỗi…",
     "info": "Thông tin",
@@ -96,7 +107,8 @@
     "down": "Xuống",
     "saved": "Đã lưu lỗi",
     "created": "Đã tạo lỗi",
-    "publishedWarning": "Sửa lỗi đã ban hành sẽ tạo phiên bản mới"
+    "publishedWarning": "Sửa lỗi đã ban hành sẽ tạo phiên bản mới",
+    "hint": "Mô tả triệu chứng, nguyên nhân và các bước xử lý để tra cứu về sau."
   },
   "suggestions": {
     "title": "Đề xuất thư viện lỗi",
@@ -121,6 +133,8 @@
     "target": "Lỗi đích",
     "accepted": "Đã chấp nhận đề xuất",
     "rejected": "Đã từ chối đề xuất",
-    "rejectTitle": "Từ chối đề xuất?"
-  }
+    "rejectTitle": "Từ chối đề xuất?",
+    "listHint": "Đề xuất lỗi mới từ kỹ thuật viên chờ duyệt đưa vào thư viện."
+  },
+  "listHint": "Kho tri thức lỗi theo model/nhóm máy: triệu chứng, nguyên nhân, cách xử lý."
 }

@@ -10,12 +10,12 @@ export function BarList({
   const { t } = useTranslation()
   const max = Math.max(...items.map((item) => item.value), 1)
   return (
-    <ul aria-label={ariaLabel} className="space-y-2">
+    <ul aria-label={ariaLabel} className="space-y-3">
       {items.map((item) => (
         <li key={item.label} className="space-y-1">
-          <div className="flex justify-between gap-2 text-sm">
-            <span className="truncate">{item.label}</span>
-            <span className="tabular-nums">{item.hint ?? item.value}</span>
+          <div className="flex justify-between gap-2 text-[13px]">
+            <span className="truncate font-medium">{item.label}</span>
+            <span className="text-muted-foreground tabular-nums">{item.hint ?? item.value}</span>
           </div>
           <svg viewBox="0 0 100 8" className="text-primary h-2 w-full" aria-hidden>
             <rect width="100" height="8" className="fill-muted" rx="2" />

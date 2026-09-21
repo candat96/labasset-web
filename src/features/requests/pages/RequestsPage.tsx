@@ -1,3 +1,4 @@
+import { enumLabel, requestTypeLabels } from '@/lib/enum-labels'
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -115,7 +116,11 @@ export function Component() {
           </Link>
         ),
       },
-      { accessorKey: 'type', header: t('type') },
+      {
+        accessorKey: 'type',
+        header: t('type'),
+        cell: ({ row }) => enumLabel(requestTypeLabels, row.original.type),
+      },
       { accessorKey: 'equipmentId', header: t('equipment') },
       { accessorKey: 'departmentName', header: 'Khoa' },
       { accessorKey: 'requesterName', header: t('requester') },
@@ -171,6 +176,9 @@ export function Component() {
       {dialog}
       <PageHeader
         title={t('title')}
+        description={t('listHint', {
+          defaultValue: 'Phiếu yêu cầu vật tư và sửa chữa từ các khoa; duyệt, cấp phát và nhận.',
+        })}
         actions={
           <div className="flex gap-2">
             {canStaff && selected.length > 0 && (

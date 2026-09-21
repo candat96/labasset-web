@@ -5,7 +5,15 @@ import type { ColumnDef } from '@tanstack/react-table'
 import { DataTable, useServerTable } from '@/components/data-table'
 import { FilterBar, FilterField } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page/PageHeader'
-import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { ExternalLink } from 'lucide-react'
+import { enumLabel } from '@/lib/enum-labels'
 import { AsyncSelect } from '@/components/form/async-select'
 import { DatePicker } from '@/components/date-picker'
 import { AuditDiff } from '@/components/audit-diff'
@@ -18,11 +26,32 @@ import {
 } from '@/components/ui/sheet'
 import { formatDateTime } from '@/lib/format/date'
 import { dayRangeToIso } from '@/lib/format/date-range'
-import { auditActionLabel } from '@/lib/audit-actions'
 import { auditEntityPath } from '@/lib/audit-entity'
 import { useAuditLogs, useAuditUsers } from '../hooks'
 import { searchAuditUsers } from '../api'
 import type { AuditLog } from '../types'
+
+/** Đối tượng hay tra cứu trong bộ lọc (giá trị đúng như API ghi). */
+const ENTITY_TYPE_OPTIONS = [
+  'users',
+  'departments',
+  'equipment',
+  'equipment_transfer',
+  'repair_ticket',
+  'fault',
+  'maintenance_task',
+  'maintenance_plan',
+  'calibration',
+  'request',
+  'supply',
+  'stock_receipt',
+  'stock_issue',
+  'stock_transfer',
+  'stocktake_session',
+  'report',
+  'settings',
+  'ai',
+] as const
 
 export function Component() {
   const { t } = useTranslation('audit-logs')
@@ -60,11 +89,15 @@ export function Component() {
         header: t('columns.user'),
         cell: ({ row }) => names.get(row.original.userId ?? '') ?? row.original.userId ?? '—',
       },
-      { accessorKey: 'entityType', header: t('columns.entityType') },
+      {
+        accessorKey: 'entityType',
+        header: t('columns.entityType'),
+        cell: ({ row }) => enumLabel('auditEntityType', row.original.entityType),
+      },
       {
         accessorKey: 'action',
         header: t('columns.action'),
-        cell: ({ row }) => auditActionLabel(row.original.action),
+        cell: ({ row }) => enumLabel('auditAction', row.original.action),
       },
       {
         accessorKey: 'entityId',
@@ -73,14 +106,21 @@ export function Component() {
           const id = row.original.entityId
           const href = auditEntityPath(row.original.entityType, id)
           if (!id) return '—'
-          if (!href) return <span className="font-mono text-xs">{id}</span>
+          if (!href)
+            return (
+              <span className="text-subtle font-mono text-xs" title={id}>
+                {id.slice(0, 8)}
+              </span>
+            )
           return (
             <Link
-              className="text-primary font-mono text-xs hover:underline"
+              className="text-primary inline-flex items-center gap-1 text-[13px] font-medium hover:underline"
               to={href}
+              title={id}
               onClick={(event) => event.stopPropagation()}
             >
-              {id}
+              <ExternalLink className="size-3.5" aria-hidden />
+              {t('view', { defaultValue: 'Xem' })}
             </Link>
           )
         },
@@ -95,7 +135,13 @@ export function Component() {
   )
   return (
     <>
-      <PageHeader title={t('title')} />
+      <PageHeader
+        title={t('title')}
+        description={t('listHint', {
+          defaultValue:
+            'Lịch sử thao tác của người dùng trên hệ thống; lọc theo người, đối tượng và thời gian.',
+        })}
+      />
       <DataTable
         tableId="audit-logs"
         columns={columns}
@@ -143,12 +189,28 @@ export function Component() {
               />
             </FilterField>
             <FilterField label={t('filter.entityType')}>
-              <Input
-                aria-label={t('filter.entityType')}
-                placeholder={t('filter.entityTypePlaceholder')}
-                value={filters.entityType ?? ''}
-                onChange={(event) => table.setFilter('entityType', event.target.value || undefined)}
-              />
+              <Select
+                value={filters.entityType ?? 'all'}
+                onValueChange={(value) =>
+                  table.setFilter('entityType', value === 'all' ? undefined : value)
+                }
+              >
+                <SelectTrigger className="w-full" aria-label={t('filter.entityType')}>
+                  <SelectValue
+                    placeholder={t('filter.allEntityTypes', { defaultValue: 'Mọi đối tượng' })}
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">
+                    {t('filter.allEntityTypes', { defaultValue: 'Mọi đối tượng' })}
+                  </SelectItem>
+                  {ENTITY_TYPE_OPTIONS.map((value) => (
+                    <SelectItem key={value} value={value}>
+                      {enumLabel('auditEntityType', value)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </FilterField>
           </FilterBar>
         }
@@ -157,7 +219,8 @@ export function Component() {
         <SheetContent className="sm:max-w-3xl" side="right">
           <SheetHeader>
             <SheetTitle>
-              {selected?.action} · {selected?.entityType}
+              {enumLabel('auditAction', selected?.action)} ·{' '}
+              {enumLabel('auditEntityType', selected?.entityType)}
             </SheetTitle>
             <SheetDescription>
               {selected ? formatDateTime(selected.createdAt) : ''}

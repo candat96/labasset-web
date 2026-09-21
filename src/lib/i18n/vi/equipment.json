@@ -138,12 +138,16 @@
     "maintenance": "Bảo dưỡng–Kiểm định",
     "transfers": "Điều chuyển",
     "timeline": "Timeline",
-    "audit": "Lịch sử thay đổi"
+    "audit": "Lịch sử thay đổi",
+    "config": "Cấu hình",
+    "service": "Sửa chữa & bảo dưỡng",
+    "history": "Lịch sử"
   },
   "info": {
     "accessories": "Phụ kiện",
     "componentsDue": "Linh kiện đến hạn",
-    "openRepairs": "Sửa chữa đang mở"
+    "openRepairs": "Sửa chữa đang mở",
+    "title": "Thông tin nhanh"
   },
   "network": {
     "ip": "IP",
@@ -156,7 +160,8 @@
     "hostPcSpec": "Cấu hình máy điều khiển",
     "diagram": "Sơ đồ",
     "other": "Khác",
-    "saved": "Đã lưu kết nối"
+    "saved": "Đã lưu kết nối",
+    "hint": "Kết nối mạng, LIS và máy tính chủ"
   },
   "accessories": {
     "title": "Phụ kiện",
@@ -177,7 +182,11 @@
       "ups": "UPS",
       "other": "Khác"
     },
-    "conditions": { "good": "Tốt", "worn": "Mòn", "broken": "Hỏng" },
+    "conditions": {
+      "good": "Tốt",
+      "worn": "Mòn",
+      "broken": "Hỏng"
+    },
     "saved": "Đã lưu phụ kiện",
     "deleteTitle": "Xoá phụ kiện này?"
   },
@@ -257,7 +266,8 @@
       "norm_test": "theo định mức test",
       "history": "theo lịch sử",
       "unknown": "chưa đủ dữ liệu"
-    }
+    },
+    "hint": "Định mức tiêu hao và số ngày còn dùng được theo tồn kho"
   },
   "counters": {
     "title": "Bộ đếm",
@@ -278,14 +288,18 @@
     "loading": "Đang tải sửa chữa…",
     "empty": "Chưa có phiếu sửa chữa",
     "createdAt": "Ngày",
-    "assignee": "Người xử lý"
+    "assignee": "Người xử lý",
+    "code": "Mã phiếu",
+    "status": "Trạng thái"
   },
   "maintenance": {
     "loading": "Đang tải bảo dưỡng…",
     "tasks": "Bảo dưỡng",
     "calibrations": "Kiểm định",
     "emptyTasks": "Chưa có bảo dưỡng",
-    "emptyCalibrations": "Chưa có kiểm định"
+    "emptyCalibrations": "Chưa có kiểm định",
+    "dueAt": "Hạn",
+    "performedAt": "Thực hiện"
   },
   "transfers": {
     "title": "Điều chuyển thiết bị",
@@ -311,7 +325,8 @@
     "rejectTitle": "Từ chối điều chuyển?",
     "cancelTitle": "Huỷ điều chuyển này?",
     "approveNote": "Ghi chú duyệt",
-    "pendingExists": "Máy đang có một yêu cầu điều chuyển chờ duyệt"
+    "pendingExists": "Máy đang có một yêu cầu điều chuyển chờ duyệt",
+    "listHint": "Yêu cầu điều chuyển máy giữa các khoa chờ duyệt và đã xử lý."
   },
   "statusDialog": {
     "title": "Đổi trạng thái",
@@ -375,10 +390,22 @@
     "title": "So sánh máy",
     "machine": "Máy {{index}}",
     "loading": "Đang so sánh…",
-    "counts": "Số lượng"
+    "counts": "Số lượng",
+    "hint": "Chọn hai máy để so sánh thông số cạnh nhau."
   },
   "byQr": {
     "loading": "Đang tìm máy…",
     "notFound": "Không tìm thấy máy"
-  }
+  },
+  "overview": {
+    "general": "Thông tin chung",
+    "purchase": "Mua sắm & bảo hành",
+    "operation": "Vận hành",
+    "upkeep": "Bảo dưỡng & hiệu chuẩn",
+    "specs": "Thông số kỹ thuật",
+    "notes": "Ghi chú"
+  },
+  "countItems": "{{n}} mục",
+  "formHint": "Nhập thông tin chung, thông số kỹ thuật; các trường có * là bắt buộc.",
+  "listHint": "Toàn bộ máy xét nghiệm theo khoa, trạng thái và nhóm máy."
 }

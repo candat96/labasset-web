@@ -1,3 +1,4 @@
+import { DetailSkeleton } from '@/components/page/DetailSkeleton'
 import { useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { useForm } from 'react-hook-form'
@@ -5,8 +6,9 @@ import { useTranslation } from 'react-i18next'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import { PageHeader } from '@/components/page/PageHeader'
+import { SectionCard } from '@/components/page/SectionCard'
+import { FormFooter } from '@/components/page/FormFooter'
 import { ErrorState } from '@/components/page/ErrorState'
-import { Button } from '@/components/ui/button'
 import { Form } from '@/components/ui/form'
 import { TextField, NumberField } from '@/components/form/fields'
 import { DateField } from '@/components/form/date-field'
@@ -176,7 +178,7 @@ export function Component() {
   useEffect(() => {
     if (detail.data) form.reset(fromDetail(detail.data))
   }, [detail.data, form])
-  if (editing && detail.isPending) return <p role="status">{t('loading')}</p>
+  if (editing && detail.isPending) return <DetailSkeleton label={t('loading')} />
   if (editing && detail.error)
     return <ErrorState error={detail.error} onRetry={() => void detail.refetch()} />
   const company = detail.data
@@ -209,12 +211,17 @@ export function Component() {
   }
   return (
     <>
-      <PageHeader title={editing ? t('editTitle') : t('create')} />
+      <PageHeader
+        eyebrow={t('title', { defaultValue: 'Hồ sơ thiết bị' })}
+        title={editing ? t('editTitle') : t('create')}
+        description={t('formHint', {
+          defaultValue: 'Nhập thông tin chung, thông số kỹ thuật; các trường có * là bắt buộc.',
+        })}
+      />
       <Form {...form}>
-        <form className="max-w-3xl space-y-4" noValidate onSubmit={form.handleSubmit(submit)}>
-          <details open className="rounded-lg border p-4">
-            <summary className="cursor-pointer font-medium">{t('sections.general')}</summary>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        <form className="space-y-5" noValidate onSubmit={form.handleSubmit(submit)}>
+          <SectionCard title={t('sections.general')}>
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               <TextField
                 control={form.control}
                 name="code"
@@ -344,14 +351,13 @@ export function Component() {
                 label={t('fields.throughputPerHour')}
                 min={0}
               />
-              <div className="sm:col-span-2">
+              <div className="col-span-full">
                 <TextField control={form.control} name="notes" label={t('fields.notes')} />
               </div>
             </div>
-          </details>
-          <details open className="rounded-lg border p-4">
-            <summary className="cursor-pointer font-medium">{t('sections.specs')}</summary>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          </SectionCard>
+          <SectionCard title={t('sections.specs')}>
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               <TextField control={form.control} name="specs.voltage" label={t('fields.voltage')} />
               <TextField control={form.control} name="specs.power" label={t('fields.power')} />
               <TextField
@@ -374,25 +380,19 @@ export function Component() {
               />
               <TextField control={form.control} name="specs.env.gas" label={t('fields.envGas')} />
             </div>
-          </details>
+          </SectionCard>
           {editing && (
-            <details open className="rounded-lg border p-4">
-              <summary className="cursor-pointer font-medium">{t('sections.photo')}</summary>
-              <div className="mt-4">
+            <SectionCard title={t('sections.photo')}>
+              <div>
                 <AttachmentsPanel
                   entityType="equipment"
                   entityId={id}
                   kinds={[{ value: 'photo', label: t('sections.photoKind') }]}
                 />
               </div>
-            </details>
+            </SectionCard>
           )}
-          <div className="flex gap-2">
-            <Button type="button" variant="outline" onClick={() => navigate(-1)}>
-              {t('common:actions.cancel')}
-            </Button>
-            <Button type="submit">{t('common:actions.save')}</Button>
-          </div>
+          <FormFooter onCancel={() => navigate(-1)} submitting={form.formState.isSubmitting} />
         </form>
       </Form>
     </>

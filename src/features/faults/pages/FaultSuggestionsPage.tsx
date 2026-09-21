@@ -147,7 +147,12 @@ export function Component() {
   return (
     <>
       {dialog}
-      <PageHeader title={t('suggestions.title')} />
+      <PageHeader
+        title={t('suggestions.title')}
+        description={t('suggestions.listHint', {
+          defaultValue: 'Đề xuất lỗi mới từ kỹ thuật viên chờ duyệt đưa vào thư viện.',
+        })}
+      />
       <DataTable
         tableId="fault-suggestions"
         columns={columns}

@@ -45,12 +45,14 @@ export function Component() {
   const notice = reason && reason !== 'manual' ? t(`login.${reason}`, { defaultValue: '' }) : ''
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{t('login.title')}</CardTitle>
-        <CardDescription>{t('login.subtitle')}</CardDescription>
+    <Card className="shadow-pop gap-5 py-7">
+      <CardHeader className="px-7">
+        <CardTitle className="text-[22px] font-bold tracking-[-0.02em]">
+          {t('login.title')}
+        </CardTitle>
+        <CardDescription className="text-[13.5px]">{t('login.subtitle')}</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-7">
         {notice && (
           <Alert className="mb-4">
             <AlertDescription>{notice}</AlertDescription>
@@ -90,7 +92,12 @@ export function Component() {
                 autoComplete="current-password"
               />
               <FormRootError form={form} />
-              <Button type="submit" className="w-full" disabled={loginMut.isPending}>
+              <Button
+                type="submit"
+                size="lg"
+                className="mt-1 w-full text-[14.5px] font-semibold shadow-[0_6px_16px_-6px_rgb(41_119_255/0.6)]"
+                disabled={loginMut.isPending}
+              >
                 {loginMut.isPending && <Loader2 className="animate-spin" aria-hidden />}
                 {t('login.submit')}
               </Button>

@@ -7,6 +7,8 @@ import { z } from 'zod'
 import Big from 'big.js'
 import { toast } from 'sonner'
 import { PageHeader } from '@/components/page/PageHeader'
+import { SectionCard } from '@/components/page/SectionCard'
+import { FormFooter } from '@/components/page/FormFooter'
 import { Button } from '@/components/ui/button'
 import { Form } from '@/components/ui/form'
 import { SelectField, TextField } from '@/components/form/fields'
@@ -110,10 +112,16 @@ export function Component() {
   }, [detail.data, form])
   return (
     <>
-      <PageHeader title={editing ? t('editIssue') : t('createIssue')} />
+      <PageHeader
+        eyebrow={t('issuesTitle')}
+        title={editing ? t('editIssue') : t('createIssue')}
+        description={t('issueFormHint', {
+          defaultValue: 'Chọn loại xuất, kho và các dòng vật tư; phiếu được lưu ở trạng thái nháp.',
+        })}
+      />
       <Form {...form}>
         <form
-          className="max-w-3xl space-y-4"
+          className="space-y-5"
           noValidate
           onSubmit={form.handleSubmit(async (values) => {
             if (values.type === 'to_department' && !values.toDepartmentId) {
@@ -169,210 +177,242 @@ export function Component() {
             }
           })}
         >
-          <SelectField
-            control={form.control}
-            name="type"
-            label={t('type')}
-            options={[
-              { value: 'to_department', label: t('issueTypeToDepartment') },
-              { value: 'for_repair', label: t('issueTypeRepair') },
-              { value: 'for_maintenance', label: t('issueTypeMaintenance') },
-              { value: 'dispose', label: t('issueTypeDispose') },
-              { value: 'return_to_supplier', label: t('issueTypeReturnSupplier') },
-              { value: 'adjust_out', label: t('issueTypeAdjustOut') },
-            ]}
-          />
-          <FormField
-            control={form.control}
-            name="warehouseId"
-            render={({ field }) => (
-              <FormItem>
-                <AsyncSelect
-                  label={t('warehouse')}
-                  queryKey="warehouses"
-                  loadOptions={(q) => catalogOptions('warehouses', q)}
-                  value={field.value || null}
-                  onChange={(v) => field.onChange(typeof v === 'string' ? v : '')}
-                />
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="equipmentId"
-            render={({ field }) => (
-              <FormItem>
-                <AsyncSelect
-                  label={t('equipment')}
-                  queryKey="equipment"
-                  loadOptions={equipmentOptions}
-                  value={field.value}
-                  onChange={field.onChange}
-                  clearable
-                />
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <TextField control={form.control} name="reason" label={t('reason')} />
-          <TextField control={form.control} name="receiverName" label={t('receiverName')} />
-          <FormField
-            control={form.control}
-            name="receiverUserId"
-            render={({ field }) => (
-              <FormItem>
-                <AsyncSelect
-                  label={t('receiverUser')}
-                  queryKey="users"
-                  loadOptions={(q) => userOptions(q)}
-                  value={field.value}
-                  onChange={field.onChange}
-                  clearable
-                />
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <DateField control={form.control} name="issuedAt" label={t('issuedAt')} />
-          <TextField control={form.control} name="notes" label={t('notes')} />
-          <FormField
-            control={form.control}
-            name="toDepartmentId"
-            render={({ field }) => (
-              <FormItem>
-                <AsyncSelect
-                  label={t('toDepartment')}
-                  queryKey="departments"
-                  loadOptions={departmentOptions}
-                  value={field.value}
-                  onChange={field.onChange}
-                  clearable
-                />
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          {items.fields.map((field, index) => (
-            <div key={field.id} className="space-y-2 rounded border p-3">
+          <SectionCard title={t('info', { defaultValue: 'Thông tin phiếu' })}>
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <SelectField
+                control={form.control}
+                name="type"
+                label={t('type')}
+                options={[
+                  { value: 'to_department', label: t('issueTypeToDepartment') },
+                  { value: 'for_repair', label: t('issueTypeRepair') },
+                  { value: 'for_maintenance', label: t('issueTypeMaintenance') },
+                  { value: 'dispose', label: t('issueTypeDispose') },
+                  { value: 'return_to_supplier', label: t('issueTypeReturnSupplier') },
+                  { value: 'adjust_out', label: t('issueTypeAdjustOut') },
+                ]}
+              />
               <FormField
                 control={form.control}
-                name={`items.${index}.supplyId`}
-                render={({ field: f }) => (
+                name="warehouseId"
+                render={({ field }) => (
                   <FormItem>
                     <AsyncSelect
-                      label={t('supply')}
-                      queryKey="supplies"
-                      loadOptions={supplyOptions}
-                      value={f.value || null}
-                      onChange={(v) => f.onChange(typeof v === 'string' ? v : '')}
+                      label={t('warehouse')}
+                      queryKey="warehouses"
+                      loadOptions={(q) => catalogOptions('warehouses', q)}
+                      value={field.value || null}
+                      onChange={(v) => field.onChange(typeof v === 'string' ? v : '')}
                     />
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <QtyField
-                control={form.control}
-                name={`items.${index}.quantity`}
-                label={t('quantity')}
-              />
               <FormField
                 control={form.control}
-                name={`items.${index}.lotId`}
-                render={({ field: lotField }) => (
+                name="equipmentId"
+                render={({ field }) => (
                   <FormItem>
                     <AsyncSelect
-                      label={t('lot')}
-                      queryKey={`supply-lots-${form.watch(`items.${index}.supplyId`)}-${form.watch('warehouseId')}`}
-                      loadOptions={async () => {
-                        const supplyId = form.getValues(`items.${index}.supplyId`)
-                        if (!supplyId) return []
-                        const stock = await getSupplyStock(supplyId)
-                        const allowRestricted = ['dispose', 'return_to_supplier'].includes(
-                          form.getValues('type'),
-                        )
-                        const availableByLot = Object.fromEntries(
-                          (stock.lots ?? []).map((lot) => [
-                            lot.id,
-                            lot.available ?? lot.qtyOnHand ?? '0',
-                          ]),
-                        )
-                        setLotAvailable((current) => ({ ...current, ...availableByLot }))
-                        return (stock.lots ?? [])
-                          .filter(
-                            (lot) =>
-                              (!lot.warehouseId ||
-                                lot.warehouseId === form.getValues('warehouseId')) &&
-                              (allowRestricted || lot.status === 'available'),
-                          )
-                          .map((lot) => ({
-                            id: lot.id,
-                            code: lot.lotNo ?? lot.id,
-                            name: `${t('available')}: ${lot.available ?? lot.qtyOnHand ?? '0'}`,
-                          }))
-                      }}
-                      value={lotField.value}
-                      onChange={lotField.onChange}
+                      label={t('equipment')}
+                      queryKey="equipment"
+                      loadOptions={equipmentOptions}
+                      value={field.value}
+                      onChange={field.onChange}
                       clearable
                     />
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              {suggestedLots[form.watch(`items.${index}.supplyId`)] &&
-                !suggestedLots[form.watch(`items.${index}.supplyId`)]?.includes(
-                  form.watch(`items.${index}.lotId`) ?? '',
-                ) && <p className="text-warning text-sm">{t('nonFefoWarning')}</p>}
+              <TextField control={form.control} name="reason" label={t('reason')} />
+              <TextField control={form.control} name="receiverName" label={t('receiverName')} />
+              <FormField
+                control={form.control}
+                name="receiverUserId"
+                render={({ field }) => (
+                  <FormItem>
+                    <AsyncSelect
+                      label={t('receiverUser')}
+                      queryKey="users"
+                      loadOptions={(q) => userOptions(q)}
+                      value={field.value}
+                      onChange={field.onChange}
+                      clearable
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DateField control={form.control} name="issuedAt" label={t('issuedAt')} />
+              <TextField control={form.control} name="notes" label={t('notes')} />
+              <FormField
+                control={form.control}
+                name="toDepartmentId"
+                render={({ field }) => (
+                  <FormItem>
+                    <AsyncSelect
+                      label={t('toDepartment')}
+                      queryKey="departments"
+                      loadOptions={departmentOptions}
+                      value={field.value}
+                      onChange={field.onChange}
+                      clearable
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </SectionCard>
+          <SectionCard
+            title={t('issueItems', { defaultValue: 'Vật tư xuất' })}
+            actions={
               <Button
                 type="button"
                 variant="outline"
-                onClick={async () => {
-                  const supplyId = form.getValues(`items.${index}.supplyId`)
-                  const warehouseId = form.getValues('warehouseId')
-                  const quantity = form.getValues(`items.${index}.quantity`)
-                  if (!supplyId || !warehouseId) return
-                  const lots = await suggestLots({ supplyId, warehouseId, quantity })
-                  const suggestions = (
-                    Array.isArray(lots)
-                      ? lots
-                      : ((lots as { items?: Array<{ lotId?: string; quantity?: string }> }).items ??
-                        [])
-                  ) as Array<{ lotId?: string; quantity?: string }>
-                  const valid = suggestions.filter(
-                    (item): item is { lotId: string; quantity?: string } => !!item.lotId,
-                  )
-                  if (valid.length) {
-                    items.remove(index)
-                    valid.reverse().forEach((item) =>
-                      items.insert(index, {
-                        supplyId,
-                        quantity: item.quantity ?? quantity,
-                        lotId: item.lotId,
-                      }),
-                    )
-                    setSuggestedLots((current) => ({
-                      ...current,
-                      [supplyId]: valid.map((item) => item.lotId),
-                    }))
-                  }
-                  toast.success(t('suggestedLot'))
-                }}
+                size="sm"
+                onClick={() => items.append({ supplyId: '', quantity: '1', lotId: null })}
               >
-                {t('suggestLotFefo')}
+                {t('addLine')}
               </Button>
-              <Button type="button" variant="ghost" onClick={() => items.remove(index)}>
-                {t('removeLine')}
-              </Button>
-            </div>
-          ))}
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => items.append({ supplyId: '', quantity: '1', lotId: null })}
+            }
+            bodyClassName="space-y-3"
           >
-            {t('addLine')}
-          </Button>
-          <Button type="submit">{t('saveDraft')}</Button>
+            {items.fields.map((field, index) => (
+              <div
+                key={field.id}
+                className="border-divider grid gap-3 rounded-xl border p-4 md:grid-cols-3"
+              >
+                <FormField
+                  control={form.control}
+                  name={`items.${index}.supplyId`}
+                  render={({ field: f }) => (
+                    <FormItem>
+                      <AsyncSelect
+                        label={t('supply')}
+                        queryKey="supplies"
+                        loadOptions={supplyOptions}
+                        value={f.value || null}
+                        onChange={(v) => f.onChange(typeof v === 'string' ? v : '')}
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <QtyField
+                  control={form.control}
+                  name={`items.${index}.quantity`}
+                  label={t('quantity')}
+                />
+                <FormField
+                  control={form.control}
+                  name={`items.${index}.lotId`}
+                  render={({ field: lotField }) => (
+                    <FormItem>
+                      <AsyncSelect
+                        label={t('lot')}
+                        queryKey={`supply-lots-${form.watch(`items.${index}.supplyId`)}-${form.watch('warehouseId')}`}
+                        loadOptions={async () => {
+                          const supplyId = form.getValues(`items.${index}.supplyId`)
+                          if (!supplyId) return []
+                          const stock = await getSupplyStock(supplyId)
+                          const allowRestricted = ['dispose', 'return_to_supplier'].includes(
+                            form.getValues('type'),
+                          )
+                          const availableByLot = Object.fromEntries(
+                            (stock.lots ?? []).map((lot) => [
+                              lot.id,
+                              lot.available ?? lot.qtyOnHand ?? '0',
+                            ]),
+                          )
+                          setLotAvailable((current) => ({ ...current, ...availableByLot }))
+                          return (stock.lots ?? [])
+                            .filter(
+                              (lot) =>
+                                (!lot.warehouseId ||
+                                  lot.warehouseId === form.getValues('warehouseId')) &&
+                                (allowRestricted || lot.status === 'available'),
+                            )
+                            .map((lot) => ({
+                              id: lot.id,
+                              code: lot.lotNo ?? lot.id,
+                              name: `${t('available')}: ${lot.available ?? lot.qtyOnHand ?? '0'}`,
+                            }))
+                        }}
+                        value={lotField.value}
+                        onChange={lotField.onChange}
+                        clearable
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                {suggestedLots[form.watch(`items.${index}.supplyId`)] &&
+                  !suggestedLots[form.watch(`items.${index}.supplyId`)]?.includes(
+                    form.watch(`items.${index}.lotId`) ?? '',
+                  ) && <p className="text-warning text-sm">{t('nonFefoWarning')}</p>}
+                <div className="col-span-full flex justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      const supplyId = form.getValues(`items.${index}.supplyId`)
+                      const warehouseId = form.getValues('warehouseId')
+                      const quantity = form.getValues(`items.${index}.quantity`)
+                      if (!supplyId || !warehouseId) return
+                      const lots = await suggestLots({ supplyId, warehouseId, quantity })
+                      const suggestions = (
+                        Array.isArray(lots)
+                          ? lots
+                          : ((lots as { items?: Array<{ lotId?: string; quantity?: string }> })
+                              .items ?? [])
+                      ) as Array<{ lotId?: string; quantity?: string }>
+                      const valid = suggestions.filter(
+                        (item): item is { lotId: string; quantity?: string } => !!item.lotId,
+                      )
+                      if (valid.length) {
+                        items.remove(index)
+                        valid.reverse().forEach((item) =>
+                          items.insert(index, {
+                            supplyId,
+                            quantity: item.quantity ?? quantity,
+                            lotId: item.lotId,
+                          }),
+                        )
+                        setSuggestedLots((current) => ({
+                          ...current,
+                          [supplyId]: valid.map((item) => item.lotId),
+                        }))
+                      }
+                      toast.success(t('suggestedLot'))
+                    }}
+                  >
+                    {t('suggestLotFefo')}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => items.remove(index)}
+                  >
+                    {t('removeLine')}
+                  </Button>
+                </div>
+              </div>
+            ))}
+            {items.fields.length === 0 && (
+              <p className="text-muted-foreground text-[13px]">
+                {t('noLines', { defaultValue: 'Chưa có dòng vật tư — bấm "Thêm dòng".' })}
+              </p>
+            )}
+          </SectionCard>
+          <FormFooter
+            onCancel={() => navigate(-1)}
+            submitting={form.formState.isSubmitting}
+            saveLabel={t('saveDraft')}
+          />
         </form>
       </Form>
     </>

@@ -141,6 +141,9 @@ export function CatalogPage({ slug }: { slug: CatalogSlug }) {
     <>
       <PageHeader
         title={t(`titles.${slug}`)}
+        description={t('listHint', {
+          defaultValue: 'Danh mục dùng chung; thêm, sửa, ngừng hoạt động các mục.',
+        })}
         actions={
           <>
             <Button variant="outline" onClick={() => setImportOpen(true)}>

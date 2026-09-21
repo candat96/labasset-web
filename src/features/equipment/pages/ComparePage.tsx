@@ -108,7 +108,12 @@ export function Component() {
   const fields = [...BASE_FIELDS, ...extraFields]
   return (
     <>
-      <PageHeader title={t('compare.title')} />
+      <PageHeader
+        title={t('compare.title')}
+        description={t('compare.hint', {
+          defaultValue: 'Chọn hai máy để so sánh thông số cạnh nhau.',
+        })}
+      />
       <div className="mb-4 grid gap-4 sm:grid-cols-2">
         <AsyncSelect
           label={t('compare.machine', { index: 1 })}

@@ -92,6 +92,9 @@ export function Component() {
     <>
       <PageHeader
         title={t('suppliesTitle')}
+        description={t('suppliesHint', {
+          defaultValue: 'Danh mục vật tư, hoá chất: mã, đơn vị, quy cách, theo dõi lô/hạn.',
+        })}
         actions={
           <div className="flex gap-2">
             {canWrite && (

@@ -1,3 +1,5 @@
+import { enumLabel, receiptTypeLabels } from '@/lib/enum-labels'
+import { shortId, useDepartmentLookup, useSupplierNames, useWarehouseNames } from '@/api/lookups'
 import { useMemo } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
@@ -42,6 +44,9 @@ export function Component() {
     queryFn: () => listReceipts(params),
     placeholderData: (p) => p,
   })
+  const warehouseNames = useWarehouseNames()
+  const supplierNames = useSupplierNames()
+  const departmentNames = useDepartmentLookup()
   const columns = useMemo<ColumnDef<Receipt>[]>(
     () => [
       {
@@ -56,7 +61,40 @@ export function Component() {
           </Link>
         ),
       },
-      { accessorKey: 'type', header: t('type') },
+      {
+        accessorKey: 'type',
+        header: t('type'),
+        cell: ({ row }) => enumLabel(receiptTypeLabels, row.original.type),
+      },
+      {
+        id: 'supplier',
+        header: t('supplier'),
+        cell: ({ row }) => {
+          const r = row.original as Receipt & {
+            supplierId?: string | null
+            fromDepartmentId?: string | null
+          }
+          if (r.supplierId) return supplierNames.get(r.supplierId) ?? shortId(r.supplierId)
+          if (r.fromDepartmentId)
+            return departmentNames.get(r.fromDepartmentId) ?? shortId(r.fromDepartmentId)
+          return '—'
+        },
+      },
+      {
+        accessorKey: 'warehouseId',
+        header: t('warehouse'),
+        cell: ({ row }) =>
+          warehouseNames.get(row.original.warehouseId) ?? shortId(row.original.warehouseId),
+      },
+      {
+        id: 'lines',
+        header: t('lineCount', { defaultValue: 'Số dòng' }),
+        cell: ({ row }) => {
+          const r = row.original as { items?: unknown[]; itemCount?: number }
+          const n = r.itemCount ?? r.items?.length
+          return n == null ? '—' : <span className="tabular-nums">{n}</span>
+        },
+      },
       {
         accessorKey: 'totalAmount',
         header: t('totalAmount'),
@@ -83,12 +121,15 @@ export function Component() {
         cell: ({ getValue }) => formatDateTime(getValue<string | undefined>()),
       },
     ],
-    [t],
+    [t, warehouseNames, supplierNames, departmentNames],
   )
   return (
     <>
       <PageHeader
         title={t('receiptsTitle')}
+        description={t('receiptsHint', {
+          defaultValue: 'Phiếu nhập từ nhà cung cấp, khoa trả lại, điều chỉnh tăng.',
+        })}
         actions={
           canWrite && (
             <Button asChild>

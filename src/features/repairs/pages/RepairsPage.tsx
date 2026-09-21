@@ -185,6 +185,9 @@ export function Component() {
     <>
       <PageHeader
         title={t('title')}
+        description={t('listHint', {
+          defaultValue: 'Phiếu báo hỏng và sửa chữa máy; theo dõi phân công, SLA và chi phí.',
+        })}
         actions={
           <Button asChild>
             <Link to="/repairs/new">{t('new')}</Link>

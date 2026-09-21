@@ -1,3 +1,4 @@
+import { DetailSkeleton } from '@/components/page/DetailSkeleton'
 import { useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
@@ -29,7 +30,7 @@ export function Component() {
   const mutations = useHospitalMutations()
   const { confirm, dialog } = useConfirm()
   const [password, setPassword] = useState<string | null>(null)
-  if (detail.isPending) return <p role="status">{t('hospital.loading')}</p>
+  if (detail.isPending) return <DetailSkeleton label={t('hospital.loading')} />
   if (detail.error) return <ErrorState error={detail.error} onRetry={() => void detail.refetch()} />
   const row = detail.data
   const run = async (

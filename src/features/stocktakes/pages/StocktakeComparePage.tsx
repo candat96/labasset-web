@@ -1,3 +1,13 @@
+import { PageSkeleton } from '@/components/page/DetailSkeleton'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { SectionCard } from '@/components/page/SectionCard'
 import { useEffect } from 'react'
 import { useParams, useSearchParams } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
@@ -39,7 +49,7 @@ export function Component() {
       </>
     )
   }
-  if (compare.isPending) return <p role="status">{t('comparing')}</p>
+  if (compare.isPending) return <PageSkeleton label={t('comparing')} />
   if (compare.error)
     return <ErrorState error={compare.error} onRetry={() => void compare.refetch()} />
   const data = compare.data
@@ -62,30 +72,34 @@ export function Component() {
           <dd>{summary.repeated}</dd>
         </div>
       </dl>
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="text-left">
-            <th>{t('key')}</th>
-            <th>{t('code')}</th>
-            <th>{t('name')}</th>
-            <th>{t('prevDiff')}</th>
-            <th>{t('currDiff')}</th>
-            <th>{t('repeated')}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.items.map((row) => (
-            <tr key={row.key} className="border-t">
-              <td>{row.key}</td>
-              <td>{row.code}</td>
-              <td>{row.name}</td>
-              <td>{formatQty(row.prevDiff)}</td>
-              <td>{formatQty(row.currDiff)}</td>
-              <td>{qtyNonZero(row.prevDiff) && qtyNonZero(row.currDiff) ? '✓' : ''}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <SectionCard title={t('compareResult', { defaultValue: 'Kết quả so sánh' })} flush>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="pl-5">{t('key')}</TableHead>
+              <TableHead>{t('code')}</TableHead>
+              <TableHead>{t('name')}</TableHead>
+              <TableHead>{t('prevDiff')}</TableHead>
+              <TableHead>{t('currDiff')}</TableHead>
+              <TableHead>{t('repeated')}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {data.items.map((row) => (
+              <TableRow key={row.key}>
+                <TableCell>{row.key}</TableCell>
+                <TableCell>{row.code}</TableCell>
+                <TableCell>{row.name}</TableCell>
+                <TableCell>{formatQty(row.prevDiff)}</TableCell>
+                <TableCell>{formatQty(row.currDiff)}</TableCell>
+                <TableCell>
+                  {qtyNonZero(row.prevDiff) && qtyNonZero(row.currDiff) ? '✓' : ''}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </SectionCard>
     </>
   )
 }

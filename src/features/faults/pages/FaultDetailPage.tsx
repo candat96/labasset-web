@@ -1,10 +1,30 @@
 import { useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router'
+import { useNavigate, useParams } from 'react-router'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { PageHeader } from '@/components/page/PageHeader'
+import { PageHeader, PageMeta } from '@/components/page/PageHeader'
+import { SectionCard } from '@/components/page/SectionCard'
+import { ActionMenu } from '@/components/page/ActionMenu'
+import { DataList } from '@/components/page/DataList'
+import { DetailSkeleton } from '@/components/page/DetailSkeleton'
+import { EmptyState } from '@/components/page/EmptyState'
+import { Timeline } from '@/components/timeline'
 import { ErrorState } from '@/components/page/ErrorState'
+import {
+  AlertTriangle,
+  Archive,
+  CalendarClock,
+  Pencil,
+  Eye,
+  Hash,
+  ListChecks,
+  Package,
+  ThumbsDown,
+  ThumbsUp,
+  Timer,
+  Wrench,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { StatusBadge } from '@/components/status-badge'
@@ -33,63 +53,105 @@ function StepImage({ fileId }: { fileId: string }) {
     queryFn: () => getFileUrl(fileId, true),
   })
   if (!url.data) return null
-  return <img src={url.data.url} alt="" className="mt-2 max-h-40 rounded object-contain" />
+  return (
+    <img
+      src={url.data.url}
+      alt=""
+      className="border-divider mt-2 max-h-48 rounded-lg border object-contain"
+    />
+  )
 }
 
 function FaultBody({ row }: { row: FaultDetail }) {
   const { t } = useTranslation('faults')
+  const steps = row.steps.slice().sort((a, b) => a.order - b.order)
   return (
-    <div className="space-y-4">
-      {row.symptoms && (
-        <section>
-          <h2 className="font-medium">{t('detail.symptoms')}</h2>
-          <p className="whitespace-pre-wrap">{row.symptoms}</p>
-        </section>
+    <>
+      {(row.symptoms || row.causes) && (
+        <SectionCard title={t('detail.description', { defaultValue: 'Mô tả lỗi' })}>
+          <DataList
+            columns={1}
+            items={[
+              {
+                label: t('detail.symptoms'),
+                value: row.symptoms ? (
+                  <span className="whitespace-pre-wrap">{row.symptoms}</span>
+                ) : null,
+                full: true,
+              },
+              {
+                label: t('detail.causes'),
+                value: row.causes ? (
+                  <span className="whitespace-pre-wrap">{row.causes}</span>
+                ) : null,
+                full: true,
+              },
+            ]}
+          />
+        </SectionCard>
       )}
-      {row.causes && (
-        <section>
-          <h2 className="font-medium">{t('detail.causes')}</h2>
-          <p className="whitespace-pre-wrap">{row.causes}</p>
-        </section>
-      )}
-      <section>
-        <h2 className="font-medium">{t('detail.steps')}</h2>
-        <ol className="mt-2 list-decimal space-y-3 pl-5">
-          {row.steps
-            .slice()
-            .sort((a, b) => a.order - b.order)
-            .map((step) => (
-              <li key={step.id}>
-                <p>{step.instruction}</p>
-                {step.expectedResult && (
-                  <p className="text-muted-foreground text-sm">
-                    {t('detail.expected', { text: step.expectedResult })}
+      <SectionCard
+        title={t('detail.steps')}
+        description={
+          steps.length
+            ? t('detail.stepCount', { defaultValue: '{{n}} bước xử lý', n: steps.length })
+            : undefined
+        }
+      >
+        {steps.length === 0 ? (
+          <EmptyState icon={ListChecks} title={t('detail.noSteps')} />
+        ) : (
+          <ol className="space-y-4">
+            {steps.map((step, index) => (
+              <li key={step.id} className="flex gap-3">
+                <span className="bg-primary-soft text-primary flex size-7 shrink-0 items-center justify-center rounded-full text-[12.5px] font-bold tabular-nums">
+                  {index + 1}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[14px] leading-5 font-medium whitespace-pre-wrap">
+                    {step.instruction}
                   </p>
-                )}
-                {step.cautions && (
-                  <p className="text-destructive text-sm">
-                    {t('detail.cautions', { text: step.cautions })}
-                  </p>
-                )}
-                {step.imageFileId && <StepImage fileId={step.imageFileId} />}
+                  {step.expectedResult && (
+                    <p className="text-muted-foreground mt-1 text-[13px] leading-5">
+                      {t('detail.expected', { text: step.expectedResult })}
+                    </p>
+                  )}
+                  {step.cautions && (
+                    <p className="bg-warning-bg text-warning-fg mt-2 inline-flex items-start gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] leading-5">
+                      <AlertTriangle className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+                      {t('detail.cautions', { text: step.cautions })}
+                    </p>
+                  )}
+                  {step.imageFileId && <StepImage fileId={step.imageFileId} />}
+                </div>
               </li>
             ))}
-          {row.steps.length === 0 && <p className="text-muted-foreground">{t('detail.noSteps')}</p>}
-        </ol>
-      </section>
-      <section>
-        <h2 className="font-medium">{t('detail.parts')}</h2>
-        <ul className="mt-2 space-y-1">
-          {row.parts.map((part) => (
-            <li key={part.id}>
-              {part.name} × {part.quantity}
-              {part.note ? ` — ${part.note}` : ''}
-            </li>
-          ))}
-          {row.parts.length === 0 && <p className="text-muted-foreground">{t('detail.noParts')}</p>}
-        </ul>
-      </section>
-    </div>
+          </ol>
+        )}
+      </SectionCard>
+      <SectionCard title={t('detail.parts')}>
+        {row.parts.length === 0 ? (
+          <EmptyState icon={Package} title={t('detail.noParts')} />
+        ) : (
+          <ul className="divide-divider divide-y">
+            {row.parts.map((part) => (
+              <li
+                key={part.id}
+                className="flex items-baseline justify-between gap-3 py-2 first:pt-0 last:pb-0"
+              >
+                <div className="min-w-0">
+                  <p className="text-[14px] font-medium">{part.name}</p>
+                  {part.note && <p className="text-muted-foreground text-[12.5px]">{part.note}</p>}
+                </div>
+                <span className="bg-surface-2 shrink-0 rounded-md px-2 py-0.5 text-[13px] font-semibold tabular-nums">
+                  × {part.quantity}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </SectionCard>
+    </>
   )
 }
 
@@ -131,7 +193,7 @@ export function Component() {
     },
     onError: (error) => toast.error(messageFor(error)),
   })
-  if (detail.isPending) return <p role="status">{t('detail.loading')}</p>
+  if (detail.isPending) return <DetailSkeleton label={t('detail.loading')} />
   if (detail.error) return <ErrorState error={detail.error} onRetry={() => void detail.refetch()} />
   const row = detail.data
   const shown = snapshot.data?.snapshot ?? row
@@ -141,8 +203,21 @@ export function Component() {
     <>
       {dialog}
       <PageHeader
+        eyebrow={t('title', { defaultValue: 'Thư viện lỗi' })}
         title={row.title}
-        description={row.errorCode ?? undefined}
+        meta={
+          <>
+            {row.errorCode && <PageMeta icon={<Hash />}>{row.errorCode}</PageMeta>}
+            {row.model && <PageMeta icon={<Wrench />}>{row.model}</PageMeta>}
+            {row.estMinutes != null && (
+              <PageMeta icon={<Timer />}>
+                {t('detail.estMinutes', { defaultValue: '~{{n}} phút', n: row.estMinutes })}
+              </PageMeta>
+            )}
+            <PageMeta icon={<Eye />}>{t('detail.viewCount', { n: row.viewCount })}</PageMeta>
+            <PageMeta icon={<CalendarClock />}>{formatDateTime(row.updatedAt)}</PageMeta>
+          </>
+        }
         badge={
           <div className="flex flex-wrap gap-1">
             <StatusBadge
@@ -158,48 +233,52 @@ export function Component() {
           </div>
         }
         actions={
-          <div className="flex flex-wrap gap-2">
-            {canEdit && (
-              <Button variant="outline" asChild>
-                <Link to={`/faults/${id}/edit`}>{tc('actions.edit')}</Link>
-              </Button>
-            )}
-            {isAdm && (row.status === 'draft' || row.status === 'archived') && (
-              <Button
-                onClick={async () => {
-                  if ((await confirm({ title: t('detail.publishConfirm') })) === false) return
-                  publish.mutate(id)
-                }}
-              >
-                {t('detail.publish')}
-              </Button>
-            )}
-            {isAdm && row.status === 'published' && (
-              <Button
-                variant="outline"
-                onClick={async () => {
-                  if (
-                    (await confirm({ title: t('detail.archiveConfirm'), destructive: true })) ===
-                    false
-                  )
-                    return
-                  archive.mutate(id)
-                }}
-              >
-                {t('detail.archive')}
-              </Button>
-            )}
-          </div>
+          <ActionMenu
+            items={[
+              isAdm &&
+                (row.status === 'draft' || row.status === 'archived') && {
+                  key: 'publish',
+                  label: t('detail.publish'),
+                  variant: 'primary' as const,
+                  onClick: () => {
+                    void (async () => {
+                      if ((await confirm({ title: t('detail.publishConfirm') })) === false) return
+                      publish.mutate(id)
+                    })()
+                  },
+                },
+              canEdit && {
+                key: 'edit',
+                label: tc('actions.edit'),
+                icon: <Pencil />,
+                to: `/faults/${id}/edit`,
+              },
+              isAdm &&
+                row.status === 'published' && {
+                  key: 'archive',
+                  label: t('detail.archive'),
+                  icon: <Archive />,
+                  onClick: () => {
+                    void (async () => {
+                      if (
+                        (await confirm({
+                          title: t('detail.archiveConfirm'),
+                          destructive: true,
+                        })) === false
+                      )
+                        return
+                      archive.mutate(id)
+                    })()
+                  },
+                },
+            ]}
+          />
         }
       />
-      <p className="text-muted-foreground mb-4 text-sm">
-        {t('detail.viewCount', { n: row.viewCount })}
-      </p>
-      <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
-        <div className="space-y-6">
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="min-w-0 space-y-5">
           <FaultBody row={shown} />
-          <section>
-            <h2 className="mb-2 font-medium">{t('detail.documents')}</h2>
+          <SectionCard title={t('detail.documents')}>
             <AttachmentsPanel
               entityType="fault"
               entityId={id}
@@ -209,24 +288,33 @@ export function Component() {
               ]}
               canWrite={canEdit}
             />
-          </section>
+          </SectionCard>
         </div>
-        <aside className="space-y-4">
-          <section className="rounded-lg border p-3">
-            <h2 className="font-medium">{t('detail.feedback')}</h2>
-            <p className="text-muted-foreground mt-1 text-sm">
-              👍 {row.helpfulCount} · 👎 {row.notHelpfulCount}
-            </p>
+        <div className="space-y-5">
+          <SectionCard
+            title={t('detail.feedback')}
+            actions={
+              <span className="text-muted-foreground inline-flex items-center gap-3 text-[13px] tabular-nums">
+                <span className="inline-flex items-center gap-1">
+                  <ThumbsUp className="text-success size-3.5" aria-hidden />
+                  {row.helpfulCount}
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  <ThumbsDown className="text-destructive size-3.5" aria-hidden />
+                  {row.notHelpfulCount}
+                </span>
+              </span>
+            }
+          >
             {canVote ? (
               <>
                 <Textarea
-                  className="mt-2"
                   aria-label={t('detail.comment')}
                   placeholder={t('detail.commentPlaceholder')}
                   value={comment}
                   onChange={(event) => setComment(event.target.value)}
                 />
-                <div className="mt-2 flex gap-2">
+                <div className="mt-3 flex gap-2">
                   <Button
                     size="sm"
                     variant="outline"
@@ -246,16 +334,15 @@ export function Component() {
                 </div>
               </>
             ) : (
-              <p className="text-muted-foreground mt-2 text-xs">{t('detail.feedbackLocked')}</p>
+              <p className="text-muted-foreground text-[13px]">{t('detail.feedbackLocked')}</p>
             )}
-          </section>
-          <section className="rounded-lg border p-3">
-            <h2 className="font-medium">{t('detail.versions')}</h2>
+          </SectionCard>
+          <SectionCard title={t('detail.versions')}>
             <Select
               value={version || '__current__'}
               onValueChange={(v) => setVersion(v === '__current__' ? '' : v)}
             >
-              <SelectTrigger className="mt-2" aria-label={t('detail.version')}>
+              <SelectTrigger className="w-full" aria-label={t('detail.version')}>
                 <SelectValue placeholder={t('detail.currentVersion')} />
               </SelectTrigger>
               <SelectContent>
@@ -267,33 +354,50 @@ export function Component() {
                 ))}
               </SelectContent>
             </Select>
-            {snapshot.isPending && version && <p role="status">{t('detail.loadingVersion')}</p>}
-          </section>
-          <section className="rounded-lg border p-3">
-            <h2 className="font-medium">{t('detail.related')}</h2>
-            <ul className="mt-2 space-y-2 text-sm">
+            {snapshot.isPending && version && (
+              <p role="status" className="text-muted-foreground mt-2 text-[13px]">
+                {t('detail.loadingVersion')}
+              </p>
+            )}
+            <Timeline
+              className="mt-4"
+              events={[
+                {
+                  at: row.createdAt,
+                  title: t('detail.createdAt', { defaultValue: 'Tạo' }),
+                  tone: 'muted',
+                },
+                ...(row.publishedAt
+                  ? [{ at: row.publishedAt, title: t('detail.publish'), tone: 'success' as const }]
+                  : []),
+              ]}
+            />
+          </SectionCard>
+          <SectionCard title={t('detail.related')}>
+            <ul className="space-y-3">
               {(history.data ?? []).map((item) => (
-                <li key={item.id}>
+                <li key={item.id} className="min-w-0">
                   <button
                     type="button"
-                    className="text-primary hover:underline"
+                    className="text-primary text-[14px] font-semibold hover:underline"
                     onClick={() => navigate(`/repairs/${item.id}`)}
                   >
                     {item.code}
                   </button>
-                  <span className="text-muted-foreground">
-                    {' '}
-                    · {item.equipment.code} – {item.equipment.name} ·{' '}
+                  <p className="text-muted-foreground truncate text-[12.5px]">
+                    {item.equipment.code} – {item.equipment.name}
+                  </p>
+                  <p className="text-subtle text-[12px] tabular-nums">
                     {formatDateTime(item.createdAt)}
-                  </span>
+                  </p>
                 </li>
               ))}
               {(history.data ?? []).length === 0 && (
-                <li className="text-muted-foreground">{t('detail.noRelated')}</li>
+                <li className="text-muted-foreground text-[13px]">{t('detail.noRelated')}</li>
               )}
             </ul>
-          </section>
-        </aside>
+          </SectionCard>
+        </div>
       </div>
     </>
   )

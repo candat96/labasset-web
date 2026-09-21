@@ -82,5 +82,12 @@
   "movedHint": "Tồn có thể lệch do nhập/xuất trong lúc kiểm",
   "countedBy": "Người/giờ đếm",
   "reasonResolution": "Nguyên nhân / xử lý",
-  "loadingPackage": "Đang tải gói kiểm kê…"
+  "loadingPackage": "Đang tải gói kiểm kê…",
+  "assigneeCount": "{{n}} người kiểm kê",
+  "countWebHint": "Quét mã hoặc nhập tay, ghi từng dòng rồi gửi theo lô.",
+  "countItems": "{{n}} mục",
+  "noExtras": "Không có hàng ngoài sổ",
+  "info": "Thông tin",
+  "compareResult": "Kết quả so sánh",
+  "listHint": "Đợt kiểm kê kho: chụp sổ, phân công đếm, đối chiếu chênh lệch."
 }

@@ -12,7 +12,8 @@ import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 import type { ColumnDef } from '@tanstack/react-table'
-import { CheckCheck } from 'lucide-react'
+import { Bell, BellDot, CheckCheck } from 'lucide-react'
+import { KpiCard } from '@/components/kpi-card'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { DataTable, useServerTable } from '@/components/data-table'
@@ -85,7 +86,6 @@ export function Component() {
         description={t('desc')}
         actions={
           <>
-            {' '}
             <Button variant="outline" asChild>
               <Link to="/notifications/preferences">Tuỳ chọn</Link>
             </Button>
@@ -99,6 +99,20 @@ export function Component() {
           </>
         }
       />
+      <div className="mb-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <KpiCard
+          title={t('unread')}
+          value={list.data?.unreadCount ?? '—'}
+          icon={<BellDot />}
+          tone="info"
+        />
+        <KpiCard
+          title={t('totalNotifications', { defaultValue: 'Tổng thông báo' })}
+          value={list.data?.total ?? '—'}
+          icon={<Bell />}
+          tone="neutral"
+        />
+      </div>
       <DataTable
         tableId="notifications"
         columns={columns}

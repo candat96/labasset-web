@@ -1,9 +1,12 @@
+import { DetailSkeleton } from '@/components/page/DetailSkeleton'
 import { useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import { PageHeader } from '@/components/page/PageHeader'
+import { SectionCard } from '@/components/page/SectionCard'
+import { FormFooter } from '@/components/page/FormFooter'
 import { ErrorState } from '@/components/page/ErrorState'
 import { Button } from '@/components/ui/button'
 import { Form } from '@/components/ui/form'
@@ -72,7 +75,7 @@ export function Component() {
       })),
     })
   }, [detail.data, form])
-  if (editing && detail.isPending) return <p role="status">{t('loadingTemplate')}</p>
+  if (editing && detail.isPending) return <DetailSkeleton label={t('loadingTemplate')} />
   if (editing && detail.error)
     return <ErrorState error={detail.error} onRetry={() => void detail.refetch()} />
   const submit = async (values: TemplateForm) => {
@@ -121,7 +124,12 @@ export function Component() {
     <>
       {dialog}
       <PageHeader
+        eyebrow={t('templatesTitle')}
         title={editing ? t('editTemplate') : t('createTemplateTitle')}
+        description={t('templateFormHint', {
+          defaultValue:
+            'Đặt tên mẫu, phạm vi áp dụng và các mục kiểm tra (đạt/không, đo, ghi chú).',
+        })}
         actions={
           editing &&
           canWrite && (
@@ -166,116 +174,134 @@ export function Component() {
         }
       />
       <Form {...form}>
-        <form className="max-w-3xl space-y-4" noValidate onSubmit={form.handleSubmit(submit)}>
-          <TextField control={form.control} name="name" label={t('name')} />
-          <FormField
-            control={form.control}
-            name="groupId"
-            render={({ field }) => (
-              <FormItem>
-                <AsyncSelect
-                  label={t('equipmentGroup')}
-                  queryKey="equipment-groups"
-                  loadOptions={(q) => catalogOptions('equipment-groups', q)}
-                  resolveOption={(groupId) => resolveCatalogItem('equipment-groups', groupId)}
-                  value={field.value}
-                  onChange={field.onChange}
-                  clearable
-                />
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <TextField control={form.control} name="model" label="Model" />
-          <SwitchField control={form.control} name="isActive" label={t('isActive')} />
-          <ol className="space-y-3">
-            {items.fields.map((field, index) => (
-              <li key={field.id} className="space-y-2 rounded border p-3">
-                <div className="flex justify-between">
-                  <p className="font-medium">
-                    {t('item')} {index + 1}
-                  </p>
-                  <div className="flex gap-1">
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      disabled={index === 0}
-                      onClick={() => items.move(index, index - 1)}
-                    >
-                      {t('moveUp')}
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      disabled={index === items.fields.length - 1}
-                      onClick={() => items.move(index, index + 1)}
-                    >
-                      {t('moveDown')}
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => items.remove(index)}
-                    >
-                      {t('delete')}
-                    </Button>
-                  </div>
-                </div>
-                <TextField
-                  control={form.control}
-                  name={`items.${index}.label`}
-                  label={t('itemLabel')}
-                />
-                <SelectField
-                  control={form.control}
-                  name={`items.${index}.type`}
-                  label={t('itemType')}
-                  options={[
-                    { value: 'check', label: t('optionCheck') },
-                    { value: 'measure', label: t('optionMeasure') },
-                    { value: 'text', label: t('optionText') },
-                  ]}
-                />
-                {form.watch(`items.${index}.type`) === 'measure' && (
-                  <>
-                    <TextField
-                      control={form.control}
-                      name={`items.${index}.unit`}
-                      label={t('unit')}
+        <form className="space-y-5" noValidate onSubmit={form.handleSubmit(submit)}>
+          <SectionCard title={t('info', { defaultValue: 'Thông tin' })}>
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <TextField control={form.control} name="name" label={t('name')} />
+              <FormField
+                control={form.control}
+                name="groupId"
+                render={({ field }) => (
+                  <FormItem>
+                    <AsyncSelect
+                      label={t('equipmentGroup')}
+                      queryKey="equipment-groups"
+                      loadOptions={(q) => catalogOptions('equipment-groups', q)}
+                      resolveOption={(groupId) => resolveCatalogItem('equipment-groups', groupId)}
+                      value={field.value}
+                      onChange={field.onChange}
+                      clearable
                     />
-                    <NumberField control={form.control} name={`items.${index}.min`} label="Min" />
-                    <NumberField control={form.control} name={`items.${index}.max`} label="Max" />
-                  </>
+                    <FormMessage />
+                  </FormItem>
                 )}
-                <SwitchField
-                  control={form.control}
-                  name={`items.${index}.optional`}
-                  label={t('optional')}
-                />
-              </li>
-            ))}
-          </ol>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() =>
-              items.append({
-                key: '',
-                label: '',
-                type: 'check',
-                unit: '',
-                min: '',
-                max: '',
-                optional: false,
-              })
+              />
+              <TextField control={form.control} name="model" label="Model" />
+              <SwitchField control={form.control} name="isActive" label={t('isActive')} />
+            </div>
+          </SectionCard>
+          <SectionCard
+            title={t('items', { defaultValue: 'Mục kiểm tra' })}
+            description={t('itemCount', { defaultValue: '{{n}} mục', n: items.fields.length })}
+            actions={
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  items.append({
+                    key: '',
+                    label: '',
+                    type: 'check',
+                    unit: '',
+                    min: '',
+                    max: '',
+                    optional: false,
+                  })
+                }
+              >
+                {t('addItem')}
+              </Button>
             }
           >
-            {t('addItem')}
-          </Button>
-          {canWrite && <Button type="submit">{t('save')}</Button>}
+            <ol className="space-y-3">
+              {items.fields.map((field, index) => (
+                <li key={field.id} className="border-divider space-y-3 rounded-xl border p-4">
+                  <div className="flex justify-between">
+                    <p className="font-medium">
+                      {t('item')} {index + 1}
+                    </p>
+                    <div className="flex gap-1">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        disabled={index === 0}
+                        onClick={() => items.move(index, index - 1)}
+                      >
+                        {t('moveUp')}
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        disabled={index === items.fields.length - 1}
+                        onClick={() => items.move(index, index + 1)}
+                      >
+                        {t('moveDown')}
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => items.remove(index)}
+                      >
+                        {t('delete')}
+                      </Button>
+                    </div>
+                  </div>
+                  <TextField
+                    control={form.control}
+                    name={`items.${index}.label`}
+                    label={t('itemLabel')}
+                  />
+                  <SelectField
+                    control={form.control}
+                    name={`items.${index}.type`}
+                    label={t('itemType')}
+                    options={[
+                      { value: 'check', label: t('optionCheck') },
+                      { value: 'measure', label: t('optionMeasure') },
+                      { value: 'text', label: t('optionText') },
+                    ]}
+                  />
+                  {form.watch(`items.${index}.type`) === 'measure' && (
+                    <>
+                      <TextField
+                        control={form.control}
+                        name={`items.${index}.unit`}
+                        label={t('unit')}
+                      />
+                      <NumberField control={form.control} name={`items.${index}.min`} label="Min" />
+                      <NumberField control={form.control} name={`items.${index}.max`} label="Max" />
+                    </>
+                  )}
+                  <SwitchField
+                    control={form.control}
+                    name={`items.${index}.optional`}
+                    label={t('optional')}
+                  />
+                </li>
+              ))}
+            </ol>
+          </SectionCard>
+          {canWrite && (
+            <FormFooter
+              onCancel={() => navigate(-1)}
+              submitting={form.formState.isSubmitting}
+              saveLabel={t('save')}
+            />
+          )}
         </form>
       </Form>
     </>

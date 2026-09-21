@@ -39,7 +39,11 @@
       "response": "Phản hồi",
       "note": "Ghi chú",
       "primary": "Chính",
-      "assistant": "Phụ"
+      "assistant": "Phụ",
+      "problem": "Sự cố",
+      "equipmentDown": "Máy ngừng hoạt động",
+      "resolution": "Chẩn đoán & xử lý",
+      "noAssignments": "Chưa phân công"
     },
     "resolution": {
       "internal": "Nội bộ",
@@ -53,7 +57,8 @@
       "action": "Hành động",
       "duration": "Thời lượng (phút)",
       "minutes": "{{n}} phút",
-      "created": "Đã ghi nhật ký"
+      "created": "Đã ghi nhật ký",
+      "empty": "Chưa có nhật ký xử lý"
     },
     "parts": {
       "add": "Thêm linh kiện",
@@ -75,7 +80,8 @@
       "note": "Ghi chú",
       "delete": "Xoá",
       "created": "Đã thêm linh kiện",
-      "deleteConfirm": "Xoá linh kiện?"
+      "deleteConfirm": "Xoá linh kiện?",
+      "empty": "Chưa ghi linh kiện/vật tư"
     },
     "vendors": {
       "add": "Thêm thuê ngoài",
@@ -92,7 +98,8 @@
       "note": "Ghi chú",
       "created": "Đã thêm thuê ngoài",
       "deleteConfirm": "Xoá thuê ngoài?",
-      "title": "Thuê ngoài"
+      "title": "Thuê ngoài",
+      "empty": "Chưa có nhà thầu"
     },
     "costs": {
       "add": "Thêm chi phí",
@@ -110,9 +117,13 @@
       "total": "Tổng: {{amount}}",
       "created": "Đã thêm chi phí",
       "deleteConfirm": "Xoá chi phí?",
-      "title": "Thêm chi phí"
+      "title": "Thêm chi phí",
+      "totalLabel": "Tổng chi phí",
+      "empty": "Chưa ghi chi phí"
     },
-    "docs": { "sign": "Ký" },
+    "docs": {
+      "sign": "Ký"
+    },
     "attachments": {
       "photo": "Ảnh",
       "video": "Video",
@@ -213,9 +224,24 @@
       "updated": "Đã cập nhật phiếu",
       "cancelled": "Đã huỷ phiếu",
       "deleted": "Đã xoá"
-    }
+    },
+    "timeline": {
+      "created": "Tạo phiếu",
+      "started": "Bắt đầu xử lý",
+      "completed": "Hoàn thành",
+      "acceptedByDept": "Khoa nghiệm thu",
+      "accepted": "Nghiệm thu",
+      "closed": "Đóng phiếu",
+      "title": "Tiến trình"
+    },
+    "info": "Thông tin"
   },
-  "presets": { "all": "Tất cả", "mine": "Của tôi", "new": "Mới", "overdue": "Quá hạn" },
+  "presets": {
+    "all": "Tất cả",
+    "mine": "Của tôi",
+    "new": "Mới",
+    "overdue": "Quá hạn"
+  },
   "columns": {
     "code": "Mã",
     "equipment": "Máy",
@@ -258,7 +284,9 @@
     "reportedDepartment": "Khoa báo hỏng",
     "suggestions": "Gợi ý lỗi",
     "create": "Tạo phiếu",
-    "created": "Đã tạo phiếu sửa chữa"
+    "created": "Đã tạo phiếu sửa chữa",
+    "hint": "Chọn máy, mô tả sự cố và mức độ; hệ thống gợi ý lỗi tương tự bên phải.",
+    "info": "Thông tin sự cố"
   },
   "stats": {
     "title": "Thống kê sửa chữa",
@@ -279,10 +307,14 @@
     "workload": "Khối lượng việc theo nhân viên",
     "person": "Người",
     "openTickets": "Phiếu mở",
-    "awaitingResponse": "Chờ phản hồi"
+    "awaitingResponse": "Chờ phản hồi",
+    "hint": "Số phiếu, chi phí, MTTR/MTBF theo khoảng thời gian; lọc theo ngày tạo phiếu."
   },
   "signature": {
     "clear": "Xoá chữ ký",
     "canvas": "Vùng ký"
-  }
+  },
+  "countPeople": "{{n}} người",
+  "countItems": "{{n}} mục",
+  "listHint": "Phiếu báo hỏng và sửa chữa máy; theo dõi phân công, SLA và chi phí."
 }

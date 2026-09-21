@@ -1,10 +1,26 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router'
+import {
+  AlertTriangle,
+  Boxes,
+  CalendarClock,
+  ClipboardCheck,
+  ClipboardList,
+  Gauge,
+  Inbox,
+  PackageCheck,
+  PackageMinus,
+  UserCheck,
+  Wrench,
+  type LucideIcon,
+} from 'lucide-react'
 import { api, unwrap } from '@/api/client'
 import type { components } from '@/api/schema'
 import { PageHeader } from '@/components/page/PageHeader'
-import { Card, CardContent } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
+import { SectionCard } from '@/components/page/SectionCard'
+import { ErrorState } from '@/components/page/ErrorState'
+import { PageSkeleton } from '@/components/page/DetailSkeleton'
+import { KpiCard, type KpiTone } from '@/components/kpi-card'
 import { useTranslation } from 'react-i18next'
 
 type MyTasks = components['schemas']['MyTasksResponseDto']
@@ -24,6 +40,34 @@ const LINKS: Record<string, string> = {
   alertsStock: '/stock/alerts?resolved=false',
 }
 
+const META: Record<string, { icon: LucideIcon; tone: KpiTone }> = {
+  repairsAssigned: { icon: Wrench, tone: 'info' },
+  repairsPendingResponse: { icon: UserCheck, tone: 'warning' },
+  repairsOverdue: { icon: AlertTriangle, tone: 'danger' },
+  maintenanceDue7d: { icon: CalendarClock, tone: 'warning' },
+  maintenanceOverdue: { icon: AlertTriangle, tone: 'danger' },
+  requestsPendingApproval: { icon: ClipboardList, tone: 'info' },
+  requestsPendingIssue: { icon: PackageMinus, tone: 'info' },
+  requestsPendingReceive: { icon: PackageCheck, tone: 'info' },
+  stocktakesCounting: { icon: ClipboardCheck, tone: 'info' },
+  alertsRepairsNew: { icon: Inbox, tone: 'warning' },
+  alertsCalibrationOverdue: { icon: Gauge, tone: 'danger' },
+  alertsStock: { icon: Boxes, tone: 'warning' },
+}
+
+const GROUPS: { key: string; items: string[] }[] = [
+  { key: 'mine', items: ['repairsAssigned', 'repairsPendingResponse', 'repairsOverdue'] },
+  { key: 'maintenance', items: ['maintenanceDue7d', 'maintenanceOverdue'] },
+  {
+    key: 'requests',
+    items: ['requestsPendingApproval', 'requestsPendingIssue', 'requestsPendingReceive'],
+  },
+  {
+    key: 'alerts',
+    items: ['stocktakesCounting', 'alertsRepairsNew', 'alertsCalibrationOverdue', 'alertsStock'],
+  },
+]
+
 export function Component() {
   const { t } = useTranslation('dashboard')
   const query = useQuery({
@@ -31,45 +75,73 @@ export function Component() {
     queryFn: () => unwrap(api.GET('/v1/me/tasks')) as Promise<MyTasks>,
   })
   const data = query.data
-  const rows = data
-    ? [
-        ['repairsAssigned', data.repairs.assigned],
-        ['repairsPendingResponse', data.repairs.pendingResponse],
-        ['repairsOverdue', data.repairs.overdue],
-        ['maintenanceDue7d', data.maintenance.due7d],
-        ['maintenanceOverdue', data.maintenance.overdue],
-        ['requestsPendingApproval', data.requests.pendingApproval],
-        ['requestsPendingIssue', data.requests.pendingIssue],
-        ['requestsPendingReceive', data.requests.pendingReceive],
-        ['stocktakesCounting', data.stocktakes.counting],
-        ['alertsRepairsNew', data.alerts.repairsNew],
-        ['alertsCalibrationOverdue', data.alerts.calibrationOverdue],
-        ['alertsStock', Object.values(data.alerts.stock).reduce((sum, value) => sum + value, 0)],
-      ].sort((a, b) => Number(b[1]) - Number(a[1]))
-    : []
+  const values: Record<string, number> = data
+    ? {
+        repairsAssigned: data.repairs.assigned,
+        repairsPendingResponse: data.repairs.pendingResponse,
+        repairsOverdue: data.repairs.overdue,
+        maintenanceDue7d: data.maintenance.due7d,
+        maintenanceOverdue: data.maintenance.overdue,
+        requestsPendingApproval: data.requests.pendingApproval,
+        requestsPendingIssue: data.requests.pendingIssue,
+        requestsPendingReceive: data.requests.pendingReceive,
+        stocktakesCounting: data.stocktakes.counting,
+        alertsRepairsNew: data.alerts.repairsNew,
+        alertsCalibrationOverdue: data.alerts.calibrationOverdue,
+        alertsStock: Object.values(data.alerts.stock).reduce((sum, value) => sum + value, 0),
+      }
+    : {}
+  const total = Object.values(values).reduce((sum, value) => sum + value, 0)
 
   return (
     <>
-      <PageHeader title={t('myTasksTitle')} />
-      {query.error && (
-        <p role="alert" className="text-destructive">
-          Không tải được việc của tôi.
-        </p>
+      <PageHeader
+        title={t('myTasksTitle')}
+        description={
+          data
+            ? t('myTasksSummary', {
+                defaultValue: '{{n}} việc đang chờ bạn xử lý — bấm vào thẻ để mở danh sách.',
+                n: total,
+              })
+            : t('myTasksHint', { defaultValue: 'Việc được giao và các mục cần bạn xử lý.' })
+        }
+      />
+      {query.error && <ErrorState error={query.error} onRetry={() => void query.refetch()} />}
+      {query.isPending && <PageSkeleton label={t('loading', { defaultValue: 'Đang tải…' })} />}
+      {data && (
+        <div className="space-y-5">
+          {GROUPS.map((group) => (
+            <SectionCard
+              key={group.key}
+              title={t(`taskGroups.${group.key}`, {
+                defaultValue: {
+                  mine: 'Sửa chữa của tôi',
+                  maintenance: 'Bảo dưỡng',
+                  requests: 'Phiếu yêu cầu',
+                  alerts: 'Cảnh báo & kiểm kê',
+                }[group.key],
+              })}
+            >
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                {group.items.map((key) => {
+                  const meta = META[key] ?? { icon: Inbox, tone: 'neutral' as const }
+                  const Icon = meta.icon
+                  return (
+                    <Link key={key} to={LINKS[key] ?? '/my-tasks'} className="block">
+                      <KpiCard
+                        title={t(`tasks.${key}`)}
+                        value={values[key] ?? 0}
+                        icon={<Icon />}
+                        tone={meta.tone}
+                      />
+                    </Link>
+                  )
+                })}
+              </div>
+            </SectionCard>
+          ))}
+        </div>
       )}
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        {query.isPending
-          ? Array.from({ length: 6 }).map((_, index) => <Skeleton key={index} className="h-24" />)
-          : rows.map(([key, value]) => (
-              <Card key={String(key)}>
-                <CardContent className="p-4">
-                  <Link className="block" to={LINKS[String(key)] ?? '/my-tasks'}>
-                    <div className="text-muted-foreground text-sm">{t(`tasks.${key}`)}</div>
-                    <div className="mt-1 text-2xl font-semibold tabular-nums">{String(value)}</div>
-                  </Link>
-                </CardContent>
-              </Card>
-            ))}
-      </div>
     </>
   )
 }

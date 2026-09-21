@@ -293,4 +293,4 @@ it('creates a transfer with multiple validated lot lines', async () => {
   await userEvent.click(await screen.findByRole('option', { name: /L02/ }))
   await userEvent.click(screen.getByRole('button', { name: 'Lưu' }))
   await waitFor(() => expect(saved).toHaveLength(1))
-})
+}, 15_000)

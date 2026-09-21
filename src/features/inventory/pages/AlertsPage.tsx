@@ -1,3 +1,4 @@
+import { alertSeverityLabels, enumLabel } from '@/lib/enum-labels'
 import { useMemo } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
@@ -57,7 +58,11 @@ export function Component() {
       { accessorKey: 'supplyName', header: t('supply') },
       { accessorKey: 'warehouseName', header: t('warehouse') },
       { accessorKey: 'lotNo', header: t('lot') },
-      { accessorKey: 'severity', header: t('severity') },
+      {
+        accessorKey: 'severity',
+        header: t('severity'),
+        cell: ({ row }) => enumLabel(alertSeverityLabels, row.original.severity),
+      },
       { accessorKey: 'message', header: t('message') },
       {
         accessorKey: 'createdAt',
@@ -90,7 +95,12 @@ export function Component() {
   )
   return (
     <>
-      <PageHeader title={t('alertsTitle')} />
+      <PageHeader
+        title={t('alertsTitle')}
+        description={t('alertsHint', {
+          defaultValue: 'Cảnh báo tồn dưới định mức, lô sắp hết hạn và hết hạn.',
+        })}
+      />
       <DataTable
         tableId="stock-alerts"
         columns={columns}

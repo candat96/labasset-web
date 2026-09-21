@@ -108,7 +108,12 @@ export function Component() {
   return (
     <>
       {dialog}
-      <PageHeader title={t('transfers.title')} />
+      <PageHeader
+        title={t('transfers.title')}
+        description={t('transfers.listHint', {
+          defaultValue: 'Yêu cầu điều chuyển máy giữa các khoa chờ duyệt và đã xử lý.',
+        })}
+      />
       <DataTable
         tableId="equipment-transfers"
         columns={columns}

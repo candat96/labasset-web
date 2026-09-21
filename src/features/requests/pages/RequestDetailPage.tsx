@@ -1,3 +1,4 @@
+import { DetailSkeleton } from '@/components/page/DetailSkeleton'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -6,7 +7,30 @@ import Big from 'big.js'
 import { Link, useNavigate, useParams } from 'react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { PageHeader } from '@/components/page/PageHeader'
+import { PageHeader, PageMeta } from '@/components/page/PageHeader'
+import { SectionCard } from '@/components/page/SectionCard'
+import { ActionMenu } from '@/components/page/ActionMenu'
+import { DataList } from '@/components/page/DataList'
+import { Timeline } from '@/components/timeline'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import {
+  Ban,
+  Building2,
+  CalendarClock,
+  ClipboardList,
+  Copy,
+  Pencil,
+  User,
+  Wrench,
+  XCircle,
+} from 'lucide-react'
 import { ErrorState } from '@/components/page/ErrorState'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -20,7 +44,7 @@ import { StatusBadge } from '@/components/status-badge'
 import { AuditTrail } from '@/components/audit-trail'
 import { useConfirm } from '@/components/confirm-dialog'
 import { requestStatusMap } from '@/lib/status-maps'
-import { formatDateTime } from '@/lib/format/date'
+import { formatDate, formatDateTime } from '@/lib/format/date'
 import { formatQty } from '@/lib/format/number'
 import { useCan } from '@/app/guards/useCan'
 import { ADM, HEADS, STAFF } from '@/routes/roles'
@@ -68,7 +92,7 @@ export function Component() {
     resolver: zodResolver(issueSchema),
     defaultValues: { warehouseId: '', items: [] },
   })
-  if (detail.isPending) return <p role="status">{t('loading')}</p>
+  if (detail.isPending) return <DetailSkeleton label={t('loading')} />
   if (detail.error) return <ErrorState error={detail.error} onRetry={() => void detail.refetch()} />
   const row = detail.data
   const owner = row.requesterId === userId || isAdm
@@ -222,7 +246,31 @@ export function Component() {
         })}
       </FormDialog>
       <PageHeader
+        eyebrow={t('title')}
         title={row.code}
+        meta={
+          <>
+            {row.departmentName && <PageMeta icon={<Building2 />}>{row.departmentName}</PageMeta>}
+            {(row.requesterName ?? row.requester?.fullName) && (
+              <PageMeta icon={<User />}>{row.requesterName ?? row.requester?.fullName}</PageMeta>
+            )}
+            {row.neededBy && (
+              <PageMeta icon={<CalendarClock />}>
+                {t('neededBy')}: {formatDate(row.neededBy)}
+              </PageMeta>
+            )}
+            {row.repairTicketId && (
+              <PageMeta icon={<Wrench />}>
+                <Link
+                  className="text-primary hover:underline"
+                  to={`/repairs/${row.repairTicketId}`}
+                >
+                  {row.repairTicket?.code ?? row.repairTicketId}
+                </Link>
+              </PageMeta>
+            )}
+          </>
+        }
         badge={
           <div className="flex gap-1">
             <StatusBadge value={row.status} map={requestStatusMap} />
@@ -241,168 +289,298 @@ export function Component() {
           </div>
         }
         actions={
-          <div className="flex flex-wrap gap-2">
-            {row.status === 'draft' && owner && (
-              <Button asChild>
-                <Link to={`/requests/${id}/edit`}>{t('edit')}</Link>
-              </Button>
-            )}
-            {row.status === 'draft' && (
-              <Button onClick={() => void run(t('submitConfirm'), () => api.submitRequest(id))}>
-                {t('submit')}
-              </Button>
-            )}
-            {['draft', 'submitted', 'dept_approved'].includes(row.status) &&
-              (owner || isAdm || isHead) && (
-                <Button
-                  variant="outline"
-                  onClick={() => void run(t('cancelConfirm'), () => api.cancelRequest(id))}
-                >
-                  {t('cancel')}
-                </Button>
-              )}
-            {row.status === 'submitted' && row.approvalLevels === 2 && (isHead || isAdm) && (
-              <Button onClick={() => void run(t('deptApproveConfirm'), () => api.deptApprove(id))}>
-                {t('deptApprove')}
-              </Button>
-            )}
-            {isStaff && (row.status === 'submitted' || row.status === 'dept_approved') && (
-              <Button
-                onClick={() => {
-                  approvalForm.reset({
-                    items: row.items.map((item) => ({
-                      id: item.id,
-                      qtyApproved: item.qtyRequested,
-                      approverNote: '',
-                    })),
-                  })
-                  setApprovalOpen(true)
-                }}
-              >
-                {t('approve')}
-              </Button>
-            )}
-            {isStaff && (row.status === 'submitted' || row.status === 'dept_approved') && (
-              <Button
-                variant="outline"
-                onClick={async () => {
-                  const reason = await confirm({
-                    title: t('rejectConfirm'),
-                    requireReason: true,
-                    destructive: true,
-                  })
-                  if (reason === false) return
-                  try {
-                    await api.rejectRequest(id, reason)
-                    toast.success(t('rejected'))
-                    invalidate()
-                  } catch (error) {
-                    toast.error(messageFor(error))
-                  }
-                }}
-              >
-                {t('reject')}
-              </Button>
-            )}
-            {isStaff && (row.status === 'approved' || row.status === 'partially_approved') && (
-              <Button
-                onClick={() => {
-                  issueForm.reset({
-                    warehouseId: '',
-                    items: row.items
-                      .filter((item) => new Big(item.qtyApproved ?? '0').gt(item.qtyIssued ?? '0'))
-                      .map((item) => ({
+          <ActionMenu
+            items={[
+              row.status === 'draft' && {
+                key: 'submit',
+                label: t('submit'),
+                variant: 'primary' as const,
+                onClick: () => void run(t('submitConfirm'), () => api.submitRequest(id)),
+              },
+              row.status === 'submitted' &&
+                row.approvalLevels === 2 &&
+                (isHead || isAdm) && {
+                  key: 'deptApprove',
+                  label: t('deptApprove'),
+                  variant: 'primary' as const,
+                  onClick: () => void run(t('deptApproveConfirm'), () => api.deptApprove(id)),
+                },
+              isStaff &&
+                (row.status === 'submitted' || row.status === 'dept_approved') && {
+                  key: 'approve',
+                  label: t('approve'),
+                  variant: 'primary' as const,
+                  onClick: () => {
+                    approvalForm.reset({
+                      items: row.items.map((item) => ({
                         id: item.id,
-                        quantity: new Big(item.qtyApproved ?? '0')
-                          .minus(item.qtyIssued ?? '0')
-                          .toString(),
+                        qtyApproved: item.qtyRequested,
+                        approverNote: '',
                       })),
-                  })
-                  setIssueOpen(true)
-                }}
-              >
-                {t('issue')}
-              </Button>
-            )}
-            {row.status === 'issued' && (
-              <Button onClick={() => void run(t('receiveConfirm'), () => api.receiveRequest(id))}>
-                {t('receive')}
-              </Button>
-            )}
-            {row.type === 'supply' && (
-              <Button
-                variant="outline"
-                onClick={async () => {
-                  try {
-                    const cloned = await api.cloneRequest(id)
-                    invalidate()
-                    navigate(`/requests/${cloned.id}/edit`)
-                  } catch (error) {
-                    toast.error(messageFor(error))
-                  }
-                }}
-              >
-                {t('clone')}
-              </Button>
-            )}
-          </div>
+                    })
+                    setApprovalOpen(true)
+                  },
+                },
+              isStaff &&
+                (row.status === 'approved' || row.status === 'partially_approved') && {
+                  key: 'issue',
+                  label: t('issue'),
+                  variant: 'primary' as const,
+                  onClick: () => {
+                    issueForm.reset({
+                      warehouseId: '',
+                      items: row.items
+                        .filter((item) =>
+                          new Big(item.qtyApproved ?? '0').gt(item.qtyIssued ?? '0'),
+                        )
+                        .map((item) => ({
+                          id: item.id,
+                          quantity: new Big(item.qtyApproved ?? '0')
+                            .minus(item.qtyIssued ?? '0')
+                            .toString(),
+                        })),
+                    })
+                    setIssueOpen(true)
+                  },
+                },
+              row.status === 'issued' && {
+                key: 'receive',
+                label: t('receive'),
+                variant: 'primary' as const,
+                onClick: () => void run(t('receiveConfirm'), () => api.receiveRequest(id)),
+              },
+              row.status === 'draft' &&
+                owner && {
+                  key: 'edit',
+                  label: t('edit'),
+                  icon: <Pencil />,
+                  to: `/requests/${id}/edit`,
+                },
+              isStaff &&
+                (row.status === 'submitted' || row.status === 'dept_approved') && {
+                  key: 'reject',
+                  label: t('reject'),
+                  icon: <XCircle />,
+                  onClick: () => {
+                    void (async () => {
+                      const reason = await confirm({
+                        title: t('rejectConfirm'),
+                        requireReason: true,
+                        destructive: true,
+                      })
+                      if (reason === false) return
+                      try {
+                        await api.rejectRequest(id, reason)
+                        toast.success(t('rejected'))
+                        invalidate()
+                      } catch (error) {
+                        toast.error(messageFor(error))
+                      }
+                    })()
+                  },
+                },
+              row.type === 'supply' && {
+                key: 'clone',
+                label: t('clone'),
+                icon: <Copy />,
+                onClick: () => {
+                  void (async () => {
+                    try {
+                      const cloned = await api.cloneRequest(id)
+                      invalidate()
+                      navigate(`/requests/${cloned.id}/edit`)
+                    } catch (error) {
+                      toast.error(messageFor(error))
+                    }
+                  })()
+                },
+              },
+              ['draft', 'submitted', 'dept_approved'].includes(row.status) &&
+                (owner || isAdm || isHead) && {
+                  key: 'cancel',
+                  label: t('cancel'),
+                  variant: 'destructive' as const,
+                  icon: <Ban />,
+                  separator: true,
+                  onClick: () => void run(t('cancelConfirm'), () => api.cancelRequest(id)),
+                },
+            ]}
+          />
         }
       />
-      {row.repairTicketId && (
-        <p className="mb-2 text-sm">
-          {t('repairTicket')}{' '}
-          <Link className="text-primary hover:underline" to={`/repairs/${row.repairTicketId}`}>
-            {row.repairTicket?.code ?? row.repairTicketId}
-          </Link>
-        </p>
-      )}
-      <table className="mb-4 w-full text-sm">
-        <thead>
-          <tr className="text-left">
-            <th>{t('supply')}</th>
-            <th>{t('qtyRequested')}</th>
-            <th>{t('approve')}</th>
-            <th>{t('qtyIssued')}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {row.items.map((item) => (
-            <tr key={item.id} className="border-t">
-              <td>{item.supply?.name ?? item.supplyId}</td>
-              <td>{formatQty(item.qtyRequested)}</td>
-              <td>{formatQty(item.qtyApproved)}</td>
-              <td>{formatQty(item.qtyIssued)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <h2 className="mb-2 font-medium">{t('comments')}</h2>
-      <ul className="mb-2 space-y-2 text-sm">
-        {row.comments.map((item) => (
-          <li key={item.id}>
-            <span className="text-muted-foreground">{formatDateTime(item.createdAt)}</span>{' '}
-            {item.body}
-          </li>
-        ))}
-      </ul>
-      <Textarea
-        value={comment}
-        onChange={(e) => setComment(e.target.value)}
-        maxLength={2000}
-        aria-label={t('comments')}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
-            event.preventDefault()
-            void sendComment()
-          }
-        }}
-      />
-      <Button className="mt-2" onClick={() => void sendComment()}>
-        {t('send')}
-      </Button>
-      <div className="mt-6">
-        <AuditTrail entityType="request" entityId={id} />
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="min-w-0 space-y-5">
+          <SectionCard
+            title={t('items')}
+            description={`${row.items.length} ${t('supply').toLowerCase()}`}
+            flush
+          >
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="pl-5">{t('supply')}</TableHead>
+                  <TableHead className="text-right">{t('qtyRequested')}</TableHead>
+                  <TableHead className="text-right">{t('approve')}</TableHead>
+                  <TableHead className="pr-5 text-right">{t('qtyIssued')}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {row.items.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell className="pl-5 font-medium">
+                      {item.supply?.name ?? item.supplyId}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {formatQty(item.qtyRequested)}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {item.qtyApproved == null ? (
+                        <span className="text-subtle">—</span>
+                      ) : (
+                        formatQty(item.qtyApproved)
+                      )}
+                    </TableCell>
+                    <TableCell className="pr-5 text-right tabular-nums">
+                      {item.qtyIssued == null || item.qtyIssued === '0' ? (
+                        <span className="text-subtle">—</span>
+                      ) : (
+                        formatQty(item.qtyIssued)
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </SectionCard>
+
+          <SectionCard
+            title={t('comments')}
+            description={`${row.comments.length} ${t('comments').toLowerCase()}`}
+          >
+            <ul className="mb-4 space-y-3 text-sm">
+              {row.comments.map((item) => (
+                <li key={item.id} className="flex gap-3">
+                  <div className="bg-primary-soft text-primary flex size-8 shrink-0 items-center justify-center rounded-full text-[12px] font-bold">
+                    {(item.user?.fullName ?? '?').slice(0, 1).toUpperCase()}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-[13px] font-semibold">
+                        {item.user?.fullName ?? '—'}
+                      </span>
+                      <span className="text-subtle text-[12px]">
+                        {formatDateTime(item.createdAt)}
+                      </span>
+                    </div>
+                    <p className="bg-surface-2 mt-1 rounded-lg px-3 py-2 text-[13.5px] leading-5 whitespace-pre-wrap">
+                      {item.body}
+                    </p>
+                  </div>
+                </li>
+              ))}
+              {row.comments.length === 0 && (
+                <li className="text-muted-foreground text-[13px]">
+                  {t('noComments', { defaultValue: 'Chưa có bình luận' })}
+                </li>
+              )}
+            </ul>
+            <Textarea
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              maxLength={2000}
+              rows={3}
+              placeholder={t('commentPlaceholder', {
+                defaultValue: 'Viết bình luận… (Ctrl+Enter để gửi)',
+              })}
+              aria-label={t('comments')}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+                  event.preventDefault()
+                  void sendComment()
+                }
+              }}
+            />
+            <div className="mt-3 flex justify-end">
+              <Button onClick={() => void sendComment()} disabled={!comment.trim()}>
+                {t('send')}
+              </Button>
+            </div>
+          </SectionCard>
+        </div>
+
+        <div className="space-y-5">
+          <SectionCard title={t('info', { defaultValue: 'Thông tin' })}>
+            <DataList
+              columns={1}
+              items={[
+                {
+                  label: t('type'),
+                  value:
+                    row.type === 'supply'
+                      ? t('typeSupply')
+                      : t('typeRepair', { defaultValue: 'Sửa chữa' }),
+                },
+                {
+                  label: t('priority'),
+                  value:
+                    row.priority === 'urgent'
+                      ? t('urgent')
+                      : t('normal', { defaultValue: 'Bình thường' }),
+                },
+                { label: t('department'), value: row.departmentName },
+                { label: t('requester'), value: row.requesterName ?? row.requester?.fullName },
+                { label: t('neededBy'), value: row.neededBy ? formatDate(row.neededBy) : null },
+                { label: t('createdAt'), value: formatDateTime(row.createdAt) },
+                { label: t('reason'), value: row.reason, full: true },
+                ...(row.rejectedReason
+                  ? [
+                      {
+                        label: t('rejectedReason', { defaultValue: 'Lý do từ chối' }),
+                        value: row.rejectedReason,
+                        full: true,
+                      },
+                    ]
+                  : []),
+              ]}
+            />
+          </SectionCard>
+          <SectionCard title={t('history', { defaultValue: 'Lịch sử' })}>
+            <Timeline
+              events={[
+                {
+                  at: row.createdAt,
+                  title: t('createdAt'),
+                  by: row.requesterName ?? undefined,
+                  tone: 'muted',
+                  icon: <ClipboardList />,
+                },
+                ...(row.submittedAt
+                  ? [{ at: row.submittedAt, title: t('submit'), tone: 'primary' as const }]
+                  : []),
+                ...(row.deptApprovedAt
+                  ? [{ at: row.deptApprovedAt, title: t('deptApprove'), tone: 'success' as const }]
+                  : []),
+                ...(row.approvedAt
+                  ? [{ at: row.approvedAt, title: t('approve'), tone: 'success' as const }]
+                  : []),
+                ...(row.receivedAt
+                  ? [
+                      {
+                        at: row.receivedAt,
+                        title: t('receive'),
+                        tone: 'success' as const,
+                        summary: row.receiveNote,
+                      },
+                    ]
+                  : []),
+              ]}
+            />
+          </SectionCard>
+        </div>
       </div>
+      <SectionCard title={t('audit', { defaultValue: 'Nhật ký thay đổi' })} className="mt-5">
+        <AuditTrail entityType="request" entityId={id} />
+      </SectionCard>
     </>
   )
 }

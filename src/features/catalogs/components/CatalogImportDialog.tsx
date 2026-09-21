@@ -1,3 +1,11 @@
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -73,25 +81,25 @@ export function CatalogImportDialog({
               })}
             </p>
             {result.errors.length > 0 && (
-              <div className="max-h-64 overflow-auto rounded border">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr>
-                      <th>{t('import.row')}</th>
-                      <th>{t('import.field')}</th>
-                      <th>{t('import.error')}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+              <div className="border-divider max-h-64 overflow-auto rounded-lg border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{t('import.row')}</TableHead>
+                      <TableHead>{t('import.field')}</TableHead>
+                      <TableHead>{t('import.error')}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {result.errors.map((error, index) => (
-                      <tr key={`${error.row}-${index}`}>
-                        <td>{error.row}</td>
-                        <td>{error.field ?? '—'}</td>
-                        <td>{error.message}</td>
-                      </tr>
+                      <TableRow key={`${error.row}-${index}`}>
+                        <TableCell>{error.row}</TableCell>
+                        <TableCell>{error.field ?? '—'}</TableCell>
+                        <TableCell>{error.message}</TableCell>
+                      </TableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </div>
             )}
           </div>

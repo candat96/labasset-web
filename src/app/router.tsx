@@ -33,6 +33,7 @@ const implemented: RouteObject[] = [
   },
   { index: true, lazy: () => import('@/features/dashboard/pages/DashboardPage') },
   { path: 'notifications', lazy: () => import('@/features/notifications/pages/NotificationsPage') },
+  { path: 'help', lazy: () => import('@/features/help/pages/HelpPage') },
   {
     path: 'admin/departments',
     lazy: () => import('@/features/departments/pages/DepartmentsPage'),
@@ -183,6 +184,12 @@ function guarded(route: RouteObject): RouteObject {
       const roles = item.roles ?? g.roles
       if (!roles) return route
       const Lazy = route.lazy
+      // Route tĩnh (element, ví dụ Navigate) không có lazy → bọc element trực tiếp.
+      if (typeof Lazy !== 'function') {
+        return route.element
+          ? { ...route, element: <RequireRole roles={roles}>{route.element}</RequireRole> }
+          : route
+      }
       return {
         ...route,
         lazy: async () => {

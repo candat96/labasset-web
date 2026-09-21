@@ -5,6 +5,7 @@ import {
   BarChart3,
   Bell,
   BookOpen,
+  CircleHelp,
   Bot,
   Boxes,
   Building2,
@@ -74,6 +75,7 @@ export const MENU: MenuGroup[] = [
       { path: '/', labelKey: 'menu:items.dashboard', icon: LayoutDashboard },
       { path: '/my-tasks', labelKey: 'menu:items.myTasks', icon: ListChecks },
       { path: '/notifications', labelKey: 'menu:items.notifications', icon: Bell },
+      { path: '/help', labelKey: 'menu:items.help', icon: CircleHelp },
     ],
   },
   {

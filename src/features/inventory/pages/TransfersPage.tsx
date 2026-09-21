@@ -1,3 +1,5 @@
+import { shortId, useUserLookup, useWarehouseNames } from '@/api/lookups'
+import { formatDate } from '@/lib/format/date'
 import { useCallback, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { useFieldArray, useForm } from 'react-hook-form'
@@ -79,6 +81,8 @@ export function Component() {
       void qc.invalidateQueries({ queryKey })
     }
   }, [qc])
+  const warehouseNames = useWarehouseNames()
+  const userNames = useUserLookup(isAdm)
   const columns = useMemo<ColumnDef<TransferRow>[]>(
     () => [
       {
@@ -90,8 +94,49 @@ export function Component() {
           </Link>
         ),
       },
-      { accessorKey: 'warehouseId', header: t('fromWarehouse') },
-      { accessorKey: 'toWarehouseId', header: t('toWarehouse') },
+      {
+        accessorKey: 'warehouseId',
+        header: t('fromWarehouse'),
+        cell: ({ row }) =>
+          warehouseNames.get(row.original.warehouseId) ?? shortId(row.original.warehouseId),
+      },
+      {
+        accessorKey: 'toWarehouseId',
+        header: t('toWarehouse'),
+        cell: ({ row }) => {
+          const r = row.original as TransferRow & { toDepartmentId?: string | null }
+          const id = r.toWarehouseId ?? null
+          return id ? (warehouseNames.get(id) ?? shortId(id)) : '—'
+        },
+      },
+      {
+        accessorKey: 'issuedAt',
+        header: t('date', { defaultValue: 'Ngày' }),
+        cell: ({ row }) =>
+          formatDate(row.original.issuedAt ?? row.original.postedAt ?? undefined) || '—',
+      },
+      {
+        id: 'createdBy',
+        header: t('createdBy', { defaultValue: 'Người tạo' }),
+        cell: ({ row }) => {
+          const r = row.original as TransferRow & {
+            createdBy?: string | null
+            issuedBy?: string | null
+            createdByName?: string | null
+          }
+          const uid = r.createdBy ?? r.issuedBy
+          return r.createdByName ?? (uid ? (userNames.get(uid) ?? shortId(uid)) : '—')
+        },
+      },
+      {
+        id: 'lines',
+        header: t('lineCount', { defaultValue: 'Số dòng' }),
+        cell: ({ row }) => {
+          const r = row.original as { items?: unknown[]; itemCount?: number }
+          const n = r.itemCount ?? r.items?.length
+          return n == null ? '—' : <span className="tabular-nums">{n}</span>
+        },
+      },
       {
         accessorKey: 'status',
         header: t('status'),
@@ -121,12 +166,15 @@ export function Component() {
           ) : null,
       },
     ],
-    [invalidate, isAdm, t],
+    [invalidate, isAdm, t, warehouseNames, userNames],
   )
   return (
     <>
       <PageHeader
         title={t('transferTitle')}
+        description={t('stockTransfersHint', {
+          defaultValue: 'Chuyển vật tư giữa các kho theo lô.',
+        })}
         actions={canWrite && <Button onClick={() => setOpen(true)}>{t('createTransfer')}</Button>}
       />
       <DataTable
