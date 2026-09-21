@@ -1,3 +1,4 @@
+import { ROOM_TYPES } from '@/lib/enum-labels'
 import type { CatalogConfig, CatalogSlug } from './types'
 
 /**
@@ -65,6 +66,20 @@ export const catalogConfigs: Record<CatalogSlug, CatalogConfig> = {
     fields: [
       { name: 'severity', type: 'severity' },
       { name: 'requiresCalibrationAfterFix', type: 'boolean' },
+    ],
+  },
+  rooms: {
+    filterDepartment: true,
+    fields: [
+      {
+        name: 'departmentId',
+        type: 'reference',
+        reference: 'departments',
+        nullLabelKey: 'shared',
+      },
+      { name: 'building', listGroup: 'buildingFloor' },
+      { name: 'floor', listGroup: 'buildingFloor' },
+      { name: 'roomType', type: 'enum', options: ROOM_TYPES, enumKind: 'roomType' },
     ],
   },
 }

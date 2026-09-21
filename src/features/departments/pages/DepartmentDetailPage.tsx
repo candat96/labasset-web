@@ -58,7 +58,7 @@ export function Component() {
   return (
     <DetailLayout
       code={row.code}
-      eyebrow={t('title', { defaultValue: 'Khoa/phòng' })}
+      eyebrow={t('title', { defaultValue: 'Khoa/Phòng ban' })}
       name={row.name}
       badge={<StatusBadge value={row.isActive ? 'active' : 'inactive'} map={commonStatusMap} />}
       meta={

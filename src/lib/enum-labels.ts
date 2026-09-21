@@ -99,6 +99,25 @@ export const counterSourceLabels: EnumLabels = {
   device: 'Từ máy',
 }
 
+export const roomTypeLabels: EnumLabels = {
+  lab: 'Phòng xét nghiệm',
+  ward: 'Buồng bệnh',
+  surgery: 'Phòng mổ',
+  imaging: 'Chẩn đoán hình ảnh',
+  office: 'Văn phòng',
+  storage: 'Kho',
+  other: 'Khác',
+}
+export const ROOM_TYPES = [
+  'lab',
+  'ward',
+  'surgery',
+  'imaging',
+  'office',
+  'storage',
+  'other',
+] as const
+
 export const deptTypeLabels: EnumLabels = {
   clinical: 'Lâm sàng',
   lab: 'Xét nghiệm',
@@ -119,8 +138,8 @@ export const roleLabels: EnumLabels = {
 export const auditEntityTypeLabels: EnumLabels = {
   users: 'Người dùng',
   user: 'Người dùng',
-  departments: 'Khoa/phòng',
-  department: 'Khoa/phòng',
+  departments: 'Khoa/Phòng ban',
+  department: 'Khoa/Phòng ban',
   department_quota: 'Định mức khoa',
   equipment: 'Thiết bị',
   equipment_transfer: 'Điều chuyển máy',
@@ -258,6 +277,7 @@ const KINDS = {
   partSource: partSourceLabels,
   counterSource: counterSourceLabels,
   deptType: deptTypeLabels,
+  roomType: roomTypeLabels,
   role: roleLabels,
   auditEntityType: auditEntityTypeLabels,
   auditAction: auditActionLabels,

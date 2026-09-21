@@ -252,7 +252,7 @@ export function Component() {
           options={[
             { value: 'all', label: t('scopeAll') },
             ...(type === 'equipment'
-              ? [{ value: 'department', label: 'Khoa' }]
+              ? [{ value: 'department', label: 'Khoa/Phòng ban' }]
               : [{ value: 'warehouse', label: 'Kho' }]),
           ]}
         />
@@ -263,7 +263,7 @@ export function Component() {
             render={({ field }) => (
               <FormItem>
                 <AsyncSelect
-                  label={scopeType === 'department' ? 'Khoa' : 'Kho'}
+                  label={scopeType === 'department' ? 'Khoa/Phòng ban' : 'Kho'}
                   queryKey={`stocktake-scope-${scopeType}`}
                   loadOptions={
                     scopeType === 'department'

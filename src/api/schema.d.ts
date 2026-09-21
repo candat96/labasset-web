@@ -1332,6 +1332,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/catalogs/rooms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["RoomsController_list"];
+        put?: never;
+        post: operations["RoomsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/catalogs/rooms/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["RoomsController_get"];
+        put?: never;
+        post?: never;
+        delete: operations["RoomsController_remove"];
+        options?: never;
+        head?: never;
+        patch: operations["RoomsController_update"];
+        trace?: never;
+    };
+    "/v1/catalogs/rooms/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["RoomsController_exportFile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/catalogs/rooms/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RoomsController_importFile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/catalogs/rooms/template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["RoomsController_templateFile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/catalogs/suppliers": {
         parameters: {
             query?: never;
@@ -1698,6 +1778,22 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["DepartmentsController_update"];
+        trace?: never;
+    };
+    "/v1/departments/{id}/rooms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DepartmentsController_listRooms"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/v1/departments/{id}/users": {
@@ -4998,6 +5094,7 @@ export interface components {
             repairTicketId: string | null;
             /** @enum {string|null} */
             result: "pass" | "fail" | "conditional" | null;
+            room: components["schemas"]["RoomCodeNameDto"] | null;
             /** Format: date-time */
             scheduledAt: string | null;
             /** @enum {string} */
@@ -5036,6 +5133,7 @@ export interface components {
             repairTicketId: string | null;
             /** @enum {string|null} */
             result: "pass" | "fail" | "conditional" | null;
+            room: components["schemas"]["RoomCodeNameDto"] | null;
             /** Format: date-time */
             scheduledAt: string | null;
             /** @enum {string} */
@@ -5347,6 +5445,8 @@ export interface components {
             purchaseContractNo?: string | null;
             /** Format: date */
             receivedAt?: string | null;
+            /** Format: uuid */
+            roomId?: string | null;
             serial?: string | null;
             specs?: components["schemas"]["SpecsDto"];
             /** Format: uuid */
@@ -5503,6 +5603,27 @@ export interface components {
             reason?: Record<string, never>;
             /** @enum {string} */
             type: "supply" | "repair";
+        };
+        CreateRoomDto: {
+            building?: string | null;
+            code: string;
+            /** @description Mã đơn vị — Excel để trống = phòng dùng chung */
+            departmentCode?: Record<string, never>;
+            /**
+             * Format: uuid
+             * @description null / bỏ trống = phòng dùng chung
+             */
+            departmentId?: Record<string, never> | null;
+            description?: string;
+            floor?: string | null;
+            isActive?: boolean;
+            name: string;
+            /**
+             * @default other
+             * @enum {string}
+             */
+            roomType: "lab" | "ward" | "surgery" | "imaging" | "office" | "storage" | "other";
+            sortOrder?: number;
         };
         CreateStocktakeDto: {
             name: string;
@@ -5778,6 +5899,8 @@ export interface components {
             purchaseContractNo: string | null;
             qrToken: string;
             receivedAt: string | null;
+            room: components["schemas"]["RoomBriefDto"] | null;
+            roomId: string | null;
             serial: string | null;
             specs: components["schemas"]["SpecsDto"];
             staffInCharge: components["schemas"]["EquipmentUserDto"] | null;
@@ -5815,6 +5938,8 @@ export interface components {
             nextCalibrationAt: string | null;
             /** Format: date-time */
             nextMaintenanceAt: string | null;
+            room: components["schemas"]["RoomBriefDto"] | null;
+            roomId: string | null;
             serial: string | null;
             staffInChargeUserId: string | null;
             status: string;
@@ -6393,6 +6518,10 @@ export interface components {
             manufacturerCode: string | null;
             name: string;
             qrToken: string | null;
+            room: {
+                code?: string;
+                name?: string;
+            } | null;
             supplyCode: string | null;
         };
         PatchItemDto: {
@@ -6520,6 +6649,7 @@ export interface components {
             departmentId: string | null;
             id: string;
             name: string;
+            room: components["schemas"]["RoomCodeNameDto"] | null;
             status: string;
         };
         QuotaPageDto: {
@@ -6710,6 +6840,7 @@ export interface components {
             reportedDepartmentId: string | null;
             resolutionSummary: string | null;
             resolutionType: string | null;
+            room: components["schemas"]["RoomCodeNameDto"] | null;
             severity: string;
             /** Format: date-time */
             slaLastRemindedAt: string | null;
@@ -6865,6 +6996,7 @@ export interface components {
             reportedDepartmentId: string | null;
             resolutionSummary: string | null;
             resolutionType: string | null;
+            room: components["schemas"]["RoomCodeNameDto"] | null;
             severity: string;
             /** Format: date-time */
             slaLastRemindedAt: string | null;
@@ -7185,6 +7317,35 @@ export interface components {
             photoFileId?: string;
             value?: (boolean | number | string) | null;
         };
+        RoomBriefDto: {
+            building: string | null;
+            code: string;
+            floor: string | null;
+            id: string;
+            name: string;
+        };
+        RoomCodeNameDto: {
+            code: string;
+            name: string;
+        };
+        RoomResponseDto: {
+            building: string | null;
+            code: string;
+            /** Format: date-time */
+            createdAt: string;
+            departmentCode?: string;
+            departmentId: string | null;
+            description: string | null;
+            floor: string | null;
+            id: string;
+            isActive: boolean;
+            name: string;
+            /** @enum {string} */
+            roomType: "lab" | "ward" | "surgery" | "imaging" | "office" | "storage" | "other";
+            sortOrder: number;
+            /** Format: date-time */
+            updatedAt: string;
+        };
         RotatedQrDto: {
             /** Format: uuid */
             id: string;
@@ -7226,6 +7387,10 @@ export interface components {
             code: string;
             id: string;
             link: string;
+            room?: {
+                code?: string;
+                name?: string;
+            } | null;
             subtitle: string;
             title: string;
         };
@@ -7612,6 +7777,7 @@ export interface components {
             overallPass: boolean | null;
             planId: string | null;
             results: components["schemas"]["ResultDto"][];
+            room: components["schemas"]["RoomCodeNameDto"] | null;
             /** Format: date-time */
             scheduledAt: string;
             /** Format: date-time */
@@ -7655,6 +7821,7 @@ export interface components {
             overallPass: boolean | null;
             planId: string | null;
             results: components["schemas"]["ResultDto"][];
+            room: components["schemas"]["RoomCodeNameDto"] | null;
             /** Format: date-time */
             scheduledAt: string;
             /** Format: date-time */
@@ -7731,6 +7898,7 @@ export interface components {
             status: string;
             toDepartmentId: string | null;
             toLocation: string | null;
+            toRoomId: string | null;
             /** Format: date-time */
             transferredAt: string | null;
         };
@@ -7840,6 +8008,8 @@ export interface components {
             purchaseContractNo?: string | null;
             /** Format: date */
             receivedAt?: string | null;
+            /** Format: uuid */
+            roomId?: string | null;
             serial?: string | null;
             specs?: components["schemas"]["SpecsDto"];
             /** Format: uuid */
@@ -8031,6 +8201,26 @@ export interface components {
             priority: "normal" | "urgent";
             /** @description Required for type=repair */
             reason?: Record<string, never>;
+        };
+        UpdateRoomDto: {
+            building?: string | null;
+            /** @description Mã đơn vị — Excel để trống = phòng dùng chung */
+            departmentCode?: Record<string, never>;
+            /**
+             * Format: uuid
+             * @description null / bỏ trống = phòng dùng chung
+             */
+            departmentId?: Record<string, never> | null;
+            description?: string;
+            floor?: string | null;
+            isActive?: boolean;
+            name?: string;
+            /**
+             * @default other
+             * @enum {string}
+             */
+            roomType: "lab" | "ward" | "surgery" | "imaging" | "office" | "storage" | "other";
+            sortOrder?: number;
         };
         UpdateSoftwareDto: {
             /** Format: date-time */
@@ -9644,6 +9834,10 @@ export interface operations {
             query?: {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
+                /** @description Lọc theo khoa/đơn vị (danh mục phòng) */
+                departmentId?: string;
+                /** @description Khi lọc theo departmentId, kèm phòng dùng chung (mặc định true) */
+                includeShared?: boolean;
                 isActive?: boolean;
                 limit?: number;
                 page?: number;
@@ -9784,6 +9978,10 @@ export interface operations {
             query?: {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
+                /** @description Lọc theo khoa/đơn vị (danh mục phòng) */
+                departmentId?: string;
+                /** @description Khi lọc theo departmentId, kèm phòng dùng chung (mặc định true) */
+                includeShared?: boolean;
                 isActive?: boolean;
                 limit?: number;
                 page?: number;
@@ -9865,6 +10063,10 @@ export interface operations {
             query?: {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
+                /** @description Lọc theo khoa/đơn vị (danh mục phòng) */
+                departmentId?: string;
+                /** @description Khi lọc theo departmentId, kèm phòng dùng chung (mặc định true) */
+                includeShared?: boolean;
                 isActive?: boolean;
                 limit?: number;
                 page?: number;
@@ -10005,6 +10207,10 @@ export interface operations {
             query?: {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
+                /** @description Lọc theo khoa/đơn vị (danh mục phòng) */
+                departmentId?: string;
+                /** @description Khi lọc theo departmentId, kèm phòng dùng chung (mặc định true) */
+                includeShared?: boolean;
                 isActive?: boolean;
                 limit?: number;
                 page?: number;
@@ -10086,6 +10292,10 @@ export interface operations {
             query?: {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
+                /** @description Lọc theo khoa/đơn vị (danh mục phòng) */
+                departmentId?: string;
+                /** @description Khi lọc theo departmentId, kèm phòng dùng chung (mặc định true) */
+                includeShared?: boolean;
                 isActive?: boolean;
                 limit?: number;
                 page?: number;
@@ -10226,6 +10436,10 @@ export interface operations {
             query?: {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
+                /** @description Lọc theo khoa/đơn vị (danh mục phòng) */
+                departmentId?: string;
+                /** @description Khi lọc theo departmentId, kèm phòng dùng chung (mặc định true) */
+                includeShared?: boolean;
                 isActive?: boolean;
                 limit?: number;
                 page?: number;
@@ -10307,6 +10521,10 @@ export interface operations {
             query?: {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
+                /** @description Lọc theo khoa/đơn vị (danh mục phòng) */
+                departmentId?: string;
+                /** @description Khi lọc theo departmentId, kèm phòng dùng chung (mặc định true) */
+                includeShared?: boolean;
                 isActive?: boolean;
                 limit?: number;
                 page?: number;
@@ -10447,6 +10665,10 @@ export interface operations {
             query?: {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
+                /** @description Lọc theo khoa/đơn vị (danh mục phòng) */
+                departmentId?: string;
+                /** @description Khi lọc theo departmentId, kèm phòng dùng chung (mặc định true) */
+                includeShared?: boolean;
                 isActive?: boolean;
                 limit?: number;
                 page?: number;
@@ -10528,6 +10750,10 @@ export interface operations {
             query?: {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
+                /** @description Lọc theo khoa/đơn vị (danh mục phòng) */
+                departmentId?: string;
+                /** @description Khi lọc theo departmentId, kèm phòng dùng chung (mặc định true) */
+                includeShared?: boolean;
                 isActive?: boolean;
                 limit?: number;
                 page?: number;
@@ -10668,6 +10894,10 @@ export interface operations {
             query?: {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
+                /** @description Lọc theo khoa/đơn vị (danh mục phòng) */
+                departmentId?: string;
+                /** @description Khi lọc theo departmentId, kèm phòng dùng chung (mặc định true) */
+                includeShared?: boolean;
                 isActive?: boolean;
                 limit?: number;
                 page?: number;
@@ -10749,6 +10979,10 @@ export interface operations {
             query?: {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
+                /** @description Lọc theo khoa/đơn vị (danh mục phòng) */
+                departmentId?: string;
+                /** @description Khi lọc theo departmentId, kèm phòng dùng chung (mặc định true) */
+                includeShared?: boolean;
                 isActive?: boolean;
                 limit?: number;
                 page?: number;
@@ -10889,6 +11123,10 @@ export interface operations {
             query?: {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
+                /** @description Lọc theo khoa/đơn vị (danh mục phòng) */
+                departmentId?: string;
+                /** @description Khi lọc theo departmentId, kèm phòng dùng chung (mặc định true) */
+                includeShared?: boolean;
                 isActive?: boolean;
                 limit?: number;
                 page?: number;
@@ -10970,6 +11208,10 @@ export interface operations {
             query?: {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
+                /** @description Lọc theo khoa/đơn vị (danh mục phòng) */
+                departmentId?: string;
+                /** @description Khi lọc theo departmentId, kèm phòng dùng chung (mặc định true) */
+                includeShared?: boolean;
                 isActive?: boolean;
                 limit?: number;
                 page?: number;
@@ -11110,6 +11352,10 @@ export interface operations {
             query?: {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
+                /** @description Lọc theo khoa/đơn vị (danh mục phòng) */
+                departmentId?: string;
+                /** @description Khi lọc theo departmentId, kèm phòng dùng chung (mặc định true) */
+                includeShared?: boolean;
                 isActive?: boolean;
                 limit?: number;
                 page?: number;
@@ -11186,11 +11432,244 @@ export interface operations {
             };
         };
     };
+    RoomsController_list: {
+        parameters: {
+            query?: {
+                /** @description Return all rows (no pagination) */
+                all?: boolean;
+                /** @description Lọc theo khoa/đơn vị (danh mục phòng) */
+                departmentId?: string;
+                /** @description Khi lọc theo departmentId, kèm phòng dùng chung (mặc định true) */
+                includeShared?: boolean;
+                isActive?: boolean;
+                limit?: number;
+                page?: number;
+                /** @description Search on code, name */
+                q?: string;
+            };
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogPageDto"];
+                };
+            };
+        };
+    };
+    RoomsController_create: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateRoomDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogResponseDto"];
+                };
+            };
+        };
+    };
+    RoomsController_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogResponseDto"];
+                };
+            };
+        };
+    };
+    RoomsController_remove: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Referenced elsewhere: deactivated instead */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogDeactivatedDto"];
+                };
+            };
+            /** @description Hard-deleted (not referenced) */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RoomsController_update: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateRoomDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogResponseDto"];
+                };
+            };
+        };
+    };
+    RoomsController_exportFile: {
+        parameters: {
+            query?: {
+                /** @description Return all rows (no pagination) */
+                all?: boolean;
+                /** @description Lọc theo khoa/đơn vị (danh mục phòng) */
+                departmentId?: string;
+                /** @description Khi lọc theo departmentId, kèm phòng dùng chung (mặc định true) */
+                includeShared?: boolean;
+                isActive?: boolean;
+                limit?: number;
+                page?: number;
+                /** @description Search on code, name */
+                q?: string;
+            };
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
+            };
+        };
+    };
+    RoomsController_importFile: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogImportResultDto"];
+                };
+            };
+        };
+    };
+    RoomsController_templateFile: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
+            };
+        };
+    };
     SuppliersController_list: {
         parameters: {
             query?: {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
+                /** @description Lọc theo khoa/đơn vị (danh mục phòng) */
+                departmentId?: string;
+                /** @description Khi lọc theo departmentId, kèm phòng dùng chung (mặc định true) */
+                includeShared?: boolean;
                 isActive?: boolean;
                 limit?: number;
                 page?: number;
@@ -11331,6 +11810,10 @@ export interface operations {
             query?: {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
+                /** @description Lọc theo khoa/đơn vị (danh mục phòng) */
+                departmentId?: string;
+                /** @description Khi lọc theo departmentId, kèm phòng dùng chung (mặc định true) */
+                includeShared?: boolean;
                 isActive?: boolean;
                 limit?: number;
                 page?: number;
@@ -11412,6 +11895,10 @@ export interface operations {
             query?: {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
+                /** @description Lọc theo khoa/đơn vị (danh mục phòng) */
+                departmentId?: string;
+                /** @description Khi lọc theo departmentId, kèm phòng dùng chung (mặc định true) */
+                includeShared?: boolean;
                 isActive?: boolean;
                 limit?: number;
                 page?: number;
@@ -11552,6 +12039,10 @@ export interface operations {
             query?: {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
+                /** @description Lọc theo khoa/đơn vị (danh mục phòng) */
+                departmentId?: string;
+                /** @description Khi lọc theo departmentId, kèm phòng dùng chung (mặc định true) */
+                includeShared?: boolean;
                 isActive?: boolean;
                 limit?: number;
                 page?: number;
@@ -11633,6 +12124,10 @@ export interface operations {
             query?: {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
+                /** @description Lọc theo khoa/đơn vị (danh mục phòng) */
+                departmentId?: string;
+                /** @description Khi lọc theo departmentId, kèm phòng dùng chung (mặc định true) */
+                includeShared?: boolean;
                 isActive?: boolean;
                 limit?: number;
                 page?: number;
@@ -11773,6 +12268,10 @@ export interface operations {
             query?: {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
+                /** @description Lọc theo khoa/đơn vị (danh mục phòng) */
+                departmentId?: string;
+                /** @description Khi lọc theo departmentId, kèm phòng dùng chung (mặc định true) */
+                includeShared?: boolean;
                 isActive?: boolean;
                 limit?: number;
                 page?: number;
@@ -11854,6 +12353,10 @@ export interface operations {
             query?: {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
+                /** @description Lọc theo khoa/đơn vị (danh mục phòng) */
+                departmentId?: string;
+                /** @description Khi lọc theo departmentId, kèm phòng dùng chung (mặc định true) */
+                includeShared?: boolean;
                 isActive?: boolean;
                 limit?: number;
                 page?: number;
@@ -11994,6 +12497,10 @@ export interface operations {
             query?: {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
+                /** @description Lọc theo khoa/đơn vị (danh mục phòng) */
+                departmentId?: string;
+                /** @description Khi lọc theo departmentId, kèm phòng dùng chung (mặc định true) */
+                includeShared?: boolean;
                 isActive?: boolean;
                 limit?: number;
                 page?: number;
@@ -12097,6 +12604,10 @@ export interface operations {
             query?: {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
+                /** @description Lọc theo khoa/đơn vị (danh mục phòng) */
+                departmentId?: string;
+                /** @description Khi lọc theo departmentId, kèm phòng dùng chung (mặc định true) */
+                includeShared?: boolean;
                 isActive?: boolean;
                 limit?: number;
                 page?: number;
@@ -12233,6 +12744,30 @@ export interface operations {
             };
         };
     };
+    DepartmentsController_listRooms: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoomResponseDto"][];
+                };
+            };
+        };
+    };
     DepartmentsController_listUsers: {
         parameters: {
             query?: {
@@ -12265,6 +12800,10 @@ export interface operations {
             query?: {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
+                /** @description Lọc theo khoa/đơn vị (danh mục phòng) */
+                departmentId?: string;
+                /** @description Khi lọc theo departmentId, kèm phòng dùng chung (mặc định true) */
+                includeShared?: boolean;
                 isActive?: boolean;
                 limit?: number;
                 page?: number;
@@ -12401,7 +12940,8 @@ export interface operations {
                 order?: "asc" | "desc";
                 page?: number;
                 q?: string;
-                sort?: "code" | "name" | "status" | "departmentId" | "commissionedAt" | "updatedAt";
+                roomId?: string;
+                sort?: "code" | "name" | "status" | "departmentId" | "room" | "commissionedAt" | "updatedAt";
                 staffId?: string;
                 status?: ("active" | "broken" | "awaiting_parts" | "suspended" | "retired" | "disposed")[];
             };
@@ -18184,6 +18724,10 @@ export interface operations {
             query?: {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
+                /** @description Lọc theo khoa/đơn vị (danh mục phòng) */
+                departmentId?: string;
+                /** @description Khi lọc theo departmentId, kèm phòng dùng chung (mặc định true) */
+                includeShared?: boolean;
                 isActive?: boolean;
                 limit?: number;
                 page?: number;
@@ -18422,6 +18966,10 @@ export interface operations {
             query?: {
                 /** @description Return all rows (no pagination) */
                 all?: boolean;
+                /** @description Lọc theo khoa/đơn vị (danh mục phòng) */
+                departmentId?: string;
+                /** @description Khi lọc theo departmentId, kèm phòng dùng chung (mặc định true) */
+                includeShared?: boolean;
                 isActive?: boolean;
                 limit?: number;
                 page?: number;

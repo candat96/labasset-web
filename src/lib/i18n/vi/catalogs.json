@@ -1,6 +1,6 @@
 {
   "index": "Danh mục",
-  "indexDesc": "Mười một danh mục dùng chung trong viện.",
+  "indexDesc": "Mười hai danh mục dùng chung trong viện.",
   "add": "Thêm mới",
   "count": "{{total}} bản ghi",
   "saved": "Đã lưu danh mục",
@@ -21,7 +21,8 @@
     "status": "Lọc trạng thái",
     "allStatuses": "Mọi trạng thái",
     "active": "Hoạt động",
-    "inactive": "Ngưng hoạt động"
+    "inactive": "Ngưng hoạt động",
+    "department": "Lọc Khoa/Phòng ban"
   },
   "fields": {
     "code": "Mã",
@@ -67,7 +68,8 @@
     "connection-types": "Loại kết nối",
     "component-types": "Loại linh kiện",
     "calibration-agencies": "Đơn vị kiểm định",
-    "fault-groups": "Nhóm lỗi"
+    "fault-groups": "Nhóm lỗi",
+    "rooms": "Phòng"
   },
   "catalogFields": {
     "suppliers": {
@@ -100,7 +102,7 @@
       "symbol": "Ký hiệu"
     },
     "warehouses": {
-      "departmentId": "Khoa/phòng (trống = kho trung tâm)",
+      "departmentId": "Khoa/Phòng ban (trống = kho trung tâm)",
       "address": "Địa chỉ/vị trí",
       "keeperUserId": "Người phụ trách"
     },
@@ -120,7 +122,16 @@
     "fault-groups": {
       "severity": "Mức độ mặc định",
       "requiresCalibrationAfterFix": "Yêu cầu kiểm định sau sửa"
+    },
+    "rooms": {
+      "departmentId": "Khoa/Phòng ban",
+      "shared": "Dùng chung",
+      "building": "Toà nhà",
+      "floor": "Tầng",
+      "buildingFloor": "Toà/Tầng",
+      "roomType": "Loại phòng"
     }
   },
-  "listHint": "Danh mục dùng chung; thêm, sửa, ngừng hoạt động các mục."
+  "listHint": "Danh mục dùng chung; thêm, sửa, ngừng hoạt động các mục.",
+  "roomInUse": "Phòng đang có máy nên không xoá được — hãy Sửa và tắt \"Đang hoạt động\"."
 }

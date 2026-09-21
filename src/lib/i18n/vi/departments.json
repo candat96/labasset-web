@@ -1,5 +1,5 @@
 {
-  "title": "Khoa/phòng",
+  "title": "Khoa/Phòng ban",
   "description": "Danh sách khoa, phòng trong bệnh viện; dùng để gán người dùng, thiết bị và phiếu yêu cầu.",
   "fields": {
     "code": "Mã",

@@ -34,6 +34,8 @@ export function catalogSchema(config: CatalogConfig) {
       shape[field.name] = z.union([z.literal(''), z.url(i18n.t('catalogs:errors.url'))]).optional()
     else if (field.type === 'severity')
       shape[field.name] = z.enum(['low', 'medium', 'high', 'critical']).optional()
+    else if (field.type === 'enum')
+      shape[field.name] = z.enum([...(field.options ?? [])] as [string, ...string[]]).optional()
     else shape[field.name] = z.string().optional()
   }
   return z.object(shape)

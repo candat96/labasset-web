@@ -10,13 +10,14 @@ import { AsyncSelect } from '@/components/form/async-select'
 import { FormField, FormItem, FormMessage } from '@/components/ui/form'
 import { applyServerErrors, messageFor } from '@/api/errors'
 import { departmentOptions, resolveDepartment, resolveUser, userOptions } from '@/api/references'
+import { enumLabel } from '@/lib/enum-labels'
 import { createCatalog, getCatalog, listCatalog, updateCatalog } from '../api'
 import { catalogSchema } from '../schema'
 import type { CatalogConfig, CatalogRow, CatalogSlug, CatalogValue } from '../types'
 
 type Values = Record<string, CatalogValue | undefined>
 
-function initial(config: CatalogConfig, row?: CatalogRow): Values {
+function initial(config: CatalogConfig, row?: CatalogRow, defaults?: Values): Values {
   const values: Values = {
     code: row?.code ?? '',
     name: row?.name ?? '',
@@ -25,7 +26,10 @@ function initial(config: CatalogConfig, row?: CatalogRow): Values {
     sortOrder: row?.sortOrder ?? 0,
   }
   for (const field of config.fields)
-    values[field.name] = row?.[field.name] ?? (field.type === 'boolean' ? false : '')
+    values[field.name] =
+      row?.[field.name] ??
+      defaults?.[field.name] ??
+      (field.type === 'boolean' ? false : field.type === 'enum' ? (field.options?.[0] ?? '') : '')
   return values
 }
 
@@ -41,23 +45,33 @@ export function CatalogFormDialog({
   row,
   open,
   onOpenChange,
+  defaults,
+  lockedFields = [],
+  onSaved,
+  width = 'lg',
 }: {
   slug: CatalogSlug
   config: CatalogConfig
   row?: CatalogRow
   open: boolean
   onOpenChange: (open: boolean) => void
+  /** Giá trị khởi tạo khi thêm mới (vd `departmentId` đã biết) — caller giữ tham chiếu ổn định (useMemo). */
+  defaults?: Values
+  /** Trường ẩn khỏi form (đã cố định qua `defaults`). */
+  lockedFields?: string[]
+  onSaved?: (row: CatalogRow) => void
+  width?: 'md' | 'lg'
 }) {
   const { t } = useTranslation('catalogs')
   const form = useForm<Values>({
     resolver: zodResolver(catalogSchema(config)) as Resolver<Values>,
-    defaultValues: initial(config, row),
+    defaultValues: initial(config, row, defaults),
     mode: 'onBlur',
   })
   const queryClient = useQueryClient()
   useEffect(() => {
-    if (open) form.reset(initial(config, row))
-  }, [open, row, config, form])
+    if (open) form.reset(initial(config, row, defaults))
+  }, [open, row, config, form, defaults])
   const save = useMutation({
     mutationFn: async (values: Values) => {
       const after = clean(values)
@@ -70,9 +84,11 @@ export function CatalogFormDialog({
       )
       return Object.keys(diff).length ? updateCatalog(slug, row.id, diff) : row
     },
-    onSuccess: () => {
+    onSuccess: (saved) => {
       void queryClient.invalidateQueries({ queryKey: ['catalogs', slug] })
+      void queryClient.invalidateQueries({ queryKey: ['reference', slug] })
       toast.success(t('saved'))
+      onSaved?.(saved)
       onOpenChange(false)
     },
     onError: (error) => {
@@ -95,7 +111,7 @@ export function CatalogFormDialog({
       form={form}
       onSubmit={(values) => save.mutate(values)}
       submitting={save.isPending}
-      width="lg"
+      width={width}
     >
       <div className="grid gap-4 sm:grid-cols-2">
         <TextField
@@ -109,6 +125,7 @@ export function CatalogFormDialog({
       </div>
       <TextField control={form.control} name="description" label={t('fields.description')} />
       {config.fields.map((field) => {
+        if (lockedFields.includes(field.name)) return null
         const label = t(`catalogFields.${slug}.${field.name}`)
         return field.type === 'boolean' ? (
           <SwitchField key={field.name} control={form.control} name={field.name} label={label} />
@@ -129,6 +146,17 @@ export function CatalogFormDialog({
             options={(['low', 'medium', 'high', 'critical'] as const).map((value) => ({
               value,
               label: t(`severity.${value}`),
+            }))}
+          />
+        ) : field.type === 'enum' ? (
+          <SelectField
+            key={field.name}
+            control={form.control}
+            name={field.name}
+            label={label}
+            options={(field.options ?? []).map((value) => ({
+              value,
+              label: field.enumKind ? enumLabel(field.enumKind, value) : value,
             }))}
           />
         ) : field.type === 'user' ? (
@@ -173,6 +201,11 @@ export function CatalogFormDialog({
                   value={typeof input.value === 'string' ? input.value : null}
                   onChange={input.onChange}
                   clearable
+                  placeholder={
+                    field.nullLabelKey
+                      ? t(`catalogFields.${slug}.${field.nullLabelKey}`)
+                      : undefined
+                  }
                 />
                 <FormMessage />
               </FormItem>

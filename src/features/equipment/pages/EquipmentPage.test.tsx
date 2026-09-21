@@ -47,7 +47,7 @@ it('chỉ sort các cột API cho phép và cột khoa gửi departmentId', asyn
   const { router } = renderWithProviders(<Component />)
   await screen.findByRole('link', { name: 'TB-2026-00001' })
   expect(screen.queryByRole('button', { name: 'Sắp xếp: Model' })).not.toBeInTheDocument()
-  await userEvent.click(screen.getByRole('button', { name: 'Sắp xếp: Khoa' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Sắp xếp: Khoa/Phòng ban' }))
   await waitFor(() => expect(urls.at(-1)).toContain('sort=departmentId'))
   expect(router.state.location.search).toContain('sort=departmentId')
 

@@ -58,7 +58,7 @@ export function Component() {
   })
   const columns = useMemo<ColumnDef<Row>[]>(
     () => [
-      { accessorKey: 'departmentId', header: 'Khoa' },
+      { accessorKey: 'departmentId', header: 'Khoa/Phòng ban' },
       { accessorKey: 'supplyId', header: t('supply') },
       { accessorKey: 'monthlyQty', header: t('monthlyQty') },
       {

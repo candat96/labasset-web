@@ -17,9 +17,13 @@ import { DataTable, useServerTable } from '@/components/data-table'
 import { FilterBar, FilterField } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page/PageHeader'
 import { StatusBadge } from '@/components/status-badge'
+import { AsyncSelect } from '@/components/form/async-select'
 import { commonStatusMap } from '@/lib/status-maps'
 import { useConfirm } from '@/components/confirm-dialog'
-import { messageFor } from '@/api/errors'
+import { isApiError, messageFor } from '@/api/errors'
+import { departmentOptions, resolveDepartment } from '@/api/references'
+import { useDepartmentLookup } from '@/api/lookups'
+import { enumLabel } from '@/lib/enum-labels'
 import { catalogConfigs } from '../config'
 import { deleteCatalog, exportCatalog, listCatalog } from '../api'
 import { catalogSlugs, type CatalogRow, type CatalogSlug } from '../types'
@@ -36,14 +40,19 @@ export function CatalogPage({ slug }: { slug: CatalogSlug }) {
   const { t } = useTranslation('catalogs')
   const { t: tc } = useTranslation()
   const config = catalogConfigs[slug]
-  const table = useServerTable({ filterKeys: ['isActive'] })
+  const table = useServerTable({ filterKeys: ['isActive', 'departmentId'] })
   const active = table.params.filters.isActive
+  const departmentId = config.filterDepartment ? table.params.filters.departmentId : undefined
   const params = {
     page: table.params.page,
     limit: table.params.limit,
     q: table.params.q || undefined,
     isActive: active === undefined ? undefined : active === 'true',
+    departmentId,
   }
+  const departmentNames = useDepartmentLookup(
+    config.fields.some((field) => field.reference === 'departments'),
+  )
   const list = useQuery({
     queryKey: ['catalogs', slug, params],
     queryFn: async () => {
@@ -66,7 +75,15 @@ export function CatalogPage({ slug }: { slug: CatalogSlug }) {
       void queryClient.invalidateQueries({ queryKey: ['catalogs', slug] })
       toast.success(result.deactivated ? t('deactivated') : t('deleted'))
     },
-    onError: (error) => toast.error(messageFor(error)),
+    onError: (error) =>
+      toast.error(
+        isApiError(error) && error.code === 'ROOM_IN_USE'
+          ? t('roomInUse', {
+              defaultValue:
+                'Phòng đang có máy nên không xoá được — hãy Sửa và tắt "Đang hoạt động".',
+            })
+          : messageFor(error),
+      ),
   })
   const columns = useMemo<ColumnDef<CatalogRow>[]>(
     () => [
@@ -80,16 +97,40 @@ export function CatalogPage({ slug }: { slug: CatalogSlug }) {
         header: t('fields.name'),
         cell: ({ getValue }) => <span className="font-medium">{getValue<string>()}</span>,
       },
-      ...config.fields.map((field) => ({
-        accessorKey: field.name,
-        header: t(`catalogFields.${slug}.${field.name}`),
-        cell: ({ row }: { row: { original: CatalogRow } }) =>
-          field.type === 'boolean'
-            ? row.original[field.name]
-              ? t('boolean.yes')
-              : t('boolean.no')
-            : String(row.original[field.name] ?? '—'),
-      })),
+      ...config.fields
+        .filter(
+          (field, index, all) =>
+            !field.listGroup || all.findIndex((f) => f.listGroup === field.listGroup) === index,
+        )
+        .map((field) => ({
+          accessorKey: field.listGroup ?? field.name,
+          header: t(`catalogFields.${slug}.${field.listGroup ?? field.name}`),
+          cell: ({ row }: { row: { original: CatalogRow } }) => {
+            const value = row.original[field.name]
+            if (field.listGroup) {
+              const parts = config.fields
+                .filter((f) => f.listGroup === field.listGroup)
+                .map((f) => row.original[f.name])
+                .filter((v) => v !== null && v !== undefined && v !== '')
+              return parts.length ? parts.join(' / ') : '—'
+            }
+            if (field.type === 'boolean') return value ? t('boolean.yes') : t('boolean.no')
+            if (field.type === 'enum' && field.enumKind)
+              return enumLabel(field.enumKind, typeof value === 'string' ? value : null)
+            if (field.reference === 'departments') {
+              if (!value)
+                return field.nullLabelKey ? (
+                  <span className="text-muted-foreground">
+                    {t(`catalogFields.${slug}.${field.nullLabelKey}`)}
+                  </span>
+                ) : (
+                  '—'
+                )
+              return departmentNames.get(String(value)) ?? String(value)
+            }
+            return String(value ?? '—')
+          },
+        })),
       {
         accessorKey: 'isActive',
         header: t('fields.status'),
@@ -135,7 +176,7 @@ export function CatalogPage({ slug }: { slug: CatalogSlug }) {
         ),
       },
     ],
-    [config.fields, confirm, remove, slug, t, tc],
+    [config.fields, confirm, departmentNames, remove, slug, t, tc],
   )
   return (
     <>
@@ -196,6 +237,22 @@ export function CatalogPage({ slug }: { slug: CatalogSlug }) {
                 placeholder={t('search.placeholder')}
               />
             </FilterField>
+            {config.filterDepartment && (
+              <FilterField label={t('filter.department')}>
+                <AsyncSelect
+                  label={t('filter.department')}
+                  queryKey="departments"
+                  loadOptions={departmentOptions}
+                  value={departmentId ?? null}
+                  onChange={(value) =>
+                    table.setFilter('departmentId', typeof value === 'string' ? value : undefined)
+                  }
+                  resolveOption={resolveDepartment}
+                  clearable
+                  showLabel={false}
+                />
+              </FilterField>
+            )}
             <FilterField label={t('filter.status')}>
               <Select
                 value={active ?? 'all'}
@@ -218,7 +275,13 @@ export function CatalogPage({ slug }: { slug: CatalogSlug }) {
         toolbarRight={
           <Button
             variant="outline"
-            onClick={() => void exportCatalog(slug, { q: params.q, isActive: params.isActive })}
+            onClick={() =>
+              void exportCatalog(slug, {
+                q: params.q,
+                isActive: params.isActive,
+                departmentId: params.departmentId,
+              })
+            }
           >
             {tc('actions.export')}
           </Button>

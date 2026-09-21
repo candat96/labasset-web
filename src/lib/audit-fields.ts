@@ -9,7 +9,7 @@ export const AUDIT_FIELD_LABELS: Record<string, string> = {
   code: 'Mã',
   status: 'Trạng thái',
   statusNote: 'Ghi chú trạng thái',
-  departmentId: 'Khoa',
+  departmentId: 'Khoa/Phòng ban',
   location: 'Vị trí',
   serialNumber: 'Serial',
   model: 'Model',

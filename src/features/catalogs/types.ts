@@ -1,3 +1,5 @@
+import type { EnumKind } from '@/lib/enum-labels'
+
 export const catalogSlugs = [
   'suppliers',
   'manufacturers',
@@ -10,6 +12,7 @@ export const catalogSlugs = [
   'component-types',
   'calibration-agencies',
   'fault-groups',
+  'rooms',
 ] as const
 
 export type CatalogSlug = (typeof catalogSlugs)[number]
@@ -37,11 +40,29 @@ export interface ImportResult {
 export interface CatalogField {
   name: string
   type?:
-    'text' | 'email' | 'url' | 'date' | 'number' | 'boolean' | 'reference' | 'severity' | 'user'
+    | 'text'
+    | 'email'
+    | 'url'
+    | 'date'
+    | 'number'
+    | 'boolean'
+    | 'reference'
+    | 'severity'
+    | 'user'
+    | 'enum'
   reference?: 'departments' | 'self'
+  /** `type: 'reference'` khoa: cho phép để trống với nhãn riêng (vd "Dùng chung"). */
+  nullLabelKey?: string
+  /** `type: 'enum'`: giá trị + nhãn qua `enumLabel(enumKind, value)`. */
+  options?: readonly string[]
+  enumKind?: EnumKind
   min?: number
   max?: number
+  /** Các trường cùng `listGroup` gộp thành một cột (nhãn `catalogFields.<slug>.<listGroup>`). */
+  listGroup?: string
 }
 export interface CatalogConfig {
   fields: CatalogField[]
+  /** Bộ lọc Khoa/Phòng ban trên danh sách (`?departmentId=`). */
+  filterDepartment?: boolean
 }

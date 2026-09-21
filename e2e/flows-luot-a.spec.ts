@@ -14,7 +14,7 @@ test('02 thiết bị: tạo máy → đổi trạng thái → thêm linh kiện
   // Tạo máy (để trống mã → tự sinh)
   await page.goto('/equipment/new')
   await page.getByLabel('Tên', { exact: true }).fill(name)
-  await pickOption(page, 'Khoa')
+  await pickOption(page, 'Khoa/Phòng ban')
   await page.getByRole('button', { name: 'Lưu' }).click()
   await page.waitForURL(/\/equipment\/[0-9a-f-]{36}/, { timeout: 15_000 })
   await expect(page.getByRole('heading', { name })).toBeVisible()

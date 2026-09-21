@@ -119,7 +119,7 @@ it('lọc điều chuyển theo khoa', async () => {
   renderWithProviders(<Transfers />)
   expect(await screen.findByText('Chuyển khoa')).toBeVisible()
   expect(screen.getByText('Điều chuyển khác')).toBeVisible()
-  await userEvent.click(screen.getByRole('combobox', { name: 'Khoa' }))
+  await userEvent.click(screen.getByRole('combobox', { name: 'Khoa/Phòng ban' }))
   await userEvent.click(await screen.findByText('HH — Huyết học'))
   await waitFor(() => expect(screen.queryByText('Điều chuyển khác')).not.toBeInTheDocument())
   expect(screen.getByText('Chuyển khoa')).toBeVisible()

@@ -7,7 +7,7 @@ test('login → dashboard → departments CRUD', async ({ page }) => {
   await login(page)
 
   await page.goto('/admin/departments')
-  await expect(page.getByRole('heading', { name: 'Khoa/phòng' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Khoa/Phòng ban' })).toBeVisible()
 
   const dept = `E2E${Date.now()}`
   await page.getByRole('button', { name: 'Thêm khoa/phòng' }).click()

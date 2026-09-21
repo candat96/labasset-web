@@ -19,7 +19,14 @@ const detail = (slug: CatalogSlug) => `/v1/catalogs/${slug}/{id}` as const
 // OpenAPI exposes eleven separate routes with the same contract; the casts keep the shared client centralized.
 export function listCatalog(
   slug: CatalogSlug,
-  params: { page?: number; limit?: number; q?: string; isActive?: boolean; all?: boolean },
+  params: {
+    page?: number
+    limit?: number
+    q?: string
+    isActive?: boolean
+    all?: boolean
+    departmentId?: string
+  },
 ) {
   return unwrapAs<CatalogPageResult | CatalogRow[]>(
     api.GET(collection(slug), { params: { query: apiQuery<CatalogQuery>(params) } }),
@@ -61,7 +68,10 @@ export function importCatalog(slug: CatalogSlug, file: File) {
     }),
   )
 }
-export function exportCatalog(slug: CatalogSlug, params: { q?: string; isActive?: boolean }) {
+export function exportCatalog(
+  slug: CatalogSlug,
+  params: { q?: string; isActive?: boolean; departmentId?: string },
+) {
   return downloadFile(`/v1/catalogs/${slug}/export`, params, `${slug}.xlsx`)
 }
 export function downloadCatalogTemplate(slug: CatalogSlug) {

@@ -122,7 +122,7 @@ export function Component() {
         cell: ({ row }) => enumLabel(requestTypeLabels, row.original.type),
       },
       { accessorKey: 'equipmentId', header: t('equipment') },
-      { accessorKey: 'departmentName', header: 'Khoa' },
+      { accessorKey: 'departmentName', header: 'Khoa/Phòng ban' },
       { accessorKey: 'requesterName', header: t('requester') },
       {
         accessorKey: 'priority',

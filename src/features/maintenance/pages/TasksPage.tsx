@@ -107,7 +107,7 @@ export function Component() {
       },
       {
         id: 'department',
-        header: t('department', { defaultValue: 'Khoa' }),
+        header: t('department', { defaultValue: 'Khoa/Phòng ban' }),
         cell: ({ row }) => equipmentNames.get(row.original.equipmentId)?.departmentName ?? '—',
       },
       {

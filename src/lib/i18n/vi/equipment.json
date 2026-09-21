@@ -62,7 +62,7 @@
     "decisionNo": "Số quyết định",
     "group": "Nhóm",
     "groupEquipment": "Nhóm máy",
-    "department": "Khoa",
+    "department": "Khoa/Phòng ban",
     "location": "Vị trí",
     "deptContact": "Liên hệ khoa",
     "staffInCharge": "Phụ trách VT",
@@ -113,7 +113,7 @@
   "filters": {
     "search": "Tìm máy",
     "searchPlaceholder": "Mã, tên, serial…",
-    "department": "Khoa",
+    "department": "Khoa/Phòng ban",
     "group": "Nhóm",
     "manufacturer": "Hãng",
     "staff": "Phụ trách VT",

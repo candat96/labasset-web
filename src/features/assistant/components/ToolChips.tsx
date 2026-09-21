@@ -42,7 +42,7 @@ const TOOL_LABELS: Record<string, string> = {
 const COLUMN_LABELS: Record<string, string> = {
   code: 'Mã',
   name: 'Tên',
-  departmentName: 'Khoa/phòng',
+  departmentName: 'Khoa/Phòng ban',
   status: 'Trạng thái',
   quantity: 'Số lượng',
   unit: 'ĐVT',

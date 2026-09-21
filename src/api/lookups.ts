@@ -38,10 +38,11 @@ export function useSupplierNames() {
   return useMemo(() => new Map((query.data ?? []).map((row) => [row.id, row.name])), [query.data])
 }
 
-export function useDepartmentLookup() {
+export function useDepartmentLookup(enabled = true) {
   const query = useQuery({
     queryKey: ['references', 'departments'],
     queryFn: allDepartments,
+    enabled,
     staleTime: 300_000,
   })
   return useMemo(() => new Map((query.data ?? []).map((row) => [row.id, row.name])), [query.data])

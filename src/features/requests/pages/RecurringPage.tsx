@@ -94,7 +94,7 @@ export function Component() {
   }
   const columns: ColumnDef<Row>[] = [
     { accessorKey: 'name', header: t('name') },
-    { accessorKey: 'departmentId', header: 'Khoa' },
+    { accessorKey: 'departmentId', header: 'Khoa/Phòng ban' },
     { accessorKey: 'dayOfMonth', header: t('dayOfMonth') },
     {
       accessorKey: 'priority',
