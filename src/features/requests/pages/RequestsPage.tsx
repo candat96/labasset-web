@@ -1,3 +1,4 @@
+import { enumLabel, requestTypeLabels } from '@/lib/enum-labels'
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -115,7 +116,11 @@ export function Component() {
           </Link>
         ),
       },
-      { accessorKey: 'type', header: t('type') },
+      {
+        accessorKey: 'type',
+        header: t('type'),
+        cell: ({ row }) => enumLabel(requestTypeLabels, row.original.type),
+      },
       { accessorKey: 'equipmentId', header: t('equipment') },
       { accessorKey: 'departmentName', header: 'Khoa' },
       { accessorKey: 'requesterName', header: t('requester') },

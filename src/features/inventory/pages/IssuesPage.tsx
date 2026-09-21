@@ -1,3 +1,6 @@
+import { enumLabel, issueTypeLabels } from '@/lib/enum-labels'
+import { shortId, useDepartmentLookup, useEquipmentLookup, useWarehouseNames } from '@/api/lookups'
+import { formatDate } from '@/lib/format/date'
 import { useCallback, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -77,6 +80,9 @@ export function Component() {
       quantity: '1',
     },
   })
+  const warehouseNames = useWarehouseNames()
+  const departmentNames = useDepartmentLookup()
+  const equipmentNames = useEquipmentLookup()
   const columns = useMemo<ColumnDef<Issue>[]>(
     () => [
       {
@@ -91,7 +97,61 @@ export function Component() {
           </Link>
         ),
       },
-      { accessorKey: 'type', header: t('type') },
+      {
+        accessorKey: 'type',
+        header: t('type'),
+        cell: ({ row }) => enumLabel(issueTypeLabels, row.original.type),
+      },
+      {
+        accessorKey: 'warehouseId',
+        header: t('warehouse'),
+        cell: ({ row }) =>
+          warehouseNames.get(row.original.warehouseId) ?? shortId(row.original.warehouseId),
+      },
+      {
+        id: 'target',
+        header: t('issueTarget', { defaultValue: 'Khoa nhận / Máy' }),
+        cell: ({ row }) => {
+          const r = row.original as Issue & {
+            toDepartmentId?: string | null
+            equipmentId?: string | null
+          }
+          if (r.toDepartmentId)
+            return departmentNames.get(r.toDepartmentId) ?? shortId(r.toDepartmentId)
+          if (r.equipmentId) {
+            const e = equipmentNames.get(r.equipmentId)
+            return e ? (
+              <Link className="text-primary hover:underline" to={`/equipment/${r.equipmentId}`}>
+                {e.code} — {e.name}
+              </Link>
+            ) : (
+              shortId(r.equipmentId)
+            )
+          }
+          return '—'
+        },
+      },
+      {
+        id: 'receiver',
+        header: t('receiverName'),
+        cell: ({ row }) =>
+          (row.original as Issue & { receiverName?: string | null }).receiverName ?? '—',
+      },
+      {
+        accessorKey: 'issuedAt',
+        header: t('issuedAt'),
+        cell: ({ row }) =>
+          formatDate(row.original.issuedAt ?? row.original.postedAt ?? undefined) || '—',
+      },
+      {
+        id: 'lines',
+        header: t('lineCount', { defaultValue: 'Số dòng' }),
+        cell: ({ row }) => {
+          const r = row.original as { items?: unknown[]; itemCount?: number }
+          const n = r.itemCount ?? r.items?.length
+          return n == null ? '—' : <span className="tabular-nums">{n}</span>
+        },
+      },
       {
         accessorKey: 'status',
         header: t('status'),
@@ -125,7 +185,7 @@ export function Component() {
           ) : null,
       },
     ],
-    [canWrite, invalidate, t],
+    [canWrite, invalidate, t, warehouseNames, departmentNames, equipmentNames],
   )
   return (
     <>

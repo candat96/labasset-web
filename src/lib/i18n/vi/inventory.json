@@ -195,5 +195,8 @@
   "alertsHint": "Cảnh báo tồn dưới định mức, lô sắp hết hạn và hết hạn.",
   "suppliesHint": "Danh mục vật tư, hoá chất: mã, đơn vị, quy cách, theo dõi lô/hạn.",
   "issuesHint": "Phiếu xuất kho cho khoa, sửa chữa, bảo dưỡng; ghi sổ để trừ tồn.",
-  "stockTransfersHint": "Chuyển vật tư giữa các kho theo lô."
+  "stockTransfersHint": "Chuyển vật tư giữa các kho theo lô.",
+  "issueTarget": "Khoa nhận / Máy",
+  "lineCount": "Số dòng",
+  "createdBy": "Người tạo"
 }

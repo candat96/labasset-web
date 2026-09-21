@@ -14,6 +14,8 @@ import { PageMeta } from '@/components/page/PageHeader'
 import { SectionCard } from '@/components/page/SectionCard'
 import { AuditTrail } from '@/components/audit-trail'
 import { StatusBadge } from '@/components/status-badge'
+import { Badge } from '@/components/ui/badge'
+import { enumLabel } from '@/lib/enum-labels'
 import { commonStatusMap } from '@/lib/status-maps'
 import { getDepartment, getDepartmentUsers, type DepartmentUser } from '../api'
 export function Component() {
@@ -36,7 +38,15 @@ export function Component() {
       {
         accessorKey: 'roles',
         header: t('userColumns.roles'),
-        cell: ({ row }) => row.original.roles.join(', '),
+        cell: ({ row }) => (
+          <div className="flex flex-wrap gap-1">
+            {row.original.roles.map((r) => (
+              <Badge variant="secondary" key={r}>
+                {enumLabel('role', r)}
+              </Badge>
+            ))}
+          </div>
+        ),
       },
     ],
     [t],

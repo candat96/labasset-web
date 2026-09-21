@@ -1,3 +1,4 @@
+import { shortId, useEquipmentLookup } from '@/api/lookups'
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { useForm } from 'react-hook-form'
@@ -72,6 +73,7 @@ export function Component() {
       notes: '',
     },
   })
+  const equipmentNames = useEquipmentLookup()
   const columns = useMemo<ColumnDef<Task>[]>(
     () => [
       {
@@ -85,6 +87,33 @@ export function Component() {
             {row.original.code}
           </Link>
         ),
+      },
+      {
+        id: 'equipment',
+        header: t('equipment'),
+        cell: ({ row }) => {
+          const r = row.original as Task & { equipment?: { code?: string; name?: string } | null }
+          const e = equipmentNames.get(r.equipmentId) ?? r.equipment
+          const code = e?.code ?? shortId(r.equipmentId)
+          return (
+            <Link className="min-w-0 hover:underline" to={`/equipment/${r.equipmentId}`}>
+              <span className="text-primary font-semibold">{code}</span>
+              {e?.name && (
+                <span className="text-muted-foreground block truncate text-[12.5px]">{e.name}</span>
+              )}
+            </Link>
+          )
+        },
+      },
+      {
+        id: 'department',
+        header: t('department', { defaultValue: 'Khoa' }),
+        cell: ({ row }) => equipmentNames.get(row.original.equipmentId)?.departmentName ?? '—',
+      },
+      {
+        id: 'location',
+        header: t('location', { defaultValue: 'Vị trí' }),
+        cell: ({ row }) => equipmentNames.get(row.original.equipmentId)?.location ?? '—',
       },
       {
         accessorKey: 'type',
@@ -113,7 +142,7 @@ export function Component() {
           row.original.overallPass == null ? '—' : row.original.overallPass ? '✓' : '✗',
       },
     ],
-    [t],
+    [t, equipmentNames],
   )
   return (
     <>

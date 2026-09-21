@@ -55,8 +55,9 @@ it('lists audit logs and sends server-supported filters', async () => {
   expect(await screen.findByText('Tạo')).toBeVisible()
   expect(screen.getByText('Quản trị viên')).toBeVisible()
   expect(screen.getByText('10.0.0.1')).toBeVisible()
-  expect(screen.getAllByRole('link', { name: 'u1' })[0]).toHaveAttribute('href', '/admin/users/u1')
-  await userEvent.type(screen.getByLabelText('Loại đối tượng'), 'users')
+  expect(screen.getAllByRole('link', { name: 'Xem' })[0]).toHaveAttribute('href', '/admin/users/u1')
+  await userEvent.click(screen.getByRole('combobox', { name: 'Loại đối tượng' }))
+  await userEvent.click(await screen.findByRole('option', { name: 'Người dùng' }))
   await userEvent.click(screen.getByLabelText('Từ ngày'))
   await userEvent.click(screen.getByRole('button', { name: /ngày 1 tháng 09 năm 2026/i }))
   await waitFor(() =>
@@ -106,7 +107,7 @@ it('reuses AuditTrail against the entity endpoint', async () => {
     }),
   )
   renderWithProviders(<AuditTrail entityType="users" entityId="u1" />)
-  expect(await screen.findByText('Sửa')).toBeVisible()
+  expect(await screen.findByText(/^Sửa/)).toBeVisible()
   expect(screen.getByLabelText('Dòng thời gian')).toBeVisible()
 })
 

@@ -38,6 +38,12 @@ const targets: { name: string; path: string; dark?: boolean; full?: boolean }[] 
   { name: 'chk-form-repair', path: '/repairs/new' },
   { name: 'chk-form-request', path: '/requests/new' },
   { name: 'chk-form-receipt', path: '/stock/receipts/new' },
+  { name: 'chk-tasks', path: '/maintenance/tasks' },
+  { name: 'chk-calibrations', path: '/calibrations' },
+  { name: 'chk-issues', path: '/stock/issues' },
+  { name: 'chk-receipts', path: '/stock/receipts' },
+  { name: 'chk-stock-transfers', path: '/stock/transfers' },
+  { name: 'chk-audit', path: '/admin/audit-logs' },
   { name: 'chk-thiet-bi-dark', path: '/equipment', dark: true },
   { name: 'chk-chi-tiet-dark', path: `/equipment/${ids.equipment}`, dark: true },
 ]

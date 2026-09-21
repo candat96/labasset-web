@@ -40,6 +40,7 @@ import {
   Wrench,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { enumLabel } from '@/lib/enum-labels'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -1903,7 +1904,7 @@ function CountersTab({ id, canWrite }: { id: string; canWrite: boolean }) {
                 <TableCell>{formatDateTime(row.recordedAt)}</TableCell>
                 <TableCell>{formatQty(row.runHours) || '—'}</TableCell>
                 <TableCell>{row.testCount ?? '—'}</TableCell>
-                <TableCell>{row.source}</TableCell>
+                <TableCell>{enumLabel('counterSource', row.source)}</TableCell>
                 <TableCell>{row.note ?? '—'}</TableCell>
               </TableRow>
             ))}

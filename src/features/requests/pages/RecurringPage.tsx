@@ -1,3 +1,4 @@
+import { enumLabel, priorityLabels } from '@/lib/enum-labels'
 import { useState } from 'react'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -95,7 +96,11 @@ export function Component() {
     { accessorKey: 'name', header: t('name') },
     { accessorKey: 'departmentId', header: 'Khoa' },
     { accessorKey: 'dayOfMonth', header: t('dayOfMonth') },
-    { accessorKey: 'priority', header: t('priority') },
+    {
+      accessorKey: 'priority',
+      header: t('priority'),
+      cell: ({ row }) => enumLabel(priorityLabels, row.original.priority),
+    },
     {
       accessorKey: 'isActive',
       header: t('status'),

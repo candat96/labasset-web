@@ -1,8 +1,6 @@
-import { useTranslation } from 'react-i18next'
-import { ROLES } from '@/routes/roles'
+import { enumLabel } from '@/lib/enum-labels'
 
-/** Nhãn vai trò qua i18n; vai trò lạ (API mới) hiện nguyên chuỗi. */
+/** Nhãn vai trò từ map tập trung; vai trò lạ (API mới) hiện nguyên chuỗi. */
 export function useRoleLabel() {
-  const { t } = useTranslation('users')
-  return (role: string) => (ROLES.some((value) => value === role) ? t(`roles.${role}`) : role)
+  return (role: string) => enumLabel('role', role)
 }

@@ -1,3 +1,4 @@
+import { enumLabel, stocktakeScopeLabels, stocktakeTypeLabels } from '@/lib/enum-labels'
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -93,8 +94,16 @@ export function Component() {
         ),
       },
       { accessorKey: 'name', header: t('name') },
-      { accessorKey: 'type', header: t('type') },
-      { accessorKey: 'scopeType', header: t('scope') },
+      {
+        accessorKey: 'type',
+        header: t('type'),
+        cell: ({ row }) => enumLabel(stocktakeTypeLabels, row.original.type),
+      },
+      {
+        accessorKey: 'scopeType',
+        header: t('scope'),
+        cell: ({ row }) => enumLabel(stocktakeScopeLabels, row.original.scopeType),
+      },
       { accessorKey: 'createdBy', header: t('createdBy') },
       {
         accessorKey: 'status',

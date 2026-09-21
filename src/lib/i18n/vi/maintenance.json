@@ -141,5 +141,6 @@
   "calendarHint": "Lịch bảo dưỡng, kiểm định theo tháng.",
   "templatesHint": "Mẫu checklist dùng cho công việc bảo dưỡng.",
   "plansHint": "Kế hoạch bảo dưỡng định kỳ theo máy hoặc nhóm máy; sinh công việc theo năm.",
-  "tasksHint": "Công việc bảo dưỡng định kỳ và đột xuất; theo dõi hạn và kết quả checklist."
+  "tasksHint": "Công việc bảo dưỡng định kỳ và đột xuất; theo dõi hạn và kết quả checklist.",
+  "location": "Vị trí"
 }
