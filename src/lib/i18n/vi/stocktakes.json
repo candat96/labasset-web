@@ -87,5 +87,6 @@
   "countWebHint": "Quét mã hoặc nhập tay, ghi từng dòng rồi gửi theo lô.",
   "countItems": "{{n}} mục",
   "noExtras": "Không có hàng ngoài sổ",
-  "info": "Thông tin"
+  "info": "Thông tin",
+  "compareResult": "Kết quả so sánh"
 }

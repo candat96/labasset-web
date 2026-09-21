@@ -9,6 +9,8 @@ import { Switch } from '@/components/ui/switch'
 import { formatVnd } from '@/lib/format/money'
 import { formatQty } from '@/lib/format/number'
 import { KpiCard } from '@/components/kpi-card'
+import { catalogOptions } from '@/api/references'
+import { AlertTriangle, Boxes, Coins, Warehouse } from 'lucide-react'
 import { listBalances, stockValue } from '../api'
 import type { Balance } from '../types'
 import { useTranslation } from 'react-i18next'
@@ -34,11 +36,27 @@ export function Component() {
     queryKey: ['stock', 'value', f.warehouseId],
     queryFn: () => stockValue(f.warehouseId),
   })
+  const belowMin = useQuery({
+    queryKey: ['stock', 'balances', 'below-min', f.warehouseId],
+    queryFn: () => listBalances({ page: 1, limit: 1, warehouseId: f.warehouseId, belowMin: true }),
+  })
+  const warehouses = useQuery({
+    queryKey: ['catalog-options', 'warehouses'],
+    queryFn: () => catalogOptions('warehouses', ''),
+  })
+  const warehouseNames = useMemo(
+    () => new Map((warehouses.data ?? []).map((w) => [w.id, w.name])),
+    [warehouses.data],
+  )
   const columns = useMemo<ColumnDef<Balance>[]>(
     () => [
       { accessorKey: 'code', header: t('code') },
       { accessorKey: 'name', header: t('name') },
-      { accessorKey: 'warehouseId', header: t('warehouse') },
+      {
+        accessorKey: 'warehouseId',
+        header: t('warehouse'),
+        cell: ({ row }) => warehouseNames.get(row.original.warehouseId) ?? row.original.warehouseId,
+      },
       {
         accessorKey: 'qtyOnHand',
         header: t('qty'),
@@ -50,7 +68,7 @@ export function Component() {
         cell: ({ getValue }) => formatVnd(String(getValue() ?? '')),
       },
     ],
-    [t],
+    [t, warehouseNames],
   )
   const totalValue =
     value.data && typeof value.data === 'object' && 'value' in value.data
@@ -58,9 +76,37 @@ export function Component() {
       : ''
   return (
     <>
-      <PageHeader title={t('balancesTitle')} />
-      <div className="mb-3">
-        <KpiCard title={t('stockValue')} value={formatVnd(totalValue) || '—'} />
+      <PageHeader
+        title={t('balancesTitle')}
+        description={t('balancesHint', {
+          defaultValue: 'Tồn theo vật tư và kho; bật "Dưới tồn min" để lọc mặt hàng cần nhập thêm.',
+        })}
+      />
+      <div className="mb-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <KpiCard
+          title={t('stockValue')}
+          value={formatVnd(totalValue) || '—'}
+          icon={<Coins />}
+          tone="info"
+        />
+        <KpiCard
+          title={t('balanceRows', { defaultValue: 'Mặt hàng có tồn' })}
+          value={list.data?.total ?? '—'}
+          icon={<Boxes />}
+          tone="neutral"
+        />
+        <KpiCard
+          title={t('belowMin')}
+          value={belowMin.data?.total ?? '—'}
+          icon={<AlertTriangle />}
+          tone="warning"
+        />
+        <KpiCard
+          title={t('warehouseCount', { defaultValue: 'Kho' })}
+          value={warehouses.data?.length ?? '—'}
+          icon={<Warehouse />}
+          tone="neutral"
+        />
       </div>
       <DataTable
         tableId="stock-balances"

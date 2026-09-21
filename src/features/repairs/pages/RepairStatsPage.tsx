@@ -4,6 +4,17 @@ import { useTranslation } from 'react-i18next'
 import Big from 'big.js'
 import { PageHeader } from '@/components/page/PageHeader'
 import { KpiCard } from '@/components/kpi-card'
+import { SectionCard } from '@/components/page/SectionCard'
+import { EmptyState } from '@/components/page/EmptyState'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { AlertTriangle, Clock, Coins, FolderOpen, Timer, Users, Wrench } from 'lucide-react'
 import { ErrorState } from '@/components/page/ErrorState'
 import { DatePicker } from '@/components/date-picker'
 import { FilterBar, FilterField } from '@/components/filter-bar'
@@ -124,7 +135,13 @@ export function Component() {
     value == null ? '—' : t('stats.hours', { n: formatNumber(value, 1) })
   return (
     <>
-      <PageHeader title={t('stats.title')} />
+      <PageHeader
+        title={t('stats.title')}
+        description={t('stats.hint', {
+          defaultValue:
+            'Số phiếu, chi phí, MTTR/MTBF theo khoảng thời gian; lọc theo ngày tạo phiếu.',
+        })}
+      />
       {!canViewStats && <p role="alert">{t('stats.forbidden')}</p>}
       <FilterBar
         className="mb-4"
@@ -146,59 +163,95 @@ export function Component() {
         </FilterField>
       </FilterBar>
       {error && <ErrorState error={error} onRetry={retry} />}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        <KpiCard title={t('stats.tickets')} value={totals?.tickets ?? '—'} />
-        <KpiCard title={t('stats.open')} value={open.data?.total ?? '—'} />
-        <KpiCard title={t('stats.overdue')} value={overdue.data?.total ?? '—'} />
-        <KpiCard title={t('stats.cost')} value={formatVnd(totals?.cost) || '—'} />
-        <KpiCard title={t('stats.mttr')} value={hours(totals?.mttrHours)} />
-        <KpiCard title={t('stats.mtbf')} value={hours(byEquipment.data?.mtbfHours)} />
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <KpiCard
+          title={t('stats.tickets')}
+          value={totals?.tickets ?? '—'}
+          icon={<Wrench />}
+          tone="info"
+        />
+        <KpiCard
+          title={t('stats.open')}
+          value={open.data?.total ?? '—'}
+          icon={<FolderOpen />}
+          tone="warning"
+        />
+        <KpiCard
+          title={t('stats.overdue')}
+          value={overdue.data?.total ?? '—'}
+          icon={<AlertTriangle />}
+          tone="danger"
+        />
+        <KpiCard
+          title={t('stats.cost')}
+          value={formatVnd(totals?.cost) || '—'}
+          icon={<Coins />}
+          tone="info"
+        />
+        <KpiCard
+          title={t('stats.mttr')}
+          value={hours(totals?.mttrHours)}
+          icon={<Timer />}
+          tone="neutral"
+        />
+        <KpiCard
+          title={t('stats.mtbf')}
+          value={hours(byEquipment.data?.mtbfHours)}
+          icon={<Clock />}
+          tone="success"
+        />
       </div>
-      <div className="mt-6 grid gap-4 lg:grid-cols-2">
-        <section className="rounded-lg border p-3">
-          <h2 className="mb-3 font-medium">{t('stats.byMonth')}</h2>
+      <div className="mt-5 grid gap-5 lg:grid-cols-2">
+        <SectionCard title={t('stats.byMonth')}>
           <BarList ariaLabel={t('stats.byMonth')} items={monthItems} />
-        </section>
-        <section className="rounded-lg border p-3">
-          <h2 className="mb-3 font-medium">{t('stats.topMachines')}</h2>
+        </SectionCard>
+        <SectionCard title={t('stats.topMachines')}>
           <BarList ariaLabel={t('stats.topMachines')} items={topMachines} />
-        </section>
-        <section className="rounded-lg border p-3">
-          <h2 className="mb-3 font-medium">{t('stats.topFaults')}</h2>
+        </SectionCard>
+        <SectionCard title={t('stats.topFaults')}>
           <BarList ariaLabel={t('stats.topFaults')} items={topFaults} />
-        </section>
-        <section className="rounded-lg border p-3">
-          <h2 className="mb-3 font-medium">{t('stats.costByDepartment')}</h2>
+        </SectionCard>
+        <SectionCard title={t('stats.costByDepartment')}>
           <BarList ariaLabel={t('stats.costByDepartment')} items={deptCost} />
-        </section>
+        </SectionCard>
       </div>
       {isAdm && (
-        <section className="mt-6 rounded-lg border p-3">
-          <h2 className="mb-3 font-medium">{t('stats.workload')}</h2>
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left">
-                <th className="py-1">{t('stats.person')}</th>
-                <th>{t('stats.openTickets')}</th>
-                <th>{t('stats.overdue')}</th>
-                <th>{t('stats.awaitingResponse')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(workload.data ?? []).map((row) => (
-                <tr key={row.id} className="border-t">
-                  <td className="py-1">{row.fullName}</td>
-                  <td>{row.open}</td>
-                  <td>{row.overdue}</td>
-                  <td>{row.awaitingResponse}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {(workload.data ?? []).length === 0 && (
-            <p className="text-muted-foreground text-sm">{tc('table.empty')}</p>
+        <SectionCard
+          title={t('stats.workload')}
+          className="mt-5"
+          flush={(workload.data ?? []).length > 0}
+        >
+          {(workload.data ?? []).length === 0 ? (
+            <EmptyState icon={Users} title={tc('table.empty')} />
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="pl-5">{t('stats.person')}</TableHead>
+                  <TableHead className="text-right">{t('stats.openTickets')}</TableHead>
+                  <TableHead className="text-right">{t('stats.overdue')}</TableHead>
+                  <TableHead className="pr-5 text-right">{t('stats.awaitingResponse')}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {(workload.data ?? []).map((row) => (
+                  <TableRow key={row.id}>
+                    <TableCell className="pl-5 font-medium">{row.fullName}</TableCell>
+                    <TableCell className="text-right tabular-nums">{row.open}</TableCell>
+                    <TableCell
+                      className={`text-right tabular-nums ${row.overdue ? 'text-destructive font-medium' : ''}`}
+                    >
+                      {row.overdue}
+                    </TableCell>
+                    <TableCell className="pr-5 text-right tabular-nums">
+                      {row.awaitingResponse}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           )}
-        </section>
+        </SectionCard>
       )}
     </>
   )

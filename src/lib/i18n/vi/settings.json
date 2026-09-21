@@ -109,5 +109,6 @@
   "backup": {
     "title": "Sao lưu & khôi phục",
     "description": "API viện không có màn sao lưu. Sao lưu CSDL do quản trị hệ thống (SYS) thực hiện trên máy chủ. Liên hệ SYS nếu cần xuất/khôi phục dữ liệu viện."
-  }
+  },
+  "hint": "Thông tin viện, quy trình duyệt, kho, cảnh báo, đánh số và trợ lý AI."
 }

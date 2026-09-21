@@ -45,5 +45,5 @@ it('renders all 18 reports returned by the registry', async () => {
   useAuthStore.getState().setSession(fakeSession())
   renderWithProviders(<Component />)
   expect(await screen.findByText('Báo cáo 17')).toBeVisible()
-  expect(document.querySelectorAll('aside button')).toHaveLength(18)
+  expect(document.querySelectorAll('[data-testid="report-list"] button')).toHaveLength(18)
 })

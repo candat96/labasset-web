@@ -11,5 +11,10 @@
   "question": "Câu hỏi",
   "send": "Gửi",
   "equipmentContext": "Ngữ cảnh máy {{id}}",
-  "selectContext": "Chọn ngữ cảnh máy khi tạo hội thoại."
+  "selectContext": "Chọn ngữ cảnh máy khi tạo hội thoại.",
+  "conversations": "Hội thoại",
+  "noConversations": "Chưa có hội thoại",
+  "emptyTitle": "Hỏi trợ lý về máy, lỗi, vật tư…",
+  "emptyHint": "Chọn một gợi ý hoặc nhập câu hỏi bên dưới.",
+  "enterHint": "Enter để gửi · Shift+Enter xuống dòng"
 }

@@ -7,6 +7,9 @@ import { isApiError, messageFor } from '@/api/errors'
 import { DataTable, useServerTable } from '@/components/data-table'
 import { FilterBar } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page/PageHeader'
+import { SectionCard } from '@/components/page/SectionCard'
+import { EmptyState } from '@/components/page/EmptyState'
+import { FileBarChart2 } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { formatDate, formatDateTime } from '@/lib/format/date'
@@ -151,6 +154,7 @@ export function Component() {
     <>
       <PageHeader
         title={t('report')}
+        description={t('reportsNote')}
         actions={
           <div className="flex flex-wrap gap-2">
             <Button asChild variant="outline">
@@ -162,62 +166,79 @@ export function Component() {
           </div>
         }
       />
-      <p className="text-muted-foreground mb-3 text-sm">{t('reportsNote')}</p>
-      <div className="grid gap-4 lg:grid-cols-[240px_1fr]">
-        <aside className="space-y-3">
-          {groups.map((group) => (
-            <section key={group.name}>
-              <h2 className="mb-1 text-sm font-medium">{group.name}</h2>
-              <ul>
-                {group.items.map((row) => (
-                  <li key={row.key}>
-                    <button
-                      type="button"
-                      className={cn(
-                        'text-primary w-full rounded px-2 py-1 text-left text-sm hover:underline',
-                        row.key === key && 'bg-muted font-medium',
-                      )}
-                      onClick={() => selectKey(row.key)}
-                    >
-                      {row.title}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ))}
-        </aside>
-        <section>
+      <div className="grid gap-5 lg:grid-cols-[260px_minmax(0,1fr)]">
+        <SectionCard
+          title={t('reportList', { defaultValue: 'Danh sách báo cáo' })}
+          className="lg:sticky lg:top-[72px] lg:self-start"
+          bodyClassName="space-y-4"
+        >
+          <div data-testid="report-list" className="space-y-4">
+            {groups.map((group) => (
+              <section key={group.name}>
+                <h3 className="text-muted-foreground mb-1.5 text-[11.5px] font-semibold tracking-[0.05em] uppercase">
+                  {group.name}
+                </h3>
+                <ul className="space-y-0.5">
+                  {group.items.map((row) => (
+                    <li key={row.key}>
+                      <button
+                        type="button"
+                        className={cn(
+                          'hover:bg-muted/70 w-full rounded-lg px-2.5 py-1.5 text-left text-[13.5px] transition-colors',
+                          row.key === key
+                            ? 'bg-primary-soft text-primary font-semibold'
+                            : 'text-foreground',
+                        )}
+                        onClick={() => selectKey(row.key)}
+                      >
+                        {row.title}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ))}
+          </div>
+        </SectionCard>
+        <div className="min-w-0">
           {selected ? (
-            <div className="space-y-3">
-              <h2 className="font-medium">{selected.title}</h2>
-              <SchemaParamsForm
-                key={selected.key}
-                ref={formRef}
-                schema={selected.params}
-                fieldErrors={fieldErrors}
-              />
-              <div className="flex flex-wrap gap-2">
-                <Button type="button" onClick={onView} disabled={view.isFetching}>
-                  Xem
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={!selected || exportReport.isPending}
-                  onClick={() => exportReport.mutate('xlsx')}
-                >
-                  {t('exportExcel')}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={!selected || exportReport.isPending}
-                  onClick={() => exportReport.mutate('pdf')}
-                >
-                  {t('exportPdf')}
-                </Button>
-              </div>
+            <div className="space-y-5">
+              <SectionCard
+                title={selected.title}
+                description={t('paramsHint', {
+                  defaultValue: 'Chọn tham số rồi bấm Xem hoặc xuất tệp.',
+                })}
+                footer={
+                  <div className="flex flex-wrap gap-2">
+                    <Button type="button" onClick={onView} disabled={view.isFetching}>
+                      Xem
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={!selected || exportReport.isPending}
+                      onClick={() => exportReport.mutate('xlsx')}
+                    >
+                      {t('exportExcel')}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={!selected || exportReport.isPending}
+                      onClick={() => exportReport.mutate('pdf')}
+                    >
+                      {t('exportPdf')}
+                    </Button>
+                  </div>
+                }
+              >
+                <SchemaParamsForm
+                  key={selected.key}
+                  ref={formRef}
+                  schema={selected.params}
+                  fieldErrors={fieldErrors}
+                />
+              </SectionCard>
               {showBackground && (
                 <Alert>
                   <AlertTitle>{t('tooLarge')}</AlertTitle>
@@ -258,9 +279,11 @@ export function Component() {
               )}
             </div>
           ) : (
-            <p className="text-muted-foreground">{t('pickReport')}</p>
+            <SectionCard>
+              <EmptyState icon={FileBarChart2} title={t('pickReport')} />
+            </SectionCard>
           )}
-        </section>
+        </div>
       </div>
     </>
   )

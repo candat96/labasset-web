@@ -1,3 +1,12 @@
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { SectionCard } from '@/components/page/SectionCard'
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { PageHeader } from '@/components/page/PageHeader'
@@ -253,31 +262,32 @@ export function Component() {
           )}
         </div>
         {preview && (
-          <div>
-            <p className="text-sm">
-              {preview.rows.length} dòng {preview.truncated && '· đã rút gọn'}
-            </p>
-            <table className="mt-2 w-full text-sm">
-              <thead>
-                <tr>
+          <SectionCard
+            title={t('preview', { defaultValue: 'Xem trước' })}
+            description={`${preview.rows.length} dòng${preview.truncated ? ' · đã rút gọn' : ''}`}
+            flush
+          >
+            <Table>
+              <TableHeader>
+                <TableRow>
                   {preview.columns.map((column) => (
-                    <th key={column.key} className="text-left">
+                    <TableHead key={column.key} className="text-left">
                       {column.title}
-                    </th>
+                    </TableHead>
                   ))}
-                </tr>
-              </thead>
-              <tbody>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {preview.rows.map((row, index) => (
-                  <tr key={index} className="border-t">
+                  <TableRow key={index}>
                     {preview.columns.map((column) => (
-                      <td key={column.key}>{String(row[column.key] ?? '—')}</td>
+                      <TableCell key={column.key}>{String(row[column.key] ?? '—')}</TableCell>
                     ))}
-                  </tr>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </TableBody>
+            </Table>
+          </SectionCard>
         )}
       </div>
     </>

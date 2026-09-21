@@ -7,6 +7,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { Collapsible as CollapsiblePrimitive } from 'radix-ui'
 import { PageHeader } from '@/components/page/PageHeader'
+import { SectionCard } from '@/components/page/SectionCard'
+import { Bell, Bot, Boxes, Braces, Building2, GitBranch, Hash } from 'lucide-react'
 import { ErrorState } from '@/components/page/ErrorState'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Form } from '@/components/ui/form'
@@ -357,10 +359,17 @@ export function Component() {
   }
   return (
     <>
-      <PageHeader title={t('title')} />
+      <PageHeader
+        title={t('title')}
+        description={t('hint', {
+          defaultValue: 'Thông tin viện, quy trình duyệt, kho, cảnh báo, đánh số và trợ lý AI.',
+        })}
+      />
       <Form {...form}>
         <form className="space-y-4" noValidate onSubmit={form.handleSubmit(submit)}>
           <Tabs
+            orientation="vertical"
+            className="items-start gap-5 lg:grid lg:grid-cols-[220px_minmax(0,1fr)]"
             value={tab}
             onValueChange={(value) => {
               const next = new URLSearchParams(params)
@@ -368,617 +377,700 @@ export function Component() {
               setParams(next, { replace: true })
             }}
           >
-            <TabsList className="max-w-full flex-wrap">
-              <TabsTrigger value="hospital">{t('tabs.hospital')}</TabsTrigger>
-              <TabsTrigger value="workflow">{t('tabs.workflow')}</TabsTrigger>
-              <TabsTrigger value="stock">{t('tabs.stock')}</TabsTrigger>
-              <TabsTrigger value="alerts">{t('tabs.alerts')}</TabsTrigger>
-              <TabsTrigger value="numbering">{t('tabs.numbering')}</TabsTrigger>
-              <TabsTrigger value="ai">{t('tabs.ai')}</TabsTrigger>
-              <TabsTrigger value="other">{t('tabs.other')}</TabsTrigger>
-            </TabsList>
-            <TabsContent
-              value="hospital"
-              forceMount
-              className="space-y-4 data-[state=inactive]:hidden"
+            <TabsList
+              variant="line"
+              className="bg-card shadow-card w-full flex-row flex-wrap items-stretch gap-1 rounded-xl border-b-0 p-2 lg:sticky lg:top-[72px] lg:flex-col"
             >
-              <TextField control={form.control} name="hospital.name" label={t('hospital.name')} />
-              <TextField
-                control={form.control}
-                name="hospital.address"
-                label={t('hospital.address')}
-              />
-              <FormField
-                control={form.control}
-                name="hospital.logoFileId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FileField
-                      label={t('hospital.logoFileId')}
-                      accept="image/*"
-                      value={field.value}
-                      onChange={field.onChange}
-                    />
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </TabsContent>
-            <TabsContent
-              value="workflow"
-              forceMount
-              className="space-y-4 data-[state=inactive]:hidden"
-            >
-              <FormField
-                control={form.control}
-                name="approval.levels"
-                render={({ field }) => (
-                  <FormItem>
-                    <fieldset className="space-y-2">
-                      <legend className="text-sm font-medium">
-                        {t('workflow.approvalLevels')}
-                      </legend>
-                      <RadioGroup
-                        className="flex gap-4"
-                        value={String(field.value)}
-                        onValueChange={(value) => field.onChange(Number(value) as 1 | 2)}
-                      >
-                        {([1, 2] as const).map((level) => (
-                          <label key={level} className="flex min-h-8 items-center gap-2 text-sm">
-                            <RadioGroupItem value={String(level)} />
-                            {t('workflow.level', { level })}
-                          </label>
-                        ))}
-                      </RadioGroup>
-                    </fieldset>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <SwitchField
-                control={form.control}
-                name="repair.requireAcceptance"
-                label={t('workflow.requireAcceptance')}
-              />
-              <SwitchField
-                control={form.control}
-                name="requests.restrictToCompatible"
-                label={t('workflow.restrictToCompatible')}
-              />
-              <div className="grid gap-4 sm:grid-cols-4">
-                <NumberField
-                  control={form.control}
-                  name="repair.sla.low"
-                  label={t('workflow.slaLow')}
-                  min={1}
-                />
-                <NumberField
-                  control={form.control}
-                  name="repair.sla.medium"
-                  label={t('workflow.slaMedium')}
-                  min={1}
-                />
-                <NumberField
-                  control={form.control}
-                  name="repair.sla.high"
-                  label={t('workflow.slaHigh')}
-                  min={1}
-                />
-                <NumberField
-                  control={form.control}
-                  name="repair.sla.critical"
-                  label={t('workflow.slaCritical')}
-                  min={1}
-                />
-              </div>
-            </TabsContent>
-            <TabsContent
-              value="stock"
-              forceMount
-              className="space-y-4 data-[state=inactive]:hidden"
-            >
-              <FormField
-                control={form.control}
-                name="stock.defaultWarehouseId"
-                render={({ field }) => (
-                  <FormItem>
-                    <AsyncSelect
-                      label={t('stock.defaultWarehouseId')}
-                      queryKey="warehouses"
-                      loadOptions={searchWarehouses}
-                      resolveOption={resolveWarehouse}
-                      value={field.value}
-                      onChange={field.onChange}
-                      clearable
-                    />
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <NumberField
-                control={form.control}
-                name="stock.cancelWindowDays"
-                label={t('stock.cancelWindowDays')}
-                min={0}
-              />
-            </TabsContent>
-            <TabsContent
-              value="alerts"
-              forceMount
-              className="grid gap-4 sm:grid-cols-2 data-[state=inactive]:hidden"
-            >
-              <SwitchField
-                control={form.control}
-                name="alerts.stockMinEnabled"
-                label={t('alerts.stockMinEnabled')}
-              />
-              <NumberField
-                control={form.control}
-                name="alerts.expiryDaysBefore"
-                label={t('alerts.expiryDaysBefore')}
-                min={0}
-              />
-              <NumberField
-                control={form.control}
-                name="alerts.maintenanceDaysBefore"
-                label={t('alerts.maintenanceDaysBefore')}
-                min={0}
-              />
-              <NumberField
-                control={form.control}
-                name="alerts.calibrationDaysBefore"
-                label={t('alerts.calibrationDaysBefore')}
-                min={0}
-              />
-              <NumberField
-                control={form.control}
-                name="alerts.repairCostPctOfValue"
-                label={t('alerts.repairCostPctOfValue')}
-                min={0}
-              />
-              <NumberField
-                control={form.control}
-                name="maintenance.dueGraceDays"
-                label={t('alerts.dueGraceDays')}
-                min={0}
-              />
-            </TabsContent>
-            <TabsContent
-              value="numbering"
-              forceMount
-              className="space-y-3 data-[state=inactive]:hidden"
-            >
-              {NUMBER_TYPES.map((type) => (
-                <div
-                  key={type}
-                  className="grid items-end gap-2 rounded border p-3 sm:grid-cols-[180px_1fr_auto]"
+              {(
+                [
+                  ['hospital', Building2],
+                  ['workflow', GitBranch],
+                  ['stock', Boxes],
+                  ['alerts', Bell],
+                  ['numbering', Hash],
+                  ['ai', Bot],
+                  ['other', Braces],
+                ] as const
+              ).map(([value, Icon]) => (
+                <TabsTrigger
+                  key={value}
+                  value={value}
+                  className="h-9 justify-start gap-2 rounded-lg px-3 text-[13.5px] after:hidden data-[state=active]:bg-primary-soft! data-[state=active]:text-primary"
                 >
-                  <label className="text-sm font-medium" htmlFor={`number-${type}`}>
-                    {t(`numbering.${type}`)}
-                  </label>
-                  <div>
-                    <Input
-                      id={`number-${type}`}
-                      value={templates[type] ?? ''}
-                      onChange={(event) =>
-                        setTemplates((current) => ({ ...current, [type]: event.target.value }))
-                      }
-                    />
-                    {templateErrors[`numbering.${type}`] && (
-                      <p className="text-destructive text-xs">
-                        {templateErrors[`numbering.${type}`]}
-                      </p>
-                    )}
-                    {previews[type] && (
-                      <output className="text-xs text-muted-foreground">
-                        {t('numbering.previewSaved', { value: previews[type] })}
-                      </output>
-                    )}
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={async () => {
-                      try {
-                        const result = await previewNumber(type)
-                        setPreviews((current) => ({ ...current, [type]: previewText(result) }))
-                      } catch (error) {
-                        toast.error(messageFor(error))
-                      }
-                    }}
-                  >
-                    {t('numbering.preview')}
-                  </Button>
-                </div>
+                  <Icon className="size-4" aria-hidden />
+                  {t(`tabs.${value}`)}
+                </TabsTrigger>
               ))}
-            </TabsContent>
-            <TabsContent value="ai" forceMount className="space-y-4 data-[state=inactive]:hidden">
-              <div className="flex items-center justify-between gap-4 rounded-md border px-3 py-2">
-                <Label htmlFor="ai-enabled">{t('ai.enabled')}</Label>
-                <Switch
-                  id="ai-enabled"
-                  checked={ai.enabled}
-                  onCheckedChange={(value) => setAi((current) => ({ ...current, enabled: value }))}
-                />
-              </div>
-              <div className="grid gap-4 md:grid-cols-2">
-                <fieldset className="space-y-3 rounded-md border p-3">
-                  <legend className="px-1 text-sm font-medium">{t('ai.chat')}</legend>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="ai-chat-protocol">{t('ai.protocol')}</Label>
-                      <Select
-                        value={ai.chat.protocol}
-                        onValueChange={(value) =>
-                          setAi((current) => ({
-                            ...current,
-                            chat: { ...current.chat, protocol: toChatProtocol(value) },
-                          }))
-                        }
-                      >
-                        <SelectTrigger id="ai-chat-protocol" className="w-full">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="openai_compatible">
-                            {t('ai.protocolOpenaiCompatible')}
-                          </SelectItem>
-                          <SelectItem value="anthropic">{t('ai.protocolAnthropic')}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="ai-chat-preset">{t('ai.provider')}</Label>
-                      <Select
-                        value={chatPreset}
-                        onValueChange={(value) => {
-                          const preset = CHAT_PRESETS.find((item) => item.id === value)
-                          setAi((current) => ({
-                            ...current,
-                            chat: {
-                              ...current.chat,
-                              protocol:
-                                value === 'custom'
-                                  ? current.chat.protocol
-                                  : toChatProtocol(preset?.protocol ?? current.chat.protocol),
-                              baseUrl: preset?.baseUrl ?? current.chat.baseUrl,
-                            },
-                          }))
-                        }}
-                      >
-                        <SelectTrigger id="ai-chat-preset" className="w-full">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {presetOptions(CHAT_PRESETS, CHAT_PRESET_LABELS, t).map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="ai-chat-base-url">{t('ai.baseUrl')}</Label>
-                    <Input
-                      id="ai-chat-base-url"
-                      value={ai.chat.baseUrl}
-                      placeholder={AI_DEFAULTS.chatBaseUrl}
-                      onChange={(event) =>
-                        setAi((current) => ({
-                          ...current,
-                          chat: { ...current.chat, baseUrl: event.target.value },
-                        }))
-                      }
+            </TabsList>
+            <div className="min-w-0 space-y-4">
+              <TabsContent
+                value="hospital"
+                forceMount
+                className="space-y-4 data-[state=inactive]:hidden"
+              >
+                <SectionCard title={t('tabs.hospital')}>
+                  <div className="space-y-4">
+                    <TextField
+                      control={form.control}
+                      name="hospital.name"
+                      label={t('hospital.name')}
+                    />
+                    <TextField
+                      control={form.control}
+                      name="hospital.address"
+                      label={t('hospital.address')}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="hospital.logoFileId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FileField
+                            label={t('hospital.logoFileId')}
+                            accept="image/*"
+                            value={field.value}
+                            onChange={field.onChange}
+                          />
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="ai-chat-model">{t('ai.model')}</Label>
-                    <Input
-                      id="ai-chat-model"
-                      list="ai-chat-model-suggestions"
-                      value={ai.chat.model}
-                      placeholder={t('ai.modelPlaceholder')}
-                      onChange={(event) =>
-                        setAi((current) => ({
-                          ...current,
-                          chat: { ...current.chat, model: event.target.value },
-                        }))
-                      }
+                </SectionCard>
+              </TabsContent>
+              <TabsContent
+                value="workflow"
+                forceMount
+                className="space-y-4 data-[state=inactive]:hidden"
+              >
+                <SectionCard title={t('tabs.workflow')}>
+                  <div className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="approval.levels"
+                      render={({ field }) => (
+                        <FormItem>
+                          <fieldset className="space-y-2">
+                            <legend className="text-sm font-medium">
+                              {t('workflow.approvalLevels')}
+                            </legend>
+                            <RadioGroup
+                              className="flex gap-4"
+                              value={String(field.value)}
+                              onValueChange={(value) => field.onChange(Number(value) as 1 | 2)}
+                            >
+                              {([1, 2] as const).map((level) => (
+                                <label
+                                  key={level}
+                                  className="flex min-h-8 items-center gap-2 text-sm"
+                                >
+                                  <RadioGroupItem value={String(level)} />
+                                  {t('workflow.level', { level })}
+                                </label>
+                              ))}
+                            </RadioGroup>
+                          </fieldset>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                    <datalist id="ai-chat-model-suggestions">
-                      {presetModels(CHAT_PRESETS, chatPreset).map((model) => (
-                        <option key={model} value={model} />
-                      ))}
-                    </datalist>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="ai-chat-key">
-                      {chatKeySet && !clearChatKey ? t('ai.apiKeySet') : t('ai.apiKeyUnset')}
-                    </Label>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        id="ai-chat-key"
-                        type="password"
-                        autoComplete="new-password"
-                        value={ai.chat.apiKey}
-                        onChange={(event) =>
-                          setAi((current) => ({
-                            ...current,
-                            chat: { ...current.chat, apiKey: event.target.value },
-                          }))
-                        }
+                    <SwitchField
+                      control={form.control}
+                      name="repair.requireAcceptance"
+                      label={t('workflow.requireAcceptance')}
+                    />
+                    <SwitchField
+                      control={form.control}
+                      name="requests.restrictToCompatible"
+                      label={t('workflow.restrictToCompatible')}
+                    />
+                    <div className="grid gap-4 sm:grid-cols-4">
+                      <NumberField
+                        control={form.control}
+                        name="repair.sla.low"
+                        label={t('workflow.slaLow')}
+                        min={1}
                       />
-                      {chatKeySet && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          disabled={clearChatKey}
-                          onClick={() => setClearChatKey(true)}
-                        >
-                          {t('ai.clearKey')}
-                        </Button>
-                      )}
-                    </div>
-                    {clearChatKey && (
-                      <p className="text-destructive text-xs">{t('ai.keyWillBeCleared')}</p>
-                    )}
-                  </div>
-                  <CollapsiblePrimitive.Root open={advancedOpen} onOpenChange={setAdvancedOpen}>
-                    <CollapsiblePrimitive.Trigger asChild>
-                      <Button type="button" variant="ghost" size="sm" className="px-2">
-                        {t('ai.advanced')}
-                      </Button>
-                    </CollapsiblePrimitive.Trigger>
-                    <CollapsiblePrimitive.Content className="space-y-2 pt-1">
-                      <div className="space-y-2">
-                        <Label htmlFor="ai-chat-headers">{t('ai.headers')}</Label>
-                        <Textarea
-                          id="ai-chat-headers"
-                          rows={3}
-                          value={ai.chat.headers}
-                          placeholder={t('ai.headersPlaceholder')}
-                          aria-invalid={headersError ? true : undefined}
-                          onChange={(event) => {
-                            const value = event.target.value
-                            setAi((current) => ({
-                              ...current,
-                              chat: { ...current.chat, headers: value },
-                            }))
-                            const trimmed = value.trim()
-                            setHeadersError(
-                              trimmed && !isValidHeadersJson(trimmed) ? t('ai.headersInvalid') : '',
-                            )
-                          }}
-                        />
-                        {headersError && <p className="text-destructive text-xs">{headersError}</p>}
-                      </div>
-                    </CollapsiblePrimitive.Content>
-                  </CollapsiblePrimitive.Root>
-                </fieldset>
-                <fieldset className="space-y-3 rounded-md border p-3">
-                  <legend className="px-1 text-sm font-medium">{t('ai.embedding')}</legend>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="ai-embedding-protocol">{t('ai.embeddingProtocol')}</Label>
-                      <Select
-                        value={ai.embedding.protocol}
-                        onValueChange={(value) =>
-                          setAi((current) => ({
-                            ...current,
-                            embedding: {
-                              ...current.embedding,
-                              protocol: toEmbeddingProtocol(value),
-                            },
-                          }))
-                        }
-                      >
-                        <SelectTrigger id="ai-embedding-protocol" className="w-full">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="openai_compatible">
-                            {t('ai.protocolOpenaiCompatible')}
-                          </SelectItem>
-                          <SelectItem value="voyage">{t('ai.protocolVoyage')}</SelectItem>
-                          <SelectItem value="none">{t('ai.protocolNone')}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="ai-embedding-preset">{t('ai.embeddingProvider')}</Label>
-                      <Select
-                        value={embeddingPreset}
-                        onValueChange={(value) => {
-                          const preset = EMBEDDING_PRESETS.find((item) => item.id === value)
-                          setAi((current) => ({
-                            ...current,
-                            embedding: {
-                              ...current.embedding,
-                              protocol:
-                                value === 'custom'
-                                  ? current.embedding.protocol
-                                  : preset
-                                    ? toEmbeddingProtocol(preset.protocol)
-                                    : current.embedding.protocol,
-                              baseUrl: preset?.baseUrl ?? current.embedding.baseUrl,
-                            },
-                          }))
-                        }}
-                      >
-                        <SelectTrigger id="ai-embedding-preset" className="w-full">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {presetOptions(EMBEDDING_PRESETS, EMBEDDING_PRESET_LABELS, t).map(
-                            (option) => (
-                              <SelectItem key={option.value} value={option.value}>
-                                {option.label}
-                              </SelectItem>
-                            ),
-                          )}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  {ai.embedding.protocol !== 'none' && (
-                    <>
-                      <div className="space-y-2">
-                        <Label htmlFor="ai-embedding-base-url">{t('ai.embeddingBaseUrl')}</Label>
-                        <Input
-                          id="ai-embedding-base-url"
-                          value={ai.embedding.baseUrl}
-                          placeholder={AI_DEFAULTS.embeddingBaseUrl}
-                          onChange={(event) =>
-                            setAi((current) => ({
-                              ...current,
-                              embedding: { ...current.embedding, baseUrl: event.target.value },
-                            }))
-                          }
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="ai-embedding-model">{t('ai.embeddingModel')}</Label>
-                        <Input
-                          id="ai-embedding-model"
-                          list="ai-embedding-model-suggestions"
-                          value={ai.embedding.model}
-                          placeholder={t('ai.embeddingModelPlaceholder')}
-                          onChange={(event) =>
-                            setAi((current) => ({
-                              ...current,
-                              embedding: { ...current.embedding, model: event.target.value },
-                            }))
-                          }
-                        />
-                        <datalist id="ai-embedding-model-suggestions">
-                          {presetModels(EMBEDDING_PRESETS, embeddingPreset).map((model) => (
-                            <option key={model} value={model} />
-                          ))}
-                        </datalist>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="ai-embedding-dimensions">{t('ai.dimensions')}</Label>
-                        <Input
-                          id="ai-embedding-dimensions"
-                          type="number"
-                          min={1}
-                          value={ai.embedding.dimensions}
-                          onChange={(event) =>
-                            setAi((current) => ({
-                              ...current,
-                              embedding: {
-                                ...current.embedding,
-                                dimensions: event.target.value,
-                              },
-                            }))
-                          }
-                        />
-                      </div>
-                    </>
-                  )}
-                  <div className="space-y-2">
-                    <Label htmlFor="ai-embedding-key">
-                      {embeddingKeySet && !clearEmbeddingKey
-                        ? t('ai.embeddingApiKeySet')
-                        : t('ai.embeddingApiKeyUnset')}
-                    </Label>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        id="ai-embedding-key"
-                        type="password"
-                        autoComplete="new-password"
-                        placeholder={
-                          embeddingKeySet ? undefined : t('ai.embeddingApiKeyPlaceholder')
-                        }
-                        value={ai.embedding.apiKey}
-                        onChange={(event) =>
-                          setAi((current) => ({
-                            ...current,
-                            embedding: { ...current.embedding, apiKey: event.target.value },
-                          }))
-                        }
+                      <NumberField
+                        control={form.control}
+                        name="repair.sla.medium"
+                        label={t('workflow.slaMedium')}
+                        min={1}
                       />
-                      {embeddingKeySet && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          disabled={clearEmbeddingKey}
-                          onClick={() => setClearEmbeddingKey(true)}
-                        >
-                          {t('ai.clearKey')}
-                        </Button>
-                      )}
+                      <NumberField
+                        control={form.control}
+                        name="repair.sla.high"
+                        label={t('workflow.slaHigh')}
+                        min={1}
+                      />
+                      <NumberField
+                        control={form.control}
+                        name="repair.sla.critical"
+                        label={t('workflow.slaCritical')}
+                        min={1}
+                      />
                     </div>
-                    {clearEmbeddingKey && (
-                      <p className="text-destructive text-xs">{t('ai.keyWillBeCleared')}</p>
-                    )}
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="ai-budget">{t('ai.budget')}</Label>
-                    <Input
-                      id="ai-budget"
-                      type="number"
+                </SectionCard>
+              </TabsContent>
+              <TabsContent
+                value="stock"
+                forceMount
+                className="space-y-4 data-[state=inactive]:hidden"
+              >
+                <SectionCard title={t('tabs.stock')}>
+                  <div className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="stock.defaultWarehouseId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <AsyncSelect
+                            label={t('stock.defaultWarehouseId')}
+                            queryKey="warehouses"
+                            loadOptions={searchWarehouses}
+                            resolveOption={resolveWarehouse}
+                            value={field.value}
+                            onChange={field.onChange}
+                            clearable
+                          />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <NumberField
+                      control={form.control}
+                      name="stock.cancelWindowDays"
+                      label={t('stock.cancelWindowDays')}
                       min={0}
-                      value={ai.monthlyTokenBudget}
-                      onChange={(event) =>
-                        setAi((current) => ({
-                          ...current,
-                          monthlyTokenBudget: event.target.value,
-                        }))
-                      }
                     />
                   </div>
-                </fieldset>
-              </div>
-              <div className="flex flex-wrap items-center gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={testState.status === 'loading'}
-                  onClick={() => void runTest()}
-                >
-                  {testState.status === 'loading' ? t('ai.testing') : t('ai.test')}
-                </Button>
-                {testState.status === 'ok' && (
-                  <Alert className="max-w-md">
-                    <AlertTitle>{t('ai.testOk')}</AlertTitle>
-                    <AlertDescription>
-                      {testState.latencyMs !== undefined && (
-                        <p>{t('ai.testLatency', { latencyMs: testState.latencyMs })}</p>
+                </SectionCard>
+              </TabsContent>
+              <TabsContent
+                value="alerts"
+                forceMount
+                className="grid gap-4 sm:grid-cols-2 data-[state=inactive]:hidden"
+              >
+                <SectionCard title={t('tabs.alerts')}>
+                  <div className="space-y-4">
+                    <SwitchField
+                      control={form.control}
+                      name="alerts.stockMinEnabled"
+                      label={t('alerts.stockMinEnabled')}
+                    />
+                    <NumberField
+                      control={form.control}
+                      name="alerts.expiryDaysBefore"
+                      label={t('alerts.expiryDaysBefore')}
+                      min={0}
+                    />
+                    <NumberField
+                      control={form.control}
+                      name="alerts.maintenanceDaysBefore"
+                      label={t('alerts.maintenanceDaysBefore')}
+                      min={0}
+                    />
+                    <NumberField
+                      control={form.control}
+                      name="alerts.calibrationDaysBefore"
+                      label={t('alerts.calibrationDaysBefore')}
+                      min={0}
+                    />
+                    <NumberField
+                      control={form.control}
+                      name="alerts.repairCostPctOfValue"
+                      label={t('alerts.repairCostPctOfValue')}
+                      min={0}
+                    />
+                    <NumberField
+                      control={form.control}
+                      name="maintenance.dueGraceDays"
+                      label={t('alerts.dueGraceDays')}
+                      min={0}
+                    />
+                  </div>
+                </SectionCard>
+              </TabsContent>
+              <TabsContent
+                value="numbering"
+                forceMount
+                className="space-y-3 data-[state=inactive]:hidden"
+              >
+                <SectionCard title={t('tabs.numbering')}>
+                  <div className="space-y-4">
+                    {NUMBER_TYPES.map((type) => (
+                      <div
+                        key={type}
+                        className="border-divider grid items-end gap-3 rounded-xl border p-4 sm:grid-cols-[180px_1fr_auto]"
+                      >
+                        <label className="text-sm font-medium" htmlFor={`number-${type}`}>
+                          {t(`numbering.${type}`)}
+                        </label>
+                        <div>
+                          <Input
+                            id={`number-${type}`}
+                            value={templates[type] ?? ''}
+                            onChange={(event) =>
+                              setTemplates((current) => ({
+                                ...current,
+                                [type]: event.target.value,
+                              }))
+                            }
+                          />
+                          {templateErrors[`numbering.${type}`] && (
+                            <p className="text-destructive text-xs">
+                              {templateErrors[`numbering.${type}`]}
+                            </p>
+                          )}
+                          {previews[type] && (
+                            <output className="text-xs text-muted-foreground">
+                              {t('numbering.previewSaved', { value: previews[type] })}
+                            </output>
+                          )}
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={async () => {
+                            try {
+                              const result = await previewNumber(type)
+                              setPreviews((current) => ({
+                                ...current,
+                                [type]: previewText(result),
+                              }))
+                            } catch (error) {
+                              toast.error(messageFor(error))
+                            }
+                          }}
+                        >
+                          {t('numbering.preview')}
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </SectionCard>
+              </TabsContent>
+              <TabsContent value="ai" forceMount className="space-y-4 data-[state=inactive]:hidden">
+                <SectionCard title={t('tabs.ai')}>
+                  <div className="space-y-4">
+                    <div className="bg-surface-2 flex items-center justify-between gap-4 rounded-lg px-4 py-3">
+                      <Label htmlFor="ai-enabled">{t('ai.enabled')}</Label>
+                      <Switch
+                        id="ai-enabled"
+                        checked={ai.enabled}
+                        onCheckedChange={(value) =>
+                          setAi((current) => ({ ...current, enabled: value }))
+                        }
+                      />
+                    </div>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <fieldset className="border-divider space-y-3 rounded-xl border p-4">
+                        <legend className="px-1 text-sm font-medium">{t('ai.chat')}</legend>
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <div className="space-y-2">
+                            <Label htmlFor="ai-chat-protocol">{t('ai.protocol')}</Label>
+                            <Select
+                              value={ai.chat.protocol}
+                              onValueChange={(value) =>
+                                setAi((current) => ({
+                                  ...current,
+                                  chat: { ...current.chat, protocol: toChatProtocol(value) },
+                                }))
+                              }
+                            >
+                              <SelectTrigger id="ai-chat-protocol" className="w-full">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="openai_compatible">
+                                  {t('ai.protocolOpenaiCompatible')}
+                                </SelectItem>
+                                <SelectItem value="anthropic">
+                                  {t('ai.protocolAnthropic')}
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="ai-chat-preset">{t('ai.provider')}</Label>
+                            <Select
+                              value={chatPreset}
+                              onValueChange={(value) => {
+                                const preset = CHAT_PRESETS.find((item) => item.id === value)
+                                setAi((current) => ({
+                                  ...current,
+                                  chat: {
+                                    ...current.chat,
+                                    protocol:
+                                      value === 'custom'
+                                        ? current.chat.protocol
+                                        : toChatProtocol(preset?.protocol ?? current.chat.protocol),
+                                    baseUrl: preset?.baseUrl ?? current.chat.baseUrl,
+                                  },
+                                }))
+                              }}
+                            >
+                              <SelectTrigger id="ai-chat-preset" className="w-full">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {presetOptions(CHAT_PRESETS, CHAT_PRESET_LABELS, t).map(
+                                  (option) => (
+                                    <SelectItem key={option.value} value={option.value}>
+                                      {option.label}
+                                    </SelectItem>
+                                  ),
+                                )}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="ai-chat-base-url">{t('ai.baseUrl')}</Label>
+                          <Input
+                            id="ai-chat-base-url"
+                            value={ai.chat.baseUrl}
+                            placeholder={AI_DEFAULTS.chatBaseUrl}
+                            onChange={(event) =>
+                              setAi((current) => ({
+                                ...current,
+                                chat: { ...current.chat, baseUrl: event.target.value },
+                              }))
+                            }
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="ai-chat-model">{t('ai.model')}</Label>
+                          <Input
+                            id="ai-chat-model"
+                            list="ai-chat-model-suggestions"
+                            value={ai.chat.model}
+                            placeholder={t('ai.modelPlaceholder')}
+                            onChange={(event) =>
+                              setAi((current) => ({
+                                ...current,
+                                chat: { ...current.chat, model: event.target.value },
+                              }))
+                            }
+                          />
+                          <datalist id="ai-chat-model-suggestions">
+                            {presetModels(CHAT_PRESETS, chatPreset).map((model) => (
+                              <option key={model} value={model} />
+                            ))}
+                          </datalist>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="ai-chat-key">
+                            {chatKeySet && !clearChatKey ? t('ai.apiKeySet') : t('ai.apiKeyUnset')}
+                          </Label>
+                          <div className="flex items-center gap-2">
+                            <Input
+                              id="ai-chat-key"
+                              type="password"
+                              autoComplete="new-password"
+                              value={ai.chat.apiKey}
+                              onChange={(event) =>
+                                setAi((current) => ({
+                                  ...current,
+                                  chat: { ...current.chat, apiKey: event.target.value },
+                                }))
+                              }
+                            />
+                            {chatKeySet && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                disabled={clearChatKey}
+                                onClick={() => setClearChatKey(true)}
+                              >
+                                {t('ai.clearKey')}
+                              </Button>
+                            )}
+                          </div>
+                          {clearChatKey && (
+                            <p className="text-destructive text-xs">{t('ai.keyWillBeCleared')}</p>
+                          )}
+                        </div>
+                        <CollapsiblePrimitive.Root
+                          open={advancedOpen}
+                          onOpenChange={setAdvancedOpen}
+                        >
+                          <CollapsiblePrimitive.Trigger asChild>
+                            <Button type="button" variant="ghost" size="sm" className="px-2">
+                              {t('ai.advanced')}
+                            </Button>
+                          </CollapsiblePrimitive.Trigger>
+                          <CollapsiblePrimitive.Content className="space-y-2 pt-1">
+                            <div className="space-y-2">
+                              <Label htmlFor="ai-chat-headers">{t('ai.headers')}</Label>
+                              <Textarea
+                                id="ai-chat-headers"
+                                rows={3}
+                                value={ai.chat.headers}
+                                placeholder={t('ai.headersPlaceholder')}
+                                aria-invalid={headersError ? true : undefined}
+                                onChange={(event) => {
+                                  const value = event.target.value
+                                  setAi((current) => ({
+                                    ...current,
+                                    chat: { ...current.chat, headers: value },
+                                  }))
+                                  const trimmed = value.trim()
+                                  setHeadersError(
+                                    trimmed && !isValidHeadersJson(trimmed)
+                                      ? t('ai.headersInvalid')
+                                      : '',
+                                  )
+                                }}
+                              />
+                              {headersError && (
+                                <p className="text-destructive text-xs">{headersError}</p>
+                              )}
+                            </div>
+                          </CollapsiblePrimitive.Content>
+                        </CollapsiblePrimitive.Root>
+                      </fieldset>
+                      <fieldset className="border-divider space-y-3 rounded-xl border p-4">
+                        <legend className="px-1 text-sm font-medium">{t('ai.embedding')}</legend>
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <div className="space-y-2">
+                            <Label htmlFor="ai-embedding-protocol">
+                              {t('ai.embeddingProtocol')}
+                            </Label>
+                            <Select
+                              value={ai.embedding.protocol}
+                              onValueChange={(value) =>
+                                setAi((current) => ({
+                                  ...current,
+                                  embedding: {
+                                    ...current.embedding,
+                                    protocol: toEmbeddingProtocol(value),
+                                  },
+                                }))
+                              }
+                            >
+                              <SelectTrigger id="ai-embedding-protocol" className="w-full">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="openai_compatible">
+                                  {t('ai.protocolOpenaiCompatible')}
+                                </SelectItem>
+                                <SelectItem value="voyage">{t('ai.protocolVoyage')}</SelectItem>
+                                <SelectItem value="none">{t('ai.protocolNone')}</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="ai-embedding-preset">{t('ai.embeddingProvider')}</Label>
+                            <Select
+                              value={embeddingPreset}
+                              onValueChange={(value) => {
+                                const preset = EMBEDDING_PRESETS.find((item) => item.id === value)
+                                setAi((current) => ({
+                                  ...current,
+                                  embedding: {
+                                    ...current.embedding,
+                                    protocol:
+                                      value === 'custom'
+                                        ? current.embedding.protocol
+                                        : preset
+                                          ? toEmbeddingProtocol(preset.protocol)
+                                          : current.embedding.protocol,
+                                    baseUrl: preset?.baseUrl ?? current.embedding.baseUrl,
+                                  },
+                                }))
+                              }}
+                            >
+                              <SelectTrigger id="ai-embedding-preset" className="w-full">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {presetOptions(EMBEDDING_PRESETS, EMBEDDING_PRESET_LABELS, t).map(
+                                  (option) => (
+                                    <SelectItem key={option.value} value={option.value}>
+                                      {option.label}
+                                    </SelectItem>
+                                  ),
+                                )}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        {ai.embedding.protocol !== 'none' && (
+                          <>
+                            <div className="space-y-2">
+                              <Label htmlFor="ai-embedding-base-url">
+                                {t('ai.embeddingBaseUrl')}
+                              </Label>
+                              <Input
+                                id="ai-embedding-base-url"
+                                value={ai.embedding.baseUrl}
+                                placeholder={AI_DEFAULTS.embeddingBaseUrl}
+                                onChange={(event) =>
+                                  setAi((current) => ({
+                                    ...current,
+                                    embedding: {
+                                      ...current.embedding,
+                                      baseUrl: event.target.value,
+                                    },
+                                  }))
+                                }
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="ai-embedding-model">{t('ai.embeddingModel')}</Label>
+                              <Input
+                                id="ai-embedding-model"
+                                list="ai-embedding-model-suggestions"
+                                value={ai.embedding.model}
+                                placeholder={t('ai.embeddingModelPlaceholder')}
+                                onChange={(event) =>
+                                  setAi((current) => ({
+                                    ...current,
+                                    embedding: { ...current.embedding, model: event.target.value },
+                                  }))
+                                }
+                              />
+                              <datalist id="ai-embedding-model-suggestions">
+                                {presetModels(EMBEDDING_PRESETS, embeddingPreset).map((model) => (
+                                  <option key={model} value={model} />
+                                ))}
+                              </datalist>
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="ai-embedding-dimensions">{t('ai.dimensions')}</Label>
+                              <Input
+                                id="ai-embedding-dimensions"
+                                type="number"
+                                min={1}
+                                value={ai.embedding.dimensions}
+                                onChange={(event) =>
+                                  setAi((current) => ({
+                                    ...current,
+                                    embedding: {
+                                      ...current.embedding,
+                                      dimensions: event.target.value,
+                                    },
+                                  }))
+                                }
+                              />
+                            </div>
+                          </>
+                        )}
+                        <div className="space-y-2">
+                          <Label htmlFor="ai-embedding-key">
+                            {embeddingKeySet && !clearEmbeddingKey
+                              ? t('ai.embeddingApiKeySet')
+                              : t('ai.embeddingApiKeyUnset')}
+                          </Label>
+                          <div className="flex items-center gap-2">
+                            <Input
+                              id="ai-embedding-key"
+                              type="password"
+                              autoComplete="new-password"
+                              placeholder={
+                                embeddingKeySet ? undefined : t('ai.embeddingApiKeyPlaceholder')
+                              }
+                              value={ai.embedding.apiKey}
+                              onChange={(event) =>
+                                setAi((current) => ({
+                                  ...current,
+                                  embedding: { ...current.embedding, apiKey: event.target.value },
+                                }))
+                              }
+                            />
+                            {embeddingKeySet && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                disabled={clearEmbeddingKey}
+                                onClick={() => setClearEmbeddingKey(true)}
+                              >
+                                {t('ai.clearKey')}
+                              </Button>
+                            )}
+                          </div>
+                          {clearEmbeddingKey && (
+                            <p className="text-destructive text-xs">{t('ai.keyWillBeCleared')}</p>
+                          )}
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="ai-budget">{t('ai.budget')}</Label>
+                          <Input
+                            id="ai-budget"
+                            type="number"
+                            min={0}
+                            value={ai.monthlyTokenBudget}
+                            onChange={(event) =>
+                              setAi((current) => ({
+                                ...current,
+                                monthlyTokenBudget: event.target.value,
+                              }))
+                            }
+                          />
+                        </div>
+                      </fieldset>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={testState.status === 'loading'}
+                        onClick={() => void runTest()}
+                      >
+                        {testState.status === 'loading' ? t('ai.testing') : t('ai.test')}
+                      </Button>
+                      {testState.status === 'ok' && (
+                        <Alert className="max-w-md">
+                          <AlertTitle>{t('ai.testOk')}</AlertTitle>
+                          <AlertDescription>
+                            {testState.latencyMs !== undefined && (
+                              <p>{t('ai.testLatency', { latencyMs: testState.latencyMs })}</p>
+                            )}
+                            {testState.model && (
+                              <p>{t('ai.testModel', { model: testState.model })}</p>
+                            )}
+                          </AlertDescription>
+                        </Alert>
                       )}
-                      {testState.model && <p>{t('ai.testModel', { model: testState.model })}</p>}
-                    </AlertDescription>
-                  </Alert>
-                )}
-                {testState.status === 'unsupported' && (
-                  <Alert className="max-w-md">
-                    <AlertTitle>{t('ai.testUnsupported')}</AlertTitle>
-                  </Alert>
-                )}
-                {testState.status === 'error' && (
-                  <Alert variant="destructive" className="max-w-md">
-                    <AlertTitle>{t('ai.testFailed')}</AlertTitle>
-                    {testState.error && (
-                      <AlertDescription>
-                        <p>{testState.error}</p>
-                      </AlertDescription>
-                    )}
-                  </Alert>
-                )}
-              </div>
-            </TabsContent>
-            <TabsContent value="other" forceMount className="data-[state=inactive]:hidden">
-              <pre className="bg-muted overflow-auto rounded p-3 text-xs">
-                {JSON.stringify(other, null, 2)}
-              </pre>
-            </TabsContent>
+                      {testState.status === 'unsupported' && (
+                        <Alert className="max-w-md">
+                          <AlertTitle>{t('ai.testUnsupported')}</AlertTitle>
+                        </Alert>
+                      )}
+                      {testState.status === 'error' && (
+                        <Alert variant="destructive" className="max-w-md">
+                          <AlertTitle>{t('ai.testFailed')}</AlertTitle>
+                          {testState.error && (
+                            <AlertDescription>
+                              <p>{testState.error}</p>
+                            </AlertDescription>
+                          )}
+                        </Alert>
+                      )}
+                    </div>
+                  </div>
+                </SectionCard>
+              </TabsContent>
+              <TabsContent value="other" forceMount className="data-[state=inactive]:hidden">
+                <SectionCard title={t('tabs.other')}>
+                  <div className="space-y-4">
+                    <pre className="bg-surface-2 overflow-auto rounded-lg p-4 text-[12px] leading-5">
+                      {JSON.stringify(other, null, 2)}
+                    </pre>
+                  </div>
+                </SectionCard>
+              </TabsContent>
+            </div>
           </Tabs>
           {canWrite && (
-            <Button type="submit" disabled={mutation.isPending}>
-              {t('save')}
-            </Button>
+            <div className="bg-background/90 border-divider sticky bottom-0 z-10 -mx-1 mt-6 flex items-center justify-end gap-2 border-t px-1 py-3 backdrop-blur">
+              <Button type="submit" disabled={mutation.isPending}>
+                {t('save')}
+              </Button>
+            </div>
           )}
         </form>
       </Form>

@@ -186,5 +186,8 @@
   "noLines": "Chưa có dòng vật tư — bấm \"Thêm dòng\".",
   "receiptFormHint": "Chọn loại nhập, kho, hoá đơn và các dòng vật tư; phiếu được lưu ở trạng thái nháp.",
   "supplyFormHint": "Mã, tên, quy cách và cấu hình theo dõi lô/hạn, tồn tối thiểu – tối đa.",
-  "stockSettings": "Tồn kho & theo dõi"
+  "stockSettings": "Tồn kho & theo dõi",
+  "balancesHint": "Tồn theo vật tư và kho; bật \"Dưới tồn min\" để lọc mặt hàng cần nhập thêm.",
+  "balanceRows": "Mặt hàng có tồn",
+  "warehouseCount": "Kho"
 }

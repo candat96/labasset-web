@@ -1,3 +1,12 @@
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { SectionCard } from '@/components/page/SectionCard'
 import { useQuery } from '@tanstack/react-query'
 import { PageHeader } from '@/components/page/PageHeader'
 import { Button } from '@/components/ui/button'
@@ -36,42 +45,55 @@ export function Component() {
   return (
     <>
       <PageHeader title={t('jobsTitle')} description={t('jobsDesc')} />
-      {jobs.isPending && <p role="status">{t('loadingJobs')}</p>}
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="text-left">
-            <th>{t('report')}</th>
-            <th>{t('format')}</th>
-            <th>{t('status')}</th>
-            <th>Số dòng</th>
-            <th>{t('createdAt')}</th>
-            <th>{t('finishedAt')}</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {(jobs.data?.items ?? []).map((job) => (
-            <tr key={job.id} className="border-t">
-              <td>{job.name ?? job.key ?? job.id}</td>
-              <td>{job.format}</td>
-              <td>
-                <StatusBadge value={job.status} map={jobStatusMap} />
-              </td>
-              <td>{job.rowCount ?? '—'}</td>
-              <td>{formatDateTime(job.createdAt)}</td>
-              <td>{job.finishedAt ? formatDateTime(job.finishedAt) : '—'}</td>
-              <td>
-                {job.status === 'done' && (job.fileId || job.downloadUrl) && (
-                  <Button size="sm" variant="outline" onClick={() => void download(job)}>
-                    {t('download')}
-                  </Button>
-                )}
-                {job.error && <span className="text-destructive">{job.error}</span>}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <SectionCard
+        title={t('jobsTitle')}
+        description={t('jobCount', {
+          defaultValue: '{{n}} tác vụ',
+          n: jobs.data?.items.length ?? 0,
+        })}
+        flush
+      >
+        {jobs.isPending && (
+          <p role="status" className="text-muted-foreground px-5 py-4 text-[13px]">
+            {t('loadingJobs')}
+          </p>
+        )}
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="pl-5">{t('report')}</TableHead>
+              <TableHead>{t('format')}</TableHead>
+              <TableHead>{t('status')}</TableHead>
+              <TableHead>Số dòng</TableHead>
+              <TableHead>{t('createdAt')}</TableHead>
+              <TableHead>{t('finishedAt')}</TableHead>
+              <TableHead></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {(jobs.data?.items ?? []).map((job) => (
+              <TableRow key={job.id}>
+                <TableCell className="pl-5 font-medium">{job.name ?? job.key ?? job.id}</TableCell>
+                <TableCell>{job.format}</TableCell>
+                <TableCell>
+                  <StatusBadge value={job.status} map={jobStatusMap} />
+                </TableCell>
+                <TableCell>{job.rowCount ?? '—'}</TableCell>
+                <TableCell>{formatDateTime(job.createdAt)}</TableCell>
+                <TableCell>{job.finishedAt ? formatDateTime(job.finishedAt) : '—'}</TableCell>
+                <TableCell>
+                  {job.status === 'done' && (job.fileId || job.downloadUrl) && (
+                    <Button size="sm" variant="outline" onClick={() => void download(job)}>
+                      {t('download')}
+                    </Button>
+                  )}
+                  {job.error && <span className="text-destructive">{job.error}</span>}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </SectionCard>
     </>
   )
 }

@@ -60,5 +60,8 @@
   "enumByDepartment": "Theo khoa",
   "enumByMonth": "Theo tháng",
   "selectPlaceholder": "Chọn",
-  "allOption": "Tất cả"
+  "allOption": "Tất cả",
+  "jobCount": "{{n}} tác vụ",
+  "reportList": "Danh sách báo cáo",
+  "paramsHint": "Chọn tham số rồi bấm Xem hoặc xuất tệp."
 }

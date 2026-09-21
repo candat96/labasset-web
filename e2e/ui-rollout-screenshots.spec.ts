@@ -56,6 +56,22 @@ test('chụp màn hình 1440', async ({ page }) => {
   for (const target of targets) {
     if (only.length && !only.includes(target.name)) continue
     if (target.path.includes('undefined')) continue
+    if (target.path === '/assistant') {
+      // Môi trường dev chưa bật AI: giả lập trạng thái để chụp khung chat (chỉ ảnh).
+      await page.route('**/v1/ai/status', (route) =>
+        route.fulfill({
+          json: { enabled: true, budget: { remaining: 120 }, rateLimit: { remaining: 20 } },
+        }),
+      )
+      await page.route('**/v1/ai/conversations', (route) =>
+        route.fulfill({
+          json: [
+            { id: 'c1', title: 'Máy XN-003 báo lỗi E12', updatedAt: new Date().toISOString() },
+            { id: 'c2', title: 'Tồn kho hoá chất tuần này', updatedAt: new Date().toISOString() },
+          ],
+        }),
+      )
+    }
     await page.goto(target.path)
     await page.evaluate((dark) => {
       document.documentElement.classList.toggle('dark', !!dark)

@@ -307,7 +307,8 @@
     "workload": "Khối lượng việc theo nhân viên",
     "person": "Người",
     "openTickets": "Phiếu mở",
-    "awaitingResponse": "Chờ phản hồi"
+    "awaitingResponse": "Chờ phản hồi",
+    "hint": "Số phiếu, chi phí, MTTR/MTBF theo khoảng thời gian; lọc theo ngày tạo phiếu."
   },
   "signature": {
     "clear": "Xoá chữ ký",
