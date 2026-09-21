@@ -135,6 +135,14 @@ const implemented: RouteObject[] = [
     lazy: () => import('@/features/stocktakes/pages/StocktakeComparePage'),
   },
   { path: 'stocktakes/:id', lazy: () => import('@/features/stocktakes/pages/StocktakeDetailPage') },
+  {
+    path: 'procurement/demand',
+    lazy: () => import('@/features/procurement/pages/DemandPeriodsPage'),
+  },
+  {
+    path: 'procurement/demand/periods/:id',
+    lazy: () => import('@/features/procurement/pages/DemandPeriodDetailPage'),
+  },
   { path: 'my-tasks', lazy: () => import('@/features/dashboard/pages/MyTasksPage') },
   { path: 'reports', lazy: () => import('@/features/reports/pages/ReportsPage') },
   { path: 'reports/builder', lazy: () => import('@/features/reports/pages/ReportBuilderPage') },

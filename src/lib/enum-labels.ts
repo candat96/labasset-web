@@ -166,6 +166,8 @@ export const auditEntityTypeLabels: EnumLabels = {
   stock_receipt: 'Phiếu nhập',
   stock_transfer: 'Chuyển kho',
   stock_lot: 'Lô kho',
+  demand_period: 'Kỳ dự trù',
+  demand_request: 'Phiếu dự trù',
   stock_alert: 'Cảnh báo kho',
   stock_adjustment: 'Điều chỉnh tồn',
   stocktake_session: 'Kiểm kê',

@@ -197,3 +197,9 @@ export const demandRequestStatusMap: StatusMap = {
   returned: { label: 'Bị trả lại', tone: 'danger' },
   accepted: { label: 'Đã tiếp nhận', tone: 'success' },
 }
+
+export const demandDecisionMap: StatusMap = {
+  buy: { label: 'Cần mua', tone: 'info' },
+  from_stock: { label: 'Lấy từ kho', tone: 'success' },
+  reject: { label: 'Không duyệt', tone: 'danger' },
+}
