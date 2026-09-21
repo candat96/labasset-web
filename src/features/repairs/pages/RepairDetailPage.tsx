@@ -81,6 +81,7 @@ import { getFileUrl } from '@/api/files'
 import { useAuthStore } from '@/stores/auth.store'
 import { assistantPath } from '@/lib/ai-link'
 import * as api from '../api'
+import { listRepairsForEquipment } from '@/features/equipment/api'
 import {
   useDepartmentNames,
   usePublicRepairSettings,
@@ -709,6 +710,68 @@ function RepairInformation({ row }: { row: NonNullable<ReturnType<typeof useRepa
         {t('detail.timeline.title', { defaultValue: 'Tiến trình' })}
       </h2>
       <Timeline events={timeline} />
+      <EquipmentRepairHistory equipmentId={row.equipmentId} currentId={row.id} />
+    </>
+  )
+}
+
+/** Các phiếu sửa chữa trước đó của cùng máy (5 gần nhất) — kỹ thuật viên cần biết máy từng hỏng gì. */
+function EquipmentRepairHistory({
+  equipmentId,
+  currentId,
+}: {
+  equipmentId: string
+  currentId: string
+}) {
+  const { t } = useTranslation('repairs')
+  const q = useQuery({
+    queryKey: ['repairs', 'by-equipment', equipmentId],
+    queryFn: () => listRepairsForEquipment(equipmentId),
+    enabled: !!equipmentId,
+  })
+  const others = (q.data?.items ?? []).filter((r) => r.id !== currentId).slice(0, 5)
+  const total = Math.max(0, (q.data?.total ?? 0) - 1)
+  return (
+    <>
+      <div className="mt-5 mb-3 flex items-baseline justify-between">
+        <h2 className="text-[15px] leading-6 font-semibold">
+          {t('detail.equipmentHistory.title', { defaultValue: 'Lịch sử sửa chữa máy này' })}
+        </h2>
+        {total > 0 && (
+          <Link
+            to={`/repairs?equipmentId=${equipmentId}`}
+            className="text-primary text-[13px] font-medium hover:underline"
+          >
+            {t('detail.equipmentHistory.all', { defaultValue: 'Tất cả ({{n}})', n: total })}
+          </Link>
+        )}
+      </div>
+      {q.isPending ? (
+        <p className="text-muted-foreground text-[13px]">…</p>
+      ) : others.length === 0 ? (
+        <p className="text-muted-foreground text-[13px]">
+          {t('detail.equipmentHistory.empty', { defaultValue: 'Chưa có lần sửa nào trước đó' })}
+        </p>
+      ) : (
+        <ul className="divide-divider divide-y">
+          {others.map((r) => (
+            <li key={r.id} className="flex items-center justify-between gap-2 py-2 text-[13px]">
+              <div className="min-w-0">
+                <Link to={`/repairs/${r.id}`} className="text-primary font-medium hover:underline">
+                  {r.code}
+                </Link>
+                <p className="text-muted-foreground truncate">{r.description}</p>
+              </div>
+              <div className="shrink-0 text-right">
+                <StatusBadge value={r.status} map={repairStatusMap} />
+                <p className="text-subtle mt-0.5 text-[12px] tabular-nums">
+                  {formatDate(r.createdAt)}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
     </>
   )
 }
