@@ -109,7 +109,7 @@ export const GUIDE: GuideSection[] = [
     blocks: [
       {
         type: 'p',
-        text: 'Mỗi máy có một hồ sơ: thông tin chung, mua sắm & bảo hành, vận hành (khoa, vị trí, người phụ trách), thông số kỹ thuật, cấu hình (phụ kiện, phần mềm, linh kiện), vật tư đi kèm, tài liệu, và toàn bộ lịch sử sửa chữa – bảo dưỡng – điều chuyển.',
+        text: 'Mỗi máy có một hồ sơ: thông tin chung, mua sắm & bảo hành, vận hành (Khoa/Phòng ban, Phòng, vị trí trong phòng, người phụ trách), thông số kỹ thuật, cấu hình (phụ kiện, phần mềm, linh kiện), vật tư đi kèm, tài liệu, và toàn bộ lịch sử sửa chữa – bảo dưỡng – điều chuyển.',
       },
     ],
     children: [
@@ -119,10 +119,16 @@ export const GUIDE: GuideSection[] = [
         roles: ['Quản trị viện', 'Nhân viên VT-TBYT'],
         blocks: [
           {
+            type: 'note',
+            tone: 'info',
+            text: 'Khoa/Phòng ban là đơn vị tổ chức (khoa lâm sàng, cận lâm sàng, phòng chức năng như Hành chính, CNTT…); Phòng là vị trí vật lý (Phòng Huyết học, Buồng hồi sức 1, Phòng máy chủ…). Mỗi máy thuộc một Khoa/Phòng ban và đặt tại một Phòng; danh sách máy có cột và bộ lọc Phòng.',
+          },
+          {
             type: 'steps',
             items: [
               'Thiết bị → Hồ sơ thiết bị → "Thêm máy".',
-              'Nhập Tên, Model, Serial, Hãng, Nhóm, Khoa sử dụng, Vị trí; mã máy để trống sẽ tự sinh (TB-YYYY-xxxxx).',
+              'Nhập Tên, Model, Serial, Hãng, Nhóm; mã máy để trống sẽ tự sinh (TB-YYYY-xxxxx).',
+              'Chọn Khoa/Phòng ban (đơn vị quản lý máy) → chọn Phòng (vị trí vật lý; danh sách gồm phòng của đơn vị và phòng dùng chung như hội trường, kho chung) → nhập "Vị trí trong phòng" (Bàn 1, Giường H04…). Chưa có phòng phù hợp: bấm "+" cạnh ô Phòng để thêm nhanh (Quản trị viện, VT-TBYT).',
               'Nhập thông tin mua sắm: nhà cung cấp, nguyên giá, ngày nhận, ngày đưa vào sử dụng, bảo hành đến, nguồn vốn.',
               'Lưu. Sau đó vào hồ sơ để bổ sung thông số, phụ kiện, tài liệu (hướng dẫn sử dụng, chứng nhận).',
               'In tem QR (Thiết bị → Tem QR) và dán lên máy để quét bằng điện thoại.',
@@ -153,15 +159,19 @@ export const GUIDE: GuideSection[] = [
       },
       {
         id: 'thiet-bi-dieu-chuyen',
-        title: '4.3 Điều chuyển máy giữa các khoa',
+        title: '4.3 Điều chuyển máy giữa các Khoa/Phòng ban',
         blocks: [
           {
             type: 'flow',
             steps: [
-              'Tạo yêu cầu điều chuyển (khoa đích, lý do)',
+              'Tạo yêu cầu điều chuyển (Khoa đích, Phòng đích, vị trí, lý do)',
               'Quản trị viện duyệt',
-              'Máy đổi khoa, ghi vào lịch sử',
+              'Máy đổi Khoa/Phòng ban và Phòng, ghi vào lịch sử',
             ],
+          },
+          {
+            type: 'p',
+            text: 'Phòng đích chỉ chọn được sau khi chọn Khoa đích (gồm phòng của khoa đó và phòng dùng chung). Không chọn phòng đích → sau khi duyệt máy chưa gán phòng, cần vào Sửa hồ sơ để chọn.',
           },
           {
             type: 'p',
@@ -416,9 +426,9 @@ export const GUIDE: GuideSection[] = [
       {
         type: 'list',
         items: [
-          '18 báo cáo sẵn: danh mục thiết bị theo khoa, máy hỏng, chi phí sửa chữa, lịch bảo dưỡng/kiểm định, tồn kho, xuất – nhập – tồn, hạn dùng, định mức, phiếu yêu cầu theo khoa…',
-          'Chọn báo cáo → đặt bộ lọc (khoảng ngày, khoa, kho) → Xem hoặc Xuất Excel/PDF. Báo cáo lớn chạy nền, xong có thông báo để tải.',
-          'Báo cáo tuỳ chỉnh: tự chọn nguồn (thiết bị, sửa chữa, xuất nhập, phiếu yêu cầu, bảo dưỡng), cột, điều kiện lọc; lưu để dùng lại.',
+          '19 báo cáo sẵn: thiết bị theo Khoa/Phòng ban (có cột Phòng), thiết bị theo phòng, máy hỏng, chi phí sửa chữa, lịch bảo dưỡng/kiểm định, tồn kho, xuất – nhập – tồn, hạn dùng, định mức, phiếu yêu cầu theo khoa…',
+          'Chọn báo cáo → đặt bộ lọc (khoảng ngày, Khoa/Phòng ban, kho) → Xem hoặc Xuất Excel/PDF. Báo cáo lớn chạy nền, xong có thông báo để tải.',
+          'Báo cáo tuỳ chỉnh: tự chọn nguồn (thiết bị — có trường Phòng, sửa chữa, xuất nhập, phiếu yêu cầu, bảo dưỡng), cột, điều kiện lọc; lưu để dùng lại.',
         ],
       },
     ],
@@ -470,9 +480,10 @@ export const GUIDE: GuideSection[] = [
       {
         type: 'list',
         items: [
-          'Người dùng: tạo tài khoản, gán vai trò và khoa, khoá/mở, đặt lại mật khẩu, xem phiên đăng nhập.',
-          'Khoa/phòng: mã, tên, loại, trưởng khoa, liên hệ.',
-          'Danh mục: nhóm thiết bị, hãng, nhà cung cấp, đơn vị tính, nguồn vốn, kho, đơn vị kiểm định, loại chi phí… (có nhập Excel).',
+          'Người dùng: tạo tài khoản, gán vai trò và Khoa/Phòng ban, khoá/mở, đặt lại mật khẩu, xem phiên đăng nhập.',
+          'Khoa/Phòng ban: mã, tên, loại, trưởng khoa, liên hệ; tab "Phòng" liệt kê các phòng của đơn vị kèm số máy, thêm phòng ngay tại đây.',
+          'Danh mục Phòng (Quản trị → Danh mục → Phòng): mã, tên, Khoa/Phòng ban (để trống = phòng dùng chung), toà nhà, tầng, loại phòng (xét nghiệm, buồng bệnh, phòng mổ, chẩn đoán hình ảnh, văn phòng, kho, khác). Lọc theo Khoa/Phòng ban, nhập/xuất Excel (cột departmentCode trống = dùng chung). Phòng đang có máy không xoá được — tắt "Đang hoạt động" để ẩn khỏi danh sách chọn.',
+          'Danh mục khác: nhóm thiết bị, hãng, nhà cung cấp, đơn vị tính, nguồn vốn, kho, đơn vị kiểm định, loại chi phí… (có nhập Excel).',
           'Cấu hình: thông tin viện, quy trình (số cấp duyệt phiếu, SLA sửa chữa theo mức độ), kho (FEFO, cửa sổ huỷ phiếu), cảnh báo (số ngày báo trước), đánh số phiếu, AI, mẫu in.',
           'Nhật ký hệ thống: ai làm gì lúc nào, xem chi tiết trước/sau của mỗi thay đổi.',
         ],

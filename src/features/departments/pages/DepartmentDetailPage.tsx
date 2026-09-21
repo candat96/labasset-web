@@ -1,9 +1,9 @@
-import { useParams } from 'react-router'
-import { useMemo } from 'react'
+import { Link, useParams } from 'react-router'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
-import { MapPin, Phone, Users } from 'lucide-react'
+import { DoorOpen, MapPin, Phone, Users } from 'lucide-react'
 import { DetailLayout } from '@/components/detail-layout'
 import { DataTable, useServerTable } from '@/components/data-table'
 import { FilterBar } from '@/components/filter-bar'
@@ -15,9 +15,21 @@ import { SectionCard } from '@/components/page/SectionCard'
 import { AuditTrail } from '@/components/audit-trail'
 import { StatusBadge } from '@/components/status-badge'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { EmptyState } from '@/components/page/EmptyState'
+import { RoomFormDialog } from '@/components/room-form-dialog'
+import { useCan } from '@/app/guards/useCan'
+import { STAFF } from '@/routes/roles'
 import { enumLabel } from '@/lib/enum-labels'
 import { commonStatusMap } from '@/lib/status-maps'
-import { getDepartment, getDepartmentUsers, type DepartmentUser } from '../api'
+import {
+  getDepartment,
+  getDepartmentRoomCounts,
+  getDepartmentRooms,
+  getDepartmentUsers,
+  type DepartmentRoom,
+  type DepartmentUser,
+} from '../api'
 export function Component() {
   const { t } = useTranslation('departments')
   const { id = '' } = useParams()
@@ -30,6 +42,76 @@ export function Component() {
     queryKey: ['departments', id, 'users', table.params.page, table.params.limit],
     queryFn: () => getDepartmentUsers(id, table.params.page, table.params.limit),
   })
+  const canAddRoom = useCan(STAFF)
+  const [roomDialog, setRoomDialog] = useState(false)
+  const rooms = useQuery({
+    queryKey: ['departments', id, 'rooms'],
+    queryFn: () => getDepartmentRooms(id),
+  })
+  const roomCounts = useQuery({
+    queryKey: ['departments', id, 'room-counts'],
+    queryFn: () => getDepartmentRoomCounts(id),
+  })
+  const roomColumns = useMemo<ColumnDef<DepartmentRoom>[]>(
+    () => [
+      {
+        accessorKey: 'code',
+        header: t('roomColumns.code', { defaultValue: 'Mã' }),
+        cell: ({ getValue }) => <code className="font-mono text-xs">{getValue<string>()}</code>,
+      },
+      {
+        accessorKey: 'name',
+        header: t('roomColumns.name', { defaultValue: 'Tên phòng' }),
+        cell: ({ row }) => (
+          <span className="inline-flex items-center gap-2 font-medium">
+            {row.original.name}
+            {row.original.departmentId === null && (
+              <Badge variant="secondary">{t('roomShared', { defaultValue: 'Dùng chung' })}</Badge>
+            )}
+          </span>
+        ),
+      },
+      {
+        id: 'buildingFloor',
+        header: t('roomColumns.buildingFloor', { defaultValue: 'Toà/Tầng' }),
+        cell: ({ row }) =>
+          [row.original.building, row.original.floor].filter(Boolean).join(' / ') || '—',
+      },
+      {
+        accessorKey: 'roomType',
+        header: t('roomColumns.roomType', { defaultValue: 'Loại phòng' }),
+        cell: ({ row }) => enumLabel('roomType', row.original.roomType),
+      },
+      {
+        id: 'equipmentCount',
+        header: t('roomColumns.equipmentCount', { defaultValue: 'Số máy' }),
+        cell: ({ row }) => {
+          const count = roomCounts.data?.get(row.original.code) ?? 0
+          return count ? (
+            <Link
+              className="text-primary hover:underline"
+              to={`/equipment?departmentId=${id}&roomId=${row.original.id}`}
+            >
+              {count}
+            </Link>
+          ) : (
+            '0'
+          )
+        },
+      },
+      {
+        accessorKey: 'isActive',
+        header: t('fields.isActive'),
+        cell: ({ row }) => (
+          <StatusBadge
+            value={row.original.isActive ? 'active' : 'inactive'}
+            map={commonStatusMap}
+          />
+        ),
+      },
+    ],
+    [id, roomCounts.data, t],
+  )
   const columns = useMemo<ColumnDef<DepartmentUser>[]>(
     () => [
       { accessorKey: 'username', header: t('userColumns.username') },
@@ -80,6 +162,7 @@ export function Component() {
               { label: t('fields.phone'), value: row.phone },
               { label: t('fields.location'), value: row.location },
               { label: t('userCount'), value: users.data?.total },
+              { label: t('roomCount', { defaultValue: 'Số phòng' }), value: rooms.data?.length },
             ]}
           />
         </>
@@ -103,6 +186,68 @@ export function Component() {
               onRetry={() => void users.refetch()}
               getRowId={(u) => u.id}
             />
+          ),
+        },
+        {
+          value: 'rooms',
+          label: t('rooms', { defaultValue: 'Phòng' }),
+          count: rooms.data?.length,
+          content: (
+            <>
+              {rooms.data && rooms.data.length === 0 ? (
+                <SectionCard
+                  title={t('rooms', { defaultValue: 'Phòng' })}
+                  actions={
+                    canAddRoom && (
+                      <Button onClick={() => setRoomDialog(true)}>
+                        {t('addRoom', { defaultValue: 'Thêm phòng' })}
+                      </Button>
+                    )
+                  }
+                >
+                  <EmptyState
+                    icon={DoorOpen}
+                    title={t('roomsEmpty', { defaultValue: 'Chưa có phòng nào' })}
+                    description={t('roomsEmptyHint', {
+                      defaultValue: 'Thêm phòng để chỉ rõ máy đặt ở đâu trong Khoa/Phòng ban này.',
+                    })}
+                  />
+                </SectionCard>
+              ) : (
+                <DataTable
+                  tableId="department-rooms"
+                  columns={roomColumns}
+                  data={rooms.data}
+                  total={rooms.data?.length ?? 0}
+                  params={{
+                    ...table.params,
+                    page: 1,
+                    limit: Math.max(rooms.data?.length ?? 0, 20),
+                  }}
+                  onPageChange={() => {}}
+                  onLimitChange={() => {}}
+                  toolbarLeft={<FilterBar>{null}</FilterBar>}
+                  toolbarRight={
+                    canAddRoom && (
+                      <Button onClick={() => setRoomDialog(true)}>
+                        {t('addRoom', { defaultValue: 'Thêm phòng' })}
+                      </Button>
+                    )
+                  }
+                  isLoading={rooms.isPending}
+                  error={rooms.error}
+                  onRetry={() => void rooms.refetch()}
+                  getRowId={(r) => r.id}
+                />
+              )}
+              <RoomFormDialog
+                open={roomDialog}
+                onOpenChange={setRoomDialog}
+                departmentId={id}
+                departmentName={row.name}
+                onCreated={() => void rooms.refetch()}
+              />
+            </>
           ),
         },
         {

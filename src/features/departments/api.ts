@@ -1,4 +1,5 @@
-import { api, unwrap, unwrapAs } from '@/api/client'
+import { api, unwrap, unwrapAs, untypedApi } from '@/api/client'
+import type { components } from '@/api/schema'
 import { downloadFile } from '@/api/download'
 import { pageQuery } from '@/api/paths'
 import type {
@@ -75,3 +76,29 @@ export const getDepartmentUsers = (id: string, page = 1, limit = 20) =>
       params: { path: { id }, query: pageQuery({ page, limit }) },
     }),
   )
+
+export type DepartmentRoom = components['schemas']['RoomResponseDto']
+
+/** Phòng của đơn vị — API hiện trả kèm cả phòng dùng chung (departmentId null). */
+export function getDepartmentRooms(id: string) {
+  return unwrapAs<DepartmentRoom[]>(
+    api.GET('/v1/departments/{id}/rooms', { params: { path: { id } } }),
+  )
+}
+
+/**
+ * Số máy theo phòng của đơn vị — lấy từ báo cáo `equipment.byRoom` (API chưa trả
+ * `equipmentCount` trong RoomResponseDto; xem WEB-NOTES 14). Khớp theo `roomCode`.
+ */
+export async function getDepartmentRoomCounts(id: string): Promise<Map<string, number>> {
+  const result = await unwrapAs<{ rows: { roomCode?: string | null; total?: number }[] }>(
+    untypedApi.GET('/v1/reports/equipment.byRoom', {
+      params: { query: { departmentId: id, format: 'json', page: 1, limit: 200 } },
+    }),
+  )
+  return new Map(
+    result.rows
+      .filter((row) => typeof row.roomCode === 'string')
+      .map((row) => [row.roomCode as string, Number(row.total ?? 0)]),
+  )
+}

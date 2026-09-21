@@ -58,5 +58,18 @@
     "message": "Nội dung"
   },
   "info": "Thông tin",
-  "audit": "Nhật ký"
+  "audit": "Nhật ký",
+  "roomCount": "Số phòng",
+  "rooms": "Phòng",
+  "addRoom": "Thêm phòng",
+  "roomsEmpty": "Chưa có phòng nào",
+  "roomsEmptyHint": "Thêm phòng để chỉ rõ máy đặt ở đâu trong Khoa/Phòng ban này.",
+  "roomColumns": {
+    "code": "Mã",
+    "name": "Tên phòng",
+    "buildingFloor": "Toà/Tầng",
+    "roomType": "Loại phòng",
+    "equipmentCount": "Số máy"
+  },
+  "roomShared": "Dùng chung"
 }

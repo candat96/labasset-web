@@ -20,8 +20,25 @@ beforeEach(() => {
   server.use(
     http.get('/v1/reports', () =>
       HttpResponse.json(
-        Array.from({ length: 18 }, (_, index) =>
-          index === 0 ? report : { ...report, key: `report.${index}`, title: `Báo cáo ${index}` },
+        Array.from({ length: 19 }, (_, index) =>
+          index === 0
+            ? report
+            : index === 1
+              ? {
+                  ...report,
+                  key: 'equipment.byRoom',
+                  title: 'Thiết bị theo phòng',
+                  params: {
+                    type: 'object',
+                    properties: { departmentId: { type: 'string', format: 'uuid' } },
+                  },
+                  columns: [
+                    { key: 'department', title: 'Khoa', type: 'string' },
+                    { key: 'room', title: 'Phòng', type: 'string' },
+                    { key: 'total', title: 'Tổng', type: 'number' },
+                  ],
+                }
+              : { ...report, key: `report.${index}`, title: `Báo cáo ${index}` },
         ),
       ),
     ),
@@ -41,9 +58,40 @@ it('renders date params from json schema', async () => {
   expect(await screen.findByLabelText('Từ ngày')).toBeVisible()
 })
 
-it('renders all 18 reports returned by the registry', async () => {
+it('renders all 19 reports returned by the registry (có "Thiết bị theo phòng")', async () => {
   useAuthStore.getState().setSession(fakeSession())
   renderWithProviders(<Component />)
-  expect(await screen.findByText('Báo cáo 17')).toBeVisible()
-  expect(document.querySelectorAll('[data-testid="report-list"] button')).toHaveLength(18)
+  expect(await screen.findByText('Báo cáo 18')).toBeVisible()
+  expect(document.querySelectorAll('[data-testid="report-list"] button')).toHaveLength(19)
+  expect(screen.getByText('Thiết bị theo phòng')).toBeVisible()
+})
+
+it('báo cáo theo phòng: chạy với tham số Khoa/Phòng ban và hiện cột Phòng', async () => {
+  server.use(
+    http.get('/v1/departments', () =>
+      HttpResponse.json([{ id: 'd1', code: 'XN', name: 'Khoa Xét nghiệm' }]),
+    ),
+    http.get('/v1/reports/equipment.byRoom', ({ request }) => {
+      const url = new URL(request.url)
+      if (url.searchParams.get('format') !== 'json') return HttpResponse.json({})
+      return HttpResponse.json({
+        columns: [
+          { key: 'department', title: 'Khoa', type: 'string' },
+          { key: 'room', title: 'Phòng', type: 'string' },
+          { key: 'total', title: 'Tổng', type: 'number' },
+        ],
+        rows: [{ department: 'Khoa Xét nghiệm', room: 'Phòng Huyết học', total: 4 }],
+        total: 1,
+        page: 1,
+        limit: 20,
+      })
+    }),
+  )
+  useAuthStore.getState().setSession(fakeSession())
+  renderWithProviders(<Component />)
+  await userEvent.click(await screen.findByText('Thiết bị theo phòng'))
+  expect(await screen.findByRole('combobox', { name: 'Khoa/Phòng ban' })).toBeVisible()
+  await userEvent.click(screen.getByRole('button', { name: 'Xem' }))
+  expect(await screen.findByText('Phòng Huyết học')).toBeVisible()
+  expect(screen.getByRole('columnheader', { name: 'Phòng' })).toBeVisible()
 })
