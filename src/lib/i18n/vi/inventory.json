@@ -171,7 +171,6 @@
   "severity": "Mức",
   "request": "Phiếu yêu cầu",
   "fefoWarningHint": "Có lô hạn dùng gần hơn chưa được xuất trước.",
-  "items": "Vật tư xuất",
   "noItems": "Chưa có dòng vật tư",
   "attachments": "Đính kèm",
   "info": "Thông tin",
@@ -198,5 +197,7 @@
   "stockTransfersHint": "Chuyển vật tư giữa các kho theo lô.",
   "issueTarget": "Khoa nhận / Máy",
   "lineCount": "Số dòng",
-  "createdBy": "Người tạo"
+  "createdBy": "Người tạo",
+  "issueItems": "Vật tư xuất",
+  "receiptItems": "Vật tư nhập"
 }

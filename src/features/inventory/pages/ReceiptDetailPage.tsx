@@ -299,7 +299,7 @@ export function Component() {
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="min-w-0 space-y-5">
           <SectionCard
-            title={t('items', { defaultValue: 'Vật tư nhập' })}
+            title={t('receiptItems', { defaultValue: 'Vật tư nhập' })}
             description={`${receiptItems.length} ${t('supply', { defaultValue: 'vật tư' }).toLowerCase()}`}
             flush
             footer={

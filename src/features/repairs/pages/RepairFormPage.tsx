@@ -78,7 +78,7 @@ export function Component() {
         <Form {...form}>
           <form className="min-w-0 space-y-5" noValidate onSubmit={form.handleSubmit(submit)}>
             <SectionCard title={t('form.info', { defaultValue: 'Thông tin sự cố' })}>
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 <FormField
                   control={form.control}
                   name="equipmentId"
@@ -99,7 +99,7 @@ export function Component() {
                   control={form.control}
                   name="description"
                   render={({ field }) => (
-                    <FormItem className="md:col-span-2">
+                    <FormItem className="col-span-full">
                       <FormLabel>{t('form.description')}</FormLabel>
                       <FormControl>
                         <Textarea {...field} />
@@ -118,7 +118,7 @@ export function Component() {
                     label: faultSeverityMap[item]?.label ?? item,
                   }))}
                 />
-                <p className="text-muted-foreground text-[13px] md:col-span-2">
+                <p className="text-muted-foreground text-[13px] col-span-full">
                   {Number.isFinite(slaHours)
                     ? t('form.sla', { hours: slaHours })
                     : t('form.slaHint')}

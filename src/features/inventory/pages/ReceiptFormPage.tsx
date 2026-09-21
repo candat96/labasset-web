@@ -174,9 +174,9 @@ export function Component() {
         })}
       />
       <Form {...form}>
-        <form className="max-w-4xl space-y-5" noValidate onSubmit={form.handleSubmit(submit)}>
+        <form className="space-y-5" noValidate onSubmit={form.handleSubmit(submit)}>
           <SectionCard title={t('info', { defaultValue: 'Thông tin phiếu' })}>
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               <SelectField
                 control={form.control}
                 name="type"
@@ -259,7 +259,7 @@ export function Component() {
             </div>
           </SectionCard>
           <SectionCard
-            title={t('items', { defaultValue: 'Vật tư nhập' })}
+            title={t('receiptItems', { defaultValue: 'Vật tư nhập' })}
             actions={
               <Button
                 type="button"
@@ -289,7 +289,7 @@ export function Component() {
             {items.fields.map((field, index) => (
               <div
                 key={field.id}
-                className="border-divider grid gap-3 rounded-xl border p-4 md:grid-cols-3"
+                className="border-divider grid gap-3 rounded-xl border p-4 md:grid-cols-3 xl:grid-cols-5"
               >
                 <FormField
                   control={form.control}
@@ -323,15 +323,24 @@ export function Component() {
                   name={`items.${index}.unitCost`}
                   label={t('unitCost')}
                 />
-                <p className="text-sm">
-                  {t('lineTotal')}{' '}
-                  {formatVnd(
-                    moneyMul(watched[index]?.quantity ?? '0', watched[index]?.unitCost ?? '0'),
-                  )}
-                </p>
-                <Button type="button" variant="ghost" onClick={() => items.remove(index)}>
-                  {t('removeLine')}
-                </Button>
+                <div className="col-span-full flex items-center justify-between gap-3">
+                  <p className="text-[13px]">
+                    <span className="text-muted-foreground">{t('lineTotal')}</span>{' '}
+                    <span className="font-semibold tabular-nums">
+                      {formatVnd(
+                        moneyMul(watched[index]?.quantity ?? '0', watched[index]?.unitCost ?? '0'),
+                      )}
+                    </span>
+                  </p>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => items.remove(index)}
+                  >
+                    {t('removeLine')}
+                  </Button>
+                </div>
               </div>
             ))}
             {items.fields.length === 0 && (

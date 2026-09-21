@@ -121,7 +121,7 @@ export function Component() {
       />
       <Form {...form}>
         <form
-          className="max-w-4xl space-y-5"
+          className="space-y-5"
           noValidate
           onSubmit={form.handleSubmit(async (values) => {
             if (values.type === 'to_department' && !values.toDepartmentId) {
@@ -178,7 +178,7 @@ export function Component() {
           })}
         >
           <SectionCard title={t('info', { defaultValue: 'Thông tin phiếu' })}>
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               <SelectField
                 control={form.control}
                 name="type"
@@ -266,7 +266,7 @@ export function Component() {
             </div>
           </SectionCard>
           <SectionCard
-            title={t('items', { defaultValue: 'Vật tư xuất' })}
+            title={t('issueItems', { defaultValue: 'Vật tư xuất' })}
             actions={
               <Button
                 type="button"
@@ -352,46 +352,54 @@ export function Component() {
                   !suggestedLots[form.watch(`items.${index}.supplyId`)]?.includes(
                     form.watch(`items.${index}.lotId`) ?? '',
                   ) && <p className="text-warning text-sm">{t('nonFefoWarning')}</p>}
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={async () => {
-                    const supplyId = form.getValues(`items.${index}.supplyId`)
-                    const warehouseId = form.getValues('warehouseId')
-                    const quantity = form.getValues(`items.${index}.quantity`)
-                    if (!supplyId || !warehouseId) return
-                    const lots = await suggestLots({ supplyId, warehouseId, quantity })
-                    const suggestions = (
-                      Array.isArray(lots)
-                        ? lots
-                        : ((lots as { items?: Array<{ lotId?: string; quantity?: string }> })
-                            .items ?? [])
-                    ) as Array<{ lotId?: string; quantity?: string }>
-                    const valid = suggestions.filter(
-                      (item): item is { lotId: string; quantity?: string } => !!item.lotId,
-                    )
-                    if (valid.length) {
-                      items.remove(index)
-                      valid.reverse().forEach((item) =>
-                        items.insert(index, {
-                          supplyId,
-                          quantity: item.quantity ?? quantity,
-                          lotId: item.lotId,
-                        }),
+                <div className="col-span-full flex justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      const supplyId = form.getValues(`items.${index}.supplyId`)
+                      const warehouseId = form.getValues('warehouseId')
+                      const quantity = form.getValues(`items.${index}.quantity`)
+                      if (!supplyId || !warehouseId) return
+                      const lots = await suggestLots({ supplyId, warehouseId, quantity })
+                      const suggestions = (
+                        Array.isArray(lots)
+                          ? lots
+                          : ((lots as { items?: Array<{ lotId?: string; quantity?: string }> })
+                              .items ?? [])
+                      ) as Array<{ lotId?: string; quantity?: string }>
+                      const valid = suggestions.filter(
+                        (item): item is { lotId: string; quantity?: string } => !!item.lotId,
                       )
-                      setSuggestedLots((current) => ({
-                        ...current,
-                        [supplyId]: valid.map((item) => item.lotId),
-                      }))
-                    }
-                    toast.success(t('suggestedLot'))
-                  }}
-                >
-                  {t('suggestLotFefo')}
-                </Button>
-                <Button type="button" variant="ghost" onClick={() => items.remove(index)}>
-                  {t('removeLine')}
-                </Button>
+                      if (valid.length) {
+                        items.remove(index)
+                        valid.reverse().forEach((item) =>
+                          items.insert(index, {
+                            supplyId,
+                            quantity: item.quantity ?? quantity,
+                            lotId: item.lotId,
+                          }),
+                        )
+                        setSuggestedLots((current) => ({
+                          ...current,
+                          [supplyId]: valid.map((item) => item.lotId),
+                        }))
+                      }
+                      toast.success(t('suggestedLot'))
+                    }}
+                  >
+                    {t('suggestLotFefo')}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => items.remove(index)}
+                  >
+                    {t('removeLine')}
+                  </Button>
+                </div>
               </div>
             ))}
             {items.fields.length === 0 && (

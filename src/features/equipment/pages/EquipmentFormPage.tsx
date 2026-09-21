@@ -219,9 +219,9 @@ export function Component() {
         })}
       />
       <Form {...form}>
-        <form className="max-w-4xl space-y-5" noValidate onSubmit={form.handleSubmit(submit)}>
+        <form className="space-y-5" noValidate onSubmit={form.handleSubmit(submit)}>
           <SectionCard title={t('sections.general')}>
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               <TextField
                 control={form.control}
                 name="code"
@@ -351,13 +351,13 @@ export function Component() {
                 label={t('fields.throughputPerHour')}
                 min={0}
               />
-              <div className="sm:col-span-2">
+              <div className="col-span-full">
                 <TextField control={form.control} name="notes" label={t('fields.notes')} />
               </div>
             </div>
           </SectionCard>
           <SectionCard title={t('sections.specs')}>
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               <TextField control={form.control} name="specs.voltage" label={t('fields.voltage')} />
               <TextField control={form.control} name="specs.power" label={t('fields.power')} />
               <TextField

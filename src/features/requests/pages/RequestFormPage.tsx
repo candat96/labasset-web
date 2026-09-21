@@ -138,10 +138,10 @@ export function Component() {
         })}
       />
       <Form {...form}>
-        <form className="max-w-4xl space-y-5" noValidate>
+        <form className="space-y-5" noValidate>
           <SectionCard title={t('info', { defaultValue: 'Thông tin' })}>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="grid grid-cols-2 gap-3 md:col-span-2">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <div className="col-span-full grid grid-cols-2 gap-3 md:max-w-md">
                 <Button
                   type="button"
                   variant={type === 'supply' ? 'default' : 'outline'}
@@ -206,7 +206,7 @@ export function Component() {
                 control={form.control}
                 name="reason"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="col-span-full">
                     <FormLabel>{t('reason')}</FormLabel>
                     <FormControl>
                       <Textarea {...field} />

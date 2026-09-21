@@ -210,14 +210,14 @@ export function Component() {
         })}
       />
       <Form {...form}>
-        <form className="max-w-4xl space-y-5" noValidate onSubmit={form.handleSubmit(submit)}>
+        <form className="space-y-5" noValidate onSubmit={form.handleSubmit(submit)}>
           <SectionCard title={t('form.info')}>
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               <FormField
                 control={form.control}
                 name="scope"
                 render={({ field }) => (
-                  <FormItem className="sm:col-span-2">
+                  <FormItem className="col-span-full">
                     <FormLabel>{t('form.scope')}</FormLabel>
                     <div className="flex flex-wrap gap-4">
                       {(['model', 'group', 'all'] as const).map((value) => (
@@ -284,7 +284,7 @@ export function Component() {
                 control={form.control}
                 name="symptoms"
                 render={({ field }) => (
-                  <FormItem className="sm:col-span-2">
+                  <FormItem className="col-span-full">
                     <FormLabel>{t('form.symptoms')}</FormLabel>
                     <FormControl>
                       <Textarea {...field} value={field.value ?? ''} />
@@ -297,7 +297,7 @@ export function Component() {
                 control={form.control}
                 name="causes"
                 render={({ field }) => (
-                  <FormItem className="sm:col-span-2">
+                  <FormItem className="col-span-full">
                     <FormLabel>{t('form.causes')}</FormLabel>
                     <FormControl>
                       <Textarea {...field} value={field.value ?? ''} />

@@ -174,9 +174,9 @@ export function Component() {
         }
       />
       <Form {...form}>
-        <form className="max-w-4xl space-y-5" noValidate onSubmit={form.handleSubmit(submit)}>
+        <form className="space-y-5" noValidate onSubmit={form.handleSubmit(submit)}>
           <SectionCard title={t('info', { defaultValue: 'Thông tin' })}>
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               <TextField control={form.control} name="name" label={t('name')} />
               <FormField
                 control={form.control}
