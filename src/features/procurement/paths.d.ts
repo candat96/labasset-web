@@ -145,8 +145,18 @@ export interface UpdateDemandLineRowDto extends CreateDemandLineDto {
   id: string
 }
 
-// ==== T3–T5 chưa có — type tay theo spec §6 (khi backend commit → api:gen + xoá) ====
+// ==== T4 thật (api:gen 2026-09-22) ====
+export type DemandConsolidation = S['DemandConsolidationRowDto']
+export type DemandConsolidationList = S['DemandConsolidationListDto']
+export type DemandSummary = S['DemandSummaryDto']
+export type DemandSummaryByItemType = S['DemandSummaryByItemTypeDto']
+export type CloseResult = S['CloseResultDto']
+/** `note` trong swagger còn Serialized Record<string,never> — chuẩn hoá chuỗi. */
+export type UpdateConsolidationDto = Omit<S['UpdateConsolidationDto'], 'note'> & {
+  note?: string
+}
 
+// ==== T5 chưa có — type tay theo spec §6 ====
 export interface DemandPeriodSummary {
   departments: number
   submitted: number
@@ -231,12 +241,14 @@ export type DemandPaths = {
       responses: { 200: DemandPeriod }
     }
   }
-  // T3+: consolidate, approve, close, cancel, clone, summary, consolidation, export
+  // T4 thật: POST consolidate — skipUnsubmitted truyền qua query, trả luôn danh sách tổng hợp.
   '/v1/demand/periods/{id}/consolidate': {
     post: {
-      parameters: { path: { id: string } }
-      requestBody?: { content: { 'application/json': { skipUnsubmitted?: boolean } } }
-      responses: { 200: DemandPeriod }
+      parameters: {
+        path: { id: string }
+        query?: { skipUnsubmitted?: boolean }
+      }
+      responses: { 200: DemandConsolidationList }
     }
   }
   '/v1/demand/periods/{id}/approve': {
@@ -248,7 +260,7 @@ export type DemandPaths = {
   '/v1/demand/periods/{id}/close': {
     post: {
       parameters: { path: { id: string } }
-      responses: { 200: { period: DemandPeriod; createdRequests: number } }
+      responses: { 200: CloseResult }
     }
   }
   '/v1/demand/periods/{id}/cancel': {
@@ -261,6 +273,18 @@ export type DemandPaths = {
   '/v1/demand/periods/{id}/clone': {
     post: {
       parameters: { path: { id: string } }
+      requestBody: {
+        content: {
+          'application/json': {
+            name: string
+            kind: DemandPeriodKind
+            year: number
+            quarter?: number
+            submitDeadline?: string
+            notes?: string
+          }
+        }
+      }
       responses: { 200: DemandPeriod }
     }
   }
@@ -273,22 +297,19 @@ export type DemandPaths = {
   '/v1/demand/periods/{id}/summary': {
     get: {
       parameters: { path: { id: string } }
-      responses: { 200: DemandPeriodSummary }
+      responses: { 200: DemandSummary }
     }
   }
   '/v1/demand/periods/{id}/consolidation': {
     get: {
-      parameters: {
-        path: { id: string }
-        query?: { itemType?: DemandItemType; departmentId?: string; q?: string }
-      }
-      responses: { 200: DemandConsolidation[] }
+      parameters: { path: { id: string } }
+      responses: { 200: DemandConsolidationList }
     }
   }
   '/v1/demand/periods/{id}/consolidation/rebuild': {
     post: {
       parameters: { path: { id: string } }
-      responses: { 200: DemandConsolidation[] }
+      responses: { 200: DemandConsolidationList }
     }
   }
   '/v1/demand/periods/{id}/export.xlsx': {
@@ -306,8 +327,8 @@ export type DemandPaths = {
   '/v1/demand/consolidation/{id}': {
     patch: {
       parameters: { path: { id: string } }
-      requestBody: { content: { 'application/json': UpdateDemandConsolidationDto } }
-      responses: { 200: DemandConsolidation }
+      requestBody: { content: { 'application/json': UpdateConsolidationDto } }
+      responses: { 200: DemandConsolidationList }
     }
   }
   // T2 thật — GET /my trả trang phiếu của khoa mình (không còn {toSubmit,...})

@@ -1748,6 +1748,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/demand/consolidation/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["DemandRequestsController_updateConsolidation"];
+        trace?: never;
+    };
     "/v1/demand/lines/{lineId}": {
         parameters: {
             query?: never;
@@ -1828,6 +1844,22 @@ export interface paths {
         patch: operations["DemandPeriodsController_update"];
         trace?: never;
     };
+    "/v1/demand/periods/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["DemandPeriodsController_approve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/demand/periods/{id}/cancel": {
         parameters: {
             query?: never;
@@ -1838,6 +1870,102 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["DemandPeriodsController_cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/demand/periods/{id}/clone": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["DemandPeriodsController_clone"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/demand/periods/{id}/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["DemandPeriodsController_close"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/demand/periods/{id}/consolidate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["DemandPeriodsController_consolidate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/demand/periods/{id}/consolidation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DemandPeriodsController_consolidation"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/demand/periods/{id}/consolidation/rebuild": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["DemandPeriodsController_rebuild"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/demand/periods/{id}/export.xlsx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DemandPeriodsController_exportXlsx"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1860,6 +1988,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/demand/periods/{id}/proposal.pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DemandPeriodsController_proposalPdf"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/demand/periods/{id}/requests": {
         parameters: {
             query?: never;
@@ -1868,6 +2012,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["DemandPeriodsController_requests"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/demand/periods/{id}/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DemandPeriodsController_summary"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5485,6 +5645,17 @@ export interface components {
             name?: string;
             serial?: string | null;
         };
+        ClonePeriodDto: {
+            /** @enum {string} */
+            kind: "annual" | "quarterly" | "adhoc";
+            name: string;
+            notes?: Record<string, never>;
+            /** @description Bắt buộc với kind=quarterly */
+            quarter?: number;
+            /** @description Hạn khoa nộp phiếu */
+            submitDeadline?: Record<string, never>;
+            year: number;
+        };
         CloseResultDto: {
             adjusted: number;
             /** Format: date-time */
@@ -6124,6 +6295,40 @@ export interface components {
             /** @enum {boolean} */
             deactivated: true;
         };
+        DemandBreakdownEntryDto: {
+            departmentId: string | null;
+            lineId: string;
+            qtyApproved: string;
+            qtyRequested: string;
+            requestId: string;
+        };
+        DemandConsolidationListDto: {
+            items: components["schemas"]["DemandConsolidationRowDto"][];
+        };
+        DemandConsolidationRowDto: {
+            amountPlan: string;
+            breakdown: components["schemas"]["DemandBreakdownEntryDto"][];
+            /** @enum {string} */
+            decision: "buy" | "from_stock" | "reject";
+            id: string;
+            itemName: string;
+            /** @enum {string} */
+            itemType: "supply" | "component" | "equipment" | "service";
+            key: string;
+            note: string | null;
+            onHand: string | null;
+            periodId: string;
+            qtyApproved: string;
+            qtyRequested: string;
+            sortOrder: number;
+            spec: string | null;
+            /** @enum {string|null} */
+            suggestedDecision: "from_stock" | null;
+            supplyCode: string | null;
+            supplyId: string | null;
+            unit: string | null;
+            unitPricePlan: string;
+        };
         DemandDepartmentSummaryDto: {
             departmentCode: string | null;
             departmentId: string | null;
@@ -6285,6 +6490,20 @@ export interface components {
             page: number;
             progress: components["schemas"]["DemandPeriodProgressDto"];
             total: number;
+        };
+        DemandSummaryByItemTypeDto: {
+            amountPlan: string;
+            /** @enum {string} */
+            itemType: "supply" | "component" | "equipment" | "service";
+            qtyApproved: string;
+            qtyRequested: string;
+        };
+        DemandSummaryDto: {
+            byItemType: components["schemas"]["DemandSummaryByItemTypeDto"][];
+            departmentsSubmitted: number;
+            departmentsTotal: number;
+            totalApproved: string;
+            totalRequested: string;
         };
         DepartmentPageDto: {
             items: components["schemas"]["DepartmentResponseDto"][];
@@ -8429,6 +8648,10 @@ export interface components {
             startsAt?: string;
             title?: string;
         };
+        UpdateBreakdownLineDto: {
+            lineId: string;
+            qtyApproved: string;
+        };
         UpdateCalibrationAgencyDto: {
             address?: Record<string, never>;
             description?: string;
@@ -8476,6 +8699,15 @@ export interface components {
             isActive?: boolean;
             name?: string;
             sortOrder?: number;
+        };
+        UpdateConsolidationDto: {
+            /** @description Sửa SL duyệt từng khoa (theo lineId) */
+            breakdown?: components["schemas"]["UpdateBreakdownLineDto"][];
+            /** @enum {string} */
+            decision?: "buy" | "from_stock" | "reject";
+            note?: Record<string, never>;
+            /** @description Sửa tổng → phân bổ tỷ lệ theo breakdown */
+            qtyApproved?: string;
         };
         UpdateDepartmentDto: {
             /** Format: uuid */
@@ -13122,6 +13354,34 @@ export interface operations {
             };
         };
     };
+    DemandRequestsController_updateConsolidation: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateConsolidationDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DemandConsolidationListDto"];
+                };
+            };
+        };
+    };
     DemandRequestsController_deleteLine: {
         parameters: {
             query?: never;
@@ -13333,6 +13593,30 @@ export interface operations {
             };
         };
     };
+    DemandPeriodsController_approve: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DemandPeriodDetailDto"];
+                };
+            };
+        };
+    };
     DemandPeriodsController_cancel: {
         parameters: {
             query?: never;
@@ -13361,6 +13645,156 @@ export interface operations {
             };
         };
     };
+    DemandPeriodsController_clone: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClonePeriodDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DemandPeriodDetailDto"];
+                };
+            };
+        };
+    };
+    DemandPeriodsController_close: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CloseResultDto"];
+                };
+            };
+        };
+    };
+    DemandPeriodsController_consolidate: {
+        parameters: {
+            query: {
+                skipUnsubmitted: string;
+            };
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DemandConsolidationListDto"];
+                };
+            };
+        };
+    };
+    DemandPeriodsController_consolidation: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DemandConsolidationListDto"];
+                };
+            };
+        };
+    };
+    DemandPeriodsController_rebuild: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DemandConsolidationListDto"];
+                };
+            };
+        };
+    };
+    DemandPeriodsController_exportXlsx: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
+            };
+        };
+    };
     DemandPeriodsController_open: {
         parameters: {
             query?: never;
@@ -13381,6 +13815,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DemandPeriodDetailDto"];
+                };
+            };
+        };
+    };
+    DemandPeriodsController_proposalPdf: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
                 };
             };
         };
@@ -13411,6 +13869,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DemandRequestSummaryPageDto"];
+                };
+            };
+        };
+    };
+    DemandPeriodsController_summary: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DemandSummaryDto"];
                 };
             };
         };

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
@@ -104,7 +104,16 @@ function DecimalCell({
   )
 }
 
-function ConsolidationRow({ row, editable }: { row: DemandConsolidation; editable: boolean }) {
+function ConsolidationRow({
+  row,
+  editable,
+  deptNames,
+}: {
+  row: DemandConsolidation
+  editable: boolean
+  deptNames: Record<string, string>
+}) {
+  const deptName = (id: string | null) => (id ? (deptNames[id] ?? id) : '—')
   const { t } = useTranslation('procurement')
   const qc = useQueryClient()
   const [open, setOpen] = useState(false)
@@ -228,9 +237,7 @@ function ConsolidationRow({ row, editable }: { row: DemandConsolidation; editabl
             <div className="space-y-1 py-1">
               {row.breakdown.map((item) => (
                 <div key={item.lineId} className="flex items-center gap-4 text-[13px]">
-                  <span className="min-w-40 font-medium">
-                    {item.departmentName ?? item.departmentId}
-                  </span>
+                  <span className="min-w-40 font-medium">{deptName(item.departmentId)}</span>
                   <span className="text-subtle tabular-nums">
                     {t('qtyRequested', { defaultValue: 'SL yêu cầu' })}:{' '}
                     {formatQty(item.qtyRequested)}
@@ -242,7 +249,7 @@ function ConsolidationRow({ row, editable }: { row: DemandConsolidation; editabl
                       </span>
                       <DecimalCell
                         className="w-24 text-right"
-                        ariaLabel={`${row.itemName} — ${item.departmentName ?? item.departmentId} SL duyệt`}
+                        ariaLabel={`${row.itemName} — ${deptName(item.departmentId)} SL duyệt`}
                         value={item.qtyApproved ?? '0'}
                         onCommit={(value) =>
                           void patch({
@@ -282,11 +289,13 @@ function ConsolidationTab({
   rows,
   editable,
   filter,
+  deptNames,
 }: {
   periodId: string
   rows: DemandConsolidation[]
   editable: boolean
   filter?: DemandItemType
+  deptNames: Record<string, string>
 }) {
   const { t } = useTranslation('procurement')
   const list = filter ? rows.filter((row) => row.itemType === filter) : rows
@@ -366,7 +375,12 @@ function ConsolidationTab({
             </TableHeader>
             <TableBody>
               {list.map((line) => (
-                <ConsolidationRow key={line.id} row={line} editable={editable} />
+                <ConsolidationRow
+                  key={line.id}
+                  row={line}
+                  editable={editable}
+                  deptNames={deptNames}
+                />
               ))}
               {list.length === 0 && (
                 <TableRow>
@@ -506,6 +520,14 @@ export function Component() {
     queryFn: () => api.listPeriodRequests(id),
     enabled: !!id && isStaff,
   })
+  const deptNames = useMemo(() => {
+    const out: Record<string, string> = {}
+    for (const r of requests.data?.items ?? []) {
+      if (r.departmentId)
+        out[r.departmentId] = r.departmentName ?? r.departmentCode ?? r.departmentId
+    }
+    return out
+  }, [requests.data])
   const consolidationVisible = ['consolidating', 'approved', 'closed'].includes(
     detail.data?.status ?? '',
   )
@@ -811,7 +833,12 @@ export function Component() {
                         </Button>
                       </div>
                     )}
-                    <ConsolidationTab periodId={id} rows={consolidationRows} editable={editable} />
+                    <ConsolidationTab
+                      periodId={id}
+                      rows={consolidationRows}
+                      editable={editable}
+                      deptNames={deptNames}
+                    />
                   </div>
                 ),
               },
@@ -824,6 +851,7 @@ export function Component() {
                     periodId={id}
                     rows={consolidationRows}
                     editable={editable}
+                    deptNames={deptNames}
                     filter="equipment"
                   />
                 ),
@@ -837,6 +865,7 @@ export function Component() {
                     periodId={id}
                     rows={consolidationRows}
                     editable={editable}
+                    deptNames={deptNames}
                     filter="service"
                   />
                 ),
