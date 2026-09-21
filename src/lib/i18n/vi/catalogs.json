@@ -121,5 +121,6 @@
       "severity": "Mức độ mặc định",
       "requiresCalibrationAfterFix": "Yêu cầu kiểm định sau sửa"
     }
-  }
+  },
+  "listHint": "Danh mục dùng chung; thêm, sửa, ngừng hoạt động các mục."
 }

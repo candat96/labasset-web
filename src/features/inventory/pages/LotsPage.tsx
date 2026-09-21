@@ -108,7 +108,12 @@ export function Component() {
   )
   return (
     <>
-      <PageHeader title={t('lotsTitle')} />
+      <PageHeader
+        title={t('lotsTitle')}
+        description={t('lotsHint', {
+          defaultValue: 'Lô vật tư theo kho với hạn dùng và số lượng khả dụng.',
+        })}
+      />
       <DataTable
         tableId="stock-lots"
         columns={columns}

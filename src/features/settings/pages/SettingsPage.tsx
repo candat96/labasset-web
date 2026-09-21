@@ -1,3 +1,4 @@
+import { DetailSkeleton } from '@/components/page/DetailSkeleton'
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { useForm } from 'react-hook-form'
@@ -302,7 +303,7 @@ export function Component() {
       else setTestState({ status: 'error', error: messageFor(error) })
     }
   }
-  if (settings.isPending) return <p role="status">{t('loading')}</p>
+  if (settings.isPending) return <DetailSkeleton label={t('loading')} />
   if (settings.error)
     return <ErrorState error={settings.error} onRetry={() => void settings.refetch()} />
   const submit = (after: SettingsForm) => {

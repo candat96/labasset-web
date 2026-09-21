@@ -131,6 +131,9 @@ export function Component() {
     <>
       <PageHeader
         title={t('issuesTitle')}
+        description={t('issuesHint', {
+          defaultValue: 'Phiếu xuất kho cho khoa, sửa chữa, bảo dưỡng; ghi sổ để trừ tồn.',
+        })}
         actions={
           canWrite && (
             <div className="flex gap-2">

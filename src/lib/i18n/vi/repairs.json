@@ -315,5 +315,6 @@
     "canvas": "Vùng ký"
   },
   "countPeople": "{{n}} người",
-  "countItems": "{{n}} mục"
+  "countItems": "{{n}} mục",
+  "listHint": "Phiếu báo hỏng và sửa chữa máy; theo dõi phân công, SLA và chi phí."
 }

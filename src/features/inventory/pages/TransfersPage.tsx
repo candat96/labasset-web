@@ -127,6 +127,9 @@ export function Component() {
     <>
       <PageHeader
         title={t('transferTitle')}
+        description={t('stockTransfersHint', {
+          defaultValue: 'Chuyển vật tư giữa các kho theo lô.',
+        })}
         actions={canWrite && <Button onClick={() => setOpen(true)}>{t('createTransfer')}</Button>}
       />
       <DataTable

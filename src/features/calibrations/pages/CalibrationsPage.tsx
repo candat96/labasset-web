@@ -175,6 +175,9 @@ export function Component() {
     <>
       <PageHeader
         title={t('title')}
+        description={t('listHint', {
+          defaultValue: 'Lịch kiểm định – hiệu chuẩn của máy; theo dõi phiếu đến hạn và quá hạn.',
+        })}
         actions={
           <div className="flex gap-2">
             {canWrite && <Button onClick={() => setOpen(true)}>{t('create')}</Button>}

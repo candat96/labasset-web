@@ -137,5 +137,9 @@
   "noSuppliesUsed": "Chưa ghi vật tư tiêu hao",
   "audit": "Nhật ký thay đổi",
   "templateFormHint": "Đặt tên mẫu, phạm vi áp dụng và các mục kiểm tra (đạt/không, đo, ghi chú).",
-  "items": "Mục kiểm tra"
+  "items": "Mục kiểm tra",
+  "calendarHint": "Lịch bảo dưỡng, kiểm định theo tháng.",
+  "templatesHint": "Mẫu checklist dùng cho công việc bảo dưỡng.",
+  "plansHint": "Kế hoạch bảo dưỡng định kỳ theo máy hoặc nhóm máy; sinh công việc theo năm.",
+  "tasksHint": "Công việc bảo dưỡng định kỳ và đột xuất; theo dõi hạn và kết quả checklist."
 }

@@ -1,3 +1,4 @@
+import { DetailSkeleton } from '@/components/page/DetailSkeleton'
 import { useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { useForm, useFieldArray, type Control } from 'react-hook-form'
@@ -178,7 +179,7 @@ export function Component() {
   useEffect(() => {
     if (detail.data?.status === 'published') toast.warning(t('form.publishedWarning'))
   }, [detail.data?.status, t])
-  if (editing && detail.isPending) return <p role="status">{t('form.loading')}</p>
+  if (editing && detail.isPending) return <DetailSkeleton label={t('form.loading')} />
   if (editing && detail.error)
     return <ErrorState error={detail.error} onRetry={() => void detail.refetch()} />
   const submit = async (values: FaultForm) => {

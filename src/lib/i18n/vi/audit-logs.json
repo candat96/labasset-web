@@ -15,5 +15,6 @@
     "user": "Người dùng",
     "entityType": "Loại đối tượng",
     "entityTypePlaceholder": "users, equipment, repairs…"
-  }
+  },
+  "listHint": "Lịch sử thao tác của người dùng trên hệ thống; lọc theo người, đối tượng và thời gian."
 }

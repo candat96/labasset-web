@@ -1,3 +1,4 @@
+import { DetailSkeleton } from '@/components/page/DetailSkeleton'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -91,7 +92,7 @@ export function Component() {
     resolver: zodResolver(issueSchema),
     defaultValues: { warehouseId: '', items: [] },
   })
-  if (detail.isPending) return <p role="status">{t('loading')}</p>
+  if (detail.isPending) return <DetailSkeleton label={t('loading')} />
   if (detail.error) return <ErrorState error={detail.error} onRetry={() => void detail.refetch()} />
   const row = detail.data
   const owner = row.requesterId === userId || isAdm

@@ -21,5 +21,6 @@
   "push": "Đẩy tới thiết bị",
   "inapp": "Trong ứng dụng",
   "savePreferences": "Lưu tuỳ chọn",
-  "totalNotifications": "Tổng thông báo"
+  "totalNotifications": "Tổng thông báo",
+  "preferencesHint": "Chọn loại thông báo nhận trong ứng dụng và đẩy tới thiết bị."
 }

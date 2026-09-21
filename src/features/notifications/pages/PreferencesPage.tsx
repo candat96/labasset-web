@@ -30,7 +30,12 @@ export function Component() {
   ]
   return (
     <>
-      <PageHeader title={t('preferences')} />
+      <PageHeader
+        title={t('preferences')}
+        description={t('preferencesHint', {
+          defaultValue: 'Chọn loại thông báo nhận trong ứng dụng và đẩy tới thiết bị.',
+        })}
+      />
       {list.isPending ? (
         <p role="status">{t('loading')}</p>
       ) : list.error ? (

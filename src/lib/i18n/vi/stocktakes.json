@@ -88,5 +88,6 @@
   "countItems": "{{n}} mục",
   "noExtras": "Không có hàng ngoài sổ",
   "info": "Thông tin",
-  "compareResult": "Kết quả so sánh"
+  "compareResult": "Kết quả so sánh",
+  "listHint": "Đợt kiểm kê kho: chụp sổ, phân công đếm, đối chiếu chênh lệch."
 }

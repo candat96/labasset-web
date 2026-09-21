@@ -1,3 +1,4 @@
+import { PageSkeleton } from '@/components/page/DetailSkeleton'
 import {
   Table,
   TableBody,
@@ -48,7 +49,7 @@ export function Component() {
       </>
     )
   }
-  if (compare.isPending) return <p role="status">{t('comparing')}</p>
+  if (compare.isPending) return <PageSkeleton label={t('comparing')} />
   if (compare.error)
     return <ErrorState error={compare.error} onRetry={() => void compare.refetch()} />
   const data = compare.data

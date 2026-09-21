@@ -133,6 +133,8 @@
     "target": "Lỗi đích",
     "accepted": "Đã chấp nhận đề xuất",
     "rejected": "Đã từ chối đề xuất",
-    "rejectTitle": "Từ chối đề xuất?"
-  }
+    "rejectTitle": "Từ chối đề xuất?",
+    "listHint": "Đề xuất lỗi mới từ kỹ thuật viên chờ duyệt đưa vào thư viện."
+  },
+  "listHint": "Kho tri thức lỗi theo model/nhóm máy: triệu chứng, nguyên nhân, cách xử lý."
 }

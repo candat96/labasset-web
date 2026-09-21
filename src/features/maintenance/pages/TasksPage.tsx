@@ -119,6 +119,10 @@ export function Component() {
     <>
       <PageHeader
         title={t('tasksTitle')}
+        description={t('tasksHint', {
+          defaultValue:
+            'Công việc bảo dưỡng định kỳ và đột xuất; theo dõi hạn và kết quả checklist.',
+        })}
         actions={canWrite && <Button onClick={() => setOpen(true)}>{t('createAdhoc')}</Button>}
       />
       <DataTable

@@ -95,7 +95,13 @@ export function Component() {
   )
   return (
     <>
-      <PageHeader title={t('title')} />
+      <PageHeader
+        title={t('title')}
+        description={t('listHint', {
+          defaultValue:
+            'Lịch sử thao tác của người dùng trên hệ thống; lọc theo người, đối tượng và thời gian.',
+        })}
+      />
       <DataTable
         tableId="audit-logs"
         columns={columns}

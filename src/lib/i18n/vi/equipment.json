@@ -325,7 +325,8 @@
     "rejectTitle": "Từ chối điều chuyển?",
     "cancelTitle": "Huỷ điều chuyển này?",
     "approveNote": "Ghi chú duyệt",
-    "pendingExists": "Máy đang có một yêu cầu điều chuyển chờ duyệt"
+    "pendingExists": "Máy đang có một yêu cầu điều chuyển chờ duyệt",
+    "listHint": "Yêu cầu điều chuyển máy giữa các khoa chờ duyệt và đã xử lý."
   },
   "statusDialog": {
     "title": "Đổi trạng thái",
@@ -389,7 +390,8 @@
     "title": "So sánh máy",
     "machine": "Máy {{index}}",
     "loading": "Đang so sánh…",
-    "counts": "Số lượng"
+    "counts": "Số lượng",
+    "hint": "Chọn hai máy để so sánh thông số cạnh nhau."
   },
   "byQr": {
     "loading": "Đang tìm máy…",
@@ -404,5 +406,6 @@
     "notes": "Ghi chú"
   },
   "countItems": "{{n}} mục",
-  "formHint": "Nhập thông tin chung, thông số kỹ thuật; các trường có * là bắt buộc."
+  "formHint": "Nhập thông tin chung, thông số kỹ thuật; các trường có * là bắt buộc.",
+  "listHint": "Toàn bộ máy xét nghiệm theo khoa, trạng thái và nhóm máy."
 }

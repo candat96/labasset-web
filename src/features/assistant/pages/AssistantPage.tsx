@@ -1,3 +1,4 @@
+import { PageSkeleton } from '@/components/page/DetailSkeleton'
 import { useEffect, useReducer, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -103,7 +104,7 @@ export function Component() {
     }
   }
 
-  if (status.isPending) return <p role="status">{t('checking')}</p>
+  if (status.isPending) return <PageSkeleton label={t('checking')} kpis={0} />
   if (status.error) return <ErrorState error={status.error} onRetry={() => void status.refetch()} />
   if (!status.data?.enabled)
     return (

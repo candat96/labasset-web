@@ -44,5 +44,6 @@
   "findings": "Nhận xét",
   "info": "Thông tin phiếu",
   "audit": "Nhật ký thay đổi",
-  "equipmentHistoryHint": "Các lần kiểm định/hiệu chuẩn của máy này"
+  "equipmentHistoryHint": "Các lần kiểm định/hiệu chuẩn của máy này",
+  "listHint": "Lịch kiểm định – hiệu chuẩn của máy; theo dõi phiếu đến hạn và quá hạn."
 }

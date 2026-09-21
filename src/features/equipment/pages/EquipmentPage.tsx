@@ -199,6 +199,9 @@ export function Component() {
     <>
       <PageHeader
         title={t('title')}
+        description={t('listHint', {
+          defaultValue: 'Toàn bộ máy xét nghiệm theo khoa, trạng thái và nhóm máy.',
+        })}
         actions={
           <div className="flex flex-wrap gap-2">
             <Button

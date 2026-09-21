@@ -95,5 +95,7 @@
   "rejectedReason": "Lý do từ chối",
   "formHint": "Chọn loại yêu cầu, lý do và vật tư cần cấp; có thể lưu nháp hoặc gửi duyệt ngay.",
   "lineCount": "{{n}} dòng",
-  "noLines": "Chưa có dòng vật tư — bấm \"Thêm dòng\"."
+  "noLines": "Chưa có dòng vật tư — bấm \"Thêm dòng\".",
+  "listHint": "Phiếu yêu cầu vật tư và sửa chữa từ các khoa; duyệt, cấp phát và nhận.",
+  "quotasHint": "Định mức vật tư theo khoa dùng để cảnh báo khi yêu cầu vượt mức."
 }

@@ -1,3 +1,4 @@
+import { DetailSkeleton } from '@/components/page/DetailSkeleton'
 import { useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { useForm } from 'react-hook-form'
@@ -177,7 +178,7 @@ export function Component() {
   useEffect(() => {
     if (detail.data) form.reset(fromDetail(detail.data))
   }, [detail.data, form])
-  if (editing && detail.isPending) return <p role="status">{t('loading')}</p>
+  if (editing && detail.isPending) return <DetailSkeleton label={t('loading')} />
   if (editing && detail.error)
     return <ErrorState error={detail.error} onRetry={() => void detail.refetch()} />
   const company = detail.data

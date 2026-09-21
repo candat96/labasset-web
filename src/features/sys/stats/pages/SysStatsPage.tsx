@@ -1,3 +1,4 @@
+import { PageSkeleton } from '@/components/page/DetailSkeleton'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { PageHeader } from '@/components/page/PageHeader'
@@ -13,7 +14,7 @@ export function Component() {
     queryKey: ['sys-stats'],
     queryFn: () => unwrap(api.GET('/sys/stats')),
   })
-  if (stats.isPending) return <p role="status">{t('stat.loading')}</p>
+  if (stats.isPending) return <PageSkeleton label={t('stat.loading')} />
   if (stats.error) return <ErrorState error={stats.error} onRetry={() => void stats.refetch()} />
   const data = stats.data
   return (

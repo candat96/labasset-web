@@ -89,6 +89,9 @@ export function Component() {
     <>
       <PageHeader
         title={t('receiptsTitle')}
+        description={t('receiptsHint', {
+          defaultValue: 'Phiếu nhập từ nhà cung cấp, khoa trả lại, điều chỉnh tăng.',
+        })}
         actions={
           canWrite && (
             <Button asChild>

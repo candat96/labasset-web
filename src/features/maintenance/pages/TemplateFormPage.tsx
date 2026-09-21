@@ -1,3 +1,4 @@
+import { DetailSkeleton } from '@/components/page/DetailSkeleton'
 import { useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { useFieldArray, useForm } from 'react-hook-form'
@@ -74,7 +75,7 @@ export function Component() {
       })),
     })
   }, [detail.data, form])
-  if (editing && detail.isPending) return <p role="status">{t('loadingTemplate')}</p>
+  if (editing && detail.isPending) return <DetailSkeleton label={t('loadingTemplate')} />
   if (editing && detail.error)
     return <ErrorState error={detail.error} onRetry={() => void detail.refetch()} />
   const submit = async (values: TemplateForm) => {

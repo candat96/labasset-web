@@ -83,7 +83,10 @@ export function Component() {
   }
   return (
     <>
-      <PageHeader title={t('schedule')} />
+      <PageHeader
+        title={t('schedule')}
+        description={t('calendarHint', { defaultValue: 'Lịch bảo dưỡng, kiểm định theo tháng.' })}
+      />
       <div className="mb-3 flex flex-wrap gap-4 text-sm">
         {(['maintenance', 'calibration', 'repair'] as const).map((type) => (
           <label key={type} className="flex items-center gap-2">

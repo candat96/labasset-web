@@ -90,7 +90,12 @@ export function Component() {
   )
   return (
     <>
-      <PageHeader title={t('alertsTitle')} />
+      <PageHeader
+        title={t('alertsTitle')}
+        description={t('alertsHint', {
+          defaultValue: 'Cảnh báo tồn dưới định mức, lô sắp hết hạn và hết hạn.',
+        })}
+      />
       <DataTable
         tableId="stock-alerts"
         columns={columns}

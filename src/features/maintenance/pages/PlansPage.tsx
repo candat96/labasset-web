@@ -105,6 +105,10 @@ export function Component() {
     <>
       <PageHeader
         title={t('plansTitle')}
+        description={t('plansHint', {
+          defaultValue:
+            'Kế hoạch bảo dưỡng định kỳ theo máy hoặc nhóm máy; sinh công việc theo năm.',
+        })}
         actions={canWrite && <Button onClick={() => setOpen(true)}>{t('createPlan')}</Button>}
       />
       <DataTable

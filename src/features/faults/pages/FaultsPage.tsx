@@ -149,6 +149,10 @@ export function Component() {
     <>
       <PageHeader
         title={t('title')}
+        description={t('listHint', {
+          defaultValue:
+            'Kho tri thức lỗi theo model/nhóm máy: triệu chứng, nguyên nhân, cách xử lý.',
+        })}
         actions={
           <div className="flex flex-wrap gap-2">
             {isAdm && (

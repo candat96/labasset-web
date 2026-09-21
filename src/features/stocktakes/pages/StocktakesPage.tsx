@@ -118,6 +118,9 @@ export function Component() {
     <>
       <PageHeader
         title={t('title')}
+        description={t('listHint', {
+          defaultValue: 'Đợt kiểm kê kho: chụp sổ, phân công đếm, đối chiếu chênh lệch.',
+        })}
         actions={canWrite && <Button onClick={() => setOpen(true)}>{t('create')}</Button>}
       />
       <DataTable
