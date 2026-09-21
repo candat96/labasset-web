@@ -8,6 +8,7 @@ import { useCan } from '@/app/guards/useCan'
 import { ADM } from '@/routes/roles'
 import { auditActionLabel } from '@/lib/audit-actions'
 import { shortId } from '@/lib/format/id'
+import { fieldChanges } from '@/lib/audit-fields'
 
 export function AuditTrail({ entityType, entityId }: { entityType: string; entityId: string }) {
   const canListUsers = useCan(ADM)
@@ -33,11 +34,30 @@ export function AuditTrail({ entityType, entityId }: { entityType: string; entit
   if (trail.error) return <ErrorState error={trail.error} onRetry={() => void trail.refetch()} />
   return (
     <Timeline
-      events={(trail.data?.items ?? []).map((item) => ({
-        at: item.createdAt,
-        title: auditActionLabel(item.action),
-        by: names.get(item.userId ?? '') ?? shortId(item.userId),
-      }))}
+      events={(trail.data?.items ?? []).map((item) => {
+        const changes = item.action === 'update' ? fieldChanges(item.before, item.after) : []
+        const shown = changes.slice(0, 6)
+        const title =
+          changes.length > 0
+            ? `${auditActionLabel(item.action)}: ${shown.map((c) => c.label).join(', ')}${changes.length > shown.length ? ` +${changes.length - shown.length}` : ''}`
+            : auditActionLabel(item.action)
+        const summary =
+          shown.length > 0
+            ? shown.map((c) => `${c.label}: ${c.from} → ${c.to}`).join('\n')
+            : undefined
+        return {
+          at: item.createdAt,
+          title,
+          summary,
+          by: names.get(item.userId ?? '') ?? shortId(item.userId),
+          tone:
+            item.action === 'create'
+              ? ('success' as const)
+              : item.action === 'delete'
+                ? ('danger' as const)
+                : undefined,
+        }
+      })}
     />
   )
 }
