@@ -33,6 +33,7 @@ const implemented: RouteObject[] = [
   },
   { index: true, lazy: () => import('@/features/dashboard/pages/DashboardPage') },
   { path: 'notifications', lazy: () => import('@/features/notifications/pages/NotificationsPage') },
+  { path: 'help', lazy: () => import('@/features/help/pages/HelpPage') },
   {
     path: 'admin/departments',
     lazy: () => import('@/features/departments/pages/DepartmentsPage'),

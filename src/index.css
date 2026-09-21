@@ -214,3 +214,20 @@
     }
   }
 }
+
+/* In hướng dẫn sử dụng / biên bản: ẩn khung ứng dụng, giữ nội dung. */
+@media print {
+  [data-slot='sidebar'],
+  [data-slot='sidebar-wrapper'] > [data-sidebar],
+  header[class*='sticky'],
+  .print\:hidden {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+  }
+  main {
+    padding: 0 !important;
+    max-width: none !important;
+  }
+}
