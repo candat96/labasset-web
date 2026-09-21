@@ -1,4 +1,4 @@
-import { api, unwrap, unwrapAs } from '@/api/client'
+import { api, apiBody, unwrap, unwrapAs } from '@/api/client'
 import { downloadFile } from '@/api/download'
 import { apiQuery, pageQuery } from '@/api/paths'
 import type { components, paths } from '@/api/schema'
@@ -231,8 +231,20 @@ export function statusHistory(id: string, page = 1, limit = 50) {
 export function listTransfers(id: string) {
   return unwrap(api.GET('/v1/equipment/{id}/transfers', { params: { path: { id } } }))
 }
-export function createTransfer(id: string, body: components['schemas']['TransferDto']) {
-  return unwrap(api.POST('/v1/equipment/{id}/transfers', { params: { path: { id } }, body }))
+// TODO(api): swagger trùng tên `TransferDto` (điều chuyển máy vs chuyển kho) nên schema
+// sinh ra là DTO của kho; giữ shape thật của điều chuyển máy ở đây.
+export interface EquipmentTransferBody {
+  toDepartmentId: string
+  toLocation?: string | null
+  reason: string
+}
+export function createTransfer(id: string, body: EquipmentTransferBody) {
+  return unwrap(
+    api.POST('/v1/equipment/{id}/transfers', {
+      params: { path: { id } },
+      body: apiBody<components['schemas']['TransferDto']>(body),
+    }),
+  )
 }
 export function approveTransfer(id: string, tid: string, note?: string) {
   return unwrap(

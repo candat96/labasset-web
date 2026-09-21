@@ -292,6 +292,134 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/ai/admin/reindex": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AiController_reindex"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ai/conversations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AiConversationsController_list"];
+        put?: never;
+        post: operations["AiConversationsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ai/conversations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AiConversationsController_get"];
+        put?: never;
+        post?: never;
+        delete: operations["AiConversationsController_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ai/conversations/{id}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AiConversationsController_send"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ai/digest/weekly": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AiController_weekly"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ai/messages/{id}/feedback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AiMessagesController_feedback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ai/settings/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AiController_testSettings"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/ai/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AiController_getStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/announcements/active": {
         parameters: {
             query?: never;
@@ -4566,6 +4694,130 @@ export interface components {
             tempPassword: string;
             username: string;
         };
+        AiBudgetDto: {
+            monthlyTokenBudget: number;
+            remaining?: number | null;
+            used: number;
+        };
+        AiChatStatusDto: {
+            baseUrlHost: string;
+            model: string;
+            protocol: string;
+        };
+        AiConversationDetailDto: {
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: uuid */
+            equipmentId?: string | null;
+            id: string;
+            messages: components["schemas"]["AiMessageDto"][];
+            title: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        AiConversationDto: {
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: uuid */
+            equipmentId?: string | null;
+            id: string;
+            title: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        AiConversationPageDto: {
+            items: components["schemas"]["AiConversationDto"][];
+            limit: number;
+            page: number;
+            total: number;
+        };
+        AiDigestDto: {
+            content?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            id: string;
+            stats: {
+                [key: string]: unknown;
+            };
+            tokens: number;
+            /** @example 2026-09-14 */
+            weekStart: string;
+        };
+        AiEmbeddingStatusDto: {
+            enabled: boolean;
+            model: string;
+            protocol: string;
+        };
+        AiFeedbackDto: {
+            /** @enum {string} */
+            feedback: "up" | "down";
+            note?: string;
+        };
+        AiMessageDto: {
+            attachments?: unknown[] | null;
+            content: string;
+            conversationId: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** @enum {string|null} */
+            feedback?: "up" | "down" | null;
+            feedbackNote?: string | null;
+            id: string;
+            interrupted: boolean;
+            latencyMs?: number | null;
+            /** @enum {string} */
+            role: "user" | "assistant" | "tool";
+            tokensIn: number;
+            tokensOut: number;
+            toolCalls?: unknown[] | null;
+            toolResults?: {
+                [key: string]: unknown;
+            } | null;
+        };
+        AiOkDto: {
+            ok: boolean;
+        };
+        AiRateLimitDto: {
+            perHour: number;
+        };
+        AiReindexDto: {
+            /** Format: uuid */
+            sourceId?: string;
+            /** @enum {string} */
+            sourceType?: "attachment" | "fault";
+        };
+        AiReindexResultDto: {
+            queued: number;
+        };
+        AiSettingsTestDto: {
+            error?: string;
+            latencyMs: number;
+            model: string;
+            ok: boolean;
+        };
+        AiSettingsTestRequestDto: {
+            apiKey?: string;
+            baseUrl?: string;
+            headers?: {
+                [key: string]: string;
+            };
+            model?: string;
+            /** @enum {string} */
+            protocol?: "openai_compatible" | "anthropic";
+        };
+        AiSseDoneDto: {
+            messageId: string;
+            tokensIn: number;
+            tokensOut: number;
+        };
+        AiStatusDto: {
+            budget: components["schemas"]["AiBudgetDto"];
+            chat: components["schemas"]["AiChatStatusDto"];
+            embedding: components["schemas"]["AiEmbeddingStatusDto"];
+            enabled: boolean;
+            model: string;
+            rateLimit: components["schemas"]["AiRateLimitDto"];
+        };
         AlertTasksDto: {
             calibrationOverdue: number;
             repairsNew: number;
@@ -4980,6 +5232,11 @@ export interface components {
             }[];
             duplicated: number;
             extras: string[];
+        };
+        CreateAiConversationDto: {
+            /** Format: uuid */
+            equipmentId?: string;
+            title?: string;
         };
         CreateAnnouncementDto: {
             body: string;
@@ -6979,6 +7236,10 @@ export interface components {
             requests: components["schemas"]["SearchHitDto"][];
             supplies: components["schemas"]["SearchHitDto"][];
         };
+        SendAiMessageDto: {
+            attachmentFileIds?: string[];
+            content: string;
+        };
         SessionViewDto: {
             /** Format: date-time */
             createdAt: string;
@@ -7278,12 +7539,35 @@ export interface components {
             viewCount: number;
         };
         SupplyResponseDto: {
-            equipmentId: string;
-            isPrimary: boolean;
-            normQtyPerDay: string | null;
-            normQtyPerTest: string | null;
-            notes: string | null;
-            supplyId: string;
+            code: string;
+            /** Format: date-time */
+            createdAt: string;
+            defaultSupplierId?: Record<string, never>;
+            description?: string;
+            groupCode?: string;
+            groupId?: Record<string, never>;
+            /** Format: uuid */
+            id: string;
+            isActive?: boolean;
+            manufacturerCode?: Record<string, never>;
+            manufacturerId?: Record<string, never>;
+            maxStock?: string;
+            minStock?: string;
+            name: string;
+            notes?: Record<string, never>;
+            openVialDays?: Record<string, never>;
+            packaging?: Record<string, never>;
+            refPrice?: string;
+            sortOrder?: number;
+            storageCondition?: Record<string, never>;
+            /** @default false */
+            trackExpiry: boolean;
+            /** @default true */
+            trackLot: boolean;
+            unitCode?: string;
+            unitId?: Record<string, never>;
+            /** Format: date-time */
+            updatedAt: string;
         };
         SysLoginDto: {
             password: string;
@@ -7417,10 +7701,9 @@ export interface components {
             kind: string;
         };
         TransferDto: {
-            reason: string;
-            /** Format: uuid */
-            toDepartmentId: string;
-            toLocation?: string | null;
+            fromWarehouseId: string;
+            items: components["schemas"]["TransferItemDto"][];
+            toWarehouseId: string;
         };
         TransferItemDto: {
             lotId: string;
@@ -8459,6 +8742,258 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StatsResponseDto"];
+                };
+            };
+        };
+    };
+    AiController_reindex: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AiReindexDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiReindexResultDto"];
+                };
+            };
+        };
+    };
+    AiConversationsController_list: {
+        parameters: {
+            query?: {
+                limit?: number;
+                page?: number;
+            };
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiConversationPageDto"];
+                };
+            };
+        };
+    };
+    AiConversationsController_create: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateAiConversationDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiConversationDto"];
+                };
+            };
+        };
+    };
+    AiConversationsController_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiConversationDetailDto"];
+                };
+            };
+        };
+    };
+    AiConversationsController_delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AiConversationsController_send: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SendAiMessageDto"];
+            };
+        };
+        responses: {
+            /** @description SSE events: text, tool, done, error */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": components["schemas"]["AiSseDoneDto"];
+                };
+            };
+        };
+    };
+    AiController_weekly: {
+        parameters: {
+            query?: {
+                weekStart?: string;
+            };
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiDigestDto"];
+                };
+            };
+        };
+    };
+    AiMessagesController_feedback: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AiFeedbackDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiOkDto"];
+                };
+            };
+        };
+    };
+    AiController_testSettings: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AiSettingsTestRequestDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiSettingsTestDto"];
+                };
+            };
+        };
+    };
+    AiController_getStatus: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiStatusDto"];
                 };
             };
         };

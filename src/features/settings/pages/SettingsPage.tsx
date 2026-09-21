@@ -4,12 +4,22 @@ import { useSearchParams } from 'react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useTranslation } from 'react-i18next'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { Collapsible as CollapsiblePrimitive } from 'radix-ui'
 import { PageHeader } from '@/components/page/PageHeader'
 import { SectionCard } from '@/components/page/SectionCard'
-import { Bell, Bot, Boxes, Braces, Building2, GitBranch, Hash } from 'lucide-react'
+import {
+  Bell,
+  Bot,
+  Boxes,
+  Braces,
+  Building2,
+  DatabaseZap,
+  GitBranch,
+  Hash,
+  Loader2,
+} from 'lucide-react'
 import { ErrorState } from '@/components/page/ErrorState'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Form } from '@/components/ui/form'
@@ -35,7 +45,9 @@ import { useCan } from '@/app/guards/useCan'
 import { ADM } from '@/routes/roles'
 import { applyServerErrors, isApiError, messageFor } from '@/api/errors'
 import {
+  getAiStatus,
   previewNumber,
+  reindexAiDocuments,
   resolveWarehouse,
   saveSettings,
   searchWarehouses,
@@ -46,7 +58,13 @@ import { isValidNumberingTemplate } from '../numbering'
 import { settingsKeys, useSettings } from '../hooks'
 import { settingsSchema, type SettingsForm } from '../schema'
 import { NUMBER_DEFAULTS, NUMBER_TYPES, type NumberingType } from '../types'
-import { CHAT_PRESETS, EMBEDDING_PRESETS, findPreset, type ProviderPreset } from '../ai-providers'
+import {
+  CHAT_PRESETS,
+  EMBEDDING_PRESETS,
+  baseUrlEndpointSuffix,
+  findPreset,
+  type ProviderPreset,
+} from '../ai-providers'
 
 type ChatProtocol = 'openai_compatible' | 'anthropic'
 type EmbeddingProtocol = 'openai_compatible' | 'voyage' | 'none'
@@ -95,7 +113,6 @@ const CHAT_PRESET_LABELS: Record<string, string> = {
 const EMBEDDING_PRESET_LABELS: Record<string, string> = {
   openai: 'presetOpenai',
   openrouter: 'presetOpenrouter',
-  deepseek: 'presetDeepseek',
   voyage: 'presetVoyage',
   ollama: 'presetOllama',
   custom: 'presetCustom',
@@ -108,6 +125,36 @@ function isValidHeadersJson(value: string): boolean {
     return Object.values(parsed as Record<string, unknown>).every((v) => typeof v === 'string')
   } catch {
     return false
+  }
+}
+
+function headersToText(value: unknown): string {
+  if (value == null || value === '') return ''
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    if (!trimmed || trimmed === '[object Object]') return ''
+    return trimmed
+  }
+  if (typeof value === 'object' && !Array.isArray(value)) {
+    if (Object.keys(value as object).length === 0) return ''
+    return JSON.stringify(value)
+  }
+  return ''
+}
+
+function applyPresetFields<T extends { protocol: string; baseUrl: string; model: string }>(
+  current: T,
+  preset: ProviderPreset | undefined,
+  toProtocol: (value: unknown) => T['protocol'],
+): T {
+  if (!preset) return current
+  return {
+    ...current,
+    protocol: toProtocol(preset.protocol),
+    baseUrl: preset.baseUrl,
+    model: preset.models.includes(current.model)
+      ? current.model
+      : (preset.models[0] ?? current.model),
   }
 }
 
@@ -210,6 +257,19 @@ export function Component() {
     model?: string
     error?: string
   }>({ status: 'idle' })
+  /** Trạng thái AI thật (host/model/embedding/ngân sách) — chỉ tải khi ADM mở tab AI. */
+  const aiStatus = useQuery({
+    queryKey: ['ai-status'],
+    queryFn: getAiStatus,
+    enabled: canWrite && tab === 'ai',
+  })
+  const reindex = useMutation({
+    mutationFn: reindexAiDocuments,
+    onSuccess: (result) => toast.success(t('ai.reindexDone', { count: result.queued ?? 0 })),
+    onError: (error) => toast.error(messageFor(error)),
+  })
+  const chatUrlSuffix = baseUrlEndpointSuffix(ai.chat.baseUrl)
+  const embeddingUrlSuffix = baseUrlEndpointSuffix(ai.embedding.baseUrl)
   useEffect(() => {
     if (settings.data) {
       form.reset(values(settings.data))
@@ -228,7 +288,7 @@ export function Component() {
         baseUrl: String(settings.data?.['ai.chat.baseUrl'] ?? AI_DEFAULTS.chatBaseUrl),
         model: String(settings.data?.['ai.chat.model'] ?? AI_DEFAULTS.chatModel),
         apiKey: '',
-        headers: String(settings.data?.['ai.chat.headers'] ?? ''),
+        headers: headersToText(settings.data?.['ai.chat.headers']),
       }
       const embedding = {
         protocol: toEmbeddingProtocol(settings.data?.['ai.embedding.protocol']),
@@ -294,7 +354,17 @@ export function Component() {
   const runTest = async () => {
     setTestState({ status: 'loading' })
     try {
-      const result = await testAiSettings()
+      const headersText = ai.chat.headers.trim()
+      const result = await testAiSettings({
+        protocol: ai.chat.protocol,
+        baseUrl: ai.chat.baseUrl.trim() || undefined,
+        model: ai.chat.model.trim() || undefined,
+        apiKey: ai.chat.apiKey.trim() || undefined,
+        headers:
+          headersText && isValidHeadersJson(headersText)
+            ? (JSON.parse(headersText) as Record<string, string>)
+            : undefined,
+      })
       if (result?.ok)
         setTestState({ status: 'ok', latencyMs: result.latencyMs, model: result.model })
       else setTestState({ status: 'error', error: result?.error ?? t('ai.testFailed') })
@@ -334,7 +404,11 @@ export function Component() {
     putAi('ai.chat.protocol', ai.chat.protocol, AI_DEFAULTS.chatProtocol)
     putAi('ai.chat.baseUrl', ai.chat.baseUrl, AI_DEFAULTS.chatBaseUrl)
     putAi('ai.chat.model', ai.chat.model, AI_DEFAULTS.chatModel)
-    if (chatHeaders) putAi('ai.chat.headers', chatHeaders, '')
+    putAi(
+      'ai.chat.headers',
+      chatHeaders ? (JSON.parse(chatHeaders) as Record<string, string>) : {},
+      {},
+    )
     putAi('ai.embedding.protocol', ai.embedding.protocol, AI_DEFAULTS.embeddingProtocol)
     putAi('ai.embedding.baseUrl', ai.embedding.baseUrl, AI_DEFAULTS.embeddingBaseUrl)
     putAi('ai.embedding.model', ai.embedding.model, AI_DEFAULTS.embeddingModel)
@@ -655,6 +729,56 @@ export function Component() {
               <TabsContent value="ai" forceMount className="space-y-4 data-[state=inactive]:hidden">
                 <SectionCard title={t('tabs.ai')}>
                   <div className="space-y-4">
+                    {aiStatus.data && (
+                      <dl
+                        role="group"
+                        className="border-divider grid gap-x-6 gap-y-2 rounded-xl border p-4 text-[13px] sm:grid-cols-2 lg:grid-cols-4"
+                        aria-label={t('ai.statusTitle')}
+                      >
+                        <div>
+                          <dt className="text-muted-foreground">{t('ai.statusState')}</dt>
+                          <dd
+                            className={
+                              aiStatus.data.enabled
+                                ? 'text-success-fg font-medium'
+                                : 'text-muted-foreground font-medium'
+                            }
+                          >
+                            {aiStatus.data.enabled ? t('ai.statusOn') : t('ai.statusOff')}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="text-muted-foreground">{t('ai.statusChat')}</dt>
+                          <dd className="font-medium break-all">
+                            {aiStatus.data.chat
+                              ? `${aiStatus.data.chat.protocol} · ${aiStatus.data.chat.baseUrlHost} · ${aiStatus.data.chat.model}`
+                              : (aiStatus.data.model ?? '—')}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="text-muted-foreground">{t('ai.statusEmbedding')}</dt>
+                          <dd className="font-medium break-all">
+                            {aiStatus.data.embedding?.enabled
+                              ? `${aiStatus.data.embedding.protocol} · ${aiStatus.data.embedding.model}`
+                              : t('ai.statusEmbeddingOff')}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="text-muted-foreground">{t('ai.statusBudget')}</dt>
+                          <dd className="font-medium">
+                            {aiStatus.data.budget?.monthlyTokenBudget
+                              ? t('ai.statusBudgetValue', {
+                                  used: (aiStatus.data.budget.used ?? 0).toLocaleString('vi-VN'),
+                                  total:
+                                    aiStatus.data.budget.monthlyTokenBudget.toLocaleString('vi-VN'),
+                                })
+                              : t('ai.statusBudgetUnlimited', {
+                                  used: (aiStatus.data.budget?.used ?? 0).toLocaleString('vi-VN'),
+                                })}
+                          </dd>
+                        </div>
+                      </dl>
+                    )}
                     <div className="bg-surface-2 flex items-center justify-between gap-4 rounded-lg px-4 py-3">
                       <Label htmlFor="ai-enabled">{t('ai.enabled')}</Label>
                       <Switch
@@ -701,14 +825,10 @@ export function Component() {
                                 const preset = CHAT_PRESETS.find((item) => item.id === value)
                                 setAi((current) => ({
                                   ...current,
-                                  chat: {
-                                    ...current.chat,
-                                    protocol:
-                                      value === 'custom'
-                                        ? current.chat.protocol
-                                        : toChatProtocol(preset?.protocol ?? current.chat.protocol),
-                                    baseUrl: preset?.baseUrl ?? current.chat.baseUrl,
-                                  },
+                                  chat:
+                                    value === 'custom'
+                                      ? current.chat
+                                      : applyPresetFields(current.chat, preset, toChatProtocol),
                                 }))
                               }}
                             >
@@ -732,7 +852,8 @@ export function Component() {
                           <Input
                             id="ai-chat-base-url"
                             value={ai.chat.baseUrl}
-                            placeholder={AI_DEFAULTS.chatBaseUrl}
+                            placeholder={t('ai.baseUrlPlaceholder')}
+                            aria-invalid={chatUrlSuffix ? true : undefined}
                             onChange={(event) =>
                               setAi((current) => ({
                                 ...current,
@@ -740,6 +861,11 @@ export function Component() {
                               }))
                             }
                           />
+                          {chatUrlSuffix && (
+                            <p className="text-warning-fg text-xs" role="alert">
+                              {t('ai.baseUrlHasEndpoint', { suffix: chatUrlSuffix })}
+                            </p>
+                          )}
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="ai-chat-model">{t('ai.model')}</Label>
@@ -871,16 +997,14 @@ export function Component() {
                                 const preset = EMBEDDING_PRESETS.find((item) => item.id === value)
                                 setAi((current) => ({
                                   ...current,
-                                  embedding: {
-                                    ...current.embedding,
-                                    protocol:
-                                      value === 'custom'
-                                        ? current.embedding.protocol
-                                        : preset
-                                          ? toEmbeddingProtocol(preset.protocol)
-                                          : current.embedding.protocol,
-                                    baseUrl: preset?.baseUrl ?? current.embedding.baseUrl,
-                                  },
+                                  embedding:
+                                    value === 'custom'
+                                      ? current.embedding
+                                      : applyPresetFields(
+                                          current.embedding,
+                                          preset,
+                                          toEmbeddingProtocol,
+                                        ),
                                 }))
                               }}
                             >
@@ -908,7 +1032,8 @@ export function Component() {
                               <Input
                                 id="ai-embedding-base-url"
                                 value={ai.embedding.baseUrl}
-                                placeholder={AI_DEFAULTS.embeddingBaseUrl}
+                                placeholder={t('ai.baseUrlPlaceholder')}
+                                aria-invalid={embeddingUrlSuffix ? true : undefined}
                                 onChange={(event) =>
                                   setAi((current) => ({
                                     ...current,
@@ -919,6 +1044,11 @@ export function Component() {
                                   }))
                                 }
                               />
+                              {embeddingUrlSuffix && (
+                                <p className="text-warning-fg text-xs" role="alert">
+                                  {t('ai.baseUrlHasEndpoint', { suffix: embeddingUrlSuffix })}
+                                </p>
+                              )}
                             </div>
                             <div className="space-y-2">
                               <Label htmlFor="ai-embedding-model">{t('ai.embeddingModel')}</Label>
@@ -1023,16 +1153,40 @@ export function Component() {
                       >
                         {testState.status === 'loading' ? t('ai.testing') : t('ai.test')}
                       </Button>
+                      {canWrite && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          disabled={reindex.isPending}
+                          onClick={() => reindex.mutate()}
+                        >
+                          {reindex.isPending ? (
+                            <Loader2 className="animate-spin" />
+                          ) : (
+                            <DatabaseZap />
+                          )}
+                          {t('ai.reindex')}
+                        </Button>
+                      )}
                       {testState.status === 'ok' && (
                         <Alert className="max-w-md">
                           <AlertTitle>{t('ai.testOk')}</AlertTitle>
                           <AlertDescription>
-                            {testState.latencyMs !== undefined && (
-                              <p>{t('ai.testLatency', { latencyMs: testState.latencyMs })}</p>
-                            )}
-                            {testState.model && (
-                              <p>{t('ai.testModel', { model: testState.model })}</p>
-                            )}
+                            <p>
+                              {t('ai.testChatResult', {
+                                model: testState.model ?? ai.chat.model,
+                                latencyMs: testState.latencyMs ?? 0,
+                              })}
+                            </p>
+                            <p>
+                              {ai.embedding.protocol === 'none'
+                                ? t('ai.testEmbeddingOff')
+                                : aiStatus.data?.embedding?.enabled
+                                  ? t('ai.testEmbeddingResult', {
+                                      model: aiStatus.data.embedding.model,
+                                    })
+                                  : t('ai.testEmbeddingSkipped')}
+                            </p>
                           </AlertDescription>
                         </Alert>
                       )}

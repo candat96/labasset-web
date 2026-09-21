@@ -28,7 +28,7 @@ const settings = {
   'ai.chat.baseUrl': 'https://api.openai.com/v1',
   'ai.chat.model': 'gpt-4o-mini',
   'ai.chat.apiKeySet': true,
-  'ai.chat.headers': '',
+  'ai.chat.headers': {},
   'ai.embedding.protocol': 'openai_compatible',
   'ai.embedding.baseUrl': 'https://api.openai.com/v1',
   'ai.embedding.model': 'text-embedding-3-small',
@@ -44,6 +44,24 @@ beforeEach(() => {
   server.use(
     http.get('/v1/settings', () => HttpResponse.json(settings)),
     http.get('/v1/catalogs/warehouses', () => HttpResponse.json([])),
+    http.get('/v1/ai/status', () =>
+      HttpResponse.json({
+        enabled: true,
+        model: 'gpt-4o-mini',
+        budget: { monthlyTokenBudget: 0, used: 1234, remaining: null },
+        rateLimit: { perHour: 30 },
+        chat: {
+          protocol: 'openai_compatible',
+          baseUrlHost: 'api.openai.com',
+          model: 'gpt-4o-mini',
+        },
+        embedding: {
+          protocol: 'openai_compatible',
+          model: 'text-embedding-3-small',
+          enabled: true,
+        },
+      }),
+    ),
   )
 })
 
@@ -158,6 +176,76 @@ it('fills Base URL from the selected provider preset', async () => {
   expect(screen.getByLabelText('Base URL embedding')).toHaveValue('https://api.voyageai.com/v1')
 })
 
+it('fills OpenRouter embedding with qwen/qwen3-embedding-4b and suggests bge-m3', async () => {
+  await openAiTab()
+  await userEvent.click(screen.getByLabelText('Nhà cung cấp embedding'))
+  await userEvent.click(screen.getByRole('option', { name: 'OpenRouter' }))
+  expect(screen.getByLabelText('Base URL embedding')).toHaveValue('https://openrouter.ai/api/v1')
+  expect(screen.getByLabelText('Mô hình embedding')).toHaveValue('qwen/qwen3-embedding-4b')
+  const options = [...document.querySelectorAll('#ai-embedding-model-suggestions option')].map(
+    (node) => (node as HTMLOptionElement).value,
+  )
+  expect(options).toEqual([
+    'qwen/qwen3-embedding-4b',
+    'openai/text-embedding-3-small',
+    'baai/bge-m3',
+  ])
+})
+
+it('warns when a Base URL is pasted with an endpoint suffix and shows the placeholder hint', async () => {
+  await openAiTab()
+  expect(screen.getByLabelText('Base URL')).toHaveAttribute(
+    'placeholder',
+    'https://openrouter.ai/api/v1 (không kèm /embeddings hay /chat/completions)',
+  )
+  fireEvent.change(screen.getByLabelText('Base URL embedding'), {
+    target: { value: 'https://openrouter.ai/api/v1/embeddings' },
+  })
+  expect(screen.getByRole('alert')).toHaveTextContent('đang kèm đuôi /embeddings')
+  expect(screen.getByLabelText('Base URL embedding')).toHaveAttribute('aria-invalid', 'true')
+  fireEvent.change(screen.getByLabelText('Base URL embedding'), {
+    target: { value: 'https://openrouter.ai/api/v1' },
+  })
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  fireEvent.change(screen.getByLabelText('Base URL'), {
+    target: { value: 'https://api.deepseek.com/v1/chat/completions' },
+  })
+  expect(screen.getByRole('alert')).toHaveTextContent('/chat/completions')
+})
+
+it('shows the live AI status card and queues a reindex with a count toast', async () => {
+  let reindexCalled = false
+  server.use(
+    http.post('/v1/ai/admin/reindex', () => {
+      reindexCalled = true
+      return HttpResponse.json({ queued: 12 })
+    }),
+  )
+  await openAiTab()
+  const card = await screen.findByRole('group', { name: 'Trạng thái trợ lý AI' })
+  expect(card).toHaveTextContent('Đang bật')
+  expect(card).toHaveTextContent('openai_compatible · api.openai.com · gpt-4o-mini')
+  expect(card).toHaveTextContent('openai_compatible · text-embedding-3-small')
+  expect(card).toHaveTextContent('Đã dùng 1.234 token (không giới hạn)')
+  await userEvent.click(screen.getByRole('button', { name: 'Lập chỉ mục lại tài liệu' }))
+  expect(await screen.findByText('Đã xếp 12 tài liệu vào hàng lập chỉ mục')).toBeVisible()
+  expect(reindexCalled).toBe(true)
+})
+
+it('fills DeepSeek chat URL and current model names, not gpt-4o-mini', async () => {
+  await openAiTab()
+  await userEvent.click(screen.getByLabelText('Nhà cung cấp'))
+  await userEvent.click(screen.getByRole('option', { name: 'DeepSeek' }))
+  expect(screen.getByLabelText('Base URL')).toHaveValue('https://api.deepseek.com/v1')
+  expect(screen.getByLabelText('Mô hình')).toHaveValue('deepseek-flash')
+  const suggestions = screen.getByLabelText('Mô hình').getAttribute('list')
+  expect(suggestions).toBe('ai-chat-model-suggestions')
+  const options = [...document.querySelectorAll('#ai-chat-model-suggestions option')].map(
+    (node) => (node as HTMLOptionElement).value,
+  )
+  expect(options).toEqual(['deepseek-flash', 'deepseek-v4-pro'])
+})
+
 it('PUT sends changed ai.* keys per the provider contract and skips empty keys', async () => {
   const saved: unknown[] = []
   server.use(
@@ -203,8 +291,36 @@ it('test connection shows latency and model on success', async () => {
   await openAiTab()
   await userEvent.click(screen.getByRole('button', { name: 'Kiểm tra kết nối' }))
   expect(await screen.findByText('Kết nối OK')).toBeVisible()
-  expect(screen.getByText('Độ trễ: 123 ms')).toBeVisible()
-  expect(screen.getByText('Mô hình: gpt-4o-mini')).toBeVisible()
+  expect(screen.getByText('Chat: OK — gpt-4o-mini, 123 ms')).toBeVisible()
+  expect(
+    await screen.findByText('Embedding: OK — text-embedding-3-small (kiểm tra cùng lượt)'),
+  ).toBeVisible()
+})
+
+it('sends the form chat config when testing connection', async () => {
+  let body: unknown
+  server.use(
+    http.post('/v1/ai/settings/test', async ({ request }) => {
+      body = await request.json()
+      return HttpResponse.json({
+        ok: true,
+        latencyMs: 40,
+        model: 'deepseek-flash',
+      })
+    }),
+  )
+  await openAiTab()
+  await userEvent.click(screen.getByLabelText('Nhà cung cấp'))
+  await userEvent.click(screen.getByRole('option', { name: 'DeepSeek' }))
+  fireEvent.change(screen.getByLabelText('API key (đã đặt)'), { target: { value: 'sk-draft' } })
+  await userEvent.click(screen.getByRole('button', { name: 'Kiểm tra kết nối' }))
+  expect(await screen.findByText('Kết nối OK')).toBeVisible()
+  expect(body).toEqual({
+    protocol: 'openai_compatible',
+    baseUrl: 'https://api.deepseek.com/v1',
+    model: 'deepseek-flash',
+    apiKey: 'sk-draft',
+  })
 })
 
 it('shows an unsupported message instead of an error when test endpoint is 404', async () => {

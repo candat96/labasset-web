@@ -23,7 +23,7 @@ export const CHAT_PRESETS: ProviderPreset[] = [
     id: 'deepseek',
     protocol: 'openai_compatible',
     baseUrl: 'https://api.deepseek.com/v1',
-    models: ['deepseek-chat', 'deepseek-reasoner'],
+    models: ['deepseek-flash', 'deepseek-v4-pro'],
   },
   {
     id: 'glm',
@@ -62,13 +62,7 @@ export const EMBEDDING_PRESETS: ProviderPreset[] = [
     id: 'openrouter',
     protocol: 'openai_compatible',
     baseUrl: 'https://openrouter.ai/api/v1',
-    models: ['openai/text-embedding-3-small'],
-  },
-  {
-    id: 'deepseek',
-    protocol: 'openai_compatible',
-    baseUrl: 'https://api.deepseek.com/v1',
-    models: ['deepseek-chat'],
+    models: ['qwen/qwen3-embedding-4b', 'openai/text-embedding-3-small', 'baai/bge-m3'],
   },
   {
     id: 'voyage',
@@ -84,11 +78,36 @@ export const EMBEDDING_PRESETS: ProviderPreset[] = [
   },
 ]
 
+function canonicalBaseUrl(url: string): string {
+  try {
+    const parsed = new URL(url)
+    const path = parsed.pathname.replace(/\/+$/, '').replace(/\/v1$/, '')
+    return `${parsed.host}${path}`
+  } catch {
+    return url.replace(/\/+$/, '')
+  }
+}
+
 /** Tìm preset khớp Base URL hiện tại (ưu tiên khớp URL, protocol phải cùng loại). */
 export function findPreset(
   presets: ProviderPreset[],
   baseUrl: string,
   protocol: string,
 ): ProviderPreset | undefined {
-  return presets.find((p) => p.baseUrl === baseUrl && p.protocol === protocol)
+  const canonical = canonicalBaseUrl(baseUrl)
+  return presets.find(
+    (preset) => preset.protocol === protocol && canonicalBaseUrl(preset.baseUrl) === canonical,
+  )
+}
+
+/** Đuôi endpoint hay bị dán nhầm vào Base URL (backend tự nối `/chat/completions`, `/embeddings`). */
+const ENDPOINT_SUFFIX = /\/(chat\/completions|completions|embeddings|v1\/messages|messages)\/?$/i
+
+/**
+ * Trả về đuôi endpoint nếu Base URL kèm `/embeddings`, `/chat/completions`, `/messages`…
+ * để form cảnh báo; `undefined` khi hợp lệ.
+ */
+export function baseUrlEndpointSuffix(baseUrl: string): string | undefined {
+  const match = ENDPOINT_SUFFIX.exec(baseUrl.trim())
+  return match ? `/${match[1]}` : undefined
 }

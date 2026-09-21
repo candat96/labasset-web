@@ -31,4 +31,41 @@ describe('AI SSE', () => {
       tools: [{ name: 'search', status: 'done' }],
     })
   })
+
+  it('maps backend tool status start → running and "lỗi:" summary → failed', () => {
+    let state = chatReducer([], { type: 'start', id: 'pending' })
+    state = chatReducer(state, {
+      type: 'event',
+      event: { event: 'tool', data: '{"name":"search_equipment","status":"start"}' },
+    })
+    expect(state[0]!.tools).toEqual([{ name: 'search_equipment', status: 'running' }])
+    state = chatReducer(state, {
+      type: 'event',
+      event: {
+        event: 'tool',
+        data: '{"name":"search_equipment","status":"done","summary":"lỗi: VALIDATION_ERROR"}',
+      },
+    })
+    expect(state[0]!.tools).toEqual([
+      { name: 'search_equipment', status: 'failed', summary: 'lỗi: VALIDATION_ERROR' },
+    ])
+  })
+
+  it('keeps SSE error apart from content and retry drops the pair', () => {
+    let state = chatReducer([], {
+      type: 'user',
+      message: { id: 'u1', role: 'user', content: 'Hỏi' },
+    })
+    state = chatReducer(state, { type: 'start', id: 'pending' })
+    state = chatReducer(state, {
+      type: 'event',
+      event: { event: 'error', data: '{"code":"AI_RATE_LIMITED","message":"Chậm lại"}' },
+    })
+    expect(state[1]).toMatchObject({
+      content: '',
+      streaming: false,
+      error: { code: 'AI_RATE_LIMITED', message: 'Chậm lại' },
+    })
+    expect(chatReducer(state, { type: 'retry', id: 'pending' })).toEqual([])
+  })
 })

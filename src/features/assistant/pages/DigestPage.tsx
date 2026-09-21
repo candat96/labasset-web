@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import ReactMarkdown from 'react-markdown'
+import { Markdown } from '../components/MessageBubble'
 import { PageHeader } from '@/components/page/PageHeader'
 import { DatePicker } from '@/components/date-picker'
 import { Label } from '@/components/ui/label'
@@ -53,9 +53,7 @@ export function Component() {
             ))}
           </ul>
           {digest.data.content ? (
-            <div className="prose bg-muted max-w-none overflow-auto rounded p-3 text-sm">
-              <ReactMarkdown>{digest.data.content}</ReactMarkdown>
-            </div>
+            <Markdown content={digest.data.content} className="bg-surface-2 rounded-xl p-4" />
           ) : (
             <p className="text-muted-foreground text-sm">{t('notConfigured')}</p>
           )}
