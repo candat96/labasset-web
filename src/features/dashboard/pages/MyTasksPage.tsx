@@ -1,110 +1,74 @@
-import { Link } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
-import { PageHeader } from '@/components/page/PageHeader'
+import { Link } from 'react-router'
 import { api, unwrap } from '@/api/client'
-import { pageQuery } from '@/api/paths'
+import type { components } from '@/api/schema'
+import { PageHeader } from '@/components/page/PageHeader'
+import { Card, CardContent } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useTranslation } from 'react-i18next'
+
+type MyTasks = components['schemas']['MyTasksResponseDto']
+
+const LINKS: Record<string, string> = {
+  repairsAssigned: '/repairs?assigneeId=me',
+  repairsPendingResponse: '/repairs?assigneeId=me',
+  repairsOverdue: '/repairs?assigneeId=me&overdue=true',
+  maintenanceDue7d: '/maintenance/tasks?assigneeId=me',
+  maintenanceOverdue: '/maintenance/tasks?assigneeId=me&status=overdue',
+  requestsPendingApproval: '/requests?pendingFor=me',
+  requestsPendingIssue: '/requests?status=approved',
+  requestsPendingReceive: '/requests?status=issued',
+  stocktakesCounting: '/stocktakes?status=counting',
+  alertsRepairsNew: '/repairs?status=new',
+  alertsCalibrationOverdue: '/calibrations?overdue=true',
+  alertsStock: '/stock/alerts?resolved=false',
+}
 
 export function Component() {
   const { t } = useTranslation('dashboard')
+  const query = useQuery({
+    queryKey: ['my-tasks'],
+    queryFn: () => unwrap(api.GET('/v1/me/tasks')) as Promise<MyTasks>,
+  })
+  const data = query.data
+  const rows = data
+    ? [
+        ['repairsAssigned', data.repairs.assigned],
+        ['repairsPendingResponse', data.repairs.pendingResponse],
+        ['repairsOverdue', data.repairs.overdue],
+        ['maintenanceDue7d', data.maintenance.due7d],
+        ['maintenanceOverdue', data.maintenance.overdue],
+        ['requestsPendingApproval', data.requests.pendingApproval],
+        ['requestsPendingIssue', data.requests.pendingIssue],
+        ['requestsPendingReceive', data.requests.pendingReceive],
+        ['stocktakesCounting', data.stocktakes.counting],
+        ['alertsRepairsNew', data.alerts.repairsNew],
+        ['alertsCalibrationOverdue', data.alerts.calibrationOverdue],
+        ['alertsStock', Object.values(data.alerts.stock).reduce((sum, value) => sum + value, 0)],
+      ].sort((a, b) => Number(b[1]) - Number(a[1]))
+    : []
 
-  const repairs = useQuery({
-    queryKey: ['my-tasks', 'repairs'],
-    queryFn: () =>
-      unwrap(
-        api.GET('/v1/repairs', {
-          params: {
-            query: pageQuery({
-              assigneeId: 'me',
-              status: 'accepted,in_progress,awaiting_parts,awaiting_vendor',
-              page: 1,
-              limit: 20,
-            }),
-          },
-        }),
-      ),
-  })
-  const tasks = useQuery({
-    queryKey: ['my-tasks', 'maint'],
-    queryFn: () =>
-      unwrap(
-        api.GET('/v1/maintenance/tasks', {
-          params: {
-            query: pageQuery({
-              assigneeId: 'me',
-              status: 'scheduled,in_progress,overdue',
-              page: 1,
-              limit: 20,
-            }),
-          },
-        }),
-      ),
-  })
-  const pending = useQuery({
-    queryKey: ['my-tasks', 'requests'],
-    queryFn: () =>
-      unwrap(
-        api.GET('/v1/requests', {
-          params: { query: pageQuery({ pendingFor: 'me' as const, page: 1, limit: 20 }) },
-        }),
-      ),
-  })
-  const issued = useQuery({
-    queryKey: ['my-tasks', 'issued'],
-    queryFn: () =>
-      unwrap(
-        api.GET('/v1/requests', {
-          params: { query: pageQuery({ status: 'issued', page: 1, limit: 20 }) },
-        }),
-      ),
-  })
-  const groups = [
-    {
-      title: t('repairsMine'),
-      items: repairs.data?.items ?? [],
-      href: (id: string) => `/repairs/${id}`,
-      code: (r: { code: string }) => r.code,
-    },
-    {
-      title: t('maintenanceMine'),
-      items: tasks.data?.items ?? [],
-      href: (id: string) => `/maintenance/tasks/${id}`,
-      code: (r: { code: string }) => r.code,
-    },
-    {
-      title: t('pendingApproval'),
-      items: pending.data?.items ?? [],
-      href: (id: string) => `/requests/${id}`,
-      code: (r: { code: string }) => r.code,
-    },
-    {
-      title: t('awaitingReceive'),
-      items: issued.data?.items ?? [],
-      href: (id: string) => `/requests/${id}`,
-      code: (r: { code: string }) => r.code,
-    },
-  ].sort((a, b) => b.items.length - a.items.length)
   return (
     <>
       <PageHeader title={t('myTasksTitle')} />
-      <div className="space-y-6">
-        {groups.map((group) => (
-          <section key={group.title}>
-            <h2 className="mb-2 font-medium">
-              {group.title} ({group.items.length})
-            </h2>
-            <ul className="space-y-1 text-sm">
-              {group.items.map((item) => (
-                <li key={item.id}>
-                  <Link className="text-primary hover:underline" to={group.href(item.id)}>
-                    {group.code(item)}
+      {query.error && (
+        <p role="alert" className="text-destructive">
+          Không tải được việc của tôi.
+        </p>
+      )}
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        {query.isPending
+          ? Array.from({ length: 6 }).map((_, index) => <Skeleton key={index} className="h-24" />)
+          : rows.map(([key, value]) => (
+              <Card key={String(key)}>
+                <CardContent className="p-4">
+                  <Link className="block" to={LINKS[String(key)] ?? '/my-tasks'}>
+                    <div className="text-muted-foreground text-sm">{t(`tasks.${key}`)}</div>
+                    <div className="mt-1 text-2xl font-semibold tabular-nums">{String(value)}</div>
                   </Link>
-                </li>
-              ))}
-              {group.items.length === 0 && <li className="text-muted-foreground">{t('empty')}</li>}
-            </ul>
-          </section>
-        ))}
+                </CardContent>
+              </Card>
+            ))}
       </div>
     </>
   )

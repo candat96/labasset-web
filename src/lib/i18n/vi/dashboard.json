@@ -24,5 +24,19 @@
   "maintenanceMine": "Bảo dưỡng của tôi",
   "pendingApproval": "Chờ tôi duyệt",
   "awaitingReceive": "Chờ nhận",
-  "empty": "Không có việc"
+  "empty": "Không có việc",
+  "tasks": {
+    "repairsAssigned": "Sửa chữa được giao",
+    "repairsPendingResponse": "Phân công chờ phản hồi",
+    "repairsOverdue": "Sửa chữa quá hạn",
+    "maintenanceDue7d": "Bảo dưỡng đến hạn 7 ngày",
+    "maintenanceOverdue": "Bảo dưỡng quá hạn",
+    "requestsPendingApproval": "Phiếu chờ duyệt",
+    "requestsPendingIssue": "Phiếu chờ cấp phát",
+    "requestsPendingReceive": "Phiếu chờ nhận",
+    "stocktakesCounting": "Kiểm kê đang đếm",
+    "alertsRepairsNew": "Phiếu sửa chữa mới",
+    "alertsCalibrationOverdue": "Kiểm định quá hạn",
+    "alertsStock": "Cảnh báo kho"
+  }
 }

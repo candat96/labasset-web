@@ -1524,6 +1524,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DashboardController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/departments": {
         parameters: {
             query?: never;
@@ -2695,6 +2711,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/me/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["MeController_myTasks"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/notifications": {
         parameters: {
             query?: never;
@@ -3175,6 +3207,166 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ReportsController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/reports/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ReportsController_run"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/reports/{key}/run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ReportsController_runJob"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/reports/custom": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CustomReportsController_list"];
+        put?: never;
+        post: operations["CustomReportsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/reports/custom/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CustomReportsController_get"];
+        put?: never;
+        post?: never;
+        delete: operations["CustomReportsController_remove"];
+        options?: never;
+        head?: never;
+        patch: operations["CustomReportsController_update"];
+        trace?: never;
+    };
+    "/v1/reports/custom/{id}/run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CustomReportsController_run"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/reports/custom/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CustomReportsController_preview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/reports/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ReportsController_listJobs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/reports/jobs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ReportsController_getJob"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/reports/sources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ReportsController_sources"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/requests": {
         parameters: {
             query?: never;
@@ -3429,6 +3621,22 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["RequestsController_updateRecurring"];
+        trace?: never;
+    };
+    "/v1/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["SearchController_query"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/v1/settings": {
@@ -4358,6 +4566,11 @@ export interface components {
             tempPassword: string;
             username: string;
         };
+        AlertTasksDto: {
+            calibrationOverdue: number;
+            repairsNew: number;
+            stock: components["schemas"]["StockAlertCountsDto"];
+        };
         AnnouncementPageDto: {
             items: components["schemas"]["AnnouncementResponseDto"][];
             limit: number;
@@ -4749,7 +4962,7 @@ export interface components {
             /** Format: date-time */
             countedAt?: string;
             countedLocation?: Record<string, never>;
-            countedQty?: string;
+            countedQty: string;
             countedStatus?: Record<string, never>;
             itemId?: string;
             lotId?: string;
@@ -5143,6 +5356,72 @@ export interface components {
             keeperUserId?: Record<string, never>;
             name: string;
             sortOrder?: number;
+        };
+        CustomPreviewDto: {
+            columns: components["schemas"]["ReportColumnDto"][];
+            rows: {
+                [key: string]: unknown;
+            }[];
+            truncated: boolean;
+        };
+        CustomReportAggregateDto: {
+            field: string;
+            /** @enum {string} */
+            fn: "count" | "sum" | "avg" | "min" | "max";
+        };
+        CustomReportBodyDto: {
+            aggregates?: components["schemas"]["CustomReportAggregateDto"][];
+            columns: string[];
+            filters?: components["schemas"]["CustomReportFilterDto"][];
+            groupBy?: string[];
+            name: string;
+            shared?: boolean;
+            sort?: components["schemas"]["CustomReportSortDto"] | null;
+            /** @enum {string} */
+            source: "equipment" | "repairs" | "stock_movements" | "requests" | "maintenance_tasks";
+        };
+        CustomReportFilterDto: {
+            field: string;
+            op: string;
+            value?: Record<string, never>;
+            valueTo?: Record<string, never>;
+        };
+        CustomReportSortDto: {
+            /** @enum {string} */
+            dir: "asc" | "desc";
+            field: string;
+        };
+        CustomReportViewDto: {
+            aggregates: components["schemas"]["CustomReportAggregateDto"][];
+            columns: string[];
+            filters: components["schemas"]["CustomReportFilterDto"][];
+            groupBy: string[];
+            /** Format: uuid */
+            id: string;
+            name: string;
+            ownerName?: string;
+            shared: boolean;
+            sort?: components["schemas"]["CustomReportSortDto"] | null;
+            source: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        CustomRunResultDto: {
+            /** Format: uuid */
+            jobId: string;
+        };
+        DashboardCardDto: {
+            key: string;
+            link: string;
+            title: string;
+            trend?: number;
+            unit?: string;
+            value: Record<string, never>;
+        };
+        DashboardResponseDto: {
+            cards: components["schemas"]["DashboardCardDto"][];
+            /** Format: date-time */
+            generatedAt: string;
         };
         DeactivatedDto: {
             /** @enum {boolean} */
@@ -5717,6 +5996,14 @@ export interface components {
             running: string[];
             total: number;
         };
+        JsonObjectSchemaDto: {
+            properties: {
+                [key: string]: Record<string, never>;
+            };
+            required?: string[];
+            /** @enum {string} */
+            type: "object";
+        };
         LicenseResponseDto: {
             equipmentId: string;
             licenseKey: string | null;
@@ -5747,6 +6034,10 @@ export interface components {
             role: "technician" | "department";
             signerName: string;
         };
+        MaintenanceTasksDto: {
+            due7d: number;
+            overdue: number;
+        };
         MigrationResultDto: {
             code: string;
             error?: string;
@@ -5762,6 +6053,13 @@ export interface components {
         };
         MoveCalendarDto: {
             scheduledAt: string;
+        };
+        MyTasksResponseDto: {
+            alerts: components["schemas"]["AlertTasksDto"];
+            maintenance: components["schemas"]["MaintenanceTasksDto"];
+            repairs: components["schemas"]["RepairTasksDto"];
+            requests: components["schemas"]["RequestTasksDto"];
+            stocktakes: components["schemas"]["StocktakeTasksDto"];
         };
         NetworkDto: {
             /** Format: uuid */
@@ -6322,6 +6620,11 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         };
+        RepairTasksDto: {
+            assigned: number;
+            overdue: number;
+            pendingResponse: number;
+        };
         RepairVendorDto: {
             contractNo?: string;
             engineerName?: string;
@@ -6374,6 +6677,58 @@ export interface components {
             repairTicketId: string | null;
             /** Format: date-time */
             replacedAt: string;
+        };
+        ReportColumnDto: {
+            key: string;
+            title: string;
+            /** @enum {string} */
+            type: "string" | "number" | "money" | "date" | "datetime" | "percent";
+            width?: number;
+        };
+        ReportJobPageDto: {
+            items: components["schemas"]["ReportJobViewDto"][];
+            limit: number;
+            page: number;
+            total: number;
+        };
+        ReportJobViewDto: {
+            /** Format: date-time */
+            createdAt: string;
+            downloadUrl?: string | null;
+            error?: string | null;
+            /** Format: uuid */
+            fileId?: Record<string, never> | null;
+            /** Format: date-time */
+            finishedAt?: string | null;
+            format: string;
+            /** Format: uuid */
+            id: string;
+            key: string;
+            rowCount?: number | null;
+            status: string;
+        };
+        ReportMetaDto: {
+            columns: components["schemas"]["ReportColumnDto"][];
+            group: string;
+            key: string;
+            params: components["schemas"]["JsonObjectSchemaDto"];
+            title: string;
+        };
+        ReportRunDto: {
+            columns: components["schemas"]["ReportColumnDto"][];
+            limit: number;
+            page: number;
+            rows: {
+                [key: string]: unknown;
+            }[];
+            total: number;
+        };
+        ReportSourceDto: {
+            fields: {
+                [key: string]: unknown;
+            };
+            label: string;
+            source: string;
         };
         RequestCommentResponseDto: {
             body: string;
@@ -6548,6 +6903,11 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         };
+        RequestTasksDto: {
+            pendingApproval: number;
+            pendingIssue: number;
+            pendingReceive: number;
+        };
         ResetPasswordDto: {
             /** @description ≥8 ký tự, có chữ và số */
             next: string;
@@ -6574,6 +6934,17 @@ export interface components {
             /** Format: uuid */
             qrToken: string;
         };
+        RunJobAcceptedDto: {
+            /** Format: uuid */
+            jobId: string;
+        };
+        RunReportJobDto: {
+            /** @enum {string} */
+            format: "xlsx" | "pdf";
+            params?: {
+                [key: string]: unknown;
+            };
+        };
         RunwayItemDto: {
             /** @enum {string} */
             basis: "norm_day" | "norm_test" | "history" | "unknown";
@@ -6593,6 +6964,20 @@ export interface components {
         SaveResultsDto: {
             clientVersion: number;
             results: components["schemas"]["ResultDto"][];
+        };
+        SearchHitDto: {
+            code: string;
+            id: string;
+            link: string;
+            subtitle: string;
+            title: string;
+        };
+        SearchResponseDto: {
+            equipment: components["schemas"]["SearchHitDto"][];
+            faults: components["schemas"]["SearchHitDto"][];
+            repairs: components["schemas"]["SearchHitDto"][];
+            requests: components["schemas"]["SearchHitDto"][];
+            supplies: components["schemas"]["SearchHitDto"][];
         };
         SessionViewDto: {
             /** Format: date-time */
@@ -6684,6 +7069,13 @@ export interface components {
             refId: string | null;
             refType: string;
             toStatus: string;
+        };
+        StockAlertCountsDto: {
+            expired: number;
+            expiring: number;
+            low_stock: number;
+            open_vial_expiring: number;
+            stale: number;
         };
         StockAlertResponseDto: {
             /** Format: date-time */
@@ -6858,6 +7250,9 @@ export interface components {
         StocktakeSubScopeDto: {
             locations?: string[];
             warehouseIds?: string[];
+        };
+        StocktakeTasksDto: {
+            counting: number;
         };
         SuggestedAssigneeDto: {
             fullName: string;
@@ -11140,6 +11535,28 @@ export interface operations {
             };
         };
     };
+    DashboardController_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardResponseDto"];
+                };
+            };
+        };
+    };
     DepartmentsController_list: {
         parameters: {
             query?: {
@@ -13834,6 +14251,28 @@ export interface operations {
             };
         };
     };
+    MeController_myTasks: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyTasksResponseDto"];
+                };
+            };
+        };
+    };
     NotificationsController_list: {
         parameters: {
             query?: {
@@ -14873,6 +15312,341 @@ export interface operations {
             };
         };
     };
+    ReportsController_list: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportMetaDto"][];
+                };
+            };
+        };
+    };
+    ReportsController_run: {
+        parameters: {
+            query?: {
+                departmentId?: string;
+                format?: "json" | "xlsx" | "pdf";
+                from?: string;
+                groupBy?: "equipment" | "department" | "month";
+                limit?: number;
+                page?: number;
+                sessionId?: string;
+                to?: string;
+                warehouseId?: string;
+                withinDays?: number;
+            };
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportRunDto"];
+                    "application/pdf": string;
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
+            };
+        };
+    };
+    ReportsController_runJob: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RunReportJobDto"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunJobAcceptedDto"];
+                };
+            };
+        };
+    };
+    CustomReportsController_list: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomReportViewDto"][];
+                };
+            };
+        };
+    };
+    CustomReportsController_create: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CustomReportBodyDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomReportViewDto"];
+                };
+            };
+        };
+    };
+    CustomReportsController_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomReportViewDto"];
+                };
+            };
+        };
+    };
+    CustomReportsController_remove: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+        };
+    };
+    CustomReportsController_update: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CustomReportBodyDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomReportViewDto"];
+                };
+            };
+        };
+    };
+    CustomReportsController_run: {
+        parameters: {
+            query: {
+                format: string;
+            };
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomRunResultDto"];
+                };
+            };
+        };
+    };
+    CustomReportsController_preview: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CustomReportBodyDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomPreviewDto"];
+                };
+            };
+        };
+    };
+    ReportsController_listJobs: {
+        parameters: {
+            query?: {
+                limit?: number;
+                page?: number;
+                status?: "queued" | "running" | "done" | "failed";
+            };
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportJobPageDto"];
+                };
+            };
+        };
+    };
+    ReportsController_getJob: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportJobViewDto"];
+                };
+            };
+        };
+    };
+    ReportsController_sources: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportSourceDto"][];
+                };
+            };
+        };
+    };
     RequestsController_list: {
         parameters: {
             query?: {
@@ -15479,6 +16253,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RecurringResponseDto"];
+                };
+            };
+        };
+    };
+    SearchController_query: {
+        parameters: {
+            query: {
+                limit?: number;
+                q: string;
+            };
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchResponseDto"];
                 };
             };
         };

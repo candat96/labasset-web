@@ -102,22 +102,33 @@ it('keeps edited preferences on server error', async () => {
   expect(await screen.findByText('Bạn không có quyền thực hiện')).toBeVisible()
   expect(toggle).toHaveAttribute('aria-checked', 'false')
 })
-it('searches four endpoints and opens a grouped result with Enter', async () => {
+it('searches the global endpoint and opens the returned link with Enter', async () => {
   const calls: string[] = []
-  for (const kind of ['equipment', 'supplies', 'repairs', 'requests'])
-    server.use(
-      http.get(`/v1/${kind}`, ({ request }) => {
-        calls.push(request.url)
-        return HttpResponse.json({
-          items: kind === 'equipment' ? [{ id: 'e1', code: 'XN1', name: 'Máy xét nghiệm' }] : [],
-        })
-      }),
-    )
+  server.use(
+    http.get('/v1/search', ({ request }) => {
+      calls.push(request.url)
+      return HttpResponse.json({
+        equipment: [
+          {
+            id: 'e1',
+            code: 'XN1',
+            title: 'Máy xét nghiệm',
+            subtitle: 'Model X',
+            link: '/equipment/e1',
+          },
+        ],
+        supplies: [],
+        repairs: [],
+        requests: [],
+        faults: [],
+      })
+    }),
+  )
   const { router } = renderWithProviders(<GlobalSearch />)
   await userEvent.keyboard('{Control>}k{/Control}')
   await userEvent.type(screen.getByRole('combobox'), 'XN')
   expect(await screen.findByRole('option', { name: /XN1/ })).toBeVisible()
-  expect(calls).toHaveLength(4)
+  expect(calls).toHaveLength(1)
   expect(calls.every((c) => c.includes('limit=5') && c.includes('q=XN'))).toBe(true)
   await userEvent.keyboard('{ArrowDown}{Enter}')
   expect(router.state.location.pathname).toBe('/equipment/e1')

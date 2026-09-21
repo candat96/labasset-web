@@ -10,12 +10,12 @@ import {
   Wrench,
   type LucideIcon,
 } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PageHeader } from '@/components/page/PageHeader'
 import type { StatusTone } from '@/components/page/StatusBadge'
 import { formatNumber } from '@/lib/format/number'
+import { formatVnd } from '@/lib/format/money'
 import { cn } from '@/lib/utils'
 import {
   Bar,
@@ -32,13 +32,14 @@ import {
 import { useDashboard } from '../hooks'
 
 const ICONS: Record<string, LucideIcon> = {
-  equipmentActive: Microscope,
-  equipmentBroken: Wrench,
-  maintenanceDue: ClipboardList,
-  calibrationDue: Gauge,
-  suppliesLow: Boxes,
-  requestsPending: FileText,
-  repairsOpen: Wrench,
+  'equipment.total': Microscope,
+  'equipment.active': Microscope,
+  'equipment.broken': Wrench,
+  'maintenance.due30': ClipboardList,
+  'calibration.due30': Gauge,
+  'stock.lowStock': Boxes,
+  'requests.pending': FileText,
+  'repair.open': Wrench,
 }
 
 const TONE: Record<StatusTone, string> = {
@@ -51,16 +52,16 @@ const TONE: Record<StatusTone, string> = {
 
 export function Component() {
   const { t } = useTranslation('dashboard')
-  const { t: tc } = useTranslation()
   const q = useDashboard()
 
   return (
     <>
-      <PageHeader
-        title={t('title')}
-        description={q.data?.isMock ? t('mockNote') : t('desc')}
-        badge={q.data?.isMock && <Badge variant="outline">{tc('mock')}</Badge>}
-      />
+      <PageHeader title={t('title')} description={t('desc')} />
+      {q.error && (
+        <p role="alert" className="text-destructive mb-3 text-sm">
+          Không tải được dashboard.
+        </p>
+      )}
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {q.isPending
           ? Array.from({ length: 7 }).map((_, i) => <Skeleton key={i} className="h-24" />)
@@ -82,12 +83,16 @@ export function Component() {
                         <Icon className="size-5" aria-hidden />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <div className="text-muted-foreground truncate text-xs">
-                          {t(`kpi.${k.key}`)}
-                        </div>
+                        <div className="text-muted-foreground truncate text-xs">{k.title}</div>
                         <div className="text-2xl font-semibold tabular-nums">
-                          {formatNumber(k.value)}
+                          {k.unit === 'VND' ? formatVnd(String(k.value)) : formatNumber(k.value)}
                         </div>
+                        {k.trend !== undefined && (
+                          <div className="text-muted-foreground text-xs">
+                            {k.trend > 0 ? '+' : ''}
+                            {k.trend}%
+                          </div>
+                        )}
                       </div>
                       <ArrowRight className="text-muted-foreground size-4" aria-hidden />
                     </Link>
@@ -105,8 +110,8 @@ export function Component() {
                 <ResponsiveContainer width="100%" height="90%">
                   <BarChart
                     data={q.data.kpis
-                      .filter((row) => row.key.startsWith('repair'))
-                      .map((row) => ({ name: t(`kpi.${row.key}`), value: row.value }))}
+                      .filter((row) => row.key.startsWith('repair.'))
+                      .map((row) => ({ name: row.title, value: Number(row.value) }))}
                   >
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" hide />
@@ -124,8 +129,8 @@ export function Component() {
                   <PieChart>
                     <Pie
                       data={q.data.kpis
-                        .filter((row) => row.key.startsWith('supplies'))
-                        .map((row) => ({ name: t(`kpi.${row.key}`), value: row.value }))}
+                        .filter((row) => row.key.startsWith('stock.') && row.unit !== 'VND')
+                        .map((row) => ({ name: row.title, value: Number(row.value) }))}
                       dataKey="value"
                       nameKey="name"
                       outerRadius={80}

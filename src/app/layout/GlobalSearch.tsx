@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router'
-import { api, unwrapAs } from '@/api/client'
-import { pageQuery } from '@/api/paths'
+import { api, unwrap } from '@/api/client'
 import { useDebounce } from '@/lib/use-debounce'
 import { useTranslation } from 'react-i18next'
 import { Search } from 'lucide-react'
@@ -16,14 +15,13 @@ import {
   CommandItem,
 } from '@/components/ui/command'
 
-// TODO(api): Chưa có search tổng hợp; lấy kết quả độc lập để lỗi một nhóm không che các nhóm khác.
-type SearchRow = { id: string; code?: string; name?: string; title?: string; description?: string }
-type SearchPage = { items: SearchRow[] }
+type SearchRow = { id: string; code: string; title: string; subtitle: string; link: string }
 const groups = [
-  { path: '/v1/equipment', target: '/equipment', title: 'Thiết bị' },
-  { path: '/v1/supplies', target: '/supplies', title: 'Vật tư' },
-  { path: '/v1/repairs', target: '/repairs', title: 'Sửa chữa' },
-  { path: '/v1/requests', target: '/requests', title: 'Phiếu yêu cầu' },
+  { key: 'equipment', title: 'Thiết bị' },
+  { key: 'supplies', title: 'Vật tư' },
+  { key: 'repairs', title: 'Sửa chữa' },
+  { key: 'requests', title: 'Phiếu yêu cầu' },
+  { key: 'faults', title: 'Thư viện lỗi' },
 ] as const
 
 export function GlobalSearch() {
@@ -36,18 +34,10 @@ export function GlobalSearch() {
     queryKey: ['global-search', search],
     enabled: open && search.length >= 2,
     queryFn: async () => {
-      return Promise.all(
-        groups.map(async (group) => {
-          try {
-            const page = await unwrapAs<SearchPage | SearchRow[]>(
-              api.GET(group.path, { params: { query: pageQuery({ q: search, limit: 5 }) } }),
-            )
-            return { ...group, items: Array.isArray(page) ? page : page.items, error: false }
-          } catch {
-            return { ...group, items: [], error: true }
-          }
-        }),
+      const data = await unwrap(
+        api.GET('/v1/search', { params: { query: { q: search, limit: 5 } } }),
       )
+      return groups.map((group) => ({ ...group, items: data[group.key] as SearchRow[] }))
     },
   })
 
@@ -102,22 +92,20 @@ export function GlobalSearch() {
               )}
               {!results.isPending && <CommandEmpty>Không tìm thấy kết quả</CommandEmpty>}
               {results.data?.map((group) => (
-                <CommandGroup key={group.path} heading={group.title}>
-                  {group.error && (
-                    <p role="status" className="text-muted-foreground px-2 text-xs">
-                      Không tải được nhóm này
-                    </p>
-                  )}
+                <CommandGroup key={group.key} heading={group.title}>
                   {group.items.map((row) => (
                     <CommandItem
                       key={row.id}
-                      value={`${q} ${group.target} ${row.id} ${row.code ?? ''} ${row.name ?? row.title ?? ''}`}
+                      value={`${q} ${row.link} ${row.id} ${row.code} ${row.title}`}
                       onSelect={() => {
                         setOpen(false)
-                        navigate(`${group.target}/${row.id}`)
+                        navigate(row.link)
                       }}
                     >
-                      {row.code} — {row.name ?? row.title ?? row.description ?? row.id}
+                      <span>
+                        {row.code} — {row.title}
+                      </span>
+                      <span className="text-muted-foreground ml-auto text-xs">{row.subtitle}</span>
                     </CommandItem>
                   ))}
                 </CommandGroup>

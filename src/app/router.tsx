@@ -135,6 +135,11 @@ const implemented: RouteObject[] = [
   { path: 'my-tasks', lazy: () => import('@/features/dashboard/pages/MyTasksPage') },
   { path: 'reports', lazy: () => import('@/features/reports/pages/ReportsPage') },
   { path: 'reports/builder', lazy: () => import('@/features/reports/pages/ReportBuilderPage') },
+  { path: 'reports/custom/new', lazy: () => import('@/features/reports/pages/ReportBuilderPage') },
+  {
+    path: 'reports/custom/:id/edit',
+    lazy: () => import('@/features/reports/pages/ReportBuilderPage'),
+  },
   { path: 'reports/jobs', lazy: () => import('@/features/reports/pages/ReportJobsPage') },
   { path: 'assistant', lazy: () => import('@/features/assistant/pages/AssistantPage') },
   { path: 'assistant/digest', lazy: () => import('@/features/assistant/pages/DigestPage') },

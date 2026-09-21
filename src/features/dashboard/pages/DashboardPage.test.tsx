@@ -8,22 +8,33 @@ import { Component as DashboardPage } from './DashboardPage'
 beforeEach(() => {
   useAuthStore.getState().setSession(fakeSession())
   server.use(
-    http.get('/v1/equipment', () => HttpResponse.json({ items: [], total: 4, page: 1, limit: 1 })),
-    http.get('/v1/repairs', () => HttpResponse.json({ items: [], total: 2, page: 1, limit: 1 })),
-    http.get('/v1/maintenance/tasks', () =>
-      HttpResponse.json({ items: [], total: 1, page: 1, limit: 1 }),
+    http.get('/v1/dashboard', () =>
+      HttpResponse.json({
+        generatedAt: '2026-09-21T00:00:00Z',
+        cards: [
+          { key: 'equipment.total', title: 'Tổng thiết bị', value: 4, link: '/equipment' },
+          {
+            key: 'equipment.active',
+            title: 'Đang hoạt động',
+            value: 3,
+            link: '/equipment?status=active',
+          },
+          {
+            key: 'stock.value',
+            title: 'Giá trị tồn',
+            value: '1000000',
+            unit: 'VND',
+            link: '/stock/balances',
+          },
+        ],
+      }),
     ),
-    http.get('/v1/requests', () => HttpResponse.json({ items: [], total: 3, page: 1, limit: 1 })),
-    http.get('/v1/stock/alerts', () =>
-      HttpResponse.json({ items: [], total: 5, page: 1, limit: 1 }),
-    ),
-    http.get('/v1/stock/value', () => HttpResponse.json({ totalValue: '1000000' })),
-    http.get('/v1/repairs/stats', () => HttpResponse.json({ totalCost: '250000' })),
   )
 })
 
-it('renders KPI cards from live list totals', async () => {
+it('renders KPI cards from GET /v1/dashboard including VND strings', async () => {
   renderWithProviders(<DashboardPage />)
-  expect(await screen.findAllByTestId('kpi-card')).toHaveLength(15)
-  expect(screen.queryByText('Dữ liệu mẫu')).not.toBeInTheDocument()
+  expect(await screen.findAllByTestId('kpi-card')).toHaveLength(3)
+  expect(screen.getByText('Tổng thiết bị')).toBeVisible()
+  expect(screen.getByText('1.000.000 ₫')).toBeVisible()
 })

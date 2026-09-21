@@ -1,15 +1,11 @@
-// TODO(api): D1 reports chưa có trong OpenAPI. Hợp đồng handoff/04-D1-reports.md.
-import { untypedApi, unwrapAs } from '@/api/client'
+import { api, apiBody, unwrap, unwrapAs, untypedApi } from '@/api/client'
 import { downloadFile } from '@/api/download'
 import { isApiError } from '@/api/errors'
-import { pageQuery } from '@/api/paths'
 import { dayRangeToIso } from '@/lib/format/date-range'
-
-const { GET: get, POST: post, PATCH: patch } = untypedApi
+import type { components } from '@/api/schema'
 
 export type JsonSchemaXRef =
   'departmentId' | 'warehouseId' | 'equipmentId' | 'supplyId' | 'sessionId'
-
 export interface JsonSchemaProperty {
   type?: 'string' | 'number' | 'integer' | 'boolean' | 'object' | 'array'
   format?: string
@@ -19,24 +15,17 @@ export interface JsonSchemaProperty {
   default?: string | number | boolean | null
   'x-ref'?: JsonSchemaXRef | string
 }
-
 export interface JsonObjectSchema {
   type?: 'object'
   properties?: Record<string, JsonSchemaProperty>
   required?: string[]
 }
-
 export type ReportParamValue = string | number | boolean | null
 export type ReportParamValues = Record<string, ReportParamValue>
-
-export type ReportColumnType = 'string' | 'number' | 'money' | 'date' | 'datetime' | 'percent'
-
-export interface ReportColumn {
-  key: string
-  title: string
+export type ReportColumnType = components['schemas']['ReportColumnDto']['type']
+export type ReportColumn = Omit<components['schemas']['ReportColumnDto'], 'type'> & {
   type?: ReportColumnType
 }
-
 export interface ReportMeta {
   key: string
   title: string
@@ -44,361 +33,58 @@ export interface ReportMeta {
   params: JsonObjectSchema
   columns: ReportColumn[]
 }
-
 export interface ReportRunResult {
   columns: ReportColumn[]
   rows: Record<string, unknown>[]
   total: number
   page: number
   limit: number
-  isMock?: boolean
 }
-
-export interface CustomReport {
-  id: string
-  name: string
-  source: string
-  shared: boolean
-  updatedAt: string
-  ownerName?: string
-}
-
-export type CustomAggregateFn = 'count' | 'sum' | 'avg' | 'min' | 'max'
-
+export type CustomReport = components['schemas']['CustomReportViewDto']
+export type CustomAggregateFn = components['schemas']['CustomReportAggregateDto']['fn']
 export interface CustomReportFilter {
   field: string
   op: string
-  value: string
-  valueTo?: string
+  value?: unknown
+  valueTo?: unknown
 }
-
 export interface CustomReportDefinition {
   id?: string
   name: string
   shared: boolean
-  source: string
+  source: 'equipment' | 'repairs' | 'stock_movements' | 'requests' | 'maintenance_tasks'
   columns: string[]
   filters: CustomReportFilter[]
   groupBy: string[]
   aggregates: { field: string; fn: CustomAggregateFn }[]
   sort?: { field: string; dir: 'asc' | 'desc' } | null
 }
-
-export interface ReportPreview {
-  columns: ReportColumn[]
-  rows: Record<string, unknown>[]
-  truncated: boolean
-}
-
-export interface ReportJob {
-  id: string
-  key?: string
+export type ReportPreview = components['schemas']['CustomPreviewDto']
+export type ReportJob = Omit<components['schemas']['ReportJobViewDto'], 'fileId'> & {
   name?: string
-  format: string
-  status: 'queued' | 'running' | 'done' | 'failed'
-  createdAt: string
-  finishedAt?: string | null
-  error?: string | null
   fileId?: string | null
-  downloadUrl?: string | null
-  rowCount?: number | null
 }
-
-export interface ReportJobPage {
+export type ReportJobPage = Omit<components['schemas']['ReportJobPageDto'], 'items'> & {
   items: ReportJob[]
-  total: number
-  page: number
-  limit: number
 }
-
 export interface ReportSourceField {
   type: 'string' | 'number' | 'date' | 'enum' | 'uuid' | 'boolean'
   label: string
   enum?: string[]
 }
-
 export interface ReportSource {
-  source: string
+  source: CustomReportDefinition['source']
   label: string
   fields: Record<string, ReportSourceField>
 }
+
+export const REPORTS: ReportMeta[] = []
 
 export function opsForType(type: ReportSourceField['type']): string[] {
   if (type === 'string') return ['eq', 'ne', 'like', 'in', 'isNull', 'notNull']
   if (type === 'boolean') return ['eq', 'isNull', 'notNull']
   if (type === 'enum' || type === 'uuid') return ['eq', 'ne', 'in', 'isNull', 'notNull']
   return ['eq', 'ne', 'gt', 'gte', 'lt', 'lte', 'between', 'isNull', 'notNull']
-}
-
-const dateFromTo: JsonObjectSchema['properties'] = {
-  from: { type: 'string', format: 'date', title: 'Từ ngày' },
-  to: { type: 'string', format: 'date', title: 'Đến ngày' },
-}
-
-const CORE_REPORTS: ReportMeta[] = [
-  {
-    key: 'equipment.byStatus',
-    title: 'Hiện trạng thiết bị',
-    group: 'Thiết bị',
-    params: {
-      type: 'object',
-      properties: {
-        ...dateFromTo,
-        q: { type: 'string', title: 'Từ khóa' },
-        departmentId: {
-          type: 'string',
-          format: 'uuid',
-          title: 'Khoa',
-          'x-ref': 'departmentId',
-        },
-        status: {
-          type: 'string',
-          title: 'Trạng thái',
-          enum: ['active', 'broken', 'awaiting_parts', 'retired'],
-        },
-        includeRetired: { type: 'boolean', title: 'Gồm máy ngừng sử dụng' },
-      },
-    },
-    columns: [
-      { key: 'code', title: 'Mã' },
-      { key: 'name', title: 'Tên' },
-      { key: 'status', title: 'Trạng thái' },
-    ],
-  },
-  {
-    key: 'repair.cost',
-    title: 'Chi phí sửa chữa',
-    group: 'Sửa chữa',
-    params: {
-      type: 'object',
-      properties: {
-        ...dateFromTo,
-        equipmentId: {
-          type: 'string',
-          format: 'uuid',
-          title: 'Thiết bị',
-          'x-ref': 'equipmentId',
-        },
-        groupBy: {
-          type: 'string',
-          title: 'Nhóm theo',
-          enum: ['equipment', 'department', 'month'],
-        },
-        minCost: { type: 'integer', title: 'Chi phí tối thiểu' },
-      },
-    },
-    columns: [
-      { key: 'code', title: 'Mã' },
-      { key: 'totalCost', title: 'Chi phí', type: 'money' },
-    ],
-  },
-  {
-    key: 'stock.summary',
-    title: 'Tồn kho',
-    group: 'Vật tư',
-    params: {
-      type: 'object',
-      properties: {
-        ...dateFromTo,
-        warehouseId: {
-          type: 'string',
-          format: 'uuid',
-          title: 'Kho',
-          'x-ref': 'warehouseId',
-        },
-        supplyId: {
-          type: 'string',
-          format: 'uuid',
-          title: 'Vật tư',
-          'x-ref': 'supplyId',
-        },
-        onlyBelowMin: { type: 'boolean', title: 'Chỉ dưới mức tối thiểu' },
-      },
-    },
-    columns: [
-      { key: 'supplyCode', title: 'Mã' },
-      { key: 'supplyName', title: 'Tên' },
-      { key: 'qty', title: 'Tồn', type: 'number' },
-      { key: 'value', title: 'Giá trị', type: 'money' },
-    ],
-  },
-  {
-    key: 'stocktake.diffs',
-    title: 'Chênh lệch kiểm kê',
-    group: 'Kiểm kê',
-    params: {
-      type: 'object',
-      properties: {
-        sessionId: {
-          type: 'string',
-          format: 'uuid',
-          title: 'Đợt kiểm kê',
-          'x-ref': 'sessionId',
-        },
-        includeZero: { type: 'boolean', title: 'Gồm dòng không chênh' },
-        minAbsDiff: { type: 'number', title: 'Chênh tối thiểu' },
-      },
-    },
-    columns: [
-      { key: 'code', title: 'Mã' },
-      { key: 'name', title: 'Tên' },
-      { key: 'bookQty', title: 'Sổ sách', type: 'number' },
-      { key: 'countQty', title: 'Đếm', type: 'number' },
-      { key: 'diff', title: 'Chênh', type: 'number' },
-    ],
-  },
-]
-
-const CONTRACT_REPORTS: Array<[string, string, string]> = [
-  ['equipment.byDepartment', 'Thiết bị theo khoa', 'Thiết bị'],
-  ['equipment.byAge', 'Tuổi thiết bị', 'Thiết bị'],
-  ['equipment.utilization', 'Mức sử dụng thiết bị', 'Thiết bị'],
-  ['equipment.calibrationDue', 'Thiết bị đến hạn kiểm định', 'Thiết bị'],
-  ['equipment.lifecycleCost', 'Chi phí vòng đời thiết bị', 'Thiết bị'],
-  ['repair.frequency', 'Tần suất sửa chữa', 'Sửa chữa'],
-  ['repair.mtbfMttr', 'MTBF / MTTR', 'Sửa chữa'],
-  ['repair.vendorVsInternal', 'Nhà cung cấp / nội bộ', 'Sửa chữa'],
-  ['repair.byStaff', 'Sửa chữa theo nhân viên', 'Sửa chữa'],
-  ['stock.consumptionByEquipment', 'Tiêu hao theo thiết bị', 'Vật tư'],
-  ['stock.consumptionByDepartment', 'Tiêu hao theo khoa', 'Vật tư'],
-  ['stock.costPerTest', 'Chi phí trên xét nghiệm', 'Vật tư'],
-  ['stock.forecast', 'Dự báo tồn kho', 'Vật tư'],
-  ['stock.expiring', 'Lô sắp hết hạn', 'Vật tư'],
-]
-
-export const REPORTS: ReportMeta[] = [
-  ...CORE_REPORTS,
-  ...CONTRACT_REPORTS.map(([key, title, group]) => ({
-    key,
-    title,
-    group,
-    params: { type: 'object' as const, properties: { ...dateFromTo } },
-    columns: [
-      { key: 'name', title: 'Tên' },
-      { key: 'value', title: 'Giá trị', type: 'number' as const },
-    ],
-  })),
-]
-
-export const REPORT_SOURCES: ReportSource[] = [
-  {
-    source: 'equipment',
-    label: 'Thiết bị',
-    fields: {
-      code: { type: 'string', label: 'Mã' },
-      name: { type: 'string', label: 'Tên' },
-      model: { type: 'string', label: 'Model' },
-      serial: { type: 'string', label: 'Serial' },
-      status: {
-        type: 'enum',
-        label: 'Trạng thái',
-        enum: ['active', 'broken', 'awaiting_parts', 'retired'],
-      },
-      departmentId: { type: 'uuid', label: 'Khoa' },
-      commissionedAt: { type: 'date', label: 'Ngày đưa vào' },
-      originalValue: { type: 'number', label: 'Nguyên giá' },
-      location: { type: 'string', label: 'Vị trí' },
-    },
-  },
-  {
-    source: 'repairs',
-    label: 'Sửa chữa',
-    fields: {
-      code: { type: 'string', label: 'Mã phiếu' },
-      status: { type: 'enum', label: 'Trạng thái', enum: ['new', 'in_progress', 'completed'] },
-      severity: { type: 'enum', label: 'Mức khẩn', enum: ['low', 'medium', 'high', 'critical'] },
-      equipmentCode: { type: 'string', label: 'Mã máy' },
-      departmentName: { type: 'string', label: 'Khoa' },
-      createdAt: { type: 'date', label: 'Ngày tạo' },
-      completedAt: { type: 'date', label: 'Ngày xong' },
-      totalCost: { type: 'number', label: 'Chi phí' },
-      assignedToName: { type: 'string', label: 'Người xử lý' },
-    },
-  },
-  {
-    source: 'supplies',
-    label: 'Vật tư',
-    fields: {
-      code: { type: 'string', label: 'Mã' },
-      name: { type: 'string', label: 'Tên' },
-      unit: { type: 'string', label: 'Đơn vị' },
-      groupName: { type: 'string', label: 'Nhóm' },
-      minStock: { type: 'number', label: 'Tồn tối thiểu' },
-      refPrice: { type: 'number', label: 'Giá tham chiếu' },
-      isActive: { type: 'boolean', label: 'Đang dùng' },
-    },
-  },
-  {
-    source: 'stocktakes',
-    label: 'Kiểm kê',
-    fields: {
-      code: { type: 'string', label: 'Mã đợt' },
-      name: { type: 'string', label: 'Tên đợt' },
-      type: { type: 'enum', label: 'Loại', enum: ['supply', 'equipment'] },
-      status: { type: 'enum', label: 'Trạng thái', enum: ['draft', 'counting', 'closed'] },
-      plannedAt: { type: 'date', label: 'Kế hoạch' },
-      diffCount: { type: 'number', label: 'Số dòng chênh' },
-    },
-  },
-]
-
-const MOCK_ROWS: Record<string, Record<string, unknown>[]> = {
-  'equipment.byStatus': [
-    { id: 'e1', code: 'TB-001', name: 'Máy huyết học', status: 'active' },
-    { id: 'e2', code: 'TB-002', name: 'Máy sinh hoá', status: 'broken' },
-  ],
-  'repair.cost': [
-    { id: 'r1', code: 'SC-001', totalCost: '1500000' },
-    { id: 'r2', code: 'SC-002', totalCost: '230000' },
-  ],
-  'stock.summary': [
-    {
-      id: 's1',
-      supplyCode: 'HC-01',
-      supplyName: 'Huyết thanh',
-      qty: '12.500',
-      value: '12500000',
-    },
-    { id: 's2', supplyCode: 'HC-02', supplyName: 'Kit PCR', qty: '3.000', value: '9000000' },
-  ],
-  'stocktake.diffs': [
-    {
-      id: 'd1',
-      code: 'HC-01',
-      name: 'Huyết thanh',
-      bookQty: '10.000',
-      countQty: '9.500',
-      diff: '-0.500',
-    },
-  ],
-}
-
-const PREVIEW_LIMIT = 500
-
-function asList<T>(data: T[] | { items?: T[] } | null | undefined): T[] {
-  if (!data) return []
-  return Array.isArray(data) ? data : (data.items ?? [])
-}
-
-function isMissingReportApi(error: unknown): boolean {
-  if (isApiError(error)) {
-    if (
-      error.code === 'REPORT_TOO_LARGE' ||
-      error.code === 'REPORT_PARAMS_INVALID' ||
-      error.code === 'REPORT_RANGE_TOO_WIDE' ||
-      error.code === 'REPORT_FIELD_INVALID'
-    ) {
-      return false
-    }
-    return (
-      error.status === 404 ||
-      error.status === 405 ||
-      error.status === 501 ||
-      error.code === 'NOT_FOUND' ||
-      error.code === 'REPORT_NOT_FOUND'
-    )
-  }
-  return false
 }
 
 export function toReportQuery(
@@ -420,73 +106,20 @@ export function toReportQuery(
 }
 
 function compactParams(params: ReportParamValues): Record<string, string | number | boolean> {
-  const query = toReportQuery(params)
-  const out: Record<string, string | number | boolean> = {}
-  for (const [key, value] of Object.entries(query)) {
-    if (value !== undefined) out[key] = value
-  }
-  return out
+  return Object.fromEntries(
+    Object.entries(toReportQuery(params)).filter(
+      (entry): entry is [string, string | number | boolean] => entry[1] !== undefined,
+    ),
+  )
 }
 
-function paginateRows(key: string, page: number, limit: number): ReportRunResult {
-  const meta = REPORTS.find((row) => row.key === key)
-  const all = MOCK_ROWS[key] ?? []
-  const start = Math.max(0, (page - 1) * limit)
-  return {
-    columns: meta?.columns ?? [],
-    rows: all.slice(start, start + limit),
-    total: all.length,
-    page,
-    limit,
-    isMock: true,
-  }
-}
-
-function mockPreview(def: CustomReportDefinition): ReportPreview {
-  const source = REPORT_SOURCES.find((row) => row.source === def.source)
-  const columns: ReportColumn[] = def.columns.slice(0, 20).map((key) => ({
-    key,
-    title: source?.fields[key]?.label ?? key,
-    type: source?.fields[key]?.type === 'number' ? 'number' : 'string',
+export async function listReportsSafe(): Promise<ReportMeta[]> {
+  const rows = await unwrap(api.GET('/v1/reports'))
+  return rows.map((row) => ({
+    ...row,
+    params: row.params as JsonObjectSchema,
+    columns: row.columns as ReportColumn[],
   }))
-  const rows = [1, 2, 3].map((index) => {
-    const row: Record<string, unknown> = { id: `p${index}` }
-    for (const col of columns) {
-      const field = source?.fields[col.key]
-      if (field?.type === 'number') row[col.key] = String(index)
-      else if (field?.type === 'boolean') row[col.key] = index === 1
-      else row[col.key] = `Mẫu ${index}`
-    }
-    return row
-  })
-  return { columns, rows, truncated: false }
-}
-
-function clipPreview(result: ReportPreview): ReportPreview {
-  return {
-    columns: result.columns,
-    rows: result.rows.slice(0, PREVIEW_LIMIT),
-    truncated: result.truncated || result.rows.length > PREVIEW_LIMIT,
-  }
-}
-
-export type ReportMetaList = ReportMeta[] & { isMock?: boolean }
-
-function mockReportList(): ReportMetaList {
-  const rows = [...REPORTS] as ReportMetaList
-  rows.isMock = true
-  return rows
-}
-
-export async function listReportsSafe(): Promise<ReportMetaList> {
-  try {
-    const data = await unwrapAs<ReportMeta[] | { items?: ReportMeta[] }>(get('/v1/reports'))
-    const items = asList(data).filter((row) => row && typeof row.key === 'string')
-    return items as ReportMetaList
-  } catch (error) {
-    if (!isMissingReportApi(error)) throw error
-    return mockReportList()
-  }
 }
 
 export async function runReport(
@@ -497,152 +130,74 @@ export async function runReport(
   limit = 20,
 ): Promise<ReportRunResult | void> {
   const path = `/v1/reports/${encodeURIComponent(key)}`
-  if (format === 'xlsx' || format === 'pdf') {
+  if (format !== 'json') {
     await downloadFile(path, toReportQuery(params, { format }), `${key}.${format}`)
     return
   }
-  try {
-    const data = await unwrapAs<Partial<ReportRunResult>>(
-      get(path, { params: { query: toReportQuery(params, { format: 'json', page, limit }) } }),
-    )
-    const meta = REPORTS.find((row) => row.key === key)
-    const rows = data.rows ?? []
-    return {
-      columns: data.columns?.length ? data.columns : (meta?.columns ?? []),
-      rows,
-      total: data.total ?? rows.length,
-      page: data.page ?? page,
-      limit: data.limit ?? limit,
-    }
-  } catch (error) {
-    if (!isMissingReportApi(error)) throw error
-    return paginateRows(key, page, limit)
-  }
+  return unwrapAs<ReportRunResult>(
+    untypedApi.GET(path, {
+      params: { query: toReportQuery(params, { format: 'json', page, limit }) },
+    }),
+  )
 }
 
-export async function runReportJob(
+export function runReportJob(
   key: string,
   params: ReportParamValues,
-  format: 'json' | 'xlsx' | 'pdf',
+  format: 'xlsx' | 'pdf',
 ): Promise<{ jobId: string }> {
-  return unwrapAs<{ jobId: string }>(
-    post(`/v1/reports/${encodeURIComponent(key)}/run`, {
+  return unwrap(
+    api.POST('/v1/reports/{key}/run', {
+      params: { path: { key } },
       body: { params: compactParams(params), format },
     }),
   )
 }
 
-export async function listReportJobs(
-  params: {
-    page?: number
-    limit?: number
-    status?: string
-  } = {},
+export function listReportJobs(
+  params: { page?: number; limit?: number; status?: 'queued' | 'running' | 'done' | 'failed' } = {},
 ): Promise<ReportJobPage> {
-  const empty: ReportJobPage = {
-    items: [],
-    total: 0,
-    page: params.page ?? 1,
-    limit: params.limit ?? 20,
-  }
-  let data: ReportJob[] | Partial<ReportJobPage>
-  try {
-    data = await unwrapAs<ReportJob[] | Partial<ReportJobPage>>(
-      get('/v1/reports/jobs', { params: { query: pageQuery(params) } }),
-    )
-  } catch (error) {
-    if (!isMissingReportApi(error)) throw error
-    return empty
-  }
-  if (Array.isArray(data)) {
-    return {
-      items: data,
-      total: data.length,
-      page: params.page ?? 1,
-      limit: params.limit ?? data.length,
-    }
-  }
-  const items = data.items ?? []
-  return {
-    items,
-    total: data.total ?? items.length,
-    page: data.page ?? params.page ?? 1,
-    limit: data.limit ?? params.limit ?? 20,
-  }
+  return unwrap(
+    api.GET('/v1/reports/jobs', { params: { query: params } }),
+  ) as Promise<ReportJobPage>
 }
 
-export async function getReportJob(id: string): Promise<ReportJob> {
-  return unwrapAs<ReportJob>(get(`/v1/reports/jobs/${encodeURIComponent(id)}`))
+export function getReportJob(id: string): Promise<ReportJob> {
+  return unwrap(
+    api.GET('/v1/reports/jobs/{id}', { params: { path: { id } } }),
+  ) as Promise<ReportJob>
 }
-
-export async function listCustomReports(): Promise<CustomReport[]> {
-  try {
-    const data = await unwrapAs<CustomReport[] | { items?: CustomReport[] }>(
-      get('/v1/reports/custom'),
-    )
-    return asList(data)
-  } catch (error) {
-    if (!isMissingReportApi(error)) throw error
-    return []
-  }
+export function listCustomReports(): Promise<CustomReport[]> {
+  return unwrap(api.GET('/v1/reports/custom'))
 }
-
 export async function listReportSources(): Promise<ReportSource[]> {
-  try {
-    const data = await unwrapAs<ReportSource[] | { items?: ReportSource[] }>(
-      get('/v1/reports/sources'),
+  return (await unwrap(api.GET('/v1/reports/sources'))) as ReportSource[]
+}
+
+function customBody(body: CustomReportDefinition) {
+  const payload = { ...body }
+  delete payload.id
+  return apiBody<components['schemas']['CustomReportBodyDto']>(payload)
+}
+
+export function saveCustomReport(body: CustomReportDefinition): Promise<CustomReport> {
+  if (body.id) {
+    return unwrap(
+      api.PATCH('/v1/reports/custom/{id}', {
+        params: { path: { id: body.id } },
+        body: customBody(body),
+      }),
     )
-    const items = asList(data)
-    return items.length > 0 ? items : REPORT_SOURCES
-  } catch (error) {
-    if (!isMissingReportApi(error)) throw error
-    return REPORT_SOURCES
   }
+  return unwrap(api.POST('/v1/reports/custom', { body: customBody(body) }))
 }
-
-export async function saveCustomReport(body: CustomReportDefinition): Promise<CustomReport> {
-  try {
-    if (body.id) {
-      return await unwrapAs<CustomReport>(
-        patch(`/v1/reports/custom/${encodeURIComponent(body.id)}`, { body }),
-      )
-    }
-    return await unwrapAs<CustomReport>(post('/v1/reports/custom', { body }))
-  } catch (error) {
-    if (!isMissingReportApi(error)) throw error
-    return {
-      id: body.id ?? 'local',
-      name: body.name,
-      source: body.source,
-      shared: body.shared,
-      updatedAt: new Date().toISOString(),
-    }
-  }
+export function previewCustomReport(body: CustomReportDefinition): Promise<ReportPreview> {
+  return unwrap(api.POST('/v1/reports/custom/preview', { body: customBody(body) }))
 }
-
-export async function previewCustomReport(body: CustomReportDefinition): Promise<ReportPreview> {
-  try {
-    const data = await unwrapAs<Partial<ReportPreview>>(
-      post('/v1/reports/custom/preview', { body }),
-    )
-    return clipPreview({
-      columns: data.columns ?? [],
-      rows: data.rows ?? [],
-      truncated: data.truncated ?? false,
-    })
-  } catch (error) {
-    if (!isMissingReportApi(error)) throw error
-    return clipPreview(mockPreview(body))
-  }
-}
-
-export async function runCustomReport(
-  id: string,
-  format: 'xlsx' | 'pdf',
-): Promise<{ jobId: string }> {
-  return unwrapAs<{ jobId: string }>(
-    post(`/v1/reports/custom/${encodeURIComponent(id)}/run`, {
-      params: { query: { format } },
+export function runCustomReport(id: string, format: 'xlsx' | 'pdf'): Promise<{ jobId: string }> {
+  return unwrap(
+    api.POST('/v1/reports/custom/{id}/run', {
+      params: { path: { id }, query: { format } },
     }),
   )
 }
@@ -650,9 +205,8 @@ export async function runCustomReport(
 export function paramErrorsFrom(error: unknown): Record<string, string> {
   if (!isApiError(error) || error.code !== 'REPORT_PARAMS_INVALID') return {}
   const out: Record<string, string> = {}
-  const details = error.details
-  if (!Array.isArray(details)) return out
-  for (const item of details) {
+  if (!Array.isArray(error.details)) return out
+  for (const item of error.details) {
     if (!item || typeof item !== 'object' || !('path' in item)) continue
     const issue = item as { path: unknown; message?: string }
     const path = Array.isArray(issue.path) ? String(issue.path[0] ?? '') : ''

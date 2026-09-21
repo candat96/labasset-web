@@ -12,8 +12,13 @@ export async function login(page: Page) {
   if (await hc.isVisible().catch(() => false)) await hc.fill(e2eCode)
   await page.getByLabel('Tài khoản').fill(e2eUser)
   await page.getByLabel('Mật khẩu').fill(e2ePass)
-  await page.getByRole('button', { name: 'Đăng nhập' }).click()
-  await expect(page.getByRole('heading', { name: 'Tổng quan' })).toBeVisible({ timeout: 15_000 })
+  const dashboard = page.getByRole('heading', { name: 'Tổng quan' })
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    await page.getByRole('button', { name: 'Đăng nhập' }).click()
+    await dashboard.waitFor({ state: 'visible', timeout: 5_000 }).catch(() => {})
+    if (await dashboard.isVisible().catch(() => false)) return
+  }
+  await expect(dashboard).toBeVisible({ timeout: 15_000 })
 }
 
 /** Mở AsyncSelect/Select theo nhãn (khớp chính xác) và chọn option khớp (mặc định đầu tiên). */

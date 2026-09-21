@@ -7,9 +7,23 @@ import { server } from '@/test/msw/server'
 import { Component } from './ReportsPage'
 
 beforeEach(() => {
+  const report = {
+    key: 'equipment.byStatus',
+    title: 'Hiện trạng thiết bị',
+    group: 'equipment',
+    params: {
+      type: 'object',
+      properties: { from: { type: 'string', format: 'date', title: 'Từ ngày' } },
+    },
+    columns: [{ key: 'status', title: 'Trạng thái', type: 'string' }],
+  }
   server.use(
     http.get('/v1/reports', () =>
-      HttpResponse.json({ code: 'NOT_FOUND', message: 'D1 chưa triển khai' }, { status: 404 }),
+      HttpResponse.json(
+        Array.from({ length: 18 }, (_, index) =>
+          index === 0 ? report : { ...report, key: `report.${index}`, title: `Báo cáo ${index}` },
+        ),
+      ),
     ),
   )
 })
@@ -27,9 +41,9 @@ it('renders date params from json schema', async () => {
   expect(await screen.findByLabelText('Từ ngày')).toBeVisible()
 })
 
-it('marks the 18-report fallback as sample data and blocks export', async () => {
+it('renders all 18 reports returned by the registry', async () => {
   useAuthStore.getState().setSession(fakeSession())
   renderWithProviders(<Component />)
-  expect(await screen.findByText('Dữ liệu mẫu')).toBeVisible()
+  expect(await screen.findByText('Báo cáo 17')).toBeVisible()
   expect(document.querySelectorAll('aside button')).toHaveLength(18)
 })

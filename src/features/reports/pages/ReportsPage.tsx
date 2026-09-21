@@ -9,7 +9,6 @@ import { FilterBar } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page/PageHeader'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { formatDate, formatDateTime } from '@/lib/format/date'
 import { formatVnd } from '@/lib/format/money'
 import { formatQty } from '@/lib/format/number'
@@ -17,7 +16,6 @@ import { cn } from '@/lib/utils'
 import {
   listReportsSafe,
   paramErrorsFrom,
-  REPORTS,
   runReport,
   runReportJob,
   type ReportColumn,
@@ -69,9 +67,8 @@ export function Component() {
   const reportsQuery = useQuery({
     queryKey: ['reports'],
     queryFn: listReportsSafe,
-    placeholderData: REPORTS,
   })
-  const reports = reportsQuery.data ?? REPORTS
+  const reports = reportsQuery.data ?? []
   const selected = reports.find((row) => row.key === key)
   const groups = groupedReports(reports)
 
@@ -154,7 +151,6 @@ export function Component() {
     <>
       <PageHeader
         title={t('report')}
-        badge={reportsQuery.data?.isMock && <Badge variant="outline">Dữ liệu mẫu</Badge>}
         actions={
           <div className="flex flex-wrap gap-2">
             <Button asChild variant="outline">
@@ -208,7 +204,7 @@ export function Component() {
                 <Button
                   type="button"
                   variant="outline"
-                  disabled={!selected || exportReport.isPending || reportsQuery.data?.isMock}
+                  disabled={!selected || exportReport.isPending}
                   onClick={() => exportReport.mutate('xlsx')}
                 >
                   {t('exportExcel')}
@@ -216,7 +212,7 @@ export function Component() {
                 <Button
                   type="button"
                   variant="outline"
-                  disabled={!selected || exportReport.isPending || reportsQuery.data?.isMock}
+                  disabled={!selected || exportReport.isPending}
                   onClick={() => exportReport.mutate('pdf')}
                 >
                   {t('exportPdf')}
