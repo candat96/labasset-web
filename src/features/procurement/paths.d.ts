@@ -140,7 +140,7 @@ export interface CreateDemandLineDto {
   priority?: DemandPriority
 }
 
-export type UpdateDemandLineDto = CreateDemandLineDto & Partial<CreateDemandLineDto>
+export type UpdateDemandLineDto = Partial<CreateDemandLineDto>
 export interface UpdateDemandLineRowDto extends CreateDemandLineDto {
   id: string
 }
