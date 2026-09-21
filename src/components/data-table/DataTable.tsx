@@ -45,6 +45,8 @@ export interface DataTableProps<T> {
   emptyTitle?: string
   emptyDescription?: string
   emptyAction?: ReactNode
+  /** Số dòng đang chọn — hiện badge cạnh phân trang khi > 0. */
+  selectedCount?: number
   getRowId?: (row: T) => string
   onRowClick?: (row: T) => void
 }
@@ -77,6 +79,7 @@ export function DataTable<T>({
   emptyTitle,
   emptyDescription,
   emptyAction,
+  selectedCount,
   getRowId,
   onRowClick,
 }: DataTableProps<T>) {
@@ -129,11 +132,11 @@ export function DataTable<T>({
           <ColumnToggle table={table} />
         </div>
       </div>
-      <div className="bg-card overflow-auto rounded-lg border">
+      <div className="bg-card overflow-auto rounded-xl shadow-[var(--shadow-card)] border-0 dark:border dark:border-border">
         <Table>
           <TableHeader className="bg-muted sticky top-0 z-10">
             {table.getHeaderGroups().map((hg) => (
-              <TableRow key={hg.id} className="hover:bg-muted">
+              <TableRow key={hg.id} className="hover:bg-muted border-divider">
                 {hg.headers.map((h) => {
                   const meta = h.column.columnDef.meta
                   const canSort = h.column.getCanSort()
@@ -142,7 +145,6 @@ export function DataTable<T>({
                     <TableHead
                       key={h.id}
                       className={cn(
-                        'h-9',
                         meta?.align === 'right' && 'text-right',
                         meta?.align === 'center' && 'text-center',
                         meta?.className,
@@ -151,7 +153,7 @@ export function DataTable<T>({
                       {h.isPlaceholder ? null : canSort ? (
                         <button
                           type="button"
-                          className="hover:text-foreground -ml-1 inline-flex items-center gap-1 rounded px-1 font-medium"
+                          className="hover:text-foreground -ml-1 inline-flex items-center gap-1 rounded px-1 font-semibold uppercase"
                           onClick={h.column.getToggleSortingHandler()}
                           aria-label={`${t('table.sort')}: ${meta?.label ?? h.column.id}`}
                         >
@@ -175,10 +177,10 @@ export function DataTable<T>({
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              Array.from({ length: 5 }).map((_, i) => (
+              Array.from({ length: 10 }).map((_, i) => (
                 <TableRow key={`s${i}`} aria-busy>
                   {Array.from({ length: colCount }).map((__, j) => (
-                    <TableCell key={j} className="h-9">
+                    <TableCell key={j} className="h-11">
                       <Skeleton className="h-4 w-full" />
                     </TableCell>
                   ))}
@@ -213,7 +215,7 @@ export function DataTable<T>({
                       <TableCell
                         key={cell.id}
                         className={cn(
-                          'h-9 py-1',
+                          'h-11 py-1',
                           meta?.align === 'right' && 'text-right tabular-nums',
                           meta?.align === 'center' && 'text-center',
                           meta?.className,
@@ -234,6 +236,7 @@ export function DataTable<T>({
           page={params.page}
           limit={params.limit}
           total={total}
+          selectedCount={selectedCount}
           onPageChange={onPageChange}
           onLimitChange={onLimitChange}
         />

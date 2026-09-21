@@ -27,6 +27,7 @@
     "error": "Không tải được dữ liệu",
     "showing": "Hiển thị {{from}}–{{to}} / {{total}}",
     "rowsPerPage": "Số dòng",
+    "selected": "Đã chọn {{count}}",
     "columns": "Cột",
     "prev": "Trang trước",
     "next": "Trang sau",

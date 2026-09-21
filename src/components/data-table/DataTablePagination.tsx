@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -16,12 +17,15 @@ export function DataTablePagination({
   page,
   limit,
   total,
+  selectedCount = 0,
   onPageChange,
   onLimitChange,
 }: {
   page: number
   limit: number
   total: number
+  /** Số dòng đang chọn (badge khi > 0). */
+  selectedCount?: number
   onPageChange: (page: number) => void
   onLimitChange: (limit: number) => void
 }) {
@@ -30,13 +34,20 @@ export function DataTablePagination({
   const to = Math.min(page * limit, total)
   const pages = Math.max(1, Math.ceil(total / limit))
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 px-1 py-2 text-sm">
-      <div className="text-muted-foreground">
-        {t('table.showing', {
-          from: formatNumber(from),
-          to: formatNumber(to),
-          total: formatNumber(total),
-        })}
+    <div className="flex flex-wrap items-center justify-between gap-3 px-1 py-2 text-[13px]">
+      <div className="text-muted-foreground flex items-center gap-2">
+        <span>
+          {t('table.showing', {
+            from: formatNumber(from),
+            to: formatNumber(to),
+            total: formatNumber(total),
+          })}
+        </span>
+        {selectedCount > 0 && (
+          <Badge variant="info" data-testid="table-selected-count">
+            {t('table.selected', { count: selectedCount })}
+          </Badge>
+        )}
       </div>
       <div className="flex items-center gap-2">
         <span className="text-muted-foreground hidden sm:inline">{t('table.rowsPerPage')}</span>
