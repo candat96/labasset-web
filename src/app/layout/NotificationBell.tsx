@@ -30,7 +30,7 @@ export function NotificationBell() {
   const openItem = (n: Notification) => {
     if (!n.readAt) markRead.mutate(n.id)
     setOpen(false)
-    const path = notificationLink(n.data)
+    const path = notificationLink(n.data, n.type)
     if (path) navigate(path)
   }
 

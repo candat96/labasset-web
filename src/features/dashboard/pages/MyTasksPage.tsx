@@ -10,11 +10,13 @@ import {
   Inbox,
   PackageCheck,
   PackageMinus,
+  ShoppingCart,
   UserCheck,
   Wrench,
   type LucideIcon,
 } from 'lucide-react'
 import { api, unwrap } from '@/api/client'
+import * as demandApi from '@/features/procurement/api'
 import type { components } from '@/api/schema'
 import { PageHeader } from '@/components/page/PageHeader'
 import { SectionCard } from '@/components/page/SectionCard'
@@ -35,6 +37,9 @@ const LINKS: Record<string, string> = {
   requestsPendingIssue: '/requests?status=approved',
   requestsPendingReceive: '/requests?status=issued',
   stocktakesCounting: '/stocktakes?status=counting',
+  demandToSubmit: '/procurement/demand',
+  demandToApprove: '/procurement/demand',
+  demandToAccept: '/procurement/demand',
   alertsRepairsNew: '/repairs?status=new',
   alertsCalibrationOverdue: '/calibrations?overdue=true',
   alertsStock: '/stock/alerts?resolved=false',
@@ -50,6 +55,9 @@ const META: Record<string, { icon: LucideIcon; tone: KpiTone }> = {
   requestsPendingIssue: { icon: PackageMinus, tone: 'info' },
   requestsPendingReceive: { icon: PackageCheck, tone: 'info' },
   stocktakesCounting: { icon: ClipboardCheck, tone: 'info' },
+  demandToSubmit: { icon: ShoppingCart, tone: 'warning' },
+  demandToApprove: { icon: ClipboardList, tone: 'info' },
+  demandToAccept: { icon: PackageCheck, tone: 'warning' },
   alertsRepairsNew: { icon: Inbox, tone: 'warning' },
   alertsCalibrationOverdue: { icon: Gauge, tone: 'danger' },
   alertsStock: { icon: Boxes, tone: 'warning' },
@@ -66,6 +74,7 @@ const GROUPS: { key: string; items: string[] }[] = [
     key: 'alerts',
     items: ['stocktakesCounting', 'alertsRepairsNew', 'alertsCalibrationOverdue', 'alertsStock'],
   },
+  { key: 'demand', items: ['demandToSubmit', 'demandToApprove', 'demandToAccept'] },
 ]
 
 export function Component() {
@@ -74,23 +83,39 @@ export function Component() {
     queryKey: ['my-tasks'],
     queryFn: () => unwrap(api.GET('/v1/me/tasks')) as Promise<MyTasks>,
   })
+  // me/tasks.demand (T5) chưa sẵn sàng — đếm từ /v1/demand/my (phiếu khoa mình,
+  // các kỳ đang mở) bằng trạng thái phiếu.
+  const demandMy = useQuery({
+    queryKey: ['demand-my', 'tasks'],
+    queryFn: () => demandApi.getMyDemand(),
+  })
   const data = query.data
-  const values: Record<string, number> = data
-    ? {
-        repairsAssigned: data.repairs.assigned,
-        repairsPendingResponse: data.repairs.pendingResponse,
-        repairsOverdue: data.repairs.overdue,
-        maintenanceDue7d: data.maintenance.due7d,
-        maintenanceOverdue: data.maintenance.overdue,
-        requestsPendingApproval: data.requests.pendingApproval,
-        requestsPendingIssue: data.requests.pendingIssue,
-        requestsPendingReceive: data.requests.pendingReceive,
-        stocktakesCounting: data.stocktakes.counting,
-        alertsRepairsNew: data.alerts.repairsNew,
-        alertsCalibrationOverdue: data.alerts.calibrationOverdue,
-        alertsStock: Object.values(data.alerts.stock).reduce((sum, value) => sum + value, 0),
-      }
-    : {}
+  const dmy = demandMy.data?.items ?? []
+  const values: Record<string, number> = {
+    ...(data
+      ? {
+          repairsAssigned: data.repairs.assigned,
+          repairsPendingResponse: data.repairs.pendingResponse,
+          repairsOverdue: data.repairs.overdue,
+          maintenanceDue7d: data.maintenance.due7d,
+          maintenanceOverdue: data.maintenance.overdue,
+          requestsPendingApproval: data.requests.pendingApproval,
+          requestsPendingIssue: data.requests.pendingIssue,
+          requestsPendingReceive: data.requests.pendingReceive,
+          stocktakesCounting: data.stocktakes.counting,
+          alertsRepairsNew: data.alerts.repairsNew,
+          alertsCalibrationOverdue: data.alerts.calibrationOverdue,
+          alertsStock: Object.values(data.alerts.stock).reduce((sum, value) => sum + value, 0),
+        }
+      : {}),
+    ...(demandMy.data
+      ? {
+          demandToSubmit: dmy.filter((r) => r.status === 'draft' || r.status === 'returned').length,
+          demandToApprove: dmy.filter((r) => r.status === 'submitted').length,
+          demandToAccept: dmy.filter((r) => r.status === 'dept_approved').length,
+        }
+      : {}),
+  }
   const total = Object.values(values).reduce((sum, value) => sum + value, 0)
 
   return (

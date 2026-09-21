@@ -128,7 +128,7 @@ export function Component() {
         getRowId={(r) => r.id}
         onRowClick={(n) => {
           if (!n.readAt) markRead.mutate(n.id)
-          const path = notificationLink(n.data)
+          const path = notificationLink(n.data, n.type)
           if (path) navigate(path)
         }}
         toolbarLeft={

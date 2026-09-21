@@ -37,7 +37,10 @@
     "stocktakesCounting": "Kiểm kê đang đếm",
     "alertsRepairsNew": "Phiếu sửa chữa mới",
     "alertsCalibrationOverdue": "Kiểm định quá hạn",
-    "alertsStock": "Cảnh báo kho"
+    "alertsStock": "Cảnh báo kho",
+    "demandToSubmit": "Dự trù cần nộp",
+    "demandToApprove": "Dự trù cần duyệt",
+    "demandToAccept": "Dự trù cần tiếp nhận"
   },
   "myTasksSummary": "{{n}} việc đang chờ bạn xử lý — bấm vào thẻ để mở danh sách.",
   "myTasksHint": "Việc được giao và các mục cần bạn xử lý.",
@@ -46,6 +49,7 @@
     "mine": "Sửa chữa của tôi",
     "maintenance": "Bảo dưỡng",
     "requests": "Phiếu yêu cầu",
-    "alerts": "Cảnh báo & kiểm kê"
+    "alerts": "Cảnh báo & kiểm kê",
+    "demand": "Dự trù"
   }
 }
