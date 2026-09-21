@@ -181,5 +181,10 @@
   "lineTotalLabel": "Thành tiền",
   "lotCount": "{{n}} lô",
   "noCardRows": "Chưa có giao dịch",
-  "noCompatibleEquipment": "Chưa gắn máy tương thích"
+  "noCompatibleEquipment": "Chưa gắn máy tương thích",
+  "issueFormHint": "Chọn loại xuất, kho và các dòng vật tư; phiếu được lưu ở trạng thái nháp.",
+  "noLines": "Chưa có dòng vật tư — bấm \"Thêm dòng\".",
+  "receiptFormHint": "Chọn loại nhập, kho, hoá đơn và các dòng vật tư; phiếu được lưu ở trạng thái nháp.",
+  "supplyFormHint": "Mã, tên, quy cách và cấu hình theo dõi lô/hạn, tồn tối thiểu – tối đa.",
+  "stockSettings": "Tồn kho & theo dõi"
 }

@@ -6,6 +6,8 @@ import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { PageHeader } from '@/components/page/PageHeader'
+import { SectionCard } from '@/components/page/SectionCard'
+import { FormFooter } from '@/components/page/FormFooter'
 import { ErrorState } from '@/components/page/ErrorState'
 import { Button } from '@/components/ui/button'
 import { Form } from '@/components/ui/form'
@@ -199,12 +201,17 @@ export function Component() {
   }
   return (
     <>
-      <PageHeader title={editing ? t('edit') : t('create')} />
+      <PageHeader
+        eyebrow={t('title', { defaultValue: 'Thư viện lỗi' })}
+        title={editing ? t('edit') : t('create')}
+        description={t('form.hint', {
+          defaultValue: 'Mô tả triệu chứng, nguyên nhân và các bước xử lý để tra cứu về sau.',
+        })}
+      />
       <Form {...form}>
-        <form className="max-w-3xl space-y-4" noValidate onSubmit={form.handleSubmit(submit)}>
-          <details open className="rounded-lg border p-4">
-            <summary className="cursor-pointer font-medium">{t('form.info')}</summary>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        <form className="max-w-4xl space-y-5" noValidate onSubmit={form.handleSubmit(submit)}>
+          <SectionCard title={t('form.info')}>
+            <div className="grid gap-4 md:grid-cols-2">
               <FormField
                 control={form.control}
                 name="scope"
@@ -299,12 +306,11 @@ export function Component() {
                 )}
               />
             </div>
-          </details>
-          <details open className="rounded-lg border p-4">
-            <summary className="cursor-pointer font-medium">{t('form.steps')}</summary>
-            <ol className="mt-4 space-y-4">
+          </SectionCard>
+          <SectionCard title={t('form.steps')}>
+            <ol className="space-y-4">
               {steps.fields.map((field, index) => (
-                <li key={field.id} className="space-y-3 rounded-md border p-3">
+                <li key={field.id} className="border-divider space-y-3 rounded-xl border p-4">
                   <div className="flex items-center justify-between">
                     <p className="font-medium">{t('form.step', { n: index + 1 })}</p>
                     <div className="flex gap-1">
@@ -386,12 +392,11 @@ export function Component() {
             >
               {t('form.addStep')}
             </Button>
-          </details>
-          <details open className="rounded-lg border p-4">
-            <summary className="cursor-pointer font-medium">{t('form.parts')}</summary>
+          </SectionCard>
+          <SectionCard title={t('form.parts')}>
             <ul className="mt-4 space-y-4">
               {parts.fields.map((field, index) => (
-                <li key={field.id} className="space-y-3 rounded-md border p-3">
+                <li key={field.id} className="border-divider space-y-3 rounded-xl border p-4">
                   <div className="flex justify-end">
                     <Button
                       type="button"
@@ -473,13 +478,8 @@ export function Component() {
             >
               {t('form.addPart')}
             </Button>
-          </details>
-          <div className="flex gap-2">
-            <Button type="button" variant="outline" onClick={() => navigate(-1)}>
-              {tc('actions.cancel')}
-            </Button>
-            <Button type="submit">{tc('actions.save')}</Button>
-          </div>
+          </SectionCard>
+          <FormFooter onCancel={() => navigate(-1)} submitting={form.formState.isSubmitting} />
         </form>
       </Form>
     </>

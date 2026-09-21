@@ -403,5 +403,6 @@
     "specs": "Thông số kỹ thuật",
     "notes": "Ghi chú"
   },
-  "countItems": "{{n}} mục"
+  "countItems": "{{n}} mục",
+  "formHint": "Nhập thông tin chung, thông số kỹ thuật; các trường có * là bắt buộc."
 }

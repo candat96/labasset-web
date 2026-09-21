@@ -284,7 +284,9 @@
     "reportedDepartment": "Khoa báo hỏng",
     "suggestions": "Gợi ý lỗi",
     "create": "Tạo phiếu",
-    "created": "Đã tạo phiếu sửa chữa"
+    "created": "Đã tạo phiếu sửa chữa",
+    "hint": "Chọn máy, mô tả sự cố và mức độ; hệ thống gợi ý lỗi tương tự bên phải.",
+    "info": "Thông tin sự cố"
   },
   "stats": {
     "title": "Thống kê sửa chữa",

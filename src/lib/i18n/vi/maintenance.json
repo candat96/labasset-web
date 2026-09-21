@@ -135,5 +135,7 @@
   "createdAt": "Tạo công việc",
   "noChecklist": "Công việc này không có checklist",
   "noSuppliesUsed": "Chưa ghi vật tư tiêu hao",
-  "audit": "Nhật ký thay đổi"
+  "audit": "Nhật ký thay đổi",
+  "templateFormHint": "Đặt tên mẫu, phạm vi áp dụng và các mục kiểm tra (đạt/không, đo, ghi chú).",
+  "items": "Mục kiểm tra"
 }

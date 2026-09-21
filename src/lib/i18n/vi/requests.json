@@ -92,5 +92,8 @@
   "audit": "Nhật ký thay đổi",
   "noComments": "Chưa có bình luận",
   "commentPlaceholder": "Viết bình luận… (Ctrl+Enter để gửi)",
-  "rejectedReason": "Lý do từ chối"
+  "rejectedReason": "Lý do từ chối",
+  "formHint": "Chọn loại yêu cầu, lý do và vật tư cần cấp; có thể lưu nháp hoặc gửi duyệt ngay.",
+  "lineCount": "{{n}} dòng",
+  "noLines": "Chưa có dòng vật tư — bấm \"Thêm dòng\"."
 }

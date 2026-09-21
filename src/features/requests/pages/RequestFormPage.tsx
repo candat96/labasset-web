@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import { PageHeader } from '@/components/page/PageHeader'
+import { SectionCard } from '@/components/page/SectionCard'
 import { Button } from '@/components/ui/button'
 import { Form } from '@/components/ui/form'
 import { TextField, SelectField } from '@/components/form/fields'
@@ -55,6 +56,7 @@ type FormValues = z.infer<typeof schema>
 
 export function Component() {
   const { t } = useTranslation('requests')
+  const { t: tc } = useTranslation()
 
   const canPickDept = useCan(STAFF)
   const navigate = useNavigate()
@@ -127,124 +129,165 @@ export function Component() {
   }
   return (
     <>
-      <PageHeader title={editing ? t('editTitle') : t('createTitle')} />
+      <PageHeader
+        eyebrow={t('title')}
+        title={editing ? t('editTitle') : t('createTitle')}
+        description={t('formHint', {
+          defaultValue:
+            'Chọn loại yêu cầu, lý do và vật tư cần cấp; có thể lưu nháp hoặc gửi duyệt ngay.',
+        })}
+      />
       <Form {...form}>
-        <form className="max-w-2xl space-y-4" noValidate>
-          <div className="grid grid-cols-2 gap-3">
-            <Button
-              type="button"
-              variant={type === 'supply' ? 'default' : 'outline'}
-              onClick={() => form.setValue('type', 'supply')}
-            >
-              {t('typeSupply')}
-            </Button>
-            <Button
-              type="button"
-              variant={type === 'repair' ? 'default' : 'outline'}
-              onClick={() => form.setValue('type', 'repair')}
-            >
-              {t('typeRepair')}
-            </Button>
-          </div>
-          {canPickDept && (
-            <FormField
-              control={form.control}
-              name="departmentId"
-              render={({ field }) => (
-                <FormItem>
-                  <AsyncSelect
-                    label="Khoa"
-                    queryKey="departments"
-                    loadOptions={departmentOptions}
-                    value={field.value}
-                    onChange={field.onChange}
-                    clearable
-                  />
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          )}
-          <FormField
-            control={form.control}
-            name="equipmentId"
-            render={({ field }) => (
-              <FormItem>
-                <AsyncSelect
-                  label={t('equipment')}
-                  queryKey="equipment"
-                  loadOptions={equipmentOptions}
-                  value={field.value}
-                  onChange={field.onChange}
-                  clearable
-                />
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <SelectField
-            control={form.control}
-            name="priority"
-            label={t('priority')}
-            options={[
-              { value: 'normal', label: t('normal') },
-              { value: 'urgent', label: t('urgent') },
-            ]}
-          />
-          <FormField
-            control={form.control}
-            name="reason"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t('reason')}</FormLabel>
-                <FormControl>
-                  <Textarea {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <DateField control={form.control} name="neededBy" label={t('neededBy')} />
-          {type === 'supply' &&
-            items.fields.map((field, index) => (
-              <div key={field.id} className="grid gap-2 rounded border p-3 sm:grid-cols-2">
+        <form className="max-w-4xl space-y-5" noValidate>
+          <SectionCard title={t('info', { defaultValue: 'Thông tin' })}>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid grid-cols-2 gap-3 md:col-span-2">
+                <Button
+                  type="button"
+                  variant={type === 'supply' ? 'default' : 'outline'}
+                  onClick={() => form.setValue('type', 'supply')}
+                >
+                  {t('typeSupply')}
+                </Button>
+                <Button
+                  type="button"
+                  variant={type === 'repair' ? 'default' : 'outline'}
+                  onClick={() => form.setValue('type', 'repair')}
+                >
+                  {t('typeRepair')}
+                </Button>
+              </div>
+              {canPickDept && (
                 <FormField
                   control={form.control}
-                  name={`items.${index}.supplyId`}
-                  render={({ field: f }) => (
+                  name="departmentId"
+                  render={({ field }) => (
                     <FormItem>
                       <AsyncSelect
-                        label={t('supply')}
-                        queryKey="supplies"
-                        loadOptions={supplyOptions}
-                        value={f.value || null}
-                        onChange={(v) => f.onChange(typeof v === 'string' ? v : '')}
+                        label="Khoa"
+                        queryKey="departments"
+                        loadOptions={departmentOptions}
+                        value={field.value}
+                        onChange={field.onChange}
+                        clearable
                       />
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                <QtyField
-                  control={form.control}
-                  name={`items.${index}.qtyRequested`}
-                  label={t('quantity')}
-                />
-                <TextField control={form.control} name={`items.${index}.note`} label={t('notes')} />
-                <Button type="button" variant="ghost" onClick={() => items.remove(index)}>
-                  {t('removeLine')}
-                </Button>
-              </div>
-            ))}
+              )}
+              <FormField
+                control={form.control}
+                name="equipmentId"
+                render={({ field }) => (
+                  <FormItem>
+                    <AsyncSelect
+                      label={t('equipment')}
+                      queryKey="equipment"
+                      loadOptions={equipmentOptions}
+                      value={field.value}
+                      onChange={field.onChange}
+                      clearable
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <SelectField
+                control={form.control}
+                name="priority"
+                label={t('priority')}
+                options={[
+                  { value: 'normal', label: t('normal') },
+                  { value: 'urgent', label: t('urgent') },
+                ]}
+              />
+              <FormField
+                control={form.control}
+                name="reason"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('reason')}</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DateField control={form.control} name="neededBy" label={t('neededBy')} />
+            </div>
+          </SectionCard>
           {type === 'supply' && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => items.append({ supplyId: '', qtyRequested: '1', note: '' })}
+            <SectionCard
+              title={t('items')}
+              description={t('lineCount', { defaultValue: '{{n}} dòng', n: items.fields.length })}
+              actions={
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => items.append({ supplyId: '', qtyRequested: '1', note: '' })}
+                >
+                  {t('addLine')}
+                </Button>
+              }
+              bodyClassName="space-y-3"
             >
-              {t('addLine')}
-            </Button>
+              {items.fields.map((field, index) => (
+                <div
+                  key={field.id}
+                  className="border-divider grid gap-3 rounded-xl border p-4 md:grid-cols-3"
+                >
+                  <FormField
+                    control={form.control}
+                    name={`items.${index}.supplyId`}
+                    render={({ field: f }) => (
+                      <FormItem>
+                        <AsyncSelect
+                          label={t('supply')}
+                          queryKey="supplies"
+                          loadOptions={supplyOptions}
+                          value={f.value || null}
+                          onChange={(v) => f.onChange(typeof v === 'string' ? v : '')}
+                        />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <QtyField
+                    control={form.control}
+                    name={`items.${index}.qtyRequested`}
+                    label={t('quantity')}
+                  />
+                  <TextField
+                    control={form.control}
+                    name={`items.${index}.note`}
+                    label={t('notes')}
+                  />
+                  <div className="md:col-span-3 flex justify-end">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => items.remove(index)}
+                    >
+                      {t('removeLine')}
+                    </Button>
+                  </div>
+                </div>
+              ))}
+              {items.fields.length === 0 && (
+                <p className="text-muted-foreground text-[13px]">
+                  {t('noLines', { defaultValue: 'Chưa có dòng vật tư — bấm "Thêm dòng".' })}
+                </p>
+              )}
+            </SectionCard>
           )}
-          <div className="flex gap-2">
+          <div className="bg-background/90 border-divider sticky bottom-0 z-10 -mx-1 mt-6 flex items-center justify-end gap-2 border-t px-1 py-3 backdrop-blur">
+            <Button type="button" variant="outline" onClick={() => navigate(-1)}>
+              {tc('actions.cancel')}
+            </Button>
             <Button
               type="button"
               variant="outline"
