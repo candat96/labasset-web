@@ -137,6 +137,9 @@
     }
   },
   "listHint": "Danh mục dùng chung; thêm, sửa, ngừng hoạt động các mục.",
+  "codeAutoExample": "Để trống sẽ tự sinh (vd {{example}})",
+  "codeFormatHint": "Chỉ chữ in hoa, số, _, -",
+  "createdWithCode": "Đã tạo {{name}} — mã {{code}}",
   "roomInUse": "Phòng đang có máy nên không xoá được — hãy Sửa và tắt \"Đang hoạt động\".",
   "addRoom": "Thêm phòng",
   "codeAuto": "Để trống để tự sinh",

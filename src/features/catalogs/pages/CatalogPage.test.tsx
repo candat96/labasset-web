@@ -36,6 +36,33 @@ it('renders a configured catalog and keeps list filters in the URL', async () =>
   expect(router.state.location.search).toContain('q=abc')
 })
 
+it('tạo mới không nhập Mã: body bỏ code, server tự sinh và toast hiển thị mã', async () => {
+  const bodies: Record<string, unknown>[] = []
+  server.use(
+    http.get('/v1/catalogs/manufacturers', () =>
+      HttpResponse.json({ items: [], total: 0, page: 1, limit: 20 }),
+    ),
+    http.post('/v1/catalogs/manufacturers', async ({ request }) => {
+      bodies.push((await request.json()) as Record<string, unknown>)
+      return HttpResponse.json({ ...row, code: 'NSX-0001' }, { status: 201 })
+    }),
+  )
+  renderWithProviders(<Component />, {
+    path: '/admin/catalogs/:name',
+    route: '/admin/catalogs/manufacturers',
+  })
+  await userEvent.click(await screen.findByRole('button', { name: 'Thêm mới' }))
+  const dialog = within(screen.getByRole('dialog'))
+  expect(dialog.getByLabelText('Mã')).toHaveAttribute(
+    'placeholder',
+    'Để trống sẽ tự sinh (vd NSX-0001)',
+  )
+  await userEvent.type(dialog.getByLabelText('Tên'), 'Hãng B')
+  await userEvent.click(dialog.getByRole('button', { name: 'Lưu' }))
+  await waitFor(() => expect(bodies[0]).not.toHaveProperty('code'))
+  expect(await screen.findByText('Đã tạo Hãng sản xuất — mã NSX-0001')).toBeVisible()
+})
+
 it('creates with schema validation and attaches API field errors', async () => {
   const bodies: unknown[] = []
   server.use(

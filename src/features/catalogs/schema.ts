@@ -4,10 +4,17 @@ import type { CatalogConfig, CatalogValue } from './types'
 
 export function catalogSchema(config: CatalogConfig) {
   const shape: Record<string, z.ZodType<CatalogValue | undefined>> = {
+    // Mã không bắt buộc — để trống server tự sinh (handoff 16); nhập thì kiểm tra định dạng.
     code: z
       .string()
       .trim()
-      .regex(/^[A-Z0-9_-]{1,32}$/, i18n.t('catalogs:errors.code')),
+      .transform((value) => value.toUpperCase())
+      .pipe(
+        z.union([
+          z.literal(''),
+          z.string().regex(/^[A-Z0-9_-]{1,32}$/, i18n.t('catalogs:errors.code')),
+        ]),
+      ),
     name: z.string().trim().min(1).max(255),
     description: z.string().optional(),
     isActive: z.boolean(),

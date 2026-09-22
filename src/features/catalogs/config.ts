@@ -1,6 +1,22 @@
 import { ROOM_TYPES } from '@/lib/enum-labels'
 import type { CatalogConfig, CatalogSlug } from './types'
 
+/** Ví dụ mã tự sinh theo từng danh mục — dùng cho placeholder ô Mã (handoff 16). */
+export const catalogCodeExamples: Record<CatalogSlug, string> = {
+  suppliers: 'NCC-0001',
+  manufacturers: 'NSX-0001',
+  'equipment-groups': 'NTB-001',
+  'supply-groups': 'NVT-001',
+  units: 'DVT-001',
+  warehouses: 'KHO-001',
+  'funding-sources': 'NV-001',
+  'connection-types': 'KN-001',
+  'component-types': 'LK-001',
+  'calibration-agencies': 'DVKD-001',
+  'fault-groups': 'NL-001',
+  rooms: 'PH-0001',
+}
+
 /**
  * Cấu hình trường của từng danh mục. Nhãn tiêu đề/trường lấy qua i18n:
  * `titles.<slug>` và `catalogFields.<slug>.<field>` trong namespace `catalogs`.

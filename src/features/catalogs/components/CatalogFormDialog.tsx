@@ -7,11 +7,13 @@ import { toast } from 'sonner'
 import { FormDialog } from '@/components/form/FormDialog'
 import { NumberField, SelectField, SwitchField, TextField } from '@/components/form/fields'
 import { AsyncSelect } from '@/components/form/async-select'
-import { FormField, FormItem, FormMessage } from '@/components/ui/form'
+import { FormField, FormItem, FormLabel, FormMessage, FormControl } from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
 import { applyServerErrors, messageFor } from '@/api/errors'
 import { departmentOptions, resolveDepartment, resolveUser, userOptions } from '@/api/references'
 import { enumLabel } from '@/lib/enum-labels'
 import { createCatalog, getCatalog, listCatalog, updateCatalog } from '../api'
+import { catalogCodeExamples } from '../config'
 import { catalogSchema } from '../schema'
 import type { CatalogConfig, CatalogRow, CatalogSlug, CatalogValue } from '../types'
 
@@ -69,13 +71,19 @@ export function CatalogFormDialog({
     mode: 'onBlur',
   })
   const queryClient = useQueryClient()
+  const title = t(`titles.${slug}`)
   useEffect(() => {
     if (open) form.reset(initial(config, row, defaults))
   }, [open, row, config, form, defaults])
   const save = useMutation({
     mutationFn: async (values: Values) => {
       const after = clean(values)
-      if (!row) return createCatalog(slug, after)
+      if (!row) {
+        // Mã để trống → bỏ khỏi body, server tự sinh (handoff 16).
+        const body = { ...after }
+        if (!body.code) delete body.code
+        return createCatalog(slug, body)
+      }
       const before = clean(initial(config, row))
       const diff = Object.fromEntries(
         Object.entries(after).filter(
@@ -87,7 +95,7 @@ export function CatalogFormDialog({
     onSuccess: (saved) => {
       void queryClient.invalidateQueries({ queryKey: ['catalogs', slug] })
       void queryClient.invalidateQueries({ queryKey: ['reference', slug] })
-      toast.success(t('saved'))
+      toast.success(row ? t('saved') : t('createdWithCode', { name: title, code: saved.code }))
       onSaved?.(saved)
       onOpenChange(false)
     },
@@ -102,7 +110,6 @@ export function CatalogFormDialog({
       .filter((item) => item.id !== row?.id)
       .map((item) => ({ id: item.id, code: item.code, name: item.name }))
   }
-  const title = t(`titles.${slug}`)
   return (
     <FormDialog
       open={open}
@@ -114,12 +121,25 @@ export function CatalogFormDialog({
       width={width}
     >
       <div className="grid gap-4 sm:grid-cols-2">
-        <TextField
+        <FormField
           control={form.control}
           name="code"
-          label={t('fields.code')}
-          disabled={!!row}
-          transform={(value) => value.toUpperCase()}
+          render={({ field: input }) => (
+            <FormItem>
+              <FormLabel>{t('fields.code')}</FormLabel>
+              <FormControl>
+                <Input
+                  {...input}
+                  value={(input.value as string) ?? ''}
+                  onChange={(event) => input.onChange(event.target.value.toUpperCase())}
+                  placeholder={t('codeAutoExample', { example: catalogCodeExamples[slug] })}
+                  disabled={!!row}
+                />
+              </FormControl>
+              {!row && <p className="text-muted-foreground text-xs">{t('codeFormatHint')}</p>}
+              <FormMessage />
+            </FormItem>
+          )}
         />
         <TextField control={form.control} name="name" label={t('fields.name')} />
       </div>
