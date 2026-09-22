@@ -192,18 +192,18 @@ function lineEditHandlers(patched: unknown[]) {
   )
 }
 
-it('bảng dòng: ô 12 tháng T3 sửa 42 → PATCH /lines/:lineId qtyByBucket[2]="42"', async () => {
+it('bảng dòng: ô Số lượng nhập 42 → PATCH /lines/:lineId qtyByBucket 12 phần chia đều, Σ = 42', async () => {
   const patched: unknown[] = []
   lineEditHandlers(patched)
   renderPage()
-  const cell = await screen.findByRole('textbox', { name: /Găng tay T3/ })
+  const cell = await screen.findByRole('textbox', { name: /Găng tay số lượng/ })
   await userEvent.clear(cell)
   await userEvent.type(cell, '42')
   await userEvent.tab()
   await waitFor(() => expect(patched).toHaveLength(1))
   const body = patched[0] as { qtyByBucket: string[] }
   expect(body.qtyByBucket).toHaveLength(12)
-  expect(body.qtyByBucket[2]).toBe('42')
+  expect(sumQty(body.qtyByBucket)).toBe('42')
 })
 
 it('bảng dòng: bấm chip gợi ý → PATCH qtyByBucket chia đều 12 tháng, Σ = suggestedQty', async () => {

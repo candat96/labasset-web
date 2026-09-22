@@ -4,7 +4,17 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import Big from 'big.js'
 import { toast } from 'sonner'
-import { CalendarClock, Coins, Download, Link2, Plus, Sparkles, Trash2, Upload } from 'lucide-react'
+import {
+  CalendarClock,
+  CalendarRange,
+  Coins,
+  Download,
+  Link2,
+  Plus,
+  Sparkles,
+  Trash2,
+  Upload,
+} from 'lucide-react'
 import { PageHeader, PageMeta } from '@/components/page/PageHeader'
 import { SectionCard } from '@/components/page/SectionCard'
 import { DetailSkeleton } from '@/components/page/DetailSkeleton'
@@ -34,10 +44,14 @@ import { AsyncSelect } from '@/components/form/async-select'
 import { useConfirm } from '@/components/confirm-dialog'
 import { messageFor } from '@/api/errors'
 import { formatVnd } from '@/lib/format/money'
-import { formatQty } from '@/lib/format/number'
 import { formatDate } from '@/lib/format/date'
-import { demandItemTypeLabels, demandPriorityLabels, enumLabel } from '@/lib/enum-labels'
-import { demandRequestStatusMap } from '@/lib/status-maps'
+import {
+  demandItemTypeLabels,
+  demandPeriodKindLabels,
+  demandPriorityLabels,
+  enumLabel,
+} from '@/lib/enum-labels'
+import { demandPeriodStatusMap, demandRequestStatusMap } from '@/lib/status-maps'
 import { useCan } from '@/app/guards/useCan'
 import { HEADS, STAFF } from '@/routes/roles'
 import { supplyOptions } from '@/api/references'
@@ -70,12 +84,6 @@ export function sumQty(cells: string[]): string {
   }
 }
 
-function bucketLabels(buckets: number): string[] {
-  if (buckets === 4) return ['Q1', 'Q2', 'Q3', 'Q4']
-  if (buckets === 1) return ['Tổng']
-  return Array.from({ length: 12 }, (_, i) => `T${i + 1}`)
-}
-
 /** Decimal(19,4) "30.0000" → "30" (chỉ để HIỂN THỊ, không đổi dữ liệu gửi lên). */
 export function trimZeroTail(value: string): string {
   return value.includes('.') ? value.replace(/0+$/, '').replace(/\.$/, '') : value
@@ -87,18 +95,24 @@ function BucketCell({
   disabled,
   onCommit,
   ariaLabel,
+  wide,
 }: {
   value: string
   disabled?: boolean
   onCommit: (value: string) => void
   ariaLabel: string
+  wide?: boolean
 }) {
   const [draft, setDraft] = useState<string | null>(null)
   const shown = draft ?? (value === '0' ? '' : trimZeroTail(value))
   return (
     <Input
       aria-label={ariaLabel}
-      className="h-7 w-11 px-1 text-center text-[12px] tabular-nums"
+      className={
+        wide
+          ? 'h-9 w-28 text-right tabular-nums'
+          : 'h-7 w-11 px-1 text-center text-[12px] tabular-nums'
+      }
       inputMode="decimal"
       value={shown}
       disabled={disabled}
@@ -192,7 +206,6 @@ function LineRow({
   const [reason, setReason] = useState(line.reason ?? '')
   const [priority, setPriority] = useState(line.priority)
   const [unitPriceEst, setUnitPriceEst] = useState(trimZeroTail(line.unitPriceEst))
-  const labels = useMemo(() => bucketLabels(buckets), [buckets])
   const zeros = useMemo(() => Array.from({ length: buckets }, () => '0'), [buckets])
   const [qty, setQty] = useState<string[]>(
     line.qtyByBucket.length === buckets ? line.qtyByBucket : zeros,
@@ -307,43 +320,19 @@ function LineRow({
         )}
       </TableCell>
       <TableCell className="text-subtle text-[12.5px]">{line.unit ?? '—'}</TableCell>
-      <TableCell>
-        <div className="flex gap-1 overflow-x-auto">
-          {qty.map((value, i) => (
-            <BucketCell
-              key={i}
-              ariaLabel={`${line.itemName || 'dòng'} ${labels[i]}`}
-              value={value}
-              disabled={!editable}
-              onCommit={(next) => {
-                const nextQty = [...qty]
-                nextQty[i] = next
-                setQty(nextQty)
-                void patch({ qtyByBucket: nextQty })
-              }}
-            />
-          ))}
-          {editable && (
-            <div className="flex flex-col gap-1">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  const total = window.prompt(t('splitEvenlyHint'), qtySum)
-                  if (total) {
-                    setQty(splitEvenly(total, buckets))
-                    void patch({ qtyByBucket: splitEvenly(total, buckets) })
-                  }
-                }}
-              >
-                {t('splitEvenly')}
-              </Button>
-              <span className="text-center text-[11.5px] tabular-nums">Σ {qtySum}</span>
-            </div>
-          )}
-        </div>
+      <TableCell className="text-right">
+        <BucketCell
+          ariaLabel={`${line.itemName || 'dòng'} số lượng`}
+          value={qtySum}
+          disabled={!editable}
+          wide
+          onCommit={(next) => {
+            const cells = splitEvenly(next || '0', buckets)
+            setQty(cells)
+            void patch({ qtyByBucket: cells })
+          }}
+        />
       </TableCell>
-      <TableCell className="text-right tabular-nums">{formatQty(line.qtyRequested)}</TableCell>
       <TableCell className="text-right">
         <Input
           aria-label={`${line.itemName || 'dòng'} đơn giá ước`}
@@ -492,7 +481,6 @@ function PendingLineRow({
   onDiscard: () => void
 }) {
   const { t } = useTranslation('procurement')
-  const labels = useMemo(() => bucketLabels(buckets), [buckets])
   const set = (patch: Partial<PendingLine>) => onChange({ ...pending, ...patch })
   const qtySum = sumQty(pending.qty)
   const amount = useMemo(() => {
@@ -582,36 +570,14 @@ function PendingLineRow({
         </div>
       </TableCell>
       <TableCell className="text-subtle text-[12.5px]">—</TableCell>
-      <TableCell>
-        <div className="flex gap-1 overflow-x-auto">
-          {pending.qty.map((value, i) => (
-            <BucketCell
-              key={i}
-              ariaLabel={`${t('newLine', { defaultValue: 'dòng mới' })} ${labels[i]}`}
-              value={value}
-              onCommit={(next) => {
-                const nextQty = [...pending.qty]
-                nextQty[i] = next
-                set({ qty: nextQty })
-              }}
-            />
-          ))}
-          <div className="flex flex-col gap-1">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                const total = window.prompt(t('splitEvenlyHint'), qtySum)
-                if (total) set({ qty: splitEvenly(total, buckets) })
-              }}
-            >
-              {t('splitEvenly')}
-            </Button>
-            <span className="text-center text-[11.5px] tabular-nums">Σ {qtySum}</span>
-          </div>
-        </div>
+      <TableCell className="text-right">
+        <BucketCell
+          ariaLabel={`${t('newLine', { defaultValue: 'dòng mới' })} số lượng`}
+          value={qtySum}
+          wide
+          onCommit={(next) => set({ qty: splitEvenly(next || '0', buckets) })}
+        />
       </TableCell>
-      <TableCell className="text-right tabular-nums">—</TableCell>
       <TableCell className="text-right">
         <Input
           aria-label={`${t('newLine', { defaultValue: 'dòng mới' })} đơn giá ước`}
@@ -854,6 +820,17 @@ export function Component() {
                 >
                   {row.period.code ?? '—'}
                 </Link>
+                {per?.name && <span className="ml-1.5">· {per.name}</span>}
+              </PageMeta>
+            )}
+            {per && (
+              <PageMeta icon={<CalendarRange size={14} />}>
+                {enumLabel(demandPeriodKindLabels, per.kind)}{' '}
+                {per.kind === 'quarterly' && per.quarter ? `Q${per.quarter}/` : ''}
+                {per.year}
+                <span className="ml-1.5">
+                  <StatusBadge value={per.status} map={demandPeriodStatusMap} />
+                </span>
               </PageMeta>
             )}
             {per?.submitDeadline && (
@@ -922,6 +899,12 @@ export function Component() {
           <AlertDescription>{row.returnReason}</AlertDescription>
         </Alert>
       )}
+      {per?.notes && (
+        <Alert>
+          <AlertTitle>{t('periodNotes', { defaultValue: 'Ghi chú của kỳ' })}</AlertTitle>
+          <AlertDescription className="whitespace-pre-line">{per.notes}</AlertDescription>
+        </Alert>
+      )}
       <SectionCard
         title={t('linesTab')}
         description={per?.name}
@@ -955,7 +938,6 @@ export function Component() {
                   {t('itemType')} / {t('supplyName')}
                 </TableHead>
                 <TableHead>{t('unit')}</TableHead>
-                <TableHead>{t('qtyByBucket')}</TableHead>
                 <TableHead className="text-right">{t('qty')}</TableHead>
                 <TableHead className="text-right">{t('unitPriceEst')}</TableHead>
                 <TableHead className="text-right">{t('amount')}</TableHead>
