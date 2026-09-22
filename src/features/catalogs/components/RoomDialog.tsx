@@ -9,9 +9,9 @@ import { FormDialog } from '@/components/form/FormDialog'
 import { NumberField, SelectField, SwitchField, TextField } from '@/components/form/fields'
 import { AsyncSelect } from '@/components/form/async-select'
 import { FormField, FormItem, FormMessage } from '@/components/ui/form'
-import { applyServerErrors, isApiError, messageFor } from '@/api/errors'
+import { applyServerErrors, messageFor } from '@/api/errors'
 import { departmentOptions, resolveDepartment } from '@/api/references'
-import { suggestRoomCode, withCodeSuffix } from '@/lib/room-code'
+import { catalogCodeExamples } from '../config'
 import { ROOM_TYPES, enumLabel } from '@/lib/enum-labels'
 import { createCatalog, updateCatalog } from '../api'
 import type { CatalogRow, CatalogValue } from '../types'
@@ -56,7 +56,8 @@ function toBody(values: RoomForm): Record<string, CatalogValue> {
     building: values.building || null,
     floor: values.floor || null,
     roomType: values.roomType,
-    code: values.code || null,
+    // Mã để trống → bỏ khỏi body, server tự sinh (handoff 16).
+    ...(values.code ? { code: values.code } : {}),
     sortOrder: values.sortOrder === '' ? 0 : values.sortOrder,
     description: values.description || null,
     isActive: values.isActive,
@@ -86,22 +87,7 @@ export function RoomDialog({
   const save = useMutation({
     mutationFn: async (values: RoomForm) => {
       const after = toBody(values)
-      if (!row) {
-        if (after.code === null) {
-          const department = values.departmentId
-            ? await resolveDepartment(values.departmentId)
-            : null
-          after.code = suggestRoomCode(department?.code, values.name)
-          try {
-            return await createCatalog('rooms', after)
-          } catch (error) {
-            // Mã tự sinh trùng → thử lại một lần với hậu tố ngắn.
-            if (!isApiError(error) || (error.status !== 409 && error.status !== 400)) throw error
-            return createCatalog('rooms', { ...after, code: withCodeSuffix(String(after.code)) })
-          }
-        }
-        return createCatalog('rooms', after)
-      }
+      if (!row) return createCatalog('rooms', after)
       const before = toBody(initial(row))
       const diff = Object.fromEntries(
         Object.entries(after).filter(
@@ -110,10 +96,12 @@ export function RoomDialog({
       )
       return Object.keys(diff).length ? updateCatalog('rooms', row.id, diff) : row
     },
-    onSuccess: () => {
+    onSuccess: (saved) => {
       void qc.invalidateQueries({ queryKey: ['catalogs', 'rooms'] })
       void qc.invalidateQueries({ queryKey: ['reference'] })
-      toast.success(t('saved'))
+      toast.success(
+        row ? t('saved') : t('createdWithCode', { name: t('titles.rooms'), code: saved.code }),
+      )
       onOpenChange(false)
     },
     onError: (error) => {
@@ -166,7 +154,7 @@ export function RoomDialog({
           control={form.control}
           name="code"
           label={t('fields.code')}
-          placeholder={t('codeAuto', { defaultValue: 'Để trống để tự sinh' })}
+          placeholder={t('codeAutoExample', { example: catalogCodeExamples.rooms })}
           disabled={!!row}
           transform={(value) => value.toUpperCase()}
         />

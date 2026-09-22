@@ -7,9 +7,7 @@ import { toast } from 'sonner'
 import { z } from 'zod'
 import { api, apiBody, unwrapAs } from '@/api/client'
 import type { components } from '@/api/schema'
-import { applyServerErrors, isApiError, messageFor } from '@/api/errors'
-import { resolveDepartment } from '@/api/references'
-import { suggestRoomCode, withCodeSuffix } from '@/lib/room-code'
+import { applyServerErrors, messageFor } from '@/api/errors'
 import { FormDialog } from '@/components/form/FormDialog'
 import { SelectField, TextField } from '@/components/form/fields'
 import { ROOM_TYPES, enumLabel } from '@/lib/enum-labels'
@@ -54,11 +52,12 @@ export function RoomFormDialog({
   useEffect(() => {
     if (open) form.reset(empty)
   }, [open, form])
-  const create = (values: RoomForm, code: string) =>
+  const create = (values: RoomForm) =>
     unwrapAs<RoomRow>(
       api.POST('/v1/catalogs/rooms', {
         body: apiBody<CreateRoomBody>({
-          code,
+          // Mã để trống → bỏ khỏi body, server tự sinh (handoff 16).
+          ...(values.code ? { code: values.code } : {}),
           name: values.name,
           departmentId,
           building: values.building || null,
@@ -68,22 +67,11 @@ export function RoomFormDialog({
       }),
     )
   const save = useMutation({
-    mutationFn: async (values: RoomForm) => {
-      if (values.code) return create(values, values.code)
-      // API vẫn bắt buộc `code` → web tự sinh từ mã khoa + tên; trùng thì thêm hậu tố.
-      const department = departmentId ? await resolveDepartment(departmentId) : null
-      const code = suggestRoomCode(department?.code, values.name)
-      try {
-        return await create(values, code)
-      } catch (error) {
-        if (!isApiError(error) || (error.status !== 409 && error.status !== 400)) throw error
-        return create(values, withCodeSuffix(code))
-      }
-    },
+    mutationFn: (values: RoomForm) => create(values),
     onSuccess: (room) => {
       void qc.invalidateQueries({ queryKey: ['catalogs', 'rooms'] })
       void qc.invalidateQueries({ queryKey: ['reference'] })
-      toast.success(t('saved'))
+      toast.success(t('createdWithCode', { name: t('titles.rooms'), code: room.code }))
       onCreated?.(room)
       onOpenChange(false)
     },
@@ -115,7 +103,7 @@ export function RoomFormDialog({
           control={form.control}
           name="code"
           label={t('fields.code')}
-          placeholder={t('quickRoom.codeAuto', { defaultValue: 'Để trống sẽ tự sinh' })}
+          placeholder={t('codeAutoExample', { example: 'PH-0001' })}
           transform={(value) => value.toUpperCase()}
         />
         <TextField

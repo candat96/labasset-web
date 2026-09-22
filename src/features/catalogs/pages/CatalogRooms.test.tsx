@@ -114,7 +114,10 @@ it('tạo phòng: mã không bắt buộc, gửi đúng body (departmentId, buil
   await userEvent.click(await screen.findByRole('button', { name: 'Thêm phòng' }))
   const dialog = within(screen.getByRole('dialog'))
   expect(dialog.getByRole('combobox', { name: 'Khoa/Phòng ban' })).toHaveTextContent('Dùng chung')
-  expect(dialog.getByLabelText('Mã')).toHaveAttribute('placeholder', 'Để trống để tự sinh')
+  expect(dialog.getByLabelText('Mã')).toHaveAttribute(
+    'placeholder',
+    'Để trống sẽ tự sinh (vd PH-0001)',
+  )
   // chỉ Tên bắt buộc — Mã trống không báo lỗi
   await userEvent.click(dialog.getByRole('button', { name: 'Lưu' }))
   expect(await dialog.findAllByText('Bắt buộc')).toHaveLength(1)
@@ -138,21 +141,22 @@ it('tạo phòng: mã không bắt buộc, gửi đúng body (departmentId, buil
       roomType: 'lab',
     }),
   )
-  expect(await screen.findByText('Đã lưu danh mục')).toBeVisible()
+  expect(await screen.findByText('Đã tạo Phòng — mã XN-P102')).toBeVisible()
 
   // phòng dùng chung: không chọn khoa → departmentId null
   await userEvent.click(await screen.findByRole('button', { name: 'Thêm phòng' }))
   const dialog2 = within(screen.getByRole('dialog'))
   await userEvent.type(dialog2.getByLabelText('Tên'), 'Hội trường B')
   await userEvent.click(dialog2.getByRole('button', { name: 'Lưu' }))
-  // mã để trống → web tự sinh (API vẫn bắt buộc code)
+  // mã để trống → bỏ khỏi body, server tự sinh (handoff 16)
   await waitFor(() =>
     expect(bodies[1]).toMatchObject({
       name: 'Hội trường B',
       departmentId: null,
-      code: 'CHUNG-HOI-TRUONG-B',
     }),
   )
+  expect(bodies[1]).not.toHaveProperty('code')
+  expect(await screen.findByText('Đã tạo Phòng — mã XN-P101')).toBeVisible()
 })
 
 it('sửa phòng gửi diff; xoá bị 409 ROOM_IN_USE báo gợi ý tắt kích hoạt', async () => {

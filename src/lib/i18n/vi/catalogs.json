@@ -142,7 +142,6 @@
   "createdWithCode": "Đã tạo {{name}} — mã {{code}}",
   "roomInUse": "Phòng đang có máy nên không xoá được — hãy Sửa và tắt \"Đang hoạt động\".",
   "addRoom": "Thêm phòng",
-  "codeAuto": "Để trống để tự sinh",
   "roomsHint": "Vị trí vật lý đặt máy: phòng của từng Khoa/Phòng ban hoặc phòng dùng chung.",
   "roomDeleteDesc": "Phòng đang có máy sẽ không xoá được — hãy tắt \"Đang hoạt động\"."
 }

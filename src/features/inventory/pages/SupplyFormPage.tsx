@@ -24,7 +24,17 @@ import { useTranslation } from 'react-i18next'
 import i18n from '@/lib/i18n'
 
 const schema = z.object({
-  code: z.string(),
+  // Mã không bắt buộc — để trống server tự sinh (handoff 16).
+  code: z
+    .string()
+    .trim()
+    .transform((value) => value.toUpperCase())
+    .pipe(
+      z.union([
+        z.literal(''),
+        z.string().regex(/^[A-Z0-9_-]{1,32}$/, i18n.t('inventory:codeInvalid')),
+      ]),
+    ),
   name: z.string().trim().min(1, i18n.t('common:form.required')),
   groupId: z.string().nullable(),
   unitId: z.string().min(1, i18n.t('common:form.required')),
@@ -131,7 +141,7 @@ export function Component() {
         navigate(`/supplies/${id}`)
       } else {
         const created = await createSupply(body)
-        toast.success(t('supplyCreated'))
+        toast.success(t('supplyCreatedWithCode', { code: created.code }))
         void qc.invalidateQueries({ queryKey: ['supplies'] })
         navigate(`/supplies/${created.id}`)
       }
@@ -156,6 +166,7 @@ export function Component() {
                 control={form.control}
                 name="code"
                 label={t('code')}
+                placeholder={t('codeAutoExample', { example: 'VT-00001' })}
                 transform={(v) => v.toUpperCase()}
               />
               <TextField control={form.control} name="name" label={t('name')} />

@@ -1,5 +1,7 @@
 {
   "code": "Mã",
+  "codeInvalid": "Mã chỉ gồm A–Z, số, _ hoặc -",
+  "codeAutoExample": "Để trống sẽ tự sinh (vd {{example}})",
   "name": "Tên",
   "qty": "Tồn",
   "value": "Giá trị",
@@ -85,6 +87,7 @@
   "saveDraft": "Lưu nháp",
   "supplySaved": "Đã lưu vật tư",
   "supplyCreated": "Đã tạo vật tư",
+  "supplyCreatedWithCode": "Đã tạo vật tư — mã {{code}}",
   "editSupply": "Sửa vật tư",
   "group": "Nhóm",
   "unit": "ĐVT",

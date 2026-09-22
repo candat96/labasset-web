@@ -21,8 +21,9 @@ export function getDepartment(id: string) {
   return unwrapAs<Department>(api.GET('/v1/departments/{id}', { params: { path: { id } } }))
 }
 
-export function createDepartment(body: CreateDepartmentDto) {
-  return unwrapAs<Department>(api.POST('/v1/departments', { body }))
+/** `code?` — để trống server tự sinh (handoff 16); sau `api:gen` DTO sẽ optional hẳn. */
+export function createDepartment(body: Omit<CreateDepartmentDto, 'code'> & { code?: string }) {
+  return unwrapAs<Department>(api.POST('/v1/departments', { body: body as CreateDepartmentDto }))
 }
 
 export function updateDepartment(id: string, body: UpdateDepartmentDto) {

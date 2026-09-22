@@ -122,6 +122,42 @@ it('creates a supply', async () => {
   await waitFor(() => expect(saved[0]).toMatchObject({ name: 'Huyết thanh mới' }))
 })
 
+it('creates a supply without code — body omits code and toast shows generated one', async () => {
+  const saved: Record<string, unknown>[] = []
+  server.use(
+    http.get('/v1/catalogs/units', () =>
+      HttpResponse.json([{ id: 'u1', code: 'ML', name: 'Mililit' }]),
+    ),
+    http.post('/v1/supplies', async ({ request }) => {
+      const body = (await request.json()) as Record<string, unknown>
+      if (!body.name) {
+        return HttpResponse.json(
+          { code: 'VALIDATION_ERROR', message: 'name là bắt buộc' },
+          { status: 400 },
+        )
+      }
+      saved.push(body)
+      return HttpResponse.json({ id: 's3', code: 'VT-00001', name: body.name }, { status: 201 })
+    }),
+  )
+  renderWithProviders(<SupplyFormPage />, {
+    path: '/supplies/new',
+    route: '/supplies/new',
+    routes: [{ path: '/supplies/:id', element: <div>DETAIL</div> }],
+  })
+  expect(screen.getByLabelText('Mã')).toHaveAttribute(
+    'placeholder',
+    'Để trống sẽ tự sinh (vd VT-00001)',
+  )
+  await userEvent.type(screen.getByLabelText('Tên'), 'Huyết thanh không mã')
+  await userEvent.type(screen.getByLabelText('ĐVT'), 'Mil')
+  await userEvent.click(await screen.findByRole('option', { name: /Mililit/ }))
+  await userEvent.click(screen.getByRole('button', { name: 'Lưu' }))
+  await vi.waitFor(() => expect(saved).toHaveLength(1))
+  expect(saved[0]).not.toHaveProperty('code')
+  expect(await screen.findByText('Đã tạo vật tư — mã VT-00001')).toBeVisible()
+})
+
 it('lists receipts', async () => {
   renderWithProviders(<ReceiptsPage />)
   expect(await screen.findByRole('link', { name: 'NK-1' })).toHaveAttribute(

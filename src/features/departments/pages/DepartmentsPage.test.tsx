@@ -87,6 +87,29 @@ it('creates a department: validation, uppercase code, server field error', async
   expect(bodies[1]).toMatchObject({ code: 'OK1' })
 })
 
+it('creates a department without code — body omits code and toast shows generated one', async () => {
+  useAuthStore.getState().setSession(fakeSession(['HOSPITAL_ADMIN']))
+  const bodies: Record<string, unknown>[] = []
+  server.use(
+    http.post('/v1/departments', async ({ request }) => {
+      bodies.push((await request.json()) as Record<string, unknown>)
+      return HttpResponse.json(dept({ id: 'd4', code: 'KH-001' }), { status: 201 })
+    }),
+  )
+  renderWithProviders(<DepartmentsPage />, { route: '/admin/departments' })
+  await userEvent.click(await screen.findByRole('button', { name: /Thêm khoa\/phòng/ }))
+  const dialog = await screen.findByRole('dialog')
+  expect(within(dialog).getByLabelText('Mã')).toHaveAttribute(
+    'placeholder',
+    'Để trống sẽ tự sinh (vd KH-001)',
+  )
+  await userEvent.type(within(dialog).getByLabelText('Tên'), 'Khoa không mã')
+  await userEvent.click(within(dialog).getByRole('button', { name: 'Lưu' }))
+  await vi.waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+  expect(bodies[0]).not.toHaveProperty('code')
+  expect(await screen.findByText('Đã tạo khoa/phòng — mã KH-001')).toBeVisible()
+})
+
 it('deletes with deactivated notice', async () => {
   useAuthStore.getState().setSession(fakeSession(['HOSPITAL_ADMIN']))
   server.use(http.delete('/v1/departments/d1', () => HttpResponse.json({ deactivated: true })))

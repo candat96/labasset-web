@@ -11,6 +11,8 @@ import {
   SwitchField,
   TextField,
 } from '@/components/form/fields'
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
 import { applyServerErrors, messageFor } from '@/api/errors'
 import { useActiveUsers } from '@/features/users/hooks'
 import { useCreateDepartment, useUpdateDepartment } from '../hooks'
@@ -81,7 +83,7 @@ export function DepartmentFormDialog({
         if (Object.keys(body).length > 0) await update.mutateAsync({ id: department.id, body })
       } else {
         await create.mutateAsync({
-          code: v.code,
+          code: v.code || undefined,
           name: v.name,
           type: v.type,
           headUserId: v.headUserId ?? undefined,
@@ -106,14 +108,26 @@ export function DepartmentFormDialog({
       submitting={create.isPending || update.isPending}
     >
       <FieldGrid>
-        <TextField
+        <FormField
           control={form.control}
           name="code"
-          label={t('fields.code')}
-          description={t('codeHint')}
-          disabled={isEdit}
-          transform={(s) => s.toUpperCase()}
-          autoFocus={!isEdit}
+          render={({ field: input }) => (
+            <FormItem>
+              <FormLabel>{t('fields.code')}</FormLabel>
+              <FormControl>
+                <Input
+                  {...input}
+                  value={(input.value as string) ?? ''}
+                  onChange={(event) => input.onChange(event.target.value.toUpperCase())}
+                  placeholder={isEdit ? undefined : t('codeAutoExample', { example: 'KH-001' })}
+                  disabled={isEdit}
+                  autoFocus={!isEdit}
+                />
+              </FormControl>
+              {!isEdit && <p className="text-muted-foreground text-xs">{t('codeFormatHint')}</p>}
+              <FormMessage />
+            </FormItem>
+          )}
         />
         <SelectField
           control={form.control}

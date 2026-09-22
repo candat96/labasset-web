@@ -29,8 +29,8 @@ export function useCreateDepartment() {
   const invalidate = useInvalidate()
   return useMutation({
     mutationFn: dApi.createDepartment,
-    onSuccess: () => {
-      toast.success(t('created'))
+    onSuccess: (created) => {
+      toast.success(t('createdWithCode', { code: created.code }))
       void invalidate()
     },
   })

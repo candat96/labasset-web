@@ -4,13 +4,17 @@ import { DEPARTMENT_TYPES } from './types'
 
 export const departmentSchema = () =>
   z.object({
+    // Mã không bắt buộc — để trống server tự sinh (handoff 16); nhập thì kiểm tra định dạng.
     code: z
       .string()
       .trim()
-      .min(1)
-      .max(32)
       .transform((s) => s.toUpperCase())
-      .pipe(z.string().regex(/^[A-Z0-9_-]{1,32}$/, i18n.t('departments:codeInvalid'))),
+      .pipe(
+        z.union([
+          z.literal(''),
+          z.string().regex(/^[A-Z0-9_-]{1,32}$/, i18n.t('departments:codeInvalid')),
+        ]),
+      ),
     name: z.string().trim().min(1).max(255),
     type: z.enum(DEPARTMENT_TYPES),
     headUserId: z.string().min(1).nullable().optional(),

@@ -162,9 +162,10 @@ it('nút "+" tạo phòng nhanh cho khoa đang chọn rồi tự chọn phòng �
       departmentId: 'd1',
       floor: 'Tầng 2',
       roomType: 'other',
-      code: 'HH-PHONG-MOI',
     }),
   )
+  // mã để trống → bỏ khỏi body, server tự sinh (handoff 16)
+  expect(bodies[0]).not.toHaveProperty('code')
   await waitFor(() =>
     expect(screen.getByRole('combobox', { name: 'Phòng' })).toHaveTextContent('Phòng mới'),
   )
