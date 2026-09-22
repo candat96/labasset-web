@@ -52,6 +52,22 @@
     "stock_transfer": "Chuyển kho",
     "request": "Phiếu yêu cầu",
     "stocktake": "Kiểm kê",
+    "department": "Khoa/Phòng ban",
+    "room": "Phòng",
+    "supply": "Vật tư",
+    "catalog": {
+      "suppliers": "Nhà cung cấp",
+      "manufacturers": "Hãng sản xuất",
+      "equipment-groups": "Nhóm thiết bị",
+      "supply-groups": "Nhóm vật tư",
+      "units": "Đơn vị tính",
+      "warehouses": "Kho",
+      "funding-sources": "Nguồn kinh phí",
+      "connection-types": "Loại kết nối",
+      "component-types": "Loại linh kiện",
+      "calibration-agencies": "Đơn vị kiểm định",
+      "fault-groups": "Nhóm lỗi"
+    },
     "preview": "Xem trước",
     "previewSaved": "Xem trước đã lưu: {{value}}",
     "invalid": "Mẫu số phải chứa {SEQ} hoặc {SEQ:1..32} và chỉ dùng token hợp lệ (YYYY, YY, MM, DD, TYPE)"

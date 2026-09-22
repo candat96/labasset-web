@@ -1,6 +1,6 @@
 import type { Settings } from './types'
 import type { SettingsForm } from './schema'
-import { NUMBER_DEFAULTS, NUMBER_TYPES } from './types'
+import { AUTO_CODE_NUMBER_TYPES, NUMBER_DEFAULTS, NUMBER_TYPES } from './types'
 
 function asNumber(value: unknown, fallback: number) {
   return typeof value === 'number' && Number.isFinite(value) ? value : fallback
@@ -90,11 +90,12 @@ export function changedSettings(
     before.alerts.repairCostPctOfValue,
   )
   put('maintenance.dueGraceDays', after.maintenance.dueGraceDays, before.maintenance.dueGraceDays)
-  for (const type of NUMBER_TYPES) {
+  const allTypes: readonly string[] = [...NUMBER_TYPES, ...AUTO_CODE_NUMBER_TYPES]
+  for (const type of allTypes) {
     const saved =
       typeof original[`numbering.${type}`] === 'string'
         ? String(original[`numbering.${type}`])
-        : NUMBER_DEFAULTS[type]
+        : NUMBER_DEFAULTS[type as keyof typeof NUMBER_DEFAULTS]
     if (templates[type] !== saved) body[`numbering.${type}`] = templates[type]
   }
   return body

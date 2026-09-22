@@ -57,7 +57,7 @@ import { changedSettings, settingField, values } from '../diff'
 import { isValidNumberingTemplate } from '../numbering'
 import { settingsKeys, useSettings } from '../hooks'
 import { settingsSchema, type SettingsForm } from '../schema'
-import { NUMBER_DEFAULTS, NUMBER_TYPES, type NumberingType } from '../types'
+import { AUTO_CODE_NUMBER_TYPES, NUMBER_DEFAULTS, NUMBER_TYPES, type NumberingType } from '../types'
 import {
   CHAT_PRESETS,
   EMBEDDING_PRESETS,
@@ -200,7 +200,8 @@ const known = new Set([
   'alerts.calibrationDaysBefore',
   'alerts.repairCostPctOfValue',
   'maintenance.dueGraceDays',
-  ...NUMBER_TYPES.map((type) => `numbering.${type}`),
+  // Đánh số: nhóm gốc + các loại mã tự sinh mới (handoff 16)
+  ...[...NUMBER_TYPES, ...AUTO_CODE_NUMBER_TYPES].map((type) => `numbering.${type}`),
 ])
 
 function previewText(result: { example?: string } | string) {
@@ -275,7 +276,7 @@ export function Component() {
       form.reset(values(settings.data))
       setTemplates(
         Object.fromEntries(
-          NUMBER_TYPES.map((type) => [
+          [...NUMBER_TYPES, ...AUTO_CODE_NUMBER_TYPES].map((type) => [
             type,
             typeof settings.data?.[`numbering.${type}`] === 'string'
               ? String(settings.data[`numbering.${type}`])
@@ -348,6 +349,13 @@ export function Component() {
       ),
     [settings.data],
   )
+  /** Tab Đánh số: nhóm gốc luôn hiện; các loại mã tự sinh mới hiện khi API đã đăng ký key. */
+  const numberingTypes = useMemo(() => {
+    const dynamic = AUTO_CODE_NUMBER_TYPES.filter(
+      (type) => settings.data?.[`numbering.${type}`] !== undefined,
+    )
+    return [...NUMBER_TYPES, ...dynamic]
+  }, [settings.data])
   const chatPreset = findPreset(CHAT_PRESETS, ai.chat.baseUrl, ai.chat.protocol)?.id ?? 'custom'
   const embeddingPreset =
     findPreset(EMBEDDING_PRESETS, ai.embedding.baseUrl, ai.embedding.protocol)?.id ?? 'custom'
@@ -667,14 +675,10 @@ export function Component() {
                   </div>
                 </SectionCard>
               </TabsContent>
-              <TabsContent
-                value="numbering"
-                forceMount
-                className="space-y-3 data-[state=inactive]:hidden"
-              >
+              <TabsContent value="numbering" className="space-y-3">
                 <SectionCard title={t('tabs.numbering')}>
                   <div className="space-y-4">
-                    {NUMBER_TYPES.map((type) => (
+                    {numberingTypes.map((type) => (
                       <div
                         key={type}
                         className="border-divider grid items-end gap-3 rounded-xl border p-4 sm:grid-cols-[180px_1fr_auto]"

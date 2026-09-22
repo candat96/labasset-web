@@ -36,6 +36,8 @@ const settings = {
   'ai.embedding.apiKeySet': false,
   'ai.monthlyTokenBudget': 0,
   'numbering.request': 'PYC-{YYYY}-{SEQ:4}',
+  'numbering.department': 'KH-{SEQ:3}',
+  'numbering.catalog.suppliers': 'NCC-{SEQ:4}',
   'future.setting': { enabled: true },
 }
 
@@ -119,6 +121,26 @@ it('attaches SETTING_INVALID to the matching field', async () => {
   await userEvent.click(screen.getByRole('button', { name: 'Lưu thay đổi' }))
   expect(await screen.findByText('Giá trị cấu hình không hợp lệ')).toBeVisible()
   expect(name).toHaveAttribute('aria-invalid', 'true')
+})
+
+it('numbering tab shows auto-code types registered by the API with defaults (handoff 16)', async () => {
+  renderWithProviders(<Component />)
+  await screen.findByDisplayValue('Bệnh viện Demo')
+  await userEvent.click(screen.getByRole('tab', { name: 'Đánh số' }))
+  // panel đang active (các panel khác forceMount nhưng ẩn)
+  const panel = () =>
+    screen.getAllByRole('tabpanel').find((el) => el.getAttribute('data-state') === 'active')!
+  // nhóm gốc vẫn hiện
+  expect(within(panel()).getByLabelText('Phiếu yêu cầu')).toHaveValue('PYC-{YYYY}-{SEQ:4}')
+  // các loại mới API đã đăng ký → hiện với giá trị đã lưu
+  expect(within(panel()).getByLabelText('Khoa/Phòng ban')).toHaveValue('KH-{SEQ:3}')
+  expect(within(panel()).getByLabelText('Nhà cung cấp')).toHaveValue('NCC-{SEQ:4}')
+  // loại chưa đăng ký (API chưa trả key) → không hiện
+  expect(within(panel()).queryByLabelText('Phòng')).not.toBeInTheDocument()
+  expect(within(panel()).queryByLabelText('Vật tư')).not.toBeInTheDocument()
+  // không rơi vào tab Khác
+  await userEvent.click(screen.getByRole('tab', { name: 'Khác' }))
+  expect(screen.queryByText(/numbering\.department/)).not.toBeInTheDocument()
 })
 
 it('saves a changed numbering template and labels preview as persisted', async () => {
