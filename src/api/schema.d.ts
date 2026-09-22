@@ -5470,7 +5470,7 @@ export interface components {
             userName: string | null;
         };
         BaseCatalogCreateDto: {
-            code: string;
+            code?: string;
             description?: string;
             isActive?: boolean;
             name: string;
@@ -5814,7 +5814,7 @@ export interface components {
         };
         CreateCalibrationAgencyDto: {
             address?: Record<string, never>;
-            code: string;
+            code?: string;
             description?: string;
             email?: Record<string, never>;
             isActive?: boolean;
@@ -5845,7 +5845,7 @@ export interface components {
             body: string;
         };
         CreateComponentTypeDto: {
-            code: string;
+            code?: string;
             defaultLifespanHours?: Record<string, never>;
             defaultLifespanMonths?: Record<string, never>;
             defaultLifespanTests?: Record<string, never>;
@@ -5858,7 +5858,7 @@ export interface components {
             counts: components["schemas"]["CountLineDto"][];
         };
         CreateDepartmentDto: {
-            code: string;
+            code?: string;
             /** Format: uuid */
             headUserId?: string;
             isActive?: boolean;
@@ -5914,7 +5914,7 @@ export interface components {
             warrantyUntil?: string | null;
         };
         CreateEquipmentGroupDto: {
-            code: string;
+            code?: string;
             defaultCalibrationCycleMonths?: Record<string, never>;
             defaultMaintenanceCycleMonths?: Record<string, never>;
             description?: string;
@@ -5945,7 +5945,7 @@ export interface components {
             title: string;
         };
         CreateFaultGroupDto: {
-            code: string;
+            code?: string;
             description?: string;
             isActive?: boolean;
             name: string;
@@ -6013,7 +6013,7 @@ export interface components {
             unitPriceEst: string;
         };
         CreateManufacturerDto: {
-            code: string;
+            code?: string;
             country?: Record<string, never>;
             description?: string;
             isActive?: boolean;
@@ -6096,7 +6096,7 @@ export interface components {
         };
         CreateRoomDto: {
             building?: string | null;
-            code: string;
+            code?: string;
             /** @description Mã đơn vị — Excel để trống = phòng dùng chung */
             departmentCode?: Record<string, never>;
             /**
@@ -6128,7 +6128,7 @@ export interface components {
         };
         CreateSupplierDto: {
             address?: Record<string, never>;
-            code: string;
+            code?: string;
             contactName?: Record<string, never>;
             contactPhone?: Record<string, never>;
             description?: string;
@@ -6148,7 +6148,7 @@ export interface components {
             taxCode?: Record<string, never>;
         };
         CreateSupplyDto: {
-            code: string;
+            code?: string;
             defaultSupplierId?: Record<string, never>;
             description?: string;
             groupCode?: string;
@@ -6173,7 +6173,7 @@ export interface components {
             unitId?: Record<string, never>;
         };
         CreateSupplyGroupDto: {
-            code: string;
+            code?: string;
             description?: string;
             isActive?: boolean;
             name: string;
@@ -6194,7 +6194,7 @@ export interface components {
             templateId?: string;
         };
         CreateUnitDto: {
-            code: string;
+            code?: string;
             description?: string;
             isActive?: boolean;
             name: string;
@@ -6212,7 +6212,7 @@ export interface components {
         };
         CreateWarehouseDto: {
             address?: Record<string, never>;
-            code: string;
+            code?: string;
             /**
              * Format: uuid
              * @description null = central warehouse
