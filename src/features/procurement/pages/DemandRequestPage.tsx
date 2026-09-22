@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
@@ -11,6 +11,7 @@ import {
   Download,
   Link2,
   Plus,
+  Save,
   Sparkles,
   Trash2,
   Upload,
@@ -59,6 +60,8 @@ import { useAuthStore } from '@/stores/auth.store'
 import * as api from '../api'
 import type { DemandItemType, DemandLine, DemandPeriod, DemandRequest } from '../paths'
 import { useTranslation } from 'react-i18next'
+
+type LinePatch = Parameters<typeof api.updateDemandLine>[1]
 
 /** Chia đều tổng vào `n` khoảng; phần dư dồn khoảng cuối (chuỗi Decimal). */
 export function splitEvenly(total: string, n: number): string[] {
@@ -188,6 +191,7 @@ function LineRow({
   periodKind,
   departmentId,
   onDataChanged,
+  onStage,
 }: {
   line: DemandLine
   buckets: number
@@ -196,6 +200,7 @@ function LineRow({
   periodKind: 'annual' | 'quarterly' | 'adhoc'
   departmentId: string
   onDataChanged: () => void
+  onStage: (lineId: string, body: LinePatch) => void
 }) {
   const { t } = useTranslation('procurement')
   const qc = useQueryClient()
@@ -222,15 +227,9 @@ function LineRow({
 
   const invalidate = () => void qc.invalidateQueries({ queryKey: ['demand-request'] })
 
-  const patch = async (body: Parameters<typeof api.updateDemandLine>[1]) => {
-    try {
-      await api.updateDemandLine(line.id, body)
-      toast.success(t('updated'))
-      invalidate()
-      onDataChanged()
-    } catch (error) {
-      toast.error(messageFor(error))
-    }
+  /* Không gọi API từng ô — gom thay đổi, cha lưu một lần khi bấm "Lưu". */
+  const patch = async (body: LinePatch) => {
+    onStage(line.id, body)
   }
 
   /* Khi chọn vật tư: tự điền đơn giá ước (lastUnitPrice) + áp gợi ý số lượng. */
@@ -248,12 +247,17 @@ function LineRow({
       if (res.suggestedQty != null && res.suggestedQty !== '0') {
         const cells = splitEvenly(res.suggestedQty, buckets)
         setQty(cells)
-        await api.updateDemandLine(line.id, { supplyId: id, qtyByBucket: cells })
-        invalidate()
+        onStage(line.id, {
+          supplyId: id,
+          qtyByBucket: cells,
+          ...(suggestion?.lastUnitPrice ? { unitPriceEst: suggestion.lastUnitPrice } : {}),
+        })
+      } else {
+        onStage(line.id, { supplyId: id })
       }
     } catch {
-      /* gợi ý lỗi không chặn việc chọn vật tư — supplyId được lưu qua patch riêng */
-      await api.updateDemandLine(line.id, { supplyId: id }).catch(() => undefined)
+      /* gợi ý lỗi không chặn việc chọn vật tư */
+      onStage(line.id, { supplyId: id })
     }
   }
 
@@ -728,6 +732,17 @@ export function Component() {
   const user = useAuthStore((s) => s.user)
   const { confirm, dialog } = useConfirm()
   const [importOpen, setImportOpen] = useState(false)
+  const [drafts, setDrafts] = useState<Record<string, LinePatch>>({})
+  const [saving, setSaving] = useState(false)
+  useEffect(() => {
+    const n = Object.keys(drafts).length
+    if (!n) return
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault()
+    }
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [drafts])
   const [pendings, setPendings] = useState<PendingLine[]>([])
 
   const detail = useQuery({
@@ -760,9 +775,40 @@ export function Component() {
     void qc.invalidateQueries({ queryKey: ['demand-request', id] })
     void qc.invalidateQueries({ queryKey: ['demand-my'] })
   }
+  const dirtyCount = Object.keys(drafts).length
+  const stage = (lineId: string, body: LinePatch) =>
+    setDrafts((d) => ({ ...d, [lineId]: { ...d[lineId], ...body } }))
+  /** Lưu mọi dòng đã sửa (một PATCH mỗi dòng, chạy song song). */
+  const saveAll = async () => {
+    if (!dirtyCount || saving) return
+    setSaving(true)
+    try {
+      const results = await Promise.allSettled(
+        Object.entries(drafts).map(([lineId, body]) => api.updateDemandLine(lineId, body)),
+      )
+      const failed = results.filter((r) => r.status === 'rejected')
+      if (failed.length) {
+        const first = failed[0] as PromiseRejectedResult
+        toast.error(`${t('saveFailed', { defaultValue: 'Lưu lỗi' })}: ${messageFor(first.reason)}`)
+        // giữ lại các dòng lỗi để sửa tiếp
+        const keep: Record<string, LinePatch> = {}
+        Object.entries(drafts).forEach(([lineId, body], i) => {
+          if (results[i]?.status === 'rejected') keep[lineId] = body
+        })
+        setDrafts(keep)
+      } else {
+        setDrafts({})
+        toast.success(t('saved', { defaultValue: 'Đã lưu' }))
+      }
+      invalidate()
+    } finally {
+      setSaving(false)
+    }
+  }
   const run = async (title: string, action: () => Promise<unknown>) => {
     if ((await confirm({ title })) === false) return
     try {
+      if (dirtyCount) await saveAll()
       await action()
       toast.success(t('updated'))
       invalidate()
@@ -916,8 +962,24 @@ export function Component() {
         }
         actions={
           canEditLines ? (
-            <div className="flex flex-wrap gap-2">
-              <Button size="sm" onClick={() => void addLine()}>
+            <div className="flex flex-wrap items-center gap-2">
+              {dirtyCount > 0 && (
+                <span className="text-warning text-[12.5px]">
+                  {t('unsavedCount', {
+                    n: dirtyCount,
+                    defaultValue: '{{n}} dòng chưa lưu',
+                  })}
+                </span>
+              )}
+              <Button
+                size="sm"
+                variant={dirtyCount ? 'default' : 'outline'}
+                disabled={!dirtyCount || saving}
+                onClick={() => void saveAll()}
+              >
+                <Save /> {t('save', { defaultValue: 'Lưu' })}
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => void addLine()}>
                 <Plus /> {t('addLine')}
               </Button>
               <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}>
@@ -963,6 +1025,7 @@ export function Component() {
                   periodKind={per?.kind ?? 'annual'}
                   departmentId={row.departmentId ?? ''}
                   onDataChanged={invalidate}
+                  onStage={stage}
                 />
               ))}
               {pendings.map((pending) => (

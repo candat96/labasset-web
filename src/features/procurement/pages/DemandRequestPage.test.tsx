@@ -192,7 +192,7 @@ function lineEditHandlers(patched: unknown[]) {
   )
 }
 
-it('bảng dòng: ô Số lượng nhập 42 → PATCH /lines/:lineId qtyByBucket 12 phần chia đều, Σ = 42', async () => {
+it('bảng dòng: nhập Số lượng 42 chưa gọi API; bấm Lưu → PATCH /lines/:lineId qtyByBucket 12 phần, Σ = 42', async () => {
   const patched: unknown[] = []
   lineEditHandlers(patched)
   renderPage()
@@ -200,18 +200,22 @@ it('bảng dòng: ô Số lượng nhập 42 → PATCH /lines/:lineId qtyByBucke
   await userEvent.clear(cell)
   await userEvent.type(cell, '42')
   await userEvent.tab()
+  expect(patched).toHaveLength(0)
+  expect(screen.getByText('1 dòng chưa lưu')).toBeInTheDocument()
+  await userEvent.click(screen.getByRole('button', { name: 'Lưu' }))
   await waitFor(() => expect(patched).toHaveLength(1))
   const body = patched[0] as { qtyByBucket: string[] }
   expect(body.qtyByBucket).toHaveLength(12)
   expect(sumQty(body.qtyByBucket)).toBe('42')
 })
 
-it('bảng dòng: bấm chip gợi ý → PATCH qtyByBucket chia đều 12 tháng, Σ = suggestedQty', async () => {
+it('bảng dòng: bấm chip gợi ý rồi Lưu → PATCH qtyByBucket chia đều 12 tháng, Σ = suggestedQty', async () => {
   const patched: unknown[] = []
   lineEditHandlers(patched)
   renderPage()
   const chip = await screen.findByRole('button', { name: /1200/ })
   await userEvent.click(chip)
+  await userEvent.click(screen.getByRole('button', { name: 'Lưu' }))
   await waitFor(() => expect(patched).toHaveLength(1))
   const body = patched[0] as { qtyByBucket: string[] }
   expect(body.qtyByBucket).toHaveLength(12)
