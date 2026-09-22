@@ -211,7 +211,7 @@ export function Component() {
       } else {
         const created = await createEquipment(toBody(values))
         invalidate()
-        toast.success(t('toasts.created'))
+        toast.success(t('toasts.createdWithCode', { code: created.code }))
         navigate(`/equipment/${created.id}`)
       }
     } catch (error) {

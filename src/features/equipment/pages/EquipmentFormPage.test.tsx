@@ -75,6 +75,11 @@ it('tạo máy: bắt buộc tên + khoa + phòng, gửi body hợp lệ có roo
   // chưa chọn khoa → ô Phòng và nút thêm phòng bị khoá
   expect(screen.getByRole('combobox', { name: 'Phòng' })).toBeDisabled()
   expect(screen.getByRole('button', { name: 'Thêm phòng mới' })).toBeDisabled()
+  // Mã không bắt buộc — placeholder gợi ý tự sinh (handoff 16)
+  expect(screen.getByLabelText('Mã máy')).toHaveAttribute(
+    'placeholder',
+    'Để trống sẽ tự sinh (vd TB-2026-00001)',
+  )
   await userEvent.click(screen.getByRole('button', { name: 'Lưu' }))
   expect((await screen.findAllByText('Bắt buộc')).length).toBeGreaterThanOrEqual(3)
   await userEvent.type(screen.getByLabelText('Tên'), 'Máy mới')
@@ -102,6 +107,8 @@ it('tạo máy: bắt buộc tên + khoa + phòng, gửi body hợp lệ có roo
     location: 'Bàn 2',
   })
   expect(saved[0]).not.toHaveProperty('code')
+  // toast hiển thị mã server đã sinh
+  expect(await screen.findByText('Đã tạo máy — mã TB-2026-00002')).toBeVisible()
 })
 
 it('đổi khoa → xoá phòng đã chọn và nạp phòng của khoa mới', async () => {

@@ -40,7 +40,7 @@
   "fields": {
     "code": "Mã",
     "equipmentCode": "Mã máy",
-    "codeHint": "Để trống để hệ thống tự sinh TB-YYYY-xxxxx",
+    "codeHint": "Để trống sẽ tự sinh (vd TB-2026-00001)",
     "codeLocked": "Không đổi được sau khi tạo",
     "name": "Tên",
     "model": "Model",
@@ -382,7 +382,8 @@
   "toasts": {
     "deleted": "Đã xoá máy",
     "saved": "Đã lưu máy",
-    "created": "Đã tạo máy"
+    "created": "Đã tạo máy",
+    "createdWithCode": "Đã tạo máy — mã {{code}}"
   },
   "qrLabels": {
     "title": "Tem QR",
