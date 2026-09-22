@@ -123,7 +123,7 @@ it('attaches SETTING_INVALID to the matching field', async () => {
   expect(name).toHaveAttribute('aria-invalid', 'true')
 })
 
-it('numbering tab shows auto-code types registered by the API with defaults (handoff 16)', async () => {
+it('numbering tab shows auto-code types with defaults (handoff 16)', async () => {
   renderWithProviders(<Component />)
   await screen.findByDisplayValue('Bệnh viện Demo')
   await userEvent.click(screen.getByRole('tab', { name: 'Đánh số' }))
@@ -132,12 +132,11 @@ it('numbering tab shows auto-code types registered by the API with defaults (han
     screen.getAllByRole('tabpanel').find((el) => el.getAttribute('data-state') === 'active')!
   // nhóm gốc vẫn hiện
   expect(within(panel()).getByLabelText('Phiếu yêu cầu')).toHaveValue('PYC-{YYYY}-{SEQ:4}')
-  // các loại mới API đã đăng ký → hiện với giá trị đã lưu
+  // các loại mã tự sinh mới → hiện với giá trị đã lưu / default
   expect(within(panel()).getByLabelText('Khoa/Phòng ban')).toHaveValue('KH-{SEQ:3}')
   expect(within(panel()).getByLabelText('Nhà cung cấp')).toHaveValue('NCC-{SEQ:4}')
-  // loại chưa đăng ký (API chưa trả key) → không hiện
-  expect(within(panel()).queryByLabelText('Phòng')).not.toBeInTheDocument()
-  expect(within(panel()).queryByLabelText('Vật tư')).not.toBeInTheDocument()
+  expect(within(panel()).getByLabelText('Phòng')).toHaveValue('PH-{SEQ:4}')
+  expect(within(panel()).getByLabelText('Vật tư')).toHaveValue('VT-{SEQ:5}')
   // không rơi vào tab Khác
   await userEvent.click(screen.getByRole('tab', { name: 'Khác' }))
   expect(screen.queryByText(/numbering\.department/)).not.toBeInTheDocument()

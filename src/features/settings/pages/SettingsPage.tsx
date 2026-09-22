@@ -349,13 +349,8 @@ export function Component() {
       ),
     [settings.data],
   )
-  /** Tab Đánh số: nhóm gốc luôn hiện; các loại mã tự sinh mới hiện khi API đã đăng ký key. */
-  const numberingTypes = useMemo(() => {
-    const dynamic = AUTO_CODE_NUMBER_TYPES.filter(
-      (type) => settings.data?.[`numbering.${type}`] !== undefined,
-    )
-    return [...NUMBER_TYPES, ...dynamic]
-  }, [settings.data])
+  /** Tab Đánh số: nhóm gốc + các loại mã tự sinh mới (handoff 16) — backend có default cho tất cả. */
+  const numberingTypes: readonly NumberingType[] = [...NUMBER_TYPES, ...AUTO_CODE_NUMBER_TYPES]
   const chatPreset = findPreset(CHAT_PRESETS, ai.chat.baseUrl, ai.chat.protocol)?.id ?? 'custom'
   const embeddingPreset =
     findPreset(EMBEDDING_PRESETS, ai.embedding.baseUrl, ai.embedding.protocol)?.id ?? 'custom'
