@@ -331,7 +331,7 @@ export const GUIDE: GuideSection[] = [
           {
             type: 'list',
             items: [
-              'Mỗi vật tư có mã, tên, đơn vị, nhóm, theo dõi lô/hạn (bật/tắt), định mức tồn tối thiểu – tối đa, máy tương thích.',
+              'Mỗi vật tư có mã, tên, đơn vị, nhóm, theo dõi lô/hạn (bật/tắt), định mức tồn tối thiểu – tối đa, máy tương thích. Khi thêm mới, ô Mã có thể để trống — hệ thống tự sinh (VT-00001…).',
               'Nhập từ Excel: Danh mục vật tư → Nhập Excel (tải mẫu, điền, tải lên).',
               'Tồn kho: xem tồn theo kho, theo lô, thẻ kho (lịch sử nhập – xuất) của từng vật tư.',
             ],
@@ -481,9 +481,9 @@ export const GUIDE: GuideSection[] = [
         type: 'list',
         items: [
           'Người dùng: tạo tài khoản, gán vai trò và Khoa/Phòng ban, khoá/mở, đặt lại mật khẩu, xem phiên đăng nhập.',
-          'Khoa/Phòng ban: mã, tên, loại, trưởng khoa, liên hệ; tab "Phòng" liệt kê các phòng của đơn vị kèm số máy, thêm phòng ngay tại đây.',
-          'Phòng (mục riêng ngay dưới Khoa/Phòng ban): tên, Khoa/Phòng ban (chọn "Dùng chung" cho hội trường, kho chung…), toà nhà, tầng, loại phòng (xét nghiệm, buồng bệnh, phòng mổ, chẩn đoán hình ảnh, văn phòng, kho, khác); mã để trống sẽ tự sinh. Bảng có cột Số máy (bấm để xem máy trong phòng); lọc theo Khoa/Phòng ban, loại, trạng thái; nhập/xuất Excel (cột departmentCode trống = dùng chung). Phòng đang có máy không xoá được — tắt "Đang hoạt động" để ẩn khỏi danh sách chọn.',
-          'Danh mục khác: nhóm thiết bị, hãng, nhà cung cấp, đơn vị tính, nguồn vốn, kho, đơn vị kiểm định, loại chi phí… (có nhập Excel).',
+          'Khoa/Phòng ban: mã, tên, loại, trưởng khoa, liên hệ; tab "Phòng" liệt kê các phòng của đơn vị kèm số máy, thêm phòng ngay tại đây. Khi thêm mới, ô Mã có thể để trống — hệ thống tự sinh (KH-001…).',
+          'Phòng (mục riêng ngay dưới Khoa/Phòng ban): tên, Khoa/Phòng ban (chọn "Dùng chung" cho hội trường, kho chung…), toà nhà, tầng, loại phòng (xét nghiệm, buồng bệnh, phòng mổ, chẩn đoán hình ảnh, văn phòng, kho, khác); mã để trống sẽ tự sinh (PH-0001…). Bảng có cột Số máy (bấm để xem máy trong phòng); lọc theo Khoa/Phòng ban, loại, trạng thái; nhập/xuất Excel (cột departmentCode trống = dùng chung). Phòng đang có máy không xoá được — tắt "Đang hoạt động" để ẩn khỏi danh sách chọn.',
+          'Danh mục khác: nhóm thiết bị, hãng, nhà cung cấp, đơn vị tính, nguồn vốn, kho, đơn vị kiểm định, loại chi phí… (có nhập Excel). Khi thêm mới, ô Mã không bắt buộc: để trống hệ thống tự sinh theo mẫu đánh số (NCC-0001, NSX-0001, NTB-001…), nhập thì chỉ dùng chữ in hoa, số, _, -. Mã sinh ra hiển thị ngay trong thông báo sau khi tạo; mã không đổi được khi sửa.',
           'Cấu hình: thông tin viện, quy trình (số cấp duyệt phiếu, SLA sửa chữa theo mức độ), kho (FEFO, cửa sổ huỷ phiếu), cảnh báo (số ngày báo trước), đánh số phiếu, AI, mẫu in.',
           'Nhật ký hệ thống: ai làm gì lúc nào, xem chi tiết trước/sau của mỗi thay đổi.',
         ],
@@ -560,6 +560,10 @@ export const GUIDE: GuideSection[] = [
           [
             'Làm sao in biên bản?',
             'Trong phiếu sửa chữa/bảo dưỡng/nhập/xuất/kiểm kê có nút "Biên bản" (PDF) sau khi hoàn thành/ghi sổ.',
+          ],
+          [
+            'Thêm mới danh mục nhưng không biết đặt Mã?',
+            'Ô Mã không bắt buộc: để trống hệ thống tự sinh theo mẫu đánh số (NCC-0001 nhà cung cấp, NSX-0001 hãng, KH-001 khoa, PH-0001 phòng, VT-00001 vật tư, TB-2026-00001 máy…). Mã sinh ra hiện ngay trong thông báo "Đã tạo … — mã …". Muốn tự đặt thì chỉ dùng chữ in hoa, số, _, - (vd NCC-001); sau khi tạo không đổi được mã. Quản trị có thể đổi mẫu đánh số tại Cấu hình → Đánh số.',
           ],
         ],
       },
