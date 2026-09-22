@@ -65,6 +65,7 @@ export function CatalogImportDialog({
         <Button variant="outline" onClick={() => void downloadCatalogTemplate(slug)}>
           {t('import.template')}
         </Button>
+        <p className="text-muted-foreground text-xs">{t('import.codeNote')}</p>
         <Input
           aria-label={t('import.file')}
           type="file"
@@ -80,6 +81,11 @@ export function CatalogImportDialog({
                 errors: result.errors.length,
               })}
             </p>
+            {result.createdCodes && result.createdCodes.length > 0 && (
+              <p className="text-success-fg text-sm">
+                {t('import.generatedCodes', { codes: result.createdCodes.join(', ') })}
+              </p>
+            )}
             {result.errors.length > 0 && (
               <div className="border-divider max-h-64 overflow-auto rounded-lg border">
                 <Table>

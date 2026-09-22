@@ -36,6 +36,8 @@ export interface ImportResult {
   created: number
   updated: number
   errors: { row: number; field?: string; message: string }[]
+  /** Mã server tự sinh cho dòng để trống Mã (handoff 16) — API trả khi có. */
+  createdCodes?: string[]
 }
 export interface CatalogField {
   name: string

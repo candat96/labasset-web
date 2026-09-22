@@ -108,6 +108,7 @@ it('imports Excel and displays errors by row', async () => {
         created: 1,
         updated: 2,
         errors: [{ row: 4, field: 'code', message: 'Mã trùng' }],
+        createdCodes: ['DVT-001'],
       }),
     ),
   )
@@ -117,6 +118,8 @@ it('imports Excel and displays errors by row', async () => {
   })
   await userEvent.click(await screen.findByRole('button', { name: 'Nhập Excel' }))
   const dialog = within(screen.getByRole('dialog'))
+  // ghi chú cột Mã để trống tự sinh (handoff 16)
+  expect(dialog.getByText('Cột Mã có thể để trống — hệ thống tự sinh.')).toBeVisible()
   await userEvent.upload(
     dialog.getByLabelText('Tệp Excel'),
     new File(['xlsx'], 'units.xlsx', {
@@ -127,6 +130,7 @@ it('imports Excel and displays errors by row', async () => {
   expect(await dialog.findByText('Mã trùng')).toBeVisible()
   expect(dialog.getByText('4')).toBeVisible()
   expect(dialog.getByText(/Tạo mới: 1/)).toBeVisible()
+  expect(dialog.getByText('Mã đã sinh: DVT-001')).toBeVisible()
 })
 
 it('shows deactivated notice when delete keeps the row', async () => {
