@@ -5,3 +5,4 @@ src/components/ui
 package-lock.json
 playwright-report
 test-results
+public/ppt
