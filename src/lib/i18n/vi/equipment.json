@@ -414,5 +414,5 @@
   },
   "countItems": "{{n}} mục",
   "formHint": "Nhập thông tin chung, thông số kỹ thuật; các trường có * là bắt buộc.",
-  "listHint": "Toàn bộ máy xét nghiệm theo khoa, trạng thái và nhóm máy."
+  "listHint": "Toàn bộ trang thiết bị theo khoa, trạng thái và nhóm máy."
 }

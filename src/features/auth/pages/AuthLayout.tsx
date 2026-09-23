@@ -42,8 +42,8 @@ export function Component() {
               {t('app.tagline')}
             </h1>
             <p className="max-w-md text-[14px] leading-6 text-white/80">
-              Phần mềm nội bộ cho phòng Vật tư – Thiết bị y tế: máy xét nghiệm, vật tư, hoá chất và
-              mọi việc đi kèm.
+              Phần mềm nội bộ cho phòng Vật tư – Thiết bị y tế: trang thiết bị toàn viện, vật tư,
+              hoá chất và mọi việc đi kèm.
             </p>
           </div>
           <ul className="space-y-3">

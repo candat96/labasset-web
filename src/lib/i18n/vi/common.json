@@ -1,7 +1,7 @@
 {
   "app": {
     "name": "LabAsset",
-    "tagline": "Quản lý thiết bị & vật tư xét nghiệm"
+    "tagline": "Quản lý trang thiết bị & vật tư y tế"
   },
   "actions": {
     "save": "Lưu",

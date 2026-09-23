@@ -220,7 +220,7 @@ export function Component() {
       <PageHeader
         title={t('title')}
         description={t('listHint', {
-          defaultValue: 'Toàn bộ máy xét nghiệm theo khoa, trạng thái và nhóm máy.',
+          defaultValue: 'Toàn bộ trang thiết bị theo khoa, trạng thái và nhóm máy.',
         })}
         actions={
           <div className="flex flex-wrap gap-2">

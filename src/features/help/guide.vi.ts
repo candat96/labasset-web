@@ -23,7 +23,7 @@ export const GUIDE_META = {
   product: 'LabAsset',
   version: '1.0',
   updated: '21/09/2026',
-  tagline: 'Hệ thống quản lý thiết bị & vật tư xét nghiệm',
+  tagline: 'Hệ thống quản lý trang thiết bị & vật tư y tế',
 }
 
 export const GUIDE: GuideSection[] = [
