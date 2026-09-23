@@ -183,7 +183,7 @@ export function Component() {
   const canWork = !!row && canWriteRepair(userId, rolesList, row.assignments)
   const canWriteParts = canWork && !afterComplete
   const canCosts = (canWork || isAdm) && !closed
-  const canAttach = !closed && (canWork || isDeptScoped)
+  const canAttach = !closed && (canWork || isDeptScoped || row?.reportedBy === userId)
   const canSignTechnician = canWork && !closed
   const canSignDepartment =
     (isAdm || isDeptScoped) && ['completed', 'acceptance'].includes(row?.status ?? '')

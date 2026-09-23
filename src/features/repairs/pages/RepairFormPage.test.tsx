@@ -5,8 +5,15 @@ import { server } from '@/test/msw/server'
 import { renderWithProviders, fakeSession } from '@/test/utils'
 import { useAuthStore } from '@/stores/auth.store'
 import { Component } from './RepairFormPage'
+import { useNavigate } from 'react-router'
+
+vi.mock('react-router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('react-router')>()),
+  useNavigate: vi.fn(),
+}))
 
 beforeEach(() => {
+  vi.mocked(useNavigate).mockReturnValue(vi.fn())
   useAuthStore.getState().setSession(fakeSession())
   server.use(
     http.get('/v1/equipment', () =>
@@ -53,5 +60,54 @@ it('validates description and creates a ticket', async () => {
       severity: 'medium',
     }),
   )
-  expect(await screen.findByText('DETAIL')).toBeVisible()
+  await waitFor(() => expect(useNavigate()).toHaveBeenCalledWith('/repairs/r2', expect.anything()))
+})
+
+it('retries failed report photos on the same ticket without creating a duplicate', async () => {
+  let creates = 0
+  let attempts = 0
+  const attached: unknown[] = []
+  server.use(
+    http.post('/v1/repairs', () => {
+      creates++
+      return HttpResponse.json({ id: 'r-photo' })
+    }),
+    http.post('/v1/files/presign', () =>
+      HttpResponse.json({ fileId: 'f-photo', uploadUrl: '/photo-upload', headers: {} }),
+    ),
+    http.put('/photo-upload', () => new HttpResponse(null, { status: 200 })),
+    http.post('/v1/files/f-photo/complete', () => HttpResponse.json({ id: 'f-photo' })),
+    http.post('/v1/attachments', async ({ request }) => {
+      attached.push(await request.json())
+      attempts++
+      return attempts === 1
+        ? HttpResponse.json({ code: 'INTERNAL_ERROR' }, { status: 500 })
+        : HttpResponse.json({ id: 'a1' })
+    }),
+  )
+  renderWithProviders(<Component />)
+  await userEvent.type(screen.getByLabelText('Máy'), 'TB')
+  await userEvent.click(await screen.findByRole('option', { name: /TB-1/ }))
+  await userEvent.type(screen.getByLabelText('Mô tả'), 'Máy kẹt kim')
+  await userEvent.upload(
+    screen.getByLabelText('Ảnh tình trạng khi báo hỏng'),
+    new File(['photo'], 'hong.jpg', { type: 'image/jpeg' }),
+  )
+  await userEvent.click(screen.getByRole('button', { name: 'Tạo phiếu' }))
+  await screen.findByText(/Đã tạo phiếu, nhưng chưa tải đủ ảnh/)
+  await userEvent.click(screen.getByRole('button', { name: 'Tạo phiếu' }))
+  await waitFor(() => expect(attempts).toBe(2))
+  expect(creates).toBe(1)
+  expect(attached).toEqual(
+    Array(2).fill({
+      entityType: 'repair_ticket',
+      entityId: 'r-photo',
+      fileId: 'f-photo',
+      kind: 'photo',
+      label: 'Báo hỏng — hong.jpg',
+    }),
+  )
+  await waitFor(() =>
+    expect(useNavigate()).toHaveBeenCalledWith('/repairs/r-photo', expect.anything()),
+  )
 })

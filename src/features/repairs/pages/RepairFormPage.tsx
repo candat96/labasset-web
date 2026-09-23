@@ -1,4 +1,8 @@
 import { useNavigate } from 'react-router'
+import { useRef, useState } from 'react'
+import { ConditionPhotoPicker } from '@/components/condition-photo-picker'
+import { api, unwrap } from '@/api/client'
+import { uploadFile } from '@/api/files'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useTranslation } from 'react-i18next'
@@ -26,6 +30,10 @@ import { REPAIR_SEVERITIES } from '../types'
 export function Component() {
   const { t } = useTranslation('repairs')
   const navigate = useNavigate()
+  const [photos, setPhotos] = useState<File[]>([])
+  const createdId = useRef<string | null>(null)
+  const uploaded = useRef(new Map<File, string>())
+  const attached = useRef(new Set<File>())
   const canPickDept = useCan(STAFF)
   const settings = usePublicRepairSettings()
   const form = useForm<RepairCreateForm>({
@@ -51,17 +59,48 @@ export function Component() {
       : undefined
   const submit = async (values: RepairCreateForm) => {
     try {
-      const created = await createRepair({
-        equipmentId: values.equipmentId,
-        description: values.description,
-        errorCode: values.errorCode || undefined,
-        severity: values.severity,
-        equipmentDown: values.equipmentDown,
-        reportedDepartmentId: canPickDept ? (values.reportedDepartmentId ?? undefined) : undefined,
-      })
+      if (!createdId.current) {
+        const created = await createRepair({
+          equipmentId: values.equipmentId,
+          description: values.description,
+          errorCode: values.errorCode || undefined,
+          severity: values.severity,
+          equipmentDown: values.equipmentDown,
+          reportedDepartmentId: canPickDept
+            ? (values.reportedDepartmentId ?? undefined)
+            : undefined,
+        })
+        createdId.current = created.id
+      }
+      for (const photo of photos) {
+        if (attached.current.has(photo)) continue
+        let fileId = uploaded.current.get(photo)
+        if (!fileId) {
+          fileId = await uploadFile(photo)
+          uploaded.current.set(photo, fileId)
+        }
+        await unwrap(
+          api.POST('/v1/attachments', {
+            body: {
+              entityType: 'repair_ticket',
+              entityId: createdId.current,
+              fileId,
+              kind: 'photo',
+              label: `Báo hỏng — ${photo.name}`,
+            },
+          }),
+        )
+        attached.current.add(photo)
+      }
       toast.success(t('form.created'))
-      navigate(`/repairs/${created.id}`, { state: { faultId: values.faultId } })
+      navigate(`/repairs/${createdId.current}`, { state: { faultId: values.faultId } })
     } catch (error) {
+      if (createdId.current) {
+        toast.error(
+          'Đã tạo phiếu, nhưng chưa tải đủ ảnh. Bấm gửi lại để tiếp tục tải ảnh vào cùng phiếu.',
+        )
+        return
+      }
       if (!applyServerErrors(form, error)) toast.error(messageFor(error))
     }
   }
@@ -77,77 +116,88 @@ export function Component() {
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
         <Form {...form}>
           <form className="min-w-0 space-y-5" noValidate onSubmit={form.handleSubmit(submit)}>
-            <SectionCard title={t('form.info', { defaultValue: 'Thông tin sự cố' })}>
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                <FormField
-                  control={form.control}
-                  name="equipmentId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <AsyncSelect
-                        label={t('form.equipment')}
-                        queryKey="equipment"
-                        loadOptions={equipmentOptions}
-                        value={field.value || null}
-                        onChange={(value) => field.onChange(typeof value === 'string' ? value : '')}
-                      />
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem className="col-span-full">
-                      <FormLabel>{t('form.description')}</FormLabel>
-                      <FormControl>
-                        <Textarea {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <TextField control={form.control} name="errorCode" label={t('form.errorCode')} />
-                <SelectField
-                  control={form.control}
-                  name="severity"
-                  label={t('form.severity')}
-                  options={REPAIR_SEVERITIES.map((item) => ({
-                    value: item,
-                    label: faultSeverityMap[item]?.label ?? item,
-                  }))}
-                />
-                <p className="text-muted-foreground text-[13px] col-span-full">
-                  {Number.isFinite(slaHours)
-                    ? t('form.sla', { hours: slaHours })
-                    : t('form.slaHint')}
-                </p>
-                <SwitchField
-                  control={form.control}
-                  name="equipmentDown"
-                  label={t('form.equipmentDown')}
-                />
-                {canPickDept && (
+            <fieldset disabled={!!createdId.current || form.formState.isSubmitting}>
+              <SectionCard title={t('form.info', { defaultValue: 'Thông tin sự cố' })}>
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                   <FormField
                     control={form.control}
-                    name="reportedDepartmentId"
+                    name="equipmentId"
                     render={({ field }) => (
                       <FormItem>
                         <AsyncSelect
-                          label={t('form.reportedDepartment')}
-                          queryKey="departments"
-                          loadOptions={departmentOptions}
-                          value={field.value}
-                          onChange={field.onChange}
-                          clearable
+                          label={t('form.equipment')}
+                          queryKey="equipment"
+                          loadOptions={equipmentOptions}
+                          value={field.value || null}
+                          onChange={(value) =>
+                            field.onChange(typeof value === 'string' ? value : '')
+                          }
                         />
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                )}
-              </div>
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem className="col-span-full">
+                        <FormLabel>{t('form.description')}</FormLabel>
+                        <FormControl>
+                          <Textarea {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <TextField control={form.control} name="errorCode" label={t('form.errorCode')} />
+                  <SelectField
+                    control={form.control}
+                    name="severity"
+                    label={t('form.severity')}
+                    options={REPAIR_SEVERITIES.map((item) => ({
+                      value: item,
+                      label: faultSeverityMap[item]?.label ?? item,
+                    }))}
+                  />
+                  <p className="text-muted-foreground text-[13px] col-span-full">
+                    {Number.isFinite(slaHours)
+                      ? t('form.sla', { hours: slaHours })
+                      : t('form.slaHint')}
+                  </p>
+                  <SwitchField
+                    control={form.control}
+                    name="equipmentDown"
+                    label={t('form.equipmentDown')}
+                  />
+                  {canPickDept && (
+                    <FormField
+                      control={form.control}
+                      name="reportedDepartmentId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <AsyncSelect
+                            label={t('form.reportedDepartment')}
+                            queryKey="departments"
+                            loadOptions={departmentOptions}
+                            value={field.value}
+                            onChange={field.onChange}
+                            clearable
+                          />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+                </div>
+              </SectionCard>
+            </fieldset>
+            <SectionCard title="Ảnh tình trạng khi báo hỏng (không bắt buộc)">
+              <ConditionPhotoPicker
+                files={photos}
+                onChange={setPhotos}
+                disabled={form.formState.isSubmitting}
+              />
             </SectionCard>
             <FormFooter
               onCancel={() => navigate(-1)}

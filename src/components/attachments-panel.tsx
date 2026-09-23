@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { ImageIcon, Trash2 } from 'lucide-react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { api, unwrap } from '@/api/client'
@@ -25,13 +26,16 @@ function AttachmentItem({
   row,
   canWrite,
   remove,
+  grid = false,
 }: {
   row: Attachment
   canWrite: boolean
   remove: () => void
+  grid?: boolean
 }) {
   const [preview, setPreview] = useState(false)
   const isImage = looksLikeImage(row)
+  const name = row.label || (row.kind === 'photo' ? 'Ảnh tình trạng' : row.kind)
   const url = useQuery({
     queryKey: ['file-url', row.fileId, isImage],
     queryFn: () => getFileUrl(row.fileId, isImage),
@@ -44,32 +48,80 @@ function AttachmentItem({
     staleTime: 600000,
   })
   return (
-    <li className="border-divider flex items-center gap-3 rounded-lg border p-2.5">
-      {url.data && isImage && (
+    <li
+      className={
+        grid
+          ? 'border-divider overflow-hidden rounded-xl border'
+          : 'border-divider flex items-center gap-3 rounded-lg border p-2.5'
+      }
+    >
+      {grid ? (
         <button
           type="button"
-          aria-label={`Xem ảnh ${row.label ?? row.kind}`}
+          className="bg-muted/40 block aspect-square w-full overflow-hidden focus-visible:ring-2 focus-visible:ring-primary"
+          aria-label={`Xem ảnh ${name}`}
           onClick={() => setPreview(true)}
+          disabled={!url.data}
         >
-          <img
-            className="size-16 rounded object-cover"
-            src={url.data.url}
-            alt={row.label ?? row.kind}
-          />
+          {url.data ? (
+            <img
+              className="size-full object-cover transition-transform hover:scale-105"
+              src={url.data.url}
+              alt={name}
+              loading="lazy"
+            />
+          ) : (
+            <ImageIcon className="text-muted-foreground mx-auto size-8" />
+          )}
         </button>
-      )}
-      <div className="min-w-0 flex-1">
-        {url.data ? (
-          <a
-            className="text-primary hover:underline"
-            href={url.data.url}
-            target="_blank"
-            rel="noreferrer"
+      ) : (
+        url.data &&
+        isImage && (
+          <button
+            type="button"
+            aria-label={`Xem ảnh ${row.label ?? row.kind}`}
+            onClick={() => setPreview(true)}
           >
-            {row.label ?? row.kind}
-          </a>
+            <img
+              className="size-16 rounded object-cover"
+              src={url.data.url}
+              alt={row.label ?? row.kind}
+            />
+          </button>
+        )
+      )}
+      <div className={grid ? 'flex min-w-0 items-center gap-1 px-2 py-1.5' : 'min-w-0 flex-1'}>
+        {grid ? (
+          <span className="min-w-0 flex-1 truncate text-xs" title={name}>
+            {name}
+          </span>
         ) : (
-          <span>{row.label ?? row.kind}</span>
+          <>
+            {url.data ? (
+              <a
+                className="text-primary hover:underline"
+                href={url.data.url}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {row.label ?? row.kind}
+              </a>
+            ) : (
+              <span>{row.label ?? row.kind}</span>
+            )}
+          </>
+        )}
+        {grid && canWrite && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="text-muted-foreground hover:text-destructive size-7 shrink-0"
+            aria-label={`Xoá ${name}`}
+            onClick={remove}
+          >
+            <Trash2 className="size-3.5" />
+          </Button>
         )}
         {url.error && (
           <p role="alert">
@@ -80,7 +132,7 @@ function AttachmentItem({
           </p>
         )}
       </div>
-      {canWrite && (
+      {!grid && canWrite && (
         <Button variant="ghost" onClick={remove}>
           Xoá
         </Button>
@@ -88,15 +140,11 @@ function AttachmentItem({
       <Dialog open={preview} onOpenChange={setPreview}>
         <DialogContent className="sm:max-w-4xl">
           <DialogHeader>
-            <DialogTitle>{row.label ?? row.kind}</DialogTitle>
+            <DialogTitle>{name}</DialogTitle>
           </DialogHeader>
           {original.isPending && <p role="status">Đang tải ảnh gốc…</p>}
           {original.error && <p role="alert">{messageFor(original.error)}</p>}
-          <img
-            className="max-h-[75vh] w-full object-contain"
-            src={original.data?.url}
-            alt={row.label ?? row.kind}
-          />
+          <img className="max-h-[75vh] w-full object-contain" src={original.data?.url} alt={name} />
         </DialogContent>
       </Dialog>
     </li>
@@ -153,8 +201,7 @@ export function AttachmentsPanel({
     <div className="space-y-4">
       {photosOnly && (
         <p className="text-muted-foreground text-sm">
-          Ảnh chỉ thuộc lần xử lý này, được lưu riêng với ảnh hồ sơ thiết bị. Không bắt buộc thêm
-          ảnh.
+          Ảnh chỉ thuộc lần xử lý này. Bấm vào ảnh để xem lớn.
         </p>
       )}
       {list.isPending && <p role="status">Đang tải đính kèm…</p>}
@@ -165,16 +212,25 @@ export function AttachmentsPanel({
       )}
       {groups.map((kind) => (
         <section key={kind.value} className="space-y-2">
-          <h3 className="text-muted-foreground text-[12.5px] font-semibold tracking-[0.04em] uppercase">
-            {kind.label}
-          </h3>
-          <ul className="space-y-2">
+          {!photosOnly && (
+            <h3 className="text-muted-foreground text-[12.5px] font-semibold tracking-[0.04em] uppercase">
+              {kind.label}
+            </h3>
+          )}
+          <ul
+            className={
+              kind.value === 'photo'
+                ? 'grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
+                : 'space-y-2'
+            }
+          >
             {list.data
               ?.filter((r) => r.kind === kind.value)
               .map((row) => (
                 <AttachmentItem
                   key={row.id}
                   row={row}
+                  grid={kind.value === 'photo'}
                   canWrite={canWrite && !remove.isPending}
                   remove={async () => {
                     if (
@@ -188,36 +244,40 @@ export function AttachmentsPanel({
                 />
               ))}
           </ul>
-          {canWrite && kinds.some((k) => k.value === kind.value) && (
-            <FileField
-              label={`Thêm ${kind.label}`}
-              accept={kind.value === 'photo' ? 'image/*' : undefined}
-              value={pending?.kind === kind.value ? pending.fileId : null}
-              disabled={attach.isPending}
-              onChange={(fileId) => {
-                if (fileId) {
-                  const next = { fileId, kind: kind.value }
+          <div className="flex flex-wrap items-start gap-2 pt-1">
+            {canWrite && kinds.some((k) => k.value === kind.value) && (
+              <FileField
+                label={kind.value === 'photo' ? 'Chọn ảnh' : `Thêm ${kind.label}`}
+                compact={kind.value === 'photo'}
+                accept={kind.value === 'photo' ? 'image/*' : undefined}
+                value={pending?.kind === kind.value ? pending.fileId : null}
+                disabled={attach.isPending}
+                onChange={(fileId) => {
+                  if (fileId) {
+                    const next = { fileId, kind: kind.value }
+                    setPending(next)
+                    attach.mutate(next)
+                  } else setPending(null)
+                }}
+              />
+            )}
+            {canWrite && kind.value === 'photo' && (
+              <FileField
+                label="Chụp ảnh tình trạng"
+                compact
+                accept="image/*"
+                capture="environment"
+                value={null}
+                disabled={attach.isPending || pending !== null}
+                onChange={(fileId) => {
+                  if (!fileId) return
+                  const next = { fileId, kind: 'photo' }
                   setPending(next)
                   attach.mutate(next)
-                } else setPending(null)
-              }}
-            />
-          )}
-          {canWrite && kind.value === 'photo' && (
-            <FileField
-              label="Chụp ảnh tình trạng"
-              accept="image/*"
-              capture="environment"
-              value={null}
-              disabled={attach.isPending || pending !== null}
-              onChange={(fileId) => {
-                if (!fileId) return
-                const next = { fileId, kind: 'photo' }
-                setPending(next)
-                attach.mutate(next)
-              }}
-            />
-          )}
+                }}
+              />
+            )}
+          </div>
         </section>
       ))}
       {pending && attach.isError && (

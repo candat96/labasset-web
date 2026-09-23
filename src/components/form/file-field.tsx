@@ -1,4 +1,5 @@
-import { useId, useState } from 'react'
+import { useId, useRef, useState } from 'react'
+import { Camera, ImagePlus } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
@@ -11,6 +12,7 @@ export function FileField({
   accept,
   disabled,
   capture,
+  compact = false,
 }: {
   label: string
   value: string | null
@@ -18,14 +20,32 @@ export function FileField({
   accept?: string
   disabled?: boolean
   capture?: 'environment' | 'user'
+  compact?: boolean
 }) {
   const id = useId()
+  const inputRef = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   return (
     <div className="space-y-2">
-      <Label htmlFor={id}>{label}</Label>
+      {compact ? (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={disabled || busy}
+          onClick={() => inputRef.current?.click()}
+        >
+          {capture ? <Camera /> : <ImagePlus />}
+          {busy ? 'Đang tải ảnh…' : label}
+        </Button>
+      ) : (
+        <Label htmlFor={id}>{label}</Label>
+      )}
       <Input
+        ref={inputRef}
+        className={compact ? 'hidden' : undefined}
+        aria-label={label}
         id={id}
         type="file"
         accept={accept}
