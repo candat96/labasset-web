@@ -139,6 +139,12 @@ docker compose -p labasset-onprem \
 nginx phục vụ tĩnh (SPA fallback) và proxy `/v1 /sys /health /openapi.json` → `API_UPSTREAM`
 (`proxy_buffering off` cho SSE thông báo). Build args `VITE_TENANT_MODE=single` khi on-prem.
 
+## Slide giới thiệu
+
+`public/ppt/labasset/` là bộ slide giới thiệu sản phẩm (HTML tĩnh, 20 slide, phím `P` mở chế độ diễn giả),
+phục vụ công khai tại `/ppt/labasset/`. Bản nguồn nằm ở `docs/superpowers/handoff/ppt/labasset/`
+của repo cha; sửa slide xong nhớ copy sang `public/ppt/labasset/` rồi build lại.
+
 ## Thông báo trong web
 
 `GET /v1/notifications` (badge = `unreadCount`), đánh dấu đọc từng cái / tất cả. Realtime qua
