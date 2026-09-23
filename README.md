@@ -1,6 +1,6 @@
-# LabAsset Web
+# MedOne Web
 
-Web quản trị của hệ thống LabAsset (quản lý máy xét nghiệm và vật tư/hoá chất cho bệnh viện,
+Web quản trị của hệ thống MedOne (quản lý máy xét nghiệm và vật tư/hoá chất cho bệnh viện,
 multi-tenant). Dự án con số 4 theo `docs/superpowers/specs/2026-09-17-kien-truc-tong-the-design.md`.
 Hợp đồng duy nhất với backend là **OpenAPI** của `labasset-api`.
 

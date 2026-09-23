@@ -1,5 +1,5 @@
 /**
- * Nội dung Hướng dẫn sử dụng LabAsset (tiếng Việt, gửi khách hàng).
+ * Nội dung Hướng dẫn sử dụng MedOne (tiếng Việt, gửi khách hàng).
  * Tách khỏi component để dễ cập nhật; mỗi section có id (mục lục), title, blocks.
  */
 export type GuideBlock =
@@ -20,7 +20,7 @@ export interface GuideSection {
 }
 
 export const GUIDE_META = {
-  product: 'LabAsset',
+  product: 'MedOne',
   version: '1.0',
   updated: '21/09/2026',
   tagline: 'Hệ thống quản lý trang thiết bị & vật tư y tế',
@@ -33,7 +33,7 @@ export const GUIDE: GuideSection[] = [
     blocks: [
       {
         type: 'p',
-        text: 'LabAsset là phần mềm quản lý toàn bộ vòng đời máy móc – thiết bị và vật tư, hoá chất đi kèm trong bệnh viện: từ hồ sơ máy, sửa chữa, bảo dưỡng – kiểm định, kho vật tư, phiếu yêu cầu của khoa, kiểm kê cho đến báo cáo và trợ lý AI. Hệ thống gồm ứng dụng web (dành cho mọi vai trò) và ứng dụng di động (dành cho nhân viên phòng Vật tư – Thiết bị y tế, có quét QR và làm việc offline).',
+        text: 'MedOne là phần mềm quản lý toàn bộ vòng đời máy móc – thiết bị và vật tư, hoá chất đi kèm trong bệnh viện: từ hồ sơ máy, sửa chữa, bảo dưỡng – kiểm định, kho vật tư, phiếu yêu cầu của khoa, kiểm kê cho đến báo cáo và trợ lý AI. Hệ thống gồm ứng dụng web (dành cho mọi vai trò) và ứng dụng di động (dành cho nhân viên phòng Vật tư – Thiết bị y tế, có quét QR và làm việc offline).',
       },
       {
         type: 'table',
@@ -75,7 +75,7 @@ export const GUIDE: GuideSection[] = [
       {
         type: 'steps',
         items: [
-          'Mở địa chỉ web do phòng Vật tư cung cấp. Trên điện thoại, cài ứng dụng LabAsset (Android/iOS).',
+          'Mở địa chỉ web do phòng Vật tư cung cấp. Trên điện thoại, cài ứng dụng MedOne (Android/iOS).',
           'Nhập Mã bệnh viện, Tài khoản và Mật khẩu do quản trị viện cấp. Lần đầu đăng nhập hệ thống yêu cầu đổi mật khẩu.',
           'Quên mật khẩu: bấm "Quên mật khẩu?" → nhập email → nhận mã OTP → đặt mật khẩu mới.',
           'Sau khi đăng nhập, menu bên trái liệt kê các phân hệ bạn được quyền dùng. Ô "Tìm kiếm…" (phím tắt Ctrl/⌘ + K) tìm nhanh máy, vật tư, phiếu theo mã hoặc tên.',

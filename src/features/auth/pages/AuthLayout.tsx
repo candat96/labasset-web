@@ -29,12 +29,10 @@ export function Component() {
         />
         <div className="relative flex items-center gap-3">
           <img
-            src="/brand/logo-64.png"
-            alt=""
-            aria-hidden
-            className="size-10 rounded-xl bg-white p-1 shadow-[0_4px_16px_rgb(0_0_0/0.2)]"
+            src="/brand/medone-logo.png"
+            alt="MedOne"
+            className="h-28 w-40 rounded-xl bg-white object-contain"
           />
-          <span className="text-[17px] font-bold tracking-[-0.01em]">{t('app.name')}</span>
         </div>
         <div className="relative space-y-6">
           <div className="space-y-2">
@@ -65,8 +63,11 @@ export function Component() {
       <div className="flex flex-1 items-center justify-center p-6">
         <div className="w-full max-w-[400px] space-y-6">
           <div className="flex items-center justify-center gap-2.5 lg:hidden">
-            <img src="/brand/logo-64.png" alt="" aria-hidden className="size-10" />
-            <div className="text-lg font-bold">{t('app.name')}</div>
+            <img
+              src="/brand/medone-logo.png"
+              alt="MedOne"
+              className="h-28 w-40 rounded-xl bg-white object-contain"
+            />
           </div>
           <Outlet />
         </div>

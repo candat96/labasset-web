@@ -34,13 +34,13 @@ export function SysShell() {
         <SidebarHeader>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild size="lg" tooltip="LabAsset Hệ thống">
+              <SidebarMenuButton asChild size="lg" tooltip="MedOne Hệ thống">
                 <NavLink to="/sys/hospitals">
                   <div className="bg-primary text-primary-foreground flex size-8 shrink-0 items-center justify-center rounded-md">
                     <FlaskConical className="size-4" aria-hidden />
                   </div>
                   <div className="grid leading-tight">
-                    <span className="truncate font-semibold">LabAsset</span>
+                    <span className="truncate font-semibold">MedOne</span>
                     <span className="text-muted-foreground truncate text-xs">Hệ thống</span>
                   </div>
                 </NavLink>

@@ -110,7 +110,7 @@
     "keyWillBeCleared": "Key đã lưu sẽ bị xoá khi bấm Lưu",
     "advanced": "Nâng cao",
     "headers": "Headers JSON",
-    "headersPlaceholder": "{\"HTTP-Referer\": \"https://labasset.example\"}",
+    "headersPlaceholder": "{\"HTTP-Referer\": \"https://medone.vattu.site\"}",
     "headersInvalid": "Headers phải là JSON object kiểu {\"Tên-Header\": \"giá trị\"}",
     "dimensions": "Số chiều vector (dimensions)",
     "budget": "Ngân sách token/tháng (0 = không giới hạn)",
