@@ -345,7 +345,21 @@ export function Component() {
           {
             value: 'overview',
             label: t('detail.tabs.overview'),
-            content: <OverviewTab row={row} faultTitle={faultTitle} />,
+            content: (
+              <>
+                <SectionCard title={`Ảnh tình trạng — ${row.code} (không bắt buộc)`}>
+                  <AttachmentsPanel
+                    key={id}
+                    entityType="repair_ticket"
+                    entityId={id}
+                    kinds={[{ value: 'photo', label: 'Ảnh tình trạng' }]}
+                    canWrite={canAttach}
+                    photosOnly
+                  />
+                </SectionCard>
+                <OverviewTab row={row} faultTitle={faultTitle} />
+              </>
+            ),
           },
           {
             value: 'logs',

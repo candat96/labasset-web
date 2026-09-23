@@ -37,6 +37,12 @@ function AttachmentItem({
     queryFn: () => getFileUrl(row.fileId, isImage),
     staleTime: 600000,
   })
+  const original = useQuery({
+    queryKey: ['file-url', row.fileId, false],
+    queryFn: () => getFileUrl(row.fileId),
+    enabled: preview && isImage,
+    staleTime: 600000,
+  })
   return (
     <li className="border-divider flex items-center gap-3 rounded-lg border p-2.5">
       {url.data && isImage && (
@@ -84,9 +90,11 @@ function AttachmentItem({
           <DialogHeader>
             <DialogTitle>{row.label ?? row.kind}</DialogTitle>
           </DialogHeader>
+          {original.isPending && <p role="status">Đang tải ảnh gốc…</p>}
+          {original.error && <p role="alert">{messageFor(original.error)}</p>}
           <img
             className="max-h-[75vh] w-full object-contain"
-            src={url.data?.url}
+            src={original.data?.url}
             alt={row.label ?? row.kind}
           />
         </DialogContent>
@@ -99,11 +107,13 @@ export function AttachmentsPanel({
   entityId,
   kinds,
   canWrite: permission,
+  photosOnly = false,
 }: {
   entityType: string
   entityId: string
   kinds: { value: string; label: string }[]
   canWrite?: boolean
+  photosOnly?: boolean
 }) {
   const staff = useCan(STAFF)
   const canWrite = permission ?? staff
@@ -135,12 +145,18 @@ export function AttachmentsPanel({
   })
   const groups = [
     ...kinds,
-    ...[...new Set((list.data ?? []).map((r) => r.kind))]
+    ...[...new Set((photosOnly ? [] : (list.data ?? [])).map((r) => r.kind))]
       .filter((k) => !kinds.some((x) => x.value === k))
       .map((value) => ({ value, label: value })),
   ]
   return (
     <div className="space-y-4">
+      {photosOnly && (
+        <p className="text-muted-foreground text-sm">
+          Ảnh chỉ thuộc lần xử lý này, được lưu riêng với ảnh hồ sơ thiết bị. Không bắt buộc thêm
+          ảnh.
+        </p>
+      )}
       {list.isPending && <p role="status">Đang tải đính kèm…</p>}
       {list.error && (
         <div role="alert">
@@ -175,6 +191,7 @@ export function AttachmentsPanel({
           {canWrite && kinds.some((k) => k.value === kind.value) && (
             <FileField
               label={`Thêm ${kind.label}`}
+              accept={kind.value === 'photo' ? 'image/*' : undefined}
               value={pending?.kind === kind.value ? pending.fileId : null}
               disabled={attach.isPending}
               onChange={(fileId) => {
@@ -183,6 +200,21 @@ export function AttachmentsPanel({
                   setPending(next)
                   attach.mutate(next)
                 } else setPending(null)
+              }}
+            />
+          )}
+          {canWrite && kind.value === 'photo' && (
+            <FileField
+              label="Chụp ảnh tình trạng"
+              accept="image/*"
+              capture="environment"
+              value={null}
+              disabled={attach.isPending || pending !== null}
+              onChange={(fileId) => {
+                if (!fileId) return
+                const next = { fileId, kind: 'photo' }
+                setPending(next)
+                attach.mutate(next)
               }}
             />
           )}

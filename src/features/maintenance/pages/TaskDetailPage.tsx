@@ -329,6 +329,16 @@ export function Component() {
             count: row.templateItems.length,
             content: (
               <>
+                <SectionCard title={`Ảnh tình trạng — ${row.code} (không bắt buộc)`}>
+                  <AttachmentsPanel
+                    key={id}
+                    entityType="maintenance_task"
+                    entityId={id}
+                    kinds={[{ value: 'photo', label: 'Ảnh tình trạng' }]}
+                    canWrite={isStaff && !['done', 'skipped'].includes(row.status)}
+                    photosOnly
+                  />
+                </SectionCard>
                 {row.templateItems.length === 0 && (
                   <SectionCard>
                     <EmptyState

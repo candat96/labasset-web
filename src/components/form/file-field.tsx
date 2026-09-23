@@ -10,12 +10,14 @@ export function FileField({
   onChange,
   accept,
   disabled,
+  capture,
 }: {
   label: string
   value: string | null
   onChange: (id: string | null) => void
   accept?: string
   disabled?: boolean
+  capture?: 'environment' | 'user'
 }) {
   const id = useId()
   const [busy, setBusy] = useState(false)
@@ -27,6 +29,7 @@ export function FileField({
         id={id}
         type="file"
         accept={accept}
+        capture={capture}
         disabled={disabled || busy}
         onChange={async (e) => {
           const input = e.currentTarget
