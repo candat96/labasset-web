@@ -23,6 +23,7 @@ import { ErrorState } from '@/components/page/ErrorState'
 import { cn } from '@/lib/utils'
 import { FilterBar } from '@/components/filter-bar'
 import { ColumnToggle } from './ColumnToggle'
+import { columnLabel } from './column-label'
 import { DataTablePagination } from './DataTablePagination'
 import type { ServerTableParams } from './useServerTable'
 
@@ -62,6 +63,24 @@ function readVisibility(id: string): VisibilityState {
   }
 }
 
+/** Bỏ trạng thái ẩn cũ của cột không cho ẩn (nếu không sẽ kẹt ẩn vĩnh viễn). */
+function withoutLocked<T>(
+  visibility: VisibilityState,
+  columns: ColumnDef<T, unknown>[],
+): VisibilityState {
+  const next = { ...visibility }
+  for (const column of columns) {
+    if (column.enableHiding !== false) continue
+    const key =
+      column.id ??
+      ('accessorKey' in column && typeof column.accessorKey === 'string'
+        ? column.accessorKey
+        : undefined)
+    if (key) delete next[key]
+  }
+  return next
+}
+
 export function DataTable<T>({
   tableId,
   columns,
@@ -85,7 +104,7 @@ export function DataTable<T>({
 }: DataTableProps<T>) {
   const { t } = useTranslation()
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(() =>
-    readVisibility(tableId),
+    withoutLocked(readVisibility(tableId), columns),
   )
   useEffect(() => {
     try {
@@ -155,7 +174,7 @@ export function DataTable<T>({
                           type="button"
                           className="hover:text-foreground -ml-1 inline-flex items-center gap-1 rounded px-1 font-semibold uppercase"
                           onClick={h.column.getToggleSortingHandler()}
-                          aria-label={`${t('table.sort')}: ${meta?.label ?? h.column.id}`}
+                          aria-label={`${t('table.sort')}: ${columnLabel(h.column)}`}
                         >
                           {flexRender(h.column.columnDef.header, h.getContext())}
                           {dir === 'asc' ? (

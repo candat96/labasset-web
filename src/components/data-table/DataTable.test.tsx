@@ -79,3 +79,47 @@ it('hides a column via toggle and persists', async () => {
   expect(screen.queryByRole('columnheader', { name: 'Tên' })).not.toBeInTheDocument()
   expect(JSON.parse(localStorage.getItem('labasset.table.t') ?? '{}')).toEqual({ name: false })
 })
+
+it('labels columns from header when meta.label is missing and omits non-hideable columns', async () => {
+  const cols: ColumnDef<Row>[] = [
+    { accessorKey: 'code', header: 'Mã' },
+    { accessorKey: 'name', header: 'Tên' },
+    { id: 'select', header: '', enableHiding: false, cell: () => null },
+  ]
+  renderWithProviders(
+    <DataTable
+      {...base}
+      columns={cols}
+      data={[{ id: '1', code: 'A', name: 'Khoa A' }]}
+      total={1}
+      isLoading={false}
+    />,
+  )
+  await userEvent.click(screen.getByRole('button', { name: 'Cột' }))
+  expect(await screen.findByRole('menuitemcheckbox', { name: 'Mã' })).toBeInTheDocument()
+  expect(screen.getByRole('menuitemcheckbox', { name: 'Tên' })).toBeInTheDocument()
+  expect(screen.queryByRole('menuitemcheckbox', { name: 'select' })).not.toBeInTheDocument()
+})
+
+it('ignores stored visibility for non-hideable columns', () => {
+  localStorage.setItem('labasset.table.t', JSON.stringify({ select: false }))
+  const cols: ColumnDef<Row>[] = [
+    { accessorKey: 'code', header: 'Mã' },
+    {
+      id: 'select',
+      header: '',
+      enableHiding: false,
+      cell: () => <input type="checkbox" aria-label="Chọn dòng" />,
+    },
+  ]
+  renderWithProviders(
+    <DataTable
+      {...base}
+      columns={cols}
+      data={[{ id: '1', code: 'A', name: 'Khoa A' }]}
+      total={1}
+      isLoading={false}
+    />,
+  )
+  expect(screen.getByRole('checkbox', { name: 'Chọn dòng' })).toBeInTheDocument()
+})

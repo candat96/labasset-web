@@ -165,6 +165,7 @@ export function Component() {
       {
         id: 'post',
         header: '',
+        enableHiding: false,
         cell: ({ row }) =>
           canWrite && row.original.status === 'draft' ? (
             <Button

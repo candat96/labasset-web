@@ -83,6 +83,7 @@ export function Component() {
       {
         id: 'actions',
         header: '',
+        enableHiding: false,
         cell: ({ row }) =>
           canWrite ? (
             <Button

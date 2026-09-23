@@ -27,7 +27,7 @@ import {
   roomOptions,
 } from '@/api/references'
 import { messageFor } from '@/api/errors'
-import { catalogOptions, downloadQrLabels, exportEquipment, userOptions } from '../api'
+import { catalogOptions, exportEquipment, printQrLabels, userOptions } from '../api'
 import { useEquipmentList } from '../hooks'
 import { shortId, useUserNames } from '../components/lookups'
 import { EQUIPMENT_STATUSES, type Equipment, type EquipmentListParams } from '../types'
@@ -97,6 +97,7 @@ export function Component() {
       {
         id: 'select',
         header: '',
+        enableHiding: false,
         enableSorting: false,
         cell: ({ row }) => (
           <Checkbox
@@ -242,7 +243,7 @@ export function Component() {
               disabled={selected.length === 0}
               onClick={async () => {
                 try {
-                  await downloadQrLabels(selected)
+                  await printQrLabels(selected)
                 } catch (error) {
                   toast.error(messageFor(error))
                 }

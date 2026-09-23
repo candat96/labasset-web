@@ -88,6 +88,7 @@ export function Component() {
       {
         id: 'select',
         header: '',
+        enableHiding: false,
         cell: ({ row }) => (
           <Checkbox
             aria-label={t('selectRequest', { code: row.original.code })}

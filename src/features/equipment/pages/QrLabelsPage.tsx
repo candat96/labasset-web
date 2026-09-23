@@ -12,7 +12,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { StatusBadge } from '@/components/status-badge'
 import { equipmentStatusMap } from '@/lib/status-maps'
 import { messageFor } from '@/api/errors'
-import { downloadQrLabels } from '../api'
+import { printQrLabels } from '../api'
 import { useEquipmentList } from '../hooks'
 import type { Equipment } from '../types'
 
@@ -30,6 +30,7 @@ export function Component() {
       {
         id: 'select',
         header: '',
+        enableHiding: false,
         enableSorting: false,
         cell: ({ row }) => (
           <Checkbox
@@ -73,7 +74,7 @@ export function Component() {
             disabled={selected.length === 0}
             onClick={async () => {
               try {
-                await downloadQrLabels(selected)
+                await printQrLabels(selected)
               } catch (error) {
                 toast.error(messageFor(error))
               }

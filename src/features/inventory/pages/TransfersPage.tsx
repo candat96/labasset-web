@@ -145,6 +145,7 @@ export function Component() {
       {
         id: 'actions',
         header: '',
+        enableHiding: false,
         cell: ({ row }) =>
           isAdm && row.original.transferId && row.original.status === 'posted' ? (
             <Button

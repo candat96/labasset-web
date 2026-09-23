@@ -8,6 +8,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { columnLabel } from './column-label'
 
 export function ColumnToggle<T>({ table }: { table: Table<T> }) {
   const { t } = useTranslation()
@@ -28,7 +29,7 @@ export function ColumnToggle<T>({ table }: { table: Table<T> }) {
             onCheckedChange={(v) => c.toggleVisibility(!!v)}
             onSelect={(e) => e.preventDefault()}
           >
-            {c.columnDef.meta?.label ?? c.id}
+            {columnLabel(c)}
           </DropdownMenuCheckboxItem>
         ))}
       </DropdownMenuContent>

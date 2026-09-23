@@ -72,6 +72,7 @@ export function Component() {
       {
         id: 'resolve',
         header: '',
+        enableHiding: false,
         cell: ({ row }) =>
           canWrite && row.original.type === 'stale' && !row.original.resolvedAt ? (
             <Button

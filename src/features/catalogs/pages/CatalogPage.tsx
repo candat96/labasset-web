@@ -144,6 +144,7 @@ export function CatalogPage({ slug }: { slug: CatalogSlug }) {
       {
         id: 'actions',
         header: tc('actions.more'),
+        enableHiding: false,
         cell: ({ row }) => (
           <div className="flex gap-1">
             <Button

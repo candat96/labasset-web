@@ -95,3 +95,24 @@ it('báo cáo theo phòng: chạy với tham số Khoa/Phòng ban và hiện c�
   expect(await screen.findByText('Phòng Huyết học')).toBeVisible()
   expect(screen.getByRole('columnheader', { name: 'Phòng' })).toBeVisible()
 })
+
+it('menu Cột hiện tiêu đề tiếng Việt, không lộ khoá thô', async () => {
+  server.use(
+    http.get('/v1/reports/equipment.byStatus', () =>
+      HttpResponse.json({
+        columns: [{ key: 'status', title: 'Trạng thái', type: 'string' }],
+        rows: [{ status: 'active' }],
+        total: 1,
+        page: 1,
+        limit: 20,
+      }),
+    ),
+  )
+  useAuthStore.getState().setSession(fakeSession())
+  renderWithProviders(<Component />)
+  await userEvent.click(await screen.findByText('Hiện trạng thiết bị'))
+  await userEvent.click(screen.getByRole('button', { name: 'Xem' }))
+  await userEvent.click(await screen.findByRole('button', { name: 'Cột' }))
+  expect(await screen.findByRole('menuitemcheckbox', { name: 'Trạng thái' })).toBeInTheDocument()
+  expect(screen.queryByRole('menuitemcheckbox', { name: 'status' })).not.toBeInTheDocument()
+})
