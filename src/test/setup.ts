@@ -25,6 +25,15 @@ if (!('ResizeObserver' in globalThis))
 if (!Element.prototype.scrollIntoView) Element.prototype.scrollIntoView = () => {}
 if (!Element.prototype.hasPointerCapture) Element.prototype.hasPointerCapture = () => false
 if (!Element.prototype.releasePointerCapture) Element.prototype.releasePointerCapture = () => {}
+// jsdom không có createObjectURL — polyfill để test luồng tải/in tệp.
+const urlWithBlob = URL as unknown as {
+  createObjectURL?: (blob: Blob) => string
+  revokeObjectURL?: (url: string) => void
+}
+if (!urlWithBlob.createObjectURL) {
+  urlWithBlob.createObjectURL = () => 'blob:mock'
+  urlWithBlob.revokeObjectURL = () => {}
+}
 if (!window.matchMedia) {
   window.matchMedia = ((q: string) => ({
     matches: false,

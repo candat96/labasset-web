@@ -1,5 +1,6 @@
 import { api, apiBody, unwrap, unwrapAs } from '@/api/client'
 import { downloadFile } from '@/api/download'
+import { printFile } from '@/api/print'
 import { apiQuery, pageQuery } from '@/api/paths'
 import type { components, paths } from '@/api/schema'
 import type { ReferenceOption } from '@/components/form/async-select'
@@ -69,8 +70,8 @@ export function exportEquipment(params: EquipmentListParams) {
   return downloadFile('/v1/equipment', { ...params, export: 'xlsx' }, 'thiet-bi.xlsx')
 }
 
-export function downloadQrLabels(ids: string[]) {
-  return downloadFile('/v1/equipment/qr/labels.pdf', { ids: ids.join(',') }, 'tem-qr.pdf')
+export function printQrLabels(ids: string[]) {
+  return printFile('/v1/equipment/qr/labels.pdf', { ids: ids.join(',') })
 }
 
 export function downloadQrPng(id: string) {

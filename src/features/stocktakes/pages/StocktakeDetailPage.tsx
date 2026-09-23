@@ -21,9 +21,9 @@ import { ErrorState } from '@/components/page/ErrorState'
 import {
   Ban,
   CalendarClock,
-  FileDown,
   GitCompare,
   PackageSearch,
+  Printer,
   ScanLine,
   UserPlus,
   Users,
@@ -585,11 +585,11 @@ export function Component() {
                 },
               ['review', 'closed'].includes(row.status) && {
                 key: 'report',
-                label: t('report'),
-                icon: <FileDown />,
+                label: t('printReport'),
+                icon: <Printer />,
                 onClick: () =>
                   void api
-                    .downloadStocktakeReport(id)
+                    .printStocktakeReport(id)
                     .catch((error) => toast.error(messageFor(error))),
               },
               row.status === 'closed' && {

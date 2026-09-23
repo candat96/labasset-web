@@ -230,9 +230,7 @@ export function Component() {
                 label: t('printReport'),
                 icon: <Printer />,
                 onClick: () =>
-                  void api
-                    .downloadTaskReport(id, row.code)
-                    .catch((e) => toast.error(messageFor(e))),
+                  void api.printTaskReport(id).catch((e) => toast.error(messageFor(e))),
               },
               isStaff &&
                 row.status !== 'done' &&

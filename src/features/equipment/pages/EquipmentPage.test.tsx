@@ -134,13 +134,20 @@ it('in tem QR gửi danh sách id đã chọn', async () => {
       return new HttpResponse('pdf')
     }),
   )
-  URL.createObjectURL = vi.fn(() => 'blob:x')
-  URL.revokeObjectURL = vi.fn()
-  vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+  const create = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:tem')
+  vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
   renderWithProviders(<Component />)
   await userEvent.click(await screen.findByRole('checkbox', { name: 'Chọn TB-2026-00001' }))
   await userEvent.click(screen.getByRole('button', { name: 'In tem QR' }))
   await waitFor(() => expect(called).toContain('ids=e1'))
+  const frame = await waitFor(() => {
+    const el = document.querySelector<HTMLIFrameElement>('iframe[aria-hidden="true"]')
+    expect(el).not.toBeNull()
+    return el!
+  })
+  expect(create).toHaveBeenCalledOnce()
+  expect(frame.getAttribute('aria-hidden')).toBe('true')
+  frame.remove()
 })
 
 it('DEPT_USER không có nút ghi', async () => {

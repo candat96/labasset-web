@@ -1,5 +1,5 @@
 import { api, unwrap, unwrapAs } from '@/api/client'
-import { downloadFile } from '@/api/download'
+import { printFile } from '@/api/print'
 import { pageQuery } from '@/api/paths'
 import type { components } from '@/api/schema'
 import type { CreateRepair, RepairListParams, UpdateRepair } from './types'
@@ -143,8 +143,8 @@ export function addRepairSignature(id: string, body: components['schemas']['Repa
   return unwrap(api.POST('/v1/repairs/{id}/signatures', { params: { path: { id } }, body }))
 }
 
-export function downloadRepairReport(id: string, code: string) {
-  return downloadFile(`/v1/repairs/${id}/report.pdf`, {}, `bien-ban-${code}.pdf`)
+export function printRepairReport(id: string) {
+  return printFile(`/v1/repairs/${id}/report.pdf`)
 }
 
 export function suggestAssignees(equipmentId: string) {

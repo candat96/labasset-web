@@ -1,5 +1,5 @@
 import { api, unwrap, unwrapAs } from '@/api/client'
-import { downloadFile } from '@/api/download'
+import { printFile } from '@/api/print'
 import { pageQuery } from '@/api/paths'
 import type { components } from '@/api/schema'
 import type { TaskListParams } from './types'
@@ -87,8 +87,8 @@ export function signTask(
     api.POST('/v1/maintenance/tasks/{id}/signatures', { params: { path: { id } }, body }),
   )
 }
-export function downloadTaskReport(id: string, code: string) {
-  return downloadFile(`/v1/maintenance/tasks/${id}/report.pdf`, {}, `bien-ban-bd-${code}.pdf`)
+export function printTaskReport(id: string) {
+  return printFile(`/v1/maintenance/tasks/${id}/report.pdf`)
 }
 
 export function listCalendar(query: {

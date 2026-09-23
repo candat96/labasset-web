@@ -304,9 +304,7 @@ export function Component() {
                 label: t('detail.actions.print'),
                 icon: <Printer />,
                 onClick: () =>
-                  void api
-                    .downloadRepairReport(id, row.code)
-                    .catch((e) => toast.error(messageFor(e))),
+                  void api.printRepairReport(id).catch((e) => toast.error(messageFor(e))),
               },
               !!row.equipment?.id && {
                 key: 'ai',

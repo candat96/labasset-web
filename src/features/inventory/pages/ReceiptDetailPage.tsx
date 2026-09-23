@@ -46,7 +46,7 @@ import { ADM, STAFF } from '@/routes/roles'
 import { messageFor } from '@/api/errors'
 import { api, unwrapAs } from '@/api/client'
 import { allDepartments, catalogOptions, supplyOptions } from '@/api/references'
-import { downloadFile } from '@/api/download'
+import { printFile } from '@/api/print'
 import { cancelReceipt, deleteReceipt, getReceipt, postReceipt, qcReceipt } from '../api'
 import { useTranslation } from 'react-i18next'
 
@@ -228,11 +228,9 @@ export function Component() {
                 label: t('print'),
                 icon: <Printer />,
                 onClick: () =>
-                  void downloadFile(
-                    `/v1/stock/receipts/${id}/print.pdf`,
-                    {},
-                    `${row.code}.pdf`,
-                  ).catch((error) => toast.error(messageFor(error))),
+                  void printFile(`/v1/stock/receipts/${id}/print.pdf`).catch((error) =>
+                    toast.error(messageFor(error)),
+                  ),
               },
               isAdm &&
                 row.status === 'posted' && {

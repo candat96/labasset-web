@@ -294,14 +294,15 @@ export function Component() {
                 label: t('actions.print'),
                 icon: <Printer />,
                 onClick: () => {
-                  void (async () => {
-                    try {
-                      await api.downloadQrPng(id)
-                      await api.downloadQrLabels([id])
-                    } catch (error) {
-                      toast.error(messageFor(error))
-                    }
-                  })()
+                  void api.printQrLabels([id]).catch((error) => toast.error(messageFor(error)))
+                },
+              },
+              {
+                key: 'qrPng',
+                label: t('actions.qrPng'),
+                icon: <QrCode />,
+                onClick: () => {
+                  void api.downloadQrPng(id).catch((error) => toast.error(messageFor(error)))
                 },
               },
               isAdm && {

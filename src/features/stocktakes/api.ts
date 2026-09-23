@@ -1,5 +1,5 @@
 import { api, apiBody, unwrap, unwrapAs } from '@/api/client'
-import { downloadFile } from '@/api/download'
+import { printFile } from '@/api/print'
 import { pageQuery } from '@/api/paths'
 import type { components } from '@/api/schema'
 
@@ -155,6 +155,6 @@ export function resolveExtra(
     }),
   )
 }
-export function downloadStocktakeReport(id: string) {
-  return downloadFile(`/v1/stocktakes/${id}/report.pdf`, {}, 'bien-ban-kk.pdf')
+export function printStocktakeReport(id: string) {
+  return printFile(`/v1/stocktakes/${id}/report.pdf`)
 }

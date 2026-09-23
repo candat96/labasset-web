@@ -53,7 +53,7 @@ import { stockDocStatusMap } from '@/lib/status-maps'
 import { useCan } from '@/app/guards/useCan'
 import { ADM, STAFF } from '@/routes/roles'
 import { messageFor } from '@/api/errors'
-import { downloadFile } from '@/api/download'
+import { printFile } from '@/api/print'
 import { uploadFile } from '@/api/files'
 import { cancelIssue, deleteIssue, getIssue, postIssue, updateIssue } from '../api'
 import { useTranslation } from 'react-i18next'
@@ -195,11 +195,9 @@ export function Component() {
                 label: t('print'),
                 icon: <Printer />,
                 onClick: () =>
-                  void downloadFile(
-                    `/v1/stock/issues/${id}/print.pdf`,
-                    {},
-                    `${row.code}.pdf`,
-                  ).catch((error) => toast.error(messageFor(error))),
+                  void printFile(`/v1/stock/issues/${id}/print.pdf`).catch((error) =>
+                    toast.error(messageFor(error)),
+                  ),
               },
               isAdm &&
                 row.status === 'posted' && {
