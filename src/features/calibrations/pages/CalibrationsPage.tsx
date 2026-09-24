@@ -126,6 +126,7 @@ export function Component() {
       {
         id: 'equipment',
         header: t('equipment'),
+        meta: { label: t('equipment'), className: 'max-w-[380px] whitespace-normal' },
         cell: ({ row }) => {
           const r = row.original as Row & { equipment?: { code?: string; name?: string } | null }
           const e = equipmentNames.get(r.equipmentId) ?? r.equipment
@@ -134,7 +135,7 @@ export function Component() {
             <Link className="min-w-0 hover:underline" to={`/equipment/${r.equipmentId}`}>
               <span className="text-primary font-semibold">{code}</span>
               {e?.name && (
-                <span className="text-muted-foreground block truncate text-[12.5px]">{e.name}</span>
+                <span className="text-muted-foreground block text-[12.5px]">{e.name}</span>
               )}
             </Link>
           )

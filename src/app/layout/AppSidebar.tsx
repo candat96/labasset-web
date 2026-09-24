@@ -72,7 +72,7 @@ export function AppSidebar() {
             >
               <NavLink to="/" className="gap-3">
                 <img
-                  src="/brand/logo-64.png"
+                  src="/brand/logo-64.png?v=2"
                   alt=""
                   aria-hidden
                   className="size-9 shrink-0 rounded-lg bg-white p-0.5 shadow-[0_2px_8px_rgb(0_0_0/0.25)]"

@@ -29,7 +29,7 @@ export function Component() {
         />
         <div className="relative flex items-center gap-3">
           <img
-            src="/brand/medone-logo.png"
+            src="/brand/medone-logo.png?v=2"
             alt="MedOne"
             className="h-28 w-40 rounded-xl bg-white object-contain"
           />
@@ -64,7 +64,7 @@ export function Component() {
         <div className="w-full max-w-[400px] space-y-6">
           <div className="flex items-center justify-center gap-2.5 lg:hidden">
             <img
-              src="/brand/medone-logo.png"
+              src="/brand/medone-logo.png?v=2"
               alt="MedOne"
               className="h-28 w-40 rounded-xl bg-white object-contain"
             />

@@ -111,6 +111,10 @@ export function Component() {
       {
         id: 'target',
         header: t('issueTarget', { defaultValue: 'Khoa nhận / Máy' }),
+        meta: {
+          label: t('issueTarget', { defaultValue: 'Khoa nhận / Máy' }),
+          className: 'max-w-[380px] whitespace-normal',
+        },
         cell: ({ row }) => {
           const r = row.original as Issue & {
             toDepartmentId?: string | null

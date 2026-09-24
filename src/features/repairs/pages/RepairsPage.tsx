@@ -106,6 +106,7 @@ export function Component() {
       {
         id: 'equipment',
         header: t('columns.equipment'),
+        meta: { label: t('columns.equipment'), className: 'max-w-[380px] whitespace-normal' },
         cell: ({ row }) =>
           row.original.equipment
             ? `${row.original.equipment.code} – ${row.original.equipment.name}`
