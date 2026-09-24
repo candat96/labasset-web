@@ -3,7 +3,7 @@ import { useEffect } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router'
 import { useForm, useFieldArray, type Control } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { PageHeader } from '@/components/page/PageHeader'
@@ -167,6 +167,7 @@ export function Component() {
   const { id = '' } = useParams()
   const editing = !!id
   const navigate = useNavigate()
+  const qc = useQueryClient()
   const isAdm = useCan(ADM)
   const detail = useFault(id)
   // Mở từ hồ sơ máy: /faults/new?model=…&manufacturerId=…&groupId=…&equipmentId=…
@@ -221,6 +222,9 @@ export function Component() {
           } else {
             toast.success(t('form.created'))
           }
+          // Tab "Lỗi thường gặp" của máy đang cache 30s → làm mới để thấy lỗi vừa thêm.
+          await qc.invalidateQueries({ queryKey: ['equipment', fromEquipment, 'faults'] })
+          void qc.invalidateQueries({ queryKey: ['faults'] })
           navigate(`/equipment/${fromEquipment}`)
         } else {
           toast.success(t('form.created'))
