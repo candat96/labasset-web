@@ -1,6 +1,6 @@
 import { DetailSkeleton } from '@/components/page/DetailSkeleton'
 import { useEffect } from 'react'
-import { useNavigate, useParams } from 'react-router'
+import { useNavigate, useParams, useSearchParams } from 'react-router'
 import { useForm, useFieldArray, type Control } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQuery } from '@tanstack/react-query'
@@ -166,9 +166,21 @@ export function Component() {
   const editing = !!id
   const navigate = useNavigate()
   const detail = useFault(id)
+  // Mở từ hồ sơ máy: /faults/new?model=…&manufacturerId=…&groupId=…&equipmentId=…
+  const [searchParams] = useSearchParams()
+  const fromEquipment = searchParams.get('equipmentId')
+  const prefilled: FaultForm = {
+    ...empty,
+    scope:
+      (searchParams.get('scope') as FaultForm['scope']) ??
+      (searchParams.get('model') ? 'model' : 'all'),
+    model: searchParams.get('model') ?? '',
+    manufacturerId: searchParams.get('manufacturerId'),
+    groupId: searchParams.get('groupId'),
+  }
   const form = useForm<FaultForm>({
     resolver: zodResolver(faultSchema),
-    defaultValues: empty,
+    defaultValues: prefilled,
   })
   const steps = useFieldArray({ control: form.control, name: 'steps' })
   const parts = useFieldArray({ control: form.control, name: 'parts' })
@@ -194,7 +206,8 @@ export function Component() {
       } else {
         const created = await createFault(body)
         toast.success(t('form.created'))
-        navigate(`/faults/${created.id}`)
+        // Thêm từ hồ sơ máy → quay lại máy đó để thấy lỗi vừa thêm.
+        navigate(fromEquipment ? `/equipment/${fromEquipment}` : `/faults/${created.id}`)
       }
     } catch (error) {
       if (!applyServerErrors(form, error)) toast.error(messageFor(error))

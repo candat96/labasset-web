@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { unwrapAs, untypedApi } from '@/api/client'
 import { messageFor } from '@/api/errors'
+import { Button } from '@/components/ui/button'
 import { SectionCard } from '@/components/page/SectionCard'
 import { EmptyState } from '@/components/page/EmptyState'
 import { ErrorState } from '@/components/page/ErrorState'
@@ -13,8 +14,30 @@ import { faultSeverityMap } from '@/lib/status-maps'
  * Tab "Lỗi thường gặp": lỗi từ thư viện khớp máy đang xem (model/nhóm/hãng)
  * qua `GET /v1/faults/suggest`, kèm số lần đã gặp trên máy và trên cùng model.
  */
-export function FaultsTab({ id }: { id: string }) {
+export function FaultsTab({
+  id,
+  canWrite,
+  model,
+  manufacturerId,
+  groupId,
+}: {
+  id: string
+  canWrite: boolean
+  model?: string | null
+  manufacturerId?: string | null
+  groupId?: string | null
+}) {
   const { t } = useTranslation('equipment')
+  // Thêm lỗi ngay trong hồ sơ máy: điền sẵn model/nhóm/hãng của máy.
+  const addParams = new URLSearchParams({ equipmentId: id })
+  if (model) {
+    addParams.set('scope', 'model')
+    addParams.set('model', model)
+  } else if (groupId) {
+    addParams.set('scope', 'group')
+  }
+  if (manufacturerId) addParams.set('manufacturerId', manufacturerId)
+  if (groupId) addParams.set('groupId', groupId)
   const suggestions = useQuery({
     queryKey: ['equipment', id, 'faults'],
     queryFn: async () =>
@@ -37,9 +60,18 @@ export function FaultsTab({ id }: { id: string }) {
     <SectionCard
       title={t('tabs.faults', { defaultValue: 'Lỗi thường gặp' })}
       actions={
-        <Link className="text-primary text-sm hover:underline" to="/faults">
-          {t('faultsTab.library', { defaultValue: 'Thư viện lỗi' })}
-        </Link>
+        <>
+          <Link className="text-primary text-sm hover:underline" to="/faults">
+            {t('faultsTab.library', { defaultValue: 'Thư viện lỗi' })}
+          </Link>
+          {canWrite && (
+            <Button asChild size="sm" variant="outline">
+              <Link to={`/faults/new?${addParams.toString()}`}>
+                {t('faultsTab.add', { defaultValue: 'Thêm lỗi' })}
+              </Link>
+            </Button>
+          )}
+        </>
       }
     >
       {suggestions.isPending ? (

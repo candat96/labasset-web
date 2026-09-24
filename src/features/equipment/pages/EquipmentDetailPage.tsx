@@ -477,7 +477,15 @@ export function Component() {
           {
             value: 'faults',
             label: t('tabs.faults', { defaultValue: 'Lỗi thường gặp' }),
-            content: <FaultsTab id={id} />,
+            content: (
+              <FaultsTab
+                id={id}
+                canWrite={canWrite}
+                model={row.model}
+                manufacturerId={row.manufacturerId}
+                groupId={row.groupId}
+              />
+            ),
           },
           {
             value: 'history',
