@@ -108,7 +108,8 @@
     "saved": "Đã lưu lỗi",
     "created": "Đã tạo lỗi",
     "publishedWarning": "Sửa lỗi đã ban hành sẽ tạo phiên bản mới",
-    "hint": "Mô tả triệu chứng, nguyên nhân và các bước xử lý để tra cứu về sau."
+    "hint": "Mô tả triệu chứng, nguyên nhân và các bước xử lý để tra cứu về sau.",
+    "createdPublished": "Đã thêm và ban hành lỗi"
   },
   "suggestions": {
     "title": "Đề xuất thư viện lỗi",

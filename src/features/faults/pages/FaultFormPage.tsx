@@ -7,6 +7,8 @@ import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { PageHeader } from '@/components/page/PageHeader'
+import { useCan } from '@/app/guards/useCan'
+import { ADM } from '@/routes/roles'
 import { SectionCard } from '@/components/page/SectionCard'
 import { FormFooter } from '@/components/page/FormFooter'
 import { ErrorState } from '@/components/page/ErrorState'
@@ -22,7 +24,7 @@ import { applyServerErrors, messageFor } from '@/api/errors'
 import { catalogOptions, resolveCatalogItem, supplyOptions } from '@/api/references'
 import { getFileUrl } from '@/api/files'
 import { faultSeverityMap } from '@/lib/status-maps'
-import { createFault, diffUpdate, emptyToNull, updateFault } from '../api'
+import { createFault, diffUpdate, emptyToNull, publishFault, updateFault } from '../api'
 import { useFault } from '../hooks'
 import { faultSchema, type FaultForm } from '../schema'
 import type { CreateFault, FaultDetail, UpdateFault } from '../types'
@@ -165,6 +167,7 @@ export function Component() {
   const { id = '' } = useParams()
   const editing = !!id
   const navigate = useNavigate()
+  const isAdm = useCan(ADM)
   const detail = useFault(id)
   // Mở từ hồ sơ máy: /faults/new?model=…&manufacturerId=…&groupId=…&equipmentId=…
   const [searchParams] = useSearchParams()
@@ -205,9 +208,24 @@ export function Component() {
         navigate(`/faults/${id}`)
       } else {
         const created = await createFault(body)
-        toast.success(t('form.created'))
-        // Thêm từ hồ sơ máy → quay lại máy đó để thấy lỗi vừa thêm.
-        navigate(fromEquipment ? `/equipment/${fromEquipment}` : `/faults/${created.id}`)
+        if (fromEquipment) {
+          // Thêm từ hồ sơ máy: admin ban hành ngay để lỗi hiện trong tab
+          // "Lỗi thường gặp"; nhân viên thì để hồ sơ lỗi tự ban hành sau.
+          if (isAdm) {
+            try {
+              await publishFault(created.id)
+              toast.success(t('form.createdPublished'))
+            } catch {
+              toast.success(t('form.created'))
+            }
+          } else {
+            toast.success(t('form.created'))
+          }
+          navigate(`/equipment/${fromEquipment}`)
+        } else {
+          toast.success(t('form.created'))
+          navigate(`/faults/${created.id}`)
+        }
       }
     } catch (error) {
       if (!applyServerErrors(form, error)) toast.error(messageFor(error))
