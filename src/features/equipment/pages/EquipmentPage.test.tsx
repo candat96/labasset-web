@@ -158,3 +158,30 @@ it('DEPT_USER không có nút ghi', async () => {
   expect(screen.queryByRole('combobox', { name: 'Phụ trách VT' })).not.toBeInTheDocument()
   expect(screen.getByRole('button', { name: 'Xuất Excel' })).toBeVisible()
 })
+
+it('mode "Theo phòng": danh sách phòng kèm số máy, bấm phòng → máy theo phòng', async () => {
+  server.use(
+    http.get('/v1/reports/equipment.byRoom', () =>
+      HttpResponse.json({ rows: [{ roomCode: 'HH-P101', total: 3 }] }),
+    ),
+  )
+  const { router } = renderWithProviders(<Component />)
+  await screen.findByRole('link', { name: 'TB-2026-00001' })
+
+  await userEvent.click(screen.getByRole('tab', { name: 'Theo phòng' }))
+  await waitFor(() => expect(router.state.location.search).toContain('view=rooms'))
+
+  // Danh sách phòng (kèm khoa, toà/tầng) và tổng số máy theo phòng.
+  expect(await screen.findByRole('cell', { name: 'Phòng Huyết học' })).toBeVisible()
+  expect(screen.getByRole('cell', { name: 'Huyết học' })).toBeVisible()
+  expect(screen.getByRole('cell', { name: '3' })).toBeVisible()
+  expect(screen.queryByRole('link', { name: 'TB-2026-00001' })).not.toBeInTheDocument()
+
+  // Bấm phòng → quay lại danh sách máy, lọc theo phòng đó.
+  await userEvent.click(screen.getByRole('cell', { name: 'Phòng Huyết học' }))
+  await waitFor(() => expect(router.state.location.search).toContain('roomId=r1'))
+  await waitFor(() =>
+    expect(urls.some((u) => u.includes('/v1/equipment') && u.includes('roomId=r1'))).toBe(true),
+  )
+  expect(await screen.findByRole('link', { name: 'TB-2026-00001' })).toBeVisible()
+})

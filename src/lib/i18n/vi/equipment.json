@@ -95,7 +95,8 @@
     "envWater": "Nước",
     "envGas": "Khí",
     "inWarranty": "Còn hạn",
-    "outWarranty": "Hết hạn"
+    "outWarranty": "Hết hạn",
+    "buildingFloor": "Toà / Tầng"
   },
   "sections": {
     "general": "Thông tin chung",
@@ -415,5 +416,15 @@
   },
   "countItems": "{{n}} mục",
   "formHint": "Nhập thông tin chung, thông số kỹ thuật; các trường có * là bắt buộc.",
-  "listHint": "Toàn bộ trang thiết bị theo khoa, trạng thái và nhóm máy."
+  "listHint": "Toàn bộ trang thiết bị theo khoa, trạng thái và nhóm máy.",
+  "views": {
+    "equipment": "Danh sách máy",
+    "rooms": "Theo phòng"
+  },
+  "rooms": {
+    "search": "Tìm phòng theo mã/tên…",
+    "count": "Số máy",
+    "empty": "Chưa có phòng nào",
+    "shared": "Dùng chung"
+  }
 }

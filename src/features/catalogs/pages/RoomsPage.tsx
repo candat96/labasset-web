@@ -23,9 +23,9 @@ import { useConfirm } from '@/components/confirm-dialog'
 import { commonStatusMap } from '@/lib/status-maps'
 import { ROOM_TYPES, enumLabel } from '@/lib/enum-labels'
 import { isApiError, messageFor } from '@/api/errors'
+import { roomEquipmentCounts } from '@/api/room-counts'
 import { departmentOptions, resolveDepartment } from '@/api/references'
 import { useDepartmentLookup } from '@/api/lookups'
-import { untypedApi, unwrapAs } from '@/api/client'
 import { deleteCatalog, exportCatalog, listCatalog } from '../api'
 import type { CatalogRow } from '../types'
 import { RoomDialog } from '../components/RoomDialog'
@@ -33,20 +33,6 @@ import { CatalogImportDialog } from '../components/CatalogImportDialog'
 
 const isRoomType = (value?: string): value is (typeof ROOM_TYPES)[number] =>
   !!value && (ROOM_TYPES as readonly string[]).includes(value)
-
-/** Số máy theo mã phòng — từ báo cáo `equipment.byRoom` (RoomResponseDto chưa có equipmentCount). */
-async function roomEquipmentCounts(): Promise<Map<string, number>> {
-  const result = await unwrapAs<{ rows: { roomCode?: string | null; total?: number }[] }>(
-    untypedApi.GET('/v1/reports/equipment.byRoom', {
-      params: { query: { format: 'json', page: 1, limit: 200 } },
-    }),
-  )
-  const counts = new Map<string, number>()
-  for (const row of result.rows)
-    if (typeof row.roomCode === 'string')
-      counts.set(row.roomCode, (counts.get(row.roomCode) ?? 0) + Number(row.total ?? 0))
-  return counts
-}
 
 export function Component() {
   const { t } = useTranslation('catalogs')
@@ -112,14 +98,7 @@ export function Component() {
       {
         accessorKey: 'name',
         header: t('fields.name'),
-        cell: ({ row }) => (
-          <Link
-            className="font-medium text-primary hover:underline"
-            to={`/equipment?roomId=${row.original.id}`}
-          >
-            {row.original.name}
-          </Link>
-        ),
+        cell: ({ getValue }) => <span className="font-medium">{getValue<string>()}</span>,
       },
       {
         accessorKey: 'departmentId',
