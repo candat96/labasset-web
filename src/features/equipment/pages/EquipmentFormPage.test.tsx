@@ -83,7 +83,7 @@ it('tạo máy: bắt buộc tên + khoa + phòng, gửi body hợp lệ có roo
   await userEvent.click(screen.getByRole('button', { name: 'Lưu' }))
   expect((await screen.findAllByText('Bắt buộc')).length).toBeGreaterThanOrEqual(3)
   await userEvent.type(screen.getByLabelText('Tên'), 'Máy mới')
-  await userEvent.click(screen.getByRole('combobox', { name: 'Khoa/Phòng ban' }))
+  await userEvent.click(screen.getByRole('combobox', { name: 'Khoa' }))
   await userEvent.click(await screen.findByText('HH — Huyết học'))
   // chọn khoa → phòng mở, còn thiếu phòng vẫn báo lỗi, không gửi
   expect(screen.getByRole('combobox', { name: 'Phòng' })).toBeEnabled()
@@ -117,11 +117,11 @@ it('đổi khoa → xoá phòng đã chọn và nạp phòng của khoa mới', 
     route: '/equipment/new',
     routes: formRoutes,
   })
-  await userEvent.click(screen.getByRole('combobox', { name: 'Khoa/Phòng ban' }))
+  await userEvent.click(screen.getByRole('combobox', { name: 'Khoa' }))
   await userEvent.click(await screen.findByText('HH — Huyết học'))
   await pickRoom('Phòng Huyết học')
   expect(screen.getByRole('combobox', { name: 'Phòng' })).toHaveTextContent('Phòng Huyết học')
-  await userEvent.click(screen.getByRole('combobox', { name: 'Khoa/Phòng ban' }))
+  await userEvent.click(screen.getByRole('combobox', { name: 'Khoa' }))
   await userEvent.click(await screen.findByText('SH — Sinh hoá'))
   await waitFor(() =>
     expect(screen.getByRole('combobox', { name: 'Phòng' })).not.toHaveTextContent(
@@ -156,7 +156,7 @@ it('nút "+" tạo phòng nhanh cho khoa đang chọn rồi tự chọn phòng �
     route: '/equipment/new',
     routes: formRoutes,
   })
-  await userEvent.click(screen.getByRole('combobox', { name: 'Khoa/Phòng ban' }))
+  await userEvent.click(screen.getByRole('combobox', { name: 'Khoa' }))
   await userEvent.click(await screen.findByText('HH — Huyết học'))
   await userEvent.click(screen.getByRole('button', { name: 'Thêm phòng mới' }))
   const dialog = await screen.findByRole('dialog')
@@ -201,7 +201,7 @@ it('gắn lỗi trùng serial vào field', async () => {
     routes: formRoutes,
   })
   await userEvent.type(screen.getByLabelText('Tên'), 'Máy mới')
-  await userEvent.click(screen.getByRole('combobox', { name: 'Khoa/Phòng ban' }))
+  await userEvent.click(screen.getByRole('combobox', { name: 'Khoa' }))
   await userEvent.click(await screen.findByText('HH — Huyết học'))
   await pickRoom('Phòng Huyết học')
   await userEvent.type(screen.getByLabelText('Serial'), 'DUP')
@@ -230,7 +230,7 @@ it('sửa máy: khoá mã máy và không gửi code/departmentId', async () => 
   })
   const codeInput = await screen.findByLabelText('Mã máy')
   expect(codeInput).toBeDisabled()
-  expect(screen.queryByRole('combobox', { name: 'Khoa/Phòng ban' })).not.toBeInTheDocument()
+  expect(screen.queryByRole('combobox', { name: 'Khoa' })).not.toBeInTheDocument()
   // sửa: phòng hiện tại giữ nguyên (không bị xoá bởi reset), chọn được theo khoa của máy
   expect(screen.getByRole('combobox', { name: 'Phòng' })).toHaveTextContent('Phòng Huyết học')
   await userEvent.clear(screen.getByLabelText('Nguyên giá'))

@@ -72,7 +72,7 @@ it('hiện danh mục Phòng: tên khoa, "Dùng chung", Toà/Tầng, loại phò
   expect(screen.getByText('Dùng chung')).toBeVisible()
   expect(screen.getByText('Nhà A / Tầng 1')).toBeVisible()
   expect(screen.getByText('Phòng xét nghiệm')).toBeVisible()
-  expect(screen.getByRole('columnheader', { name: 'Khoa/Phòng ban' })).toBeVisible()
+  expect(screen.getByRole('columnheader', { name: 'Khoa' })).toBeVisible()
   expect(screen.getByRole('columnheader', { name: 'Toà/Tầng' })).toBeVisible()
   expect(screen.getByRole('columnheader', { name: 'Số máy' })).toBeVisible()
   expect(await screen.findByRole('link', { name: '3' })).toHaveAttribute(
@@ -82,7 +82,7 @@ it('hiện danh mục Phòng: tên khoa, "Dùng chung", Toà/Tầng, loại phò
   // không lộ enum thô
   expect(screen.queryByText('lab')).not.toBeInTheDocument()
 
-  await userEvent.click(screen.getByRole('combobox', { name: 'Lọc Khoa/Phòng ban' }))
+  await userEvent.click(screen.getByRole('combobox', { name: 'Lọc Khoa' }))
   await userEvent.click(await screen.findByRole('option', { name: /Khoa Xét nghiệm/ }))
   await waitFor(() => expect(urls.some((url) => url.includes('departmentId=d1'))).toBe(true))
   expect(router.state.location.search).toContain('departmentId=d1')
@@ -113,7 +113,7 @@ it('tạo phòng: mã không bắt buộc, gửi đúng body (departmentId, buil
   })
   await userEvent.click(await screen.findByRole('button', { name: 'Thêm phòng' }))
   const dialog = within(screen.getByRole('dialog'))
-  expect(dialog.getByRole('combobox', { name: 'Khoa/Phòng ban' })).toHaveTextContent('Dùng chung')
+  expect(dialog.getByRole('combobox', { name: 'Khoa' })).toHaveTextContent('Dùng chung')
   expect(dialog.getByLabelText('Mã')).toHaveAttribute(
     'placeholder',
     'Để trống sẽ tự sinh (vd PH-0001)',
@@ -124,7 +124,7 @@ it('tạo phòng: mã không bắt buộc, gửi đúng body (departmentId, buil
   expect(dialog.queryByText(/Mã A–Z/)).not.toBeInTheDocument()
   await userEvent.type(dialog.getByLabelText('Mã'), 'xn-p102')
   await userEvent.type(dialog.getByLabelText('Tên'), 'Phòng Sinh hoá')
-  await userEvent.click(dialog.getByRole('combobox', { name: 'Khoa/Phòng ban' }))
+  await userEvent.click(dialog.getByRole('combobox', { name: 'Khoa' }))
   await userEvent.click(await screen.findByRole('option', { name: /Khoa Xét nghiệm/ }))
   await userEvent.type(dialog.getByLabelText('Toà nhà'), 'Nhà B')
   await userEvent.type(dialog.getByLabelText('Tầng'), 'Tầng 2')

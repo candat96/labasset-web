@@ -61,7 +61,7 @@ it('validates department role, submits field errors then shows a one-time passwo
   await userEvent.click(form.getByRole('checkbox', { name: 'Nhân viên khoa' }))
   await userEvent.click(form.getByRole('button', { name: 'Lưu' }))
   expect(await form.findByText('Vai trò khoa bắt buộc chọn khoa/phòng')).toBeVisible()
-  await userEvent.click(form.getByRole('combobox', { name: 'Khoa/Phòng ban' }))
+  await userEvent.click(form.getByRole('combobox', { name: 'Khoa' }))
   await userEvent.click(await screen.findByRole('option', { name: 'XN — Xét nghiệm' }))
   await userEvent.click(form.getByRole('button', { name: 'Lưu' }))
   expect(await form.findByText('username đã tồn tại')).toBeVisible()

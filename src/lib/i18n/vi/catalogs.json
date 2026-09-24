@@ -23,7 +23,7 @@
     "allStatuses": "Mọi trạng thái",
     "active": "Hoạt động",
     "inactive": "Ngưng hoạt động",
-    "department": "Lọc Khoa/Phòng ban",
+    "department": "Lọc Khoa",
     "roomType": "Loại phòng",
     "allRoomTypes": "Mọi loại"
   },
@@ -107,7 +107,7 @@
       "symbol": "Ký hiệu"
     },
     "warehouses": {
-      "departmentId": "Khoa/Phòng ban (trống = kho trung tâm)",
+      "departmentId": "Khoa (trống = kho trung tâm)",
       "address": "Địa chỉ/vị trí",
       "keeperUserId": "Người phụ trách"
     },
@@ -129,7 +129,7 @@
       "requiresCalibrationAfterFix": "Yêu cầu kiểm định sau sửa"
     },
     "rooms": {
-      "departmentId": "Khoa/Phòng ban",
+      "departmentId": "Khoa",
       "shared": "Dùng chung",
       "building": "Toà nhà",
       "floor": "Tầng",
@@ -144,6 +144,6 @@
   "createdWithCode": "Đã tạo {{name}} — mã {{code}}",
   "roomInUse": "Phòng đang có máy nên không xoá được — hãy Sửa và tắt \"Đang hoạt động\".",
   "addRoom": "Thêm phòng",
-  "roomsHint": "Vị trí vật lý đặt máy: phòng của từng Khoa/Phòng ban hoặc phòng dùng chung.",
+  "roomsHint": "Vị trí vật lý đặt máy: phòng của từng Khoa hoặc phòng dùng chung.",
   "roomDeleteDesc": "Phòng đang có máy sẽ không xoá được — hãy tắt \"Đang hoạt động\"."
 }

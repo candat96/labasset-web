@@ -363,7 +363,7 @@ it('DEPT ký vai khoa khi phiếu đã hoàn thành', async () => {
   await userEvent.click(await screen.findByRole('button', { name: 'Ký' }))
   const dialog = await screen.findByRole('dialog')
   await userEvent.click(within(dialog).getByLabelText('Vai trò'))
-  expect(await screen.findByRole('option', { name: 'Khoa/Phòng ban' })).toBeVisible()
+  expect(await screen.findByRole('option', { name: 'Khoa' })).toBeVisible()
   expect(screen.queryByRole('option', { name: 'Kỹ thuật' })).not.toBeInTheDocument()
 })
 

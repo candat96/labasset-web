@@ -64,7 +64,7 @@
     "circulationNo": "Số lưu hành",
     "group": "Nhóm",
     "groupEquipment": "Nhóm máy",
-    "department": "Khoa/Phòng ban",
+    "department": "Khoa",
     "location": "Vị trí trong phòng",
     "room": "Phòng",
     "roomAdd": "Thêm phòng mới",
@@ -119,7 +119,7 @@
   "filters": {
     "search": "Tìm máy",
     "searchPlaceholder": "Mã, tên, serial…",
-    "department": "Khoa/Phòng ban",
+    "department": "Khoa",
     "group": "Nhóm",
     "manufacturer": "Hãng",
     "staff": "Phụ trách VT",

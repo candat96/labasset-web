@@ -10,8 +10,8 @@
     "email": "Email",
     "phone": "Điện thoại",
     "roles": "Vai trò",
-    "department": "Khoa/Phòng ban",
-    "departmentId": "Khoa/Phòng ban",
+    "department": "Khoa",
+    "departmentId": "Khoa",
     "isActive": "Trạng thái",
     "lastLoginAt": "Đăng nhập cuối"
   },

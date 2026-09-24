@@ -133,7 +133,7 @@ it('numbering tab shows auto-code types with defaults (handoff 16)', async () =>
   // nhóm gốc vẫn hiện
   expect(within(panel()).getByLabelText('Phiếu yêu cầu')).toHaveValue('PYC-{YYYY}-{SEQ:4}')
   // các loại mã tự sinh mới → hiện với giá trị đã lưu / default
-  expect(within(panel()).getByLabelText('Khoa/Phòng ban')).toHaveValue('KH-{SEQ:3}')
+  expect(within(panel()).getByLabelText('Khoa')).toHaveValue('KH-{SEQ:3}')
   expect(within(panel()).getByLabelText('Nhà cung cấp')).toHaveValue('NCC-{SEQ:4}')
   expect(within(panel()).getByLabelText('Phòng')).toHaveValue('PH-{SEQ:4}')
   expect(within(panel()).getByLabelText('Vật tư')).toHaveValue('VT-{SEQ:5}')

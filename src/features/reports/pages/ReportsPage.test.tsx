@@ -66,7 +66,7 @@ it('renders all 19 reports returned by the registry (có "Thiết bị theo phò
   expect(screen.getByText('Thiết bị theo phòng')).toBeVisible()
 })
 
-it('báo cáo theo phòng: chạy với tham số Khoa/Phòng ban và hiện cột Phòng', async () => {
+it('báo cáo theo phòng: chạy với tham số Khoa và hiện cột Phòng', async () => {
   server.use(
     http.get('/v1/departments', () =>
       HttpResponse.json([{ id: 'd1', code: 'XN', name: 'Khoa Xét nghiệm' }]),
@@ -90,7 +90,7 @@ it('báo cáo theo phòng: chạy với tham số Khoa/Phòng ban và hiện c�
   useAuthStore.getState().setSession(fakeSession())
   renderWithProviders(<Component />)
   await userEvent.click(await screen.findByText('Thiết bị theo phòng'))
-  expect(await screen.findByRole('combobox', { name: 'Khoa/Phòng ban' })).toBeVisible()
+  expect(await screen.findByRole('combobox', { name: 'Khoa' })).toBeVisible()
   await userEvent.click(screen.getByRole('button', { name: 'Xem' }))
   expect(await screen.findByText('Phòng Huyết học')).toBeVisible()
   expect(screen.getByRole('columnheader', { name: 'Phòng' })).toBeVisible()

@@ -160,12 +160,23 @@ export function Component() {
           </Link>
         ),
       },
-      { accessorKey: 'name', header: t('fields.name'), meta: { label: t('fields.name') } },
+      {
+        accessorKey: 'name',
+        header: t('fields.name'),
+        // Tên máy có thể rất dài → xuống dòng thay vì kéo cột rộng ra.
+        meta: {
+          label: t('fields.name'),
+          className: 'max-w-[380px] min-w-[220px] whitespace-normal',
+        },
+      },
       {
         accessorKey: 'model',
         header: t('fields.model'),
         enableSorting: false,
-        meta: { label: t('fields.model') },
+        meta: {
+          label: t('fields.model'),
+          className: 'max-w-[260px] whitespace-normal',
+        },
       },
       {
         accessorKey: 'serial',

@@ -58,16 +58,16 @@ it('lists equipment and keeps filters on the URL', async () => {
   await waitFor(() => expect(urls.some((u) => u.includes('q=huyet'))).toBe(true))
 })
 
-it('cột Phòng sau Khoa/Phòng ban, sort=room; lọc Phòng theo khoa đang lọc và reset khi đổi khoa', async () => {
+it('cột Phòng sau Khoa, sort=room; lọc Phòng theo khoa đang lọc và reset khi đổi khoa', async () => {
   const { router } = renderWithProviders(<Component />)
   await screen.findByRole('link', { name: 'TB-2026-00001' })
   const headers = screen.getAllByRole('columnheader').map((h) => h.textContent ?? '')
-  expect(headers.indexOf('Phòng')).toBe(headers.indexOf('Khoa/Phòng ban') + 1)
+  expect(headers.indexOf('Phòng')).toBe(headers.indexOf('Khoa') + 1)
   expect(screen.getByRole('cell', { name: 'Phòng Huyết học' })).toBeVisible()
   await userEvent.click(screen.getByRole('button', { name: 'Sắp xếp: Phòng' }))
   await waitFor(() => expect(urls.at(-1)).toContain('sort=room'))
 
-  await userEvent.click(screen.getByRole('combobox', { name: 'Khoa/Phòng ban' }))
+  await userEvent.click(screen.getByRole('combobox', { name: 'Khoa' }))
   await userEvent.click(await screen.findByRole('option', { name: /Huyết học/ }))
   await waitFor(() => expect(router.state.location.search).toContain('departmentId=d1'))
   await userEvent.click(screen.getByRole('combobox', { name: 'Phòng' }))
@@ -88,7 +88,7 @@ it('chỉ sort các cột API cho phép và cột khoa gửi departmentId', asyn
   const { router } = renderWithProviders(<Component />)
   await screen.findByRole('link', { name: 'TB-2026-00001' })
   expect(screen.queryByRole('button', { name: 'Sắp xếp: Model' })).not.toBeInTheDocument()
-  await userEvent.click(screen.getByRole('button', { name: 'Sắp xếp: Khoa/Phòng ban' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Sắp xếp: Khoa' }))
   await waitFor(() => expect(urls.at(-1)).toContain('sort=departmentId'))
   expect(router.state.location.search).toContain('sort=departmentId')
 

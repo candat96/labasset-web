@@ -1,5 +1,5 @@
 {
-  "title": "Khoa/Phòng ban",
+  "title": "Khoa",
   "description": "Danh sách khoa, phòng trong bệnh viện; dùng để gán người dùng, thiết bị và phiếu yêu cầu.",
   "fields": {
     "code": "Mã",
@@ -13,8 +13,12 @@
     "isActiveSwitch": "Đang hoạt động"
   },
   "types": {
-    "lab": "Khoa xét nghiệm",
-    "equipment_office": "Phòng Vật tư – TBYT",
+    "exam": "Khám bệnh",
+    "internal": "Nội khoa",
+    "surgery": "Ngoại khoa",
+    "imaging": "CDHA",
+    "lab": "Xét nghiệm",
+    "finance": "Tài chính",
     "other": "Khác"
   },
   "filter": {
@@ -66,7 +70,7 @@
   "rooms": "Phòng",
   "addRoom": "Thêm phòng",
   "roomsEmpty": "Chưa có phòng nào",
-  "roomsEmptyHint": "Thêm phòng để chỉ rõ máy đặt ở đâu trong Khoa/Phòng ban này.",
+  "roomsEmptyHint": "Thêm phòng để chỉ rõ máy đặt ở đâu trong Khoa này.",
   "roomColumns": {
     "code": "Mã",
     "name": "Tên phòng",

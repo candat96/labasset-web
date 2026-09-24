@@ -1,8 +1,17 @@
 import type { components } from '@/api/schema'
 
 // TODO(api): OpenAPI chưa khai response schema cho GET/PATCH/DELETE /v1/departments.
-export type DepartmentType = 'lab' | 'equipment_office' | 'other'
-export const DEPARTMENT_TYPES: DepartmentType[] = ['lab', 'equipment_office', 'other']
+export type DepartmentType =
+  'exam' | 'internal' | 'surgery' | 'imaging' | 'lab' | 'finance' | 'other'
+export const DEPARTMENT_TYPES: DepartmentType[] = [
+  'exam',
+  'internal',
+  'surgery',
+  'imaging',
+  'lab',
+  'finance',
+  'other',
+]
 
 export interface Department {
   id: string

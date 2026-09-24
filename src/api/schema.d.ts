@@ -5867,7 +5867,7 @@ export interface components {
             phone?: string;
             sortOrder?: number;
             /** @enum {string} */
-            type: "lab" | "equipment_office" | "other";
+            type: "exam" | "internal" | "surgery" | "imaging" | "lab" | "finance" | "other";
         };
         CreatedUserDto: {
             tempPassword: string;
@@ -6532,7 +6532,7 @@ export interface components {
             phone: string | null;
             sortOrder: number;
             /** @enum {string} */
-            type: "lab" | "equipment_office" | "other";
+            type: "exam" | "internal" | "surgery" | "imaging" | "lab" | "finance" | "other";
             /** Format: date-time */
             updatedAt: string;
         };
@@ -8709,7 +8709,7 @@ export interface components {
             phone?: string;
             sortOrder?: number;
             /** @enum {string} */
-            type?: "lab" | "equipment_office" | "other";
+            type?: "exam" | "internal" | "surgery" | "imaging" | "lab" | "finance" | "other";
         };
         UpdateEquipmentDto: {
             assetCode?: string | null;
