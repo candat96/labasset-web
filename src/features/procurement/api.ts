@@ -4,6 +4,7 @@ import { downloadFile } from '@/api/download'
 import type {
   CreateAcceptLineDto,
   CreateDemandLineDto,
+  CreateDemandPeriodDto,
   DemandConsolidation,
   DemandLine,
   DemandLineImportResult,
@@ -75,7 +76,16 @@ export function updatePeriod(id: string, body: UpdateDemandPeriodDto) {
   )
 }
 
-/** POST /periods/{id}/clone — body giống create. */
+/**
+ * POST /periods/{id}/clone — tạo kỳ mới (draft) từ kỳ này, body giống create
+ * (`CreatePeriodDto`). Backend trả kỳ mới kèm phiếu khoa nháp copy dòng.
+ */
+export function clonePeriod(id: string, body: CreateDemandPeriodDto) {
+  return unwrapAs<DemandPeriod>(
+    demandApi.POST('/v1/demand/periods/{id}/clone', { params: { path: { id } }, body }),
+  )
+}
+
 export function getPeriodSummary(periodId: string) {
   return unwrapAs<DemandSummary>(
     demandApi.GET('/v1/demand/periods/{id}/summary', { params: { path: { id: periodId } } }),

@@ -517,7 +517,7 @@ export const GUIDE: GuideSection[] = [
       {
         type: 'note',
         tone: 'success',
-        text: 'Gợi ý số lượng: (tiêu hao trung bình tháng × 12 + 1 tháng dự phòng) − tồn toàn viện, làm tròn lên theo đơn vị; khoa chưa có dữ liệu tiêu hao → dùng mức tồn tối thiểu. Thiết bị mua mới / dịch vụ không gợi ý, do khoa tự nhập thông số và đơn giá ước.',
+        text: 'Gợi ý số lượng chỉ là gợi ý — người lập sửa lại được. Cách tính: tiêu hao lấy từ phiếu xuất kho cho chính khoa đó trong 12 tháng gần nhất; tồn là tồn toàn viện (mọi kho, đã trừ phần giữ chỗ). Kỳ năm: tiêu hao năm + tồn an toàn − tồn hiện có; kỳ quý: tiêu hao 3 tháng − tồn hiện có; kết quả làm tròn lên theo đơn vị và không âm. Vật tư chưa có lịch sử xuất → lấy mức tồn tối thiểu. Thiết bị mua mới / dịch vụ không gợi ý, do khoa tự nhập thông số và đơn giá ước.',
       },
       {
         type: 'list',

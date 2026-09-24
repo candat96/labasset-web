@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router'
+import { Link, useNavigate, useParams } from 'react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import Big from 'big.js'
 import { toast } from 'sonner'
-import { Building2, CalendarClock, User } from 'lucide-react'
+import { Building2, CalendarClock, Copy, User } from 'lucide-react'
 import { DetailLayout } from '@/components/detail-layout'
 import { PageMeta } from '@/components/page/PageHeader'
 import { SectionCard } from '@/components/page/SectionCard'
@@ -16,6 +16,7 @@ import { ErrorState } from '@/components/page/ErrorState'
 import { ActionMenu } from '@/components/page/ActionMenu'
 import { StatusBadge } from '@/components/status-badge'
 import { AuditTrail } from '@/components/audit-trail'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -35,10 +36,11 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { FormDialog } from '@/components/form/FormDialog'
-import { TextField } from '@/components/form/fields'
+import { TextField, SelectField } from '@/components/form/fields'
 import { DateField } from '@/components/form/date-field'
 import { useConfirm } from '@/components/confirm-dialog'
-import { messageFor, isApiError } from '@/api/errors'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { applyServerErrors, messageFor, isApiError } from '@/api/errors'
 import { useDepartmentLookup } from '@/api/lookups'
 import { formatVnd } from '@/lib/format/money'
 import { formatQty } from '@/lib/format/number'
@@ -46,7 +48,7 @@ import { formatDate, formatDateTime } from '@/lib/format/date'
 import { demandDecisionLabels, demandPeriodKindLabels, enumLabel } from '@/lib/enum-labels'
 import { demandPeriodStatusMap, demandRequestStatusMap, demandDecisionMap } from '@/lib/status-maps'
 import { useCan } from '@/app/guards/useCan'
-import { STAFF } from '@/routes/roles'
+import { ADM, STAFF } from '@/routes/roles'
 import * as api from '../api'
 import type {
   DemandConsolidation,
@@ -63,6 +65,48 @@ const editSchema = z.object({
   notes: z.string().optional(),
 })
 type EditValues = z.infer<typeof editSchema>
+
+const cloneSchema = z.object({
+  name: z.string().min(1, 'Vui lòng nhập tên kỳ'),
+  kind: z.enum(['annual', 'quarterly', 'adhoc']),
+  year: z.string().min(4, 'Nhập năm'),
+  quarter: z.string().optional(),
+  submitDeadline: z.string().optional(),
+})
+type CloneValues = z.infer<typeof cloneSchema>
+
+/** Ngày `yyyy-MM-dd` của DatePicker từ ISO; `+months` theo lịch (giữ ngày trong tháng). */
+function shiftDate(iso: string, months: number): string {
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return ''
+  date.setMonth(date.getMonth() + months)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+}
+
+/** Mặc định "kỳ hiện tại + 1 năm (hoặc + 1 quý)" cho form Sao chép sang kỳ mới. */
+function cloneDefaults(row: DemandPeriod): CloneValues {
+  const isQuarterly = row.kind === 'quarterly'
+  const quarter = row.quarter ?? 1
+  const nextQuarter = isQuarterly ? (quarter === 4 ? 1 : quarter + 1) : undefined
+  const nextYear = isQuarterly && nextQuarter !== 1 ? row.year : row.year + 1
+  const name =
+    row.kind === 'annual'
+      ? `Dự trù năm ${nextYear}`
+      : row.kind === 'quarterly'
+        ? `Dự trù Q${nextQuarter}/${nextYear}`
+        : `${row.name} (bản sao)`
+  return {
+    name,
+    kind: row.kind,
+    year: String(nextYear),
+    quarter: nextQuarter == null ? undefined : String(nextQuarter),
+    // "kỳ hiện tại +1 năm (hoặc +1 quý)" — chỉ dời khi kỳ nguồn có hạn nộp.
+    submitDeadline: row.submitDeadline
+      ? shiftDate(row.submitDeadline, isQuarterly ? 3 : 12)
+      : undefined,
+  }
+}
 
 /** Ô số tiền/số lượng dạng chuỗi Decimal, chỉ gửi lên khi rời ô. */
 function DecimalCell({
@@ -161,14 +205,6 @@ function ConsolidationRow({
         <TableCell className="font-medium">
           {row.itemName}
           {row.spec ? <p className="text-subtle text-[12px]">{row.spec}</p> : null}
-          {row.suggestedDecision && (
-            <p className="text-subtle text-[11.5px]">
-              {t('suggestedHint', {
-                decision: enumLabel(demandDecisionLabels, row.suggestedDecision),
-                defaultValue: 'Gợi ý: {{decision}}',
-              })}
-            </p>
-          )}
         </TableCell>
         <TableCell className="text-subtle text-[12.5px]">{row.unit ?? '—'}</TableCell>
         <TableCell className="text-right tabular-nums">{formatQty(row.qtyRequested)}</TableCell>
@@ -183,6 +219,41 @@ function ConsolidationRow({
           ) : (
             <span className="tabular-nums">{formatQty(row.qtyApproved ?? '0')}</span>
           )}
+        </TableCell>
+        <TableCell className="text-right">
+          {/* onHand = tồn toàn viện (mọi kho, đã trừ giữ chỗ) — API tính, web chỉ hiển thị */}
+          <div className="flex flex-col items-end gap-1">
+            <span
+              className={
+                row.suggestedDecision === 'from_stock' ? 'font-medium tabular-nums' : 'tabular-nums'
+              }
+            >
+              {row.onHand == null || row.onHand === '' ? '—' : formatQty(row.onHand)}
+            </span>
+            {row.suggestedDecision === 'from_stock' &&
+              (editable ? (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="xs"
+                      variant="outline"
+                      onClick={() => void patch({ decision: 'from_stock' })}
+                    >
+                      {t('suggestFromStock', { defaultValue: 'Nên lấy từ kho' })}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {t('suggestFromStockHint', {
+                      defaultValue: 'Tồn kho đủ đáp ứng nhu cầu cả kỳ — bấm để chọn "Lấy từ kho"',
+                    })}
+                  </TooltipContent>
+                </Tooltip>
+              ) : (
+                <Badge variant="info">
+                  {t('suggestFromStock', { defaultValue: 'Nên lấy từ kho' })}
+                </Badge>
+              ))}
+          </div>
         </TableCell>
         <TableCell className="text-right">
           {/* Đơn giá kế hoạch do API tính (trung vị) — PATCH /consolidation không nhận sửa */}
@@ -229,7 +300,7 @@ function ConsolidationRow({
       </TableRow>
       {open && (
         <TableRow>
-          <TableCell colSpan={9}>
+          <TableCell colSpan={10}>
             <div className="space-y-1 py-1">
               {row.breakdown.map((item) => (
                 <div key={item.lineId} className="flex items-center gap-4 text-[13px]">
@@ -276,6 +347,72 @@ function ConsolidationRow({
         </TableRow>
       )}
     </>
+  )
+}
+
+/** "Sao chép sang kỳ mới" (spec §5) — chỉ ADM, kỳ `approved|closed`. */
+function ClonePeriodDialog({ source, onClose }: { source: DemandPeriod; onClose: () => void }) {
+  const { t } = useTranslation('procurement')
+  const navigate = useNavigate()
+  const qc = useQueryClient()
+  const form = useForm<CloneValues>({
+    resolver: zodResolver(cloneSchema),
+    defaultValues: cloneDefaults(source),
+  })
+  const kind = form.watch('kind')
+  return (
+    <FormDialog
+      open
+      onOpenChange={(value) => !value && onClose()}
+      title={t('clonePeriod', { defaultValue: 'Sao chép sang kỳ mới' })}
+      description={t('cloneHint', {
+        defaultValue:
+          'Tạo kỳ mới ở trạng thái Nháp, phiếu khoa nháp được sao chép dòng và tính lại gợi ý số lượng.',
+      })}
+      form={form}
+      width="md"
+      submitting={form.formState.isSubmitting}
+      submitLabel={t('cloneSubmit', { defaultValue: 'Tạo kỳ mới' })}
+      onSubmit={async (values) => {
+        try {
+          const created = await api.clonePeriod(source.id, {
+            name: values.name,
+            kind: values.kind,
+            year: Number(values.year),
+            quarter: values.kind === 'quarterly' ? Number(values.quarter) || undefined : undefined,
+            submitDeadline: values.submitDeadline || undefined,
+          })
+          toast.success(t('periodCloned', { defaultValue: 'Đã sao chép sang kỳ mới' }))
+          void qc.invalidateQueries({ queryKey: ['demand-periods'] })
+          onClose()
+          navigate(`/procurement/demand/periods/${created.id}`)
+        } catch (error) {
+          if (!applyServerErrors(form, error)) toast.error(messageFor(error))
+        }
+      }}
+    >
+      <TextField control={form.control} name="name" label={t('name')} />
+      <SelectField
+        control={form.control}
+        name="kind"
+        label={t('kind')}
+        options={[
+          { value: 'annual', label: t('kindAnnual', { defaultValue: 'Kỳ năm' }) },
+          { value: 'quarterly', label: t('kindQuarterly', { defaultValue: 'Kỳ quý' }) },
+          { value: 'adhoc', label: t('kindAdhoc', { defaultValue: 'Đột xuất' }) },
+        ]}
+      />
+      <TextField control={form.control} name="year" label="Năm (yyyy)" inputMode="numeric" />
+      {kind === 'quarterly' && (
+        <SelectField
+          control={form.control}
+          name="quarter"
+          label={t('quarter')}
+          options={[1, 2, 3, 4].map((q) => ({ value: String(q), label: `Q${q}` }))}
+        />
+      )}
+      <DateField control={form.control} name="submitDeadline" label={t('submitDeadline')} />
+    </FormDialog>
   )
 }
 
@@ -365,6 +502,7 @@ function ConsolidationTab({
                 <TableHead>{t('unit')}</TableHead>
                 <TableHead className="text-right">{t('qtyRequested')}</TableHead>
                 <TableHead className="text-right">{t('qtyApproved')}</TableHead>
+                <TableHead className="text-right">{t('onHand')}</TableHead>
                 <TableHead className="text-right">{t('unitPricePlan')}</TableHead>
                 <TableHead className="text-right">{t('amountPlan')}</TableHead>
                 <TableHead>{t('decision')}</TableHead>
@@ -382,7 +520,7 @@ function ConsolidationTab({
               ))}
               {list.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-muted-foreground text-center text-sm">
+                  <TableCell colSpan={10} className="text-muted-foreground text-center text-sm">
                     {t('noConsolidation', { defaultValue: 'Chưa có dữ liệu tổng hợp' })}
                   </TableCell>
                 </TableRow>
@@ -503,11 +641,13 @@ export function Component() {
   const { id = '' } = useParams()
   const qc = useQueryClient()
   const isStaff = useCan(STAFF)
+  const isAdmin = useCan(ADM)
   const { confirm, dialog } = useConfirm()
   const [skipOpen, setSkipOpen] = useState(false)
   const [skipUnsubmitted, setSkipUnsubmitted] = useState(false)
   const [unsubmitted, setUnsubmitted] = useState<string[] | null>(null)
   const [editOpen, setEditOpen] = useState(false)
+  const [cloneOpen, setCloneOpen] = useState(false)
   const allDeptNames = useDepartmentLookup()
 
   const detail = useQuery({
@@ -597,8 +737,18 @@ export function Component() {
       toast.error(messageFor(error))
     }
   }
+  // B2 (review E1a): rebuild dựng lại TOÀN BỘ bảng từ dòng phiếu ⇒ mất SL duyệt /
+  // quyết định / ghi chú đã sửa ở cấp tổng hợp — dialog phải nói rõ + nút destructive.
   const rebuild = async () => {
-    if ((await confirm({ title: t('rebuildConfirm') })) === false) return
+    if (
+      (await confirm({
+        title: t('rebuildConfirm'),
+        description: t('rebuildWarning'),
+        destructive: true,
+        confirmLabel: t('rebuild'),
+      })) === false
+    )
+      return
     try {
       await api.rebuildConsolidation(id)
       toast.success(t('updated'))
@@ -691,6 +841,7 @@ export function Component() {
         <DateField control={editForm.control} name="submitDeadline" label={t('submitDeadline')} />
         <TextField control={editForm.control} name="notes" label={t('notes')} />
       </FormDialog>
+      {cloneOpen && <ClonePeriodDialog source={row} onClose={() => setCloneOpen(false)} />}
       <DetailLayout
         code={row.code}
         name={row.name}
@@ -751,6 +902,14 @@ export function Component() {
                       toast.error(messageFor(error))
                     }
                   },
+                },
+              // B1: "Sao chép sang kỳ mới" — chỉ ADM, khi kỳ đã chốt (approved|closed).
+              isAdmin &&
+                ['approved', 'closed'].includes(row.status) && {
+                  key: 'clone',
+                  label: t('clonePeriod', { defaultValue: 'Sao chép sang kỳ mới' }),
+                  icon: <Copy aria-hidden />,
+                  onClick: () => setCloneOpen(true),
                 },
               isStaff &&
                 !['closed', 'cancelled'].includes(row.status) && {

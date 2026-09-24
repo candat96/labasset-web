@@ -313,11 +313,7 @@ export function Component() {
                 name="purchaseContractNo"
                 label={t('fields.purchaseContractNo')}
               />
-              <TextField
-                control={form.control}
-                name="decisionNo"
-                label={t('fields.decisionNo')}
-              />
+              <TextField control={form.control} name="decisionNo" label={t('fields.decisionNo')} />
               <TextField
                 control={form.control}
                 name="circulationNo"

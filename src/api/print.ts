@@ -40,8 +40,7 @@ export function printBlob(blob: Blob): void {
   frame.setAttribute('aria-hidden', 'true')
   // Khung phải có kích thước thật và nằm ngoài màn hình. Chrome không vẽ PDF
   // trong iframe 1px / opacity:0 / display:none — hộp thoại in ra trang trắng.
-  frame.style.cssText =
-    'position:fixed;left:-10000px;top:0;width:800px;height:1100px;border:0'
+  frame.style.cssText = 'position:fixed;left:-10000px;top:0;width:800px;height:1100px;border:0'
   const cleanup = () => {
     frame.remove()
     URL.revokeObjectURL(href)
