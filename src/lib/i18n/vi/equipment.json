@@ -393,7 +393,8 @@
     "description": "Chọn máy rồi in tem PDF.",
     "print": "In tem ({{count}})",
     "search": "Tìm máy",
-    "searchPlaceholder": "Mã, tên, serial"
+    "searchPlaceholder": "Mã, tên, serial",
+    "tooMany": "Chọn tối đa 500 máy mỗi lần in tem (đang chọn {{count}} máy)"
   },
   "compare": {
     "title": "So sánh máy",

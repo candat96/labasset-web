@@ -77,6 +77,10 @@ export function Component() {
           <Button
             disabled={selected.length === 0}
             onClick={async () => {
+              if (selected.length > 500) {
+                toast.error(t('qrLabels.tooMany', { count: selected.length }))
+                return
+              }
               try {
                 await printQrLabels(selected)
               } catch (error) {
