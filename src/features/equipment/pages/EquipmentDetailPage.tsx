@@ -42,6 +42,8 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { enumLabel } from '@/lib/enum-labels'
+import { FaultsTab } from '../components/FaultsTab'
+import { DeleteIconButton, EditIconButton } from '@/components/icon-action'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -473,6 +475,11 @@ export function Component() {
             ),
           },
           {
+            value: 'faults',
+            label: t('tabs.faults', { defaultValue: 'Lỗi thường gặp' }),
+            content: <FaultsTab id={id} />,
+          },
+          {
             value: 'history',
             label: t('tabs.history', { defaultValue: 'Lịch sử' }),
             content: (
@@ -869,24 +876,20 @@ function AccessoriesTab({ id, canWrite }: { id: string; canWrite: boolean }) {
               <TableCell>{row.notes ?? '—'}</TableCell>
               {canWrite && (
                 <TableCell className="whitespace-nowrap">
-                  <Button size="sm" variant="ghost" onClick={() => openEdit(row)}>
-                    {tc('actions.edit')}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={async () => {
-                      if (
-                        (await confirm({
-                          title: t('accessories.deleteTitle'),
-                          destructive: true,
-                        })) !== false
-                      )
-                        remove.mutate(row.id)
-                    }}
-                  >
-                    {tc('actions.delete')}
-                  </Button>
+                  <div className="flex gap-1">
+                    <EditIconButton onClick={() => openEdit(row)} />
+                    <DeleteIconButton
+                      onClick={async () => {
+                        if (
+                          (await confirm({
+                            title: t('accessories.deleteTitle'),
+                            destructive: true,
+                          })) !== false
+                        )
+                          remove.mutate(row.id)
+                      }}
+                    />
+                  </div>
                 </TableCell>
               )}
             </TableRow>
@@ -1064,45 +1067,43 @@ function SoftwareTab({ id, canWrite }: { id: string; canWrite: boolean }) {
               </TableCell>
               <TableCell>{row.notes ?? '—'}</TableCell>
               {canWrite && (
-                <TableCell className="whitespace-nowrap">
-                  {row.hasLicenseKey && (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={async () => {
-                        try {
-                          const result = await api.softwareLicense(id, row.id)
-                          setKey(result.licenseKey)
-                        } catch (e) {
-                          toast.error(messageFor(e))
-                        }
-                      }}
-                    >
-                      {t('actions.viewKey')}
+                <TableCell>
+                  <div className="flex flex-wrap items-center gap-1">
+                    {row.hasLicenseKey && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={async () => {
+                          try {
+                            const result = await api.softwareLicense(id, row.id)
+                            setKey(result.licenseKey)
+                          } catch (e) {
+                            toast.error(messageFor(e))
+                          }
+                        }}
+                      >
+                        {t('actions.viewKey')}
+                      </Button>
+                    )}
+                    <Button size="sm" variant="ghost" onClick={() => setUpgradeRow(row)}>
+                      {t('actions.upgrade')}
                     </Button>
-                  )}
-                  <Button size="sm" variant="ghost" onClick={() => setUpgradeRow(row)}>
-                    {t('actions.upgrade')}
-                  </Button>
-                  <Button size="sm" variant="ghost" onClick={() => setHistoryRow(row)}>
-                    {t('actions.history')}
-                  </Button>
-                  <Button size="sm" variant="ghost" onClick={() => openEdit(row)}>
-                    {tc('actions.edit')}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={async () => {
-                      if (
-                        (await confirm({ title: t('software.deleteTitle'), destructive: true })) !==
-                        false
-                      )
-                        remove.mutate(row.id)
-                    }}
-                  >
-                    {tc('actions.delete')}
-                  </Button>
+                    <Button size="sm" variant="ghost" onClick={() => setHistoryRow(row)}>
+                      {t('actions.history')}
+                    </Button>
+                    <EditIconButton onClick={() => openEdit(row)} />
+                    <DeleteIconButton
+                      onClick={async () => {
+                        if (
+                          (await confirm({
+                            title: t('software.deleteTitle'),
+                            destructive: true,
+                          })) !== false
+                        )
+                          remove.mutate(row.id)
+                      }}
+                    />
+                  </div>
                 </TableCell>
               )}
             </TableRow>
@@ -1254,7 +1255,6 @@ function ComponentsTab({
   tests: number
 }) {
   const { t } = useTranslation('equipment')
-  const { t: tc } = useTranslation()
   const qc = useQueryClient()
   const { confirm, dialog } = useConfirm()
   const list = useQuery({
@@ -1403,12 +1403,8 @@ function ComponentsTab({
                   <Button size="sm" variant="ghost" onClick={() => setHistoryRow(row)}>
                     {t('actions.history')}
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={() => openEdit(row)}>
-                    {tc('actions.edit')}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
+                  <EditIconButton onClick={() => openEdit(row)} />
+                  <DeleteIconButton
                     onClick={async () => {
                       if (
                         (await confirm({
@@ -1418,9 +1414,7 @@ function ComponentsTab({
                       )
                         remove.mutate(row.id)
                     }}
-                  >
-                    {tc('actions.delete')}
-                  </Button>
+                  />
                 </div>
               )}
             </li>

@@ -136,7 +136,6 @@ export function CatalogFormDialog({
                   disabled={!!row}
                 />
               </FormControl>
-              {!row && <p className="text-muted-foreground text-xs">{t('codeFormatHint')}</p>}
               <FormMessage />
             </FormItem>
           )}

@@ -57,6 +57,7 @@ it('tạo mới không nhập Mã: body bỏ code, server tự sinh và toast hi
     'placeholder',
     'Để trống sẽ tự sinh (vd NSX-0001)',
   )
+  expect(dialog.queryByText('Chỉ chữ in hoa, số, _, -')).not.toBeInTheDocument()
   await userEvent.type(dialog.getByLabelText('Tên'), 'Hãng B')
   await userEvent.click(dialog.getByRole('button', { name: 'Lưu' }))
   await waitFor(() => expect(bodies[0]).not.toHaveProperty('code'))

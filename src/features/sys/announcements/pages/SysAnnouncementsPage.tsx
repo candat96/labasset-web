@@ -7,6 +7,7 @@ import type { ColumnDef } from '@tanstack/react-table'
 import { toast } from 'sonner'
 import { DataTable, useServerTable } from '@/components/data-table'
 import { PageHeader } from '@/components/page/PageHeader'
+import { DeleteIconButton, EditIconButton } from '@/components/icon-action'
 import { Button } from '@/components/ui/button'
 import { FormDialog } from '@/components/form/FormDialog'
 import { TextField, SelectField } from '@/components/form/fields'
@@ -112,19 +113,13 @@ export function Component() {
       enableHiding: false,
       cell: ({ row }) => (
         <div className="flex gap-1">
-          <Button
-            variant="ghost"
-            size="sm"
+          <EditIconButton
             onClick={() => {
               setEditing(row.original)
               setOpen(true)
             }}
-          >
-            {tc('actions.edit')}
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
+          />
+          <DeleteIconButton
             onClick={async () => {
               if (
                 (await confirm({
@@ -134,9 +129,7 @@ export function Component() {
               )
                 remove.mutate(row.original.id)
             }}
-          >
-            {tc('actions.delete')}
-          </Button>
+          />
         </div>
       ),
     },

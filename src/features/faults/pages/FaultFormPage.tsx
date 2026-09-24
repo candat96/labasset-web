@@ -10,6 +10,7 @@ import { PageHeader } from '@/components/page/PageHeader'
 import { SectionCard } from '@/components/page/SectionCard'
 import { FormFooter } from '@/components/page/FormFooter'
 import { ErrorState } from '@/components/page/ErrorState'
+import { DeleteIconButton } from '@/components/icon-action'
 import { Button } from '@/components/ui/button'
 import { Form } from '@/components/ui/form'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
@@ -161,7 +162,6 @@ function StepImagePreview({ fileId }: { fileId: string | null }) {
 
 export function Component() {
   const { t } = useTranslation('faults')
-  const { t: tc } = useTranslation()
   const { id = '' } = useParams()
   const editing = !!id
   const navigate = useNavigate()
@@ -333,14 +333,7 @@ export function Component() {
                       >
                         {t('form.down')}
                       </Button>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => steps.remove(index)}
-                      >
-                        {tc('actions.delete')}
-                      </Button>
+                      <DeleteIconButton onClick={() => steps.remove(index)} />
                     </div>
                   </div>
                   <TextField
@@ -399,14 +392,7 @@ export function Component() {
               {parts.fields.map((field, index) => (
                 <li key={field.id} className="border-divider space-y-3 rounded-xl border p-4">
                   <div className="flex justify-end">
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => parts.remove(index)}
-                    >
-                      {tc('actions.delete')}
-                    </Button>
+                    <DeleteIconButton onClick={() => parts.remove(index)} />
                   </div>
                   <TextField
                     control={form.control}

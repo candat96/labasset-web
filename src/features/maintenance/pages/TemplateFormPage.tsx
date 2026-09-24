@@ -8,6 +8,7 @@ import { PageHeader } from '@/components/page/PageHeader'
 import { SectionCard } from '@/components/page/SectionCard'
 import { FormFooter } from '@/components/page/FormFooter'
 import { ErrorState } from '@/components/page/ErrorState'
+import { DeleteIconButton } from '@/components/icon-action'
 import { Button } from '@/components/ui/button'
 import { Form } from '@/components/ui/form'
 import { TextField, SelectField, SwitchField, NumberField } from '@/components/form/fields'
@@ -250,14 +251,7 @@ export function Component() {
                       >
                         {t('moveDown')}
                       </Button>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => items.remove(index)}
-                      >
-                        {t('delete')}
-                      </Button>
+                      <DeleteIconButton onClick={() => items.remove(index)} />
                     </div>
                   </div>
                   <TextField

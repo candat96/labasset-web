@@ -40,6 +40,7 @@ import {
   User,
   UserPlus,
 } from 'lucide-react'
+import { DeleteIconButton, EditIconButton } from '@/components/icon-action'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/status-badge'
 import { FormDialog } from '@/components/form/FormDialog'
@@ -1053,12 +1054,8 @@ function PartsTab({
                 <TableCell className="pr-5">
                   {canWrite && (
                     <div className="flex justify-end gap-1">
-                      <Button size="sm" variant="ghost" onClick={() => onEdit(row)}>
-                        {t('detail.actions.edit')}
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => onDelete(row.id)}>
-                        {t('detail.parts.delete')}
-                      </Button>
+                      <EditIconButton onClick={() => onEdit(row)} />
+                      <DeleteIconButton onClick={() => onDelete(row.id)} />
                     </div>
                   )}
                 </TableCell>
@@ -1136,12 +1133,8 @@ function VendorsTab({
             />
             {canWrite && (
               <div className="mt-3 flex gap-1">
-                <Button size="sm" variant="ghost" onClick={() => onEdit(row)}>
-                  {t('detail.actions.edit')}
-                </Button>
-                <Button size="sm" variant="ghost" onClick={() => onDelete(row.id)}>
-                  {t('detail.parts.delete')}
-                </Button>
+                <EditIconButton onClick={() => onEdit(row)} />
+                <DeleteIconButton onClick={() => onDelete(row.id)} />
               </div>
             )}
           </li>
@@ -1295,12 +1288,8 @@ function CostsTab({
                   <TableCell className="pr-5">
                     {canWrite && (
                       <div className="flex justify-end gap-1">
-                        <Button size="sm" variant="ghost" onClick={() => onEdit(row)}>
-                          {t('detail.actions.edit')}
-                        </Button>
-                        <Button size="sm" variant="ghost" onClick={() => onDelete(row.id)}>
-                          {t('detail.parts.delete')}
-                        </Button>
+                        <EditIconButton onClick={() => onEdit(row)} />
+                        <DeleteIconButton onClick={() => onDelete(row.id)} />
                       </div>
                     )}
                   </TableCell>
@@ -1622,7 +1611,6 @@ function DeclineDialog({
 
 function ProposeFields({ control }: { control: Control<CompleteForm> }) {
   const { t } = useTranslation('repairs')
-  const { t: tc } = useTranslation()
   const steps = useFieldArray({ control, name: 'proposeSteps' })
   const parts = useFieldArray({ control, name: 'proposeParts' })
   const { errors } = useFormState({ control, name: 'proposeSteps' })
@@ -1648,9 +1636,7 @@ function ProposeFields({ control }: { control: Control<CompleteForm> }) {
           <div key={field.id} className="border-divider space-y-2 rounded-lg border p-3">
             <div className="flex items-center justify-between">
               <p className="text-sm">{t('detail.complete.step', { n: index + 1 })}</p>
-              <Button type="button" size="sm" variant="ghost" onClick={() => steps.remove(index)}>
-                {tc('actions.delete')}
-              </Button>
+              <DeleteIconButton onClick={() => steps.remove(index)} />
             </div>
             <TextField
               control={control}
@@ -1693,9 +1679,7 @@ function ProposeFields({ control }: { control: Control<CompleteForm> }) {
                 step={1}
               />
             </div>
-            <Button type="button" size="sm" variant="ghost" onClick={() => parts.remove(index)}>
-              {tc('actions.delete')}
-            </Button>
+            <DeleteIconButton onClick={() => parts.remove(index)} />
           </div>
         ))}
         <Button

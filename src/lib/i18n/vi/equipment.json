@@ -148,7 +148,8 @@
     "audit": "Lịch sử thay đổi",
     "config": "Cấu hình",
     "service": "Sửa chữa & bảo dưỡng",
-    "history": "Lịch sử"
+    "history": "Lịch sử",
+    "faults": "Lỗi thường gặp"
   },
   "info": {
     "accessories": "Phụ kiện",
@@ -427,5 +428,10 @@
     "count": "Số máy",
     "empty": "Chưa có phòng nào",
     "shared": "Dùng chung"
+  },
+  "faultsTab": {
+    "library": "Thư viện lỗi",
+    "empty": "Chưa có lỗi nào trong thư viện cho máy này",
+    "times": "Đã gặp {{on}} lần trên máy này · {{model}} máy cùng model"
   }
 }

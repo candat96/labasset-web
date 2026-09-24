@@ -6,6 +6,11 @@ import { printBlob, printFile } from './print'
 
 const frameIn = () => document.querySelector<HTMLIFrameElement>('iframe[aria-hidden="true"]')
 
+/** jsdom không tải blob: — giả lập sự kiện load của iframe như trình duyệt. */
+function fireFrameLoad() {
+  frameIn()?.dispatchEvent(new Event('load'))
+}
+
 /** jsdom không tải blob: trong iframe — thay contentWindow để kiểm tra lời gọi in. */
 function mockFrameWindow(print: () => void = () => {}) {
   const win = { focus: vi.fn(), print: vi.fn(print), addEventListener: vi.fn() }
@@ -37,7 +42,8 @@ it('tải PDF kèm token rồi in qua iframe ẩn (không lưu file)', async () 
 
   expect(auth).toBe('Bearer A1')
   expect(create).toHaveBeenCalledOnce()
-  expect(frameIn()).not.toBeNull()
+  expect(frameIn()?.getAttribute('src')).toBe('blob:in')
+  fireFrameLoad()
   await waitFor(() => expect(win.print).toHaveBeenCalledOnce())
 
   const afterPrint = (
@@ -57,6 +63,7 @@ it('trình duyệt chặn in → mở tab xem PDF để in thủ công', async (
   })
 
   printBlob(new Blob(['pdf'], { type: 'application/pdf' }))
+  fireFrameLoad()
 
   await waitFor(() => expect(open).toHaveBeenCalledWith('blob:chan', '_blank', 'noopener'))
 })

@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { toast } from 'sonner'
+import { DeleteIconButton, EditIconButton } from '@/components/icon-action'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -147,19 +148,13 @@ export function CatalogPage({ slug }: { slug: CatalogSlug }) {
         enableHiding: false,
         cell: ({ row }) => (
           <div className="flex gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
+            <EditIconButton
               onClick={() => {
                 setEditing(row.original)
                 setFormOpen(true)
               }}
-            >
-              {tc('actions.edit')}
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
+            />
+            <DeleteIconButton
               onClick={async () => {
                 if (
                   (await confirm({
@@ -170,9 +165,7 @@ export function CatalogPage({ slug }: { slug: CatalogSlug }) {
                 )
                   remove.mutate(row.original.id)
               }}
-            >
-              {tc('actions.delete')}
-            </Button>
+            />
           </div>
         ),
       },

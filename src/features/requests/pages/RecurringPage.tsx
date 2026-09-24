@@ -9,6 +9,7 @@ import { toast } from 'sonner'
 import { DataTable, useServerTable } from '@/components/data-table'
 import { FilterBar } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page/PageHeader'
+import { DeleteIconButton, EditIconButton } from '@/components/icon-action'
 import { Button } from '@/components/ui/button'
 import { FormDialog } from '@/components/form/FormDialog'
 import { SelectField, SwitchField } from '@/components/form/fields'
@@ -118,12 +119,8 @@ export function Component() {
       cell: ({ row }) =>
         canWrite ? (
           <div className="flex gap-1">
-            <Button size="sm" variant="outline" onClick={() => startEdit(row.original)}>
-              {t('edit')}
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
+            <EditIconButton onClick={() => startEdit(row.original)} />
+            <DeleteIconButton
               onClick={async () => {
                 try {
                   await deleteRecurring(row.original.id)
@@ -133,9 +130,7 @@ export function Component() {
                   toast.error(messageFor(error))
                 }
               }}
-            >
-              {t('delete')}
-            </Button>
+            />
           </div>
         ) : null,
     },

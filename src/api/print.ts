@@ -34,17 +34,20 @@ export async function printFile(path: string, params: Params = {}): Promise<void
  * Trình duyệt chặn in PDF nhúng → mở tab xem PDF để người dùng tự bấm in.
  */
 export function printBlob(blob: Blob): void {
-  const href = URL.createObjectURL(blob)
+  const pdf = blob.type === 'application/pdf' ? blob : new Blob([blob], { type: 'application/pdf' })
+  const href = URL.createObjectURL(pdf)
   const frame = document.createElement('iframe')
   frame.setAttribute('aria-hidden', 'true')
-  // 1px trong suốt (không display:none): Firefox/Safari cần iframe hiển thị mới dựng PDF
-  frame.style.cssText = 'position:fixed;right:0;bottom:0;width:1px;height:1px;opacity:0;border:0'
+  // Khung phải có kích thước thật và nằm ngoài màn hình. Chrome không vẽ PDF
+  // trong iframe 1px / opacity:0 / display:none — hộp thoại in ra trang trắng.
+  frame.style.cssText =
+    'position:fixed;left:-10000px;top:0;width:800px;height:1100px;border:0'
   const cleanup = () => {
     frame.remove()
     URL.revokeObjectURL(href)
   }
   frame.onload = () => {
-    // chờ trình xem PDF dựng xong trước khi gọi hộp thoại in
+    // onload của plugin PDF thường tới trước khi trang vẽ xong
     window.setTimeout(() => {
       let printed = false
       try {
@@ -66,4 +69,5 @@ export function printBlob(blob: Blob): void {
     }, 300)
   }
   document.body.append(frame)
+  frame.src = href
 }
