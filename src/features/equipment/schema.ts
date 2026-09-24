@@ -137,8 +137,7 @@ export const cloneSchema = z.object({
     z
       .string()
       .trim()
-      .transform((value) => value.toUpperCase())
-      .pipe(z.string().regex(/^[A-Z0-9_-]{1,32}$/, 'Mã A–Z, số, _ hoặc -')),
+      .pipe(z.string().regex(/^[A-Za-z0-9._\-[\]()+/ ]{1,32}$/, 'Mã A–Z, 0–9, . _ - [ ] ( ) + /')),
   ]),
   name: optionalText,
   serial: optionalText,
