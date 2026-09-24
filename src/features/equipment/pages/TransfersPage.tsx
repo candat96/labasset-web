@@ -73,6 +73,7 @@ export function Component() {
     {
       id: 'equipmentId',
       header: t('transfers.equipment'),
+      meta: { label: t('transfers.equipment'), className: 'max-w-[380px] whitespace-normal' },
       cell: ({ row: r }) => (
         <Link className="text-primary hover:underline" to={`/equipment/${r.original.equipmentId}`}>
           {equipmentName(r.original.equipmentId)}

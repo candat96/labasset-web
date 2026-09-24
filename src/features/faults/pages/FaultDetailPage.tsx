@@ -384,7 +384,7 @@ export function Component() {
                   >
                     {item.code}
                   </button>
-                  <p className="text-muted-foreground truncate text-[12.5px]">
+                  <p className="text-muted-foreground text-[12.5px]">
                     {item.equipment.code} – {item.equipment.name}
                   </p>
                   <p className="text-subtle text-[12px] tabular-nums">

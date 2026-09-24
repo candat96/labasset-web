@@ -55,7 +55,11 @@ export function Component() {
           </Link>
         ),
       },
-      { accessorKey: 'name', header: t('fields.name') },
+      {
+        accessorKey: 'name',
+        header: t('fields.name'),
+        meta: { label: t('fields.name'), className: 'max-w-[420px] whitespace-normal' },
+      },
       {
         accessorKey: 'status',
         header: t('fields.status'),
