@@ -19,6 +19,7 @@ const GENERAL_FIELDS = [
   'countryOfOrigin',
   'purchaseContractNo',
   'decisionNo',
+  'circulationNo',
   'location',
   'manufactureYear',
   'receivedAt',

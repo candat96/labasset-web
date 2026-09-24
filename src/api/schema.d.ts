@@ -5875,6 +5875,7 @@ export interface components {
         };
         CreateEquipmentDto: {
             assetCode?: string | null;
+            circulationNo?: string | null;
             code?: string;
             /** Format: date */
             commissionedAt?: string | null;
@@ -6566,6 +6567,7 @@ export interface components {
         EquipmentDetailDto: {
             assetCode: string | null;
             calibrationOverdue: boolean;
+            circulationNo: string | null;
             code: string;
             commissionedAt: string | null;
             countryOfOrigin: string | null;
@@ -8711,6 +8713,7 @@ export interface components {
         };
         UpdateEquipmentDto: {
             assetCode?: string | null;
+            circulationNo?: string | null;
             /** Format: date */
             commissionedAt?: string | null;
             countryOfOrigin?: string | null;

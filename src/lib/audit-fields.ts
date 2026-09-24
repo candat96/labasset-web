@@ -39,6 +39,7 @@ export const AUDIT_FIELD_LABELS: Record<string, string> = {
   phone: 'Điện thoại',
   fullName: 'Họ tên',
   manufactureYear: 'Năm SX',
+  circulationNo: 'Số lưu hành',
   origin: 'Xuất xứ',
   groupId: 'Nhóm',
   fundingSourceId: 'Nguồn vốn',

@@ -25,6 +25,7 @@ export const equipmentSchema = z.object({
   warrantyUntil: optionalText,
   purchaseContractNo: optionalText,
   decisionNo: optionalText,
+  circulationNo: optionalText,
   groupId: optionalId,
   departmentId: optionalId,
   roomId: optionalId,

@@ -112,7 +112,14 @@ export function Component() {
       {
         accessorKey: 'name',
         header: t('fields.name'),
-        cell: ({ getValue }) => <span className="font-medium">{getValue<string>()}</span>,
+        cell: ({ row }) => (
+          <Link
+            className="font-medium text-primary hover:underline"
+            to={`/equipment?roomId=${row.original.id}`}
+          >
+            {row.original.name}
+          </Link>
+        ),
       },
       {
         accessorKey: 'departmentId',

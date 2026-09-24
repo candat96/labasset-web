@@ -59,6 +59,7 @@ const empty: EquipmentForm = {
   warrantyUntil: '',
   purchaseContractNo: '',
   decisionNo: '',
+  circulationNo: '',
   groupId: null,
   departmentId: null,
   roomId: null,
@@ -95,6 +96,7 @@ function fromDetail(data: NonNullable<ReturnType<typeof useEquipment>['data']>):
     warrantyUntil: data.warrantyUntil ?? '',
     purchaseContractNo: data.purchaseContractNo ?? '',
     decisionNo: data.decisionNo ?? '',
+    circulationNo: data.circulationNo ?? '',
     groupId: data.groupId,
     departmentId: data.departmentId,
     roomId: data.roomId,
@@ -138,6 +140,7 @@ function toBody(values: EquipmentForm, includeIdentity = true): CreateEquipment 
     warrantyUntil: values.warrantyUntil,
     purchaseContractNo: values.purchaseContractNo,
     decisionNo: values.decisionNo,
+    circulationNo: values.circulationNo,
     groupId: values.groupId,
     roomId: values.roomId,
     location: values.location,
@@ -310,7 +313,16 @@ export function Component() {
                 name="purchaseContractNo"
                 label={t('fields.purchaseContractNo')}
               />
-              <TextField control={form.control} name="decisionNo" label={t('fields.decisionNo')} />
+              <TextField
+                control={form.control}
+                name="decisionNo"
+                label={t('fields.decisionNo')}
+              />
+              <TextField
+                control={form.control}
+                name="circulationNo"
+                label={t('fields.circulationNo')}
+              />
               <AsyncSelectField
                 control={form.control}
                 name="groupId"

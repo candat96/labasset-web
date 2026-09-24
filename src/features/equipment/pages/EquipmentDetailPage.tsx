@@ -549,10 +549,18 @@ function Overview({ row }: { row: NonNullable<ReturnType<typeof useEquipment>['d
     },
     { label: t('fields.purchaseContractNo'), value: row.purchaseContractNo },
     { label: t('fields.decisionNo'), value: row.decisionNo },
+    { label: t('fields.circulationNo'), value: row.circulationNo },
   ]
   const operation: DataListItem[] = [
     { label: t('fields.department'), value: row.department?.name },
-    { label: t('fields.room'), value: row.room?.name },
+    {
+      label: t('fields.room'),
+      value: row.room ? (
+        <Link className="text-primary hover:underline" to={`/equipment?roomId=${row.room.id}`}>
+          {row.room.name}
+        </Link>
+      ) : null,
+    },
     { label: t('fields.location'), value: row.location },
     { label: t('fields.deptContact'), value: row.deptContact?.fullName },
     { label: t('fields.staffInCharge'), value: row.staffInCharge?.fullName },

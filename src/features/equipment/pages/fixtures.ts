@@ -52,6 +52,7 @@ export const detail: EquipmentDetail = {
   warrantyUntil: '2027-01-01',
   purchaseContractNo: null,
   decisionNo: null,
+  circulationNo: null,
   groupId: null,
   group: null,
   departmentId: 'd1',

@@ -146,7 +146,17 @@ export function Component() {
         accessorFn: (row) => row.room?.name ?? '',
         header: t('fields.room'),
         meta: { label: t('fields.room') },
-        cell: ({ row }) => row.original.room?.name ?? '—',
+        cell: ({ row }) =>
+          row.original.room ? (
+            <Link
+              className="text-primary hover:underline"
+              to={`/equipment?roomId=${row.original.room.id}`}
+            >
+              {row.original.room.name}
+            </Link>
+          ) : (
+            '—'
+          ),
       },
       {
         accessorKey: 'groupName',
