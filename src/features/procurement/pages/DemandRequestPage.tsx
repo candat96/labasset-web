@@ -54,7 +54,7 @@ import {
 } from '@/lib/enum-labels'
 import { demandPeriodStatusMap, demandRequestStatusMap } from '@/lib/status-maps'
 import { useCan } from '@/app/guards/useCan'
-import { HEADS, STAFF } from '@/routes/roles'
+import { ADM, HEADS, STAFF } from '@/routes/roles'
 import { supplyOptions } from '@/api/references'
 import { useAuthStore } from '@/stores/auth.store'
 import * as api from '../api'
@@ -729,6 +729,7 @@ export function Component() {
   const qc = useQueryClient()
   const isStaff = useCan(STAFF)
   const isHead = useCan(HEADS)
+  const isAdm = useCan(ADM)
   const user = useAuthStore((s) => s.user)
   const { confirm, dialog } = useConfirm()
   const [importOpen, setImportOpen] = useState(false)
@@ -766,7 +767,8 @@ export function Component() {
   const buckets = per?.buckets ?? 12
   const lines = row.lines ?? []
 
-  const ownDept = !!user?.departmentId && user.departmentId === row.departmentId
+  // Quản trị viện làm được việc của mọi vai trò, kể cả lập/gửi phiếu thay khoa.
+  const ownDept = isAdm || (!!user?.departmentId && user.departmentId === row.departmentId)
   const canEditLines = ownDept && (row.status === 'draft' || row.status === 'returned')
   const canApproveLines = isStaff && ['submitted', 'dept_approved', 'accepted'].includes(row.status)
   const total = lines.reduce((sum, line) => sum.plus(new Big(line.amountEst || '0')), new Big(0))
