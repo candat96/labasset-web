@@ -8,13 +8,9 @@ server {
   gzip_types text/plain text/css application/json application/javascript image/svg+xml;
   client_max_body_size 20m;
 
-  location ~* \.(js|css|woff2?|png|svg|ico)$ {
-    expires 30d;
-    add_header Cache-Control "public, immutable";
-    try_files $uri =404;
-  }
-
   # API cùng origin (tránh CORS). SSE thông báo cần tắt buffering.
+  # Đặt TRƯỚC location tĩnh bên dưới: nginx xét location regex theo thứ tự,
+  # nếu để sau thì `/v1/equipment/{id}/qr.png` bị location ảnh nuốt → 404.
   location ~ ^/(v1|sys|health|openapi\.json) {
     proxy_pass ${API_UPSTREAM};
     proxy_http_version 1.1;
@@ -25,6 +21,12 @@ server {
     proxy_buffering off;
     proxy_cache off;
     proxy_read_timeout 3600s;
+  }
+
+  location ~* \.(js|css|woff2?|png|svg|ico)$ {
+    expires 30d;
+    add_header Cache-Control "public, immutable";
+    try_files $uri =404;
   }
 
   # Slide giới thiệu — tĩnh, không qua SPA fallback.
