@@ -77,7 +77,7 @@ import {
   staffUserOptions,
   supplyOptions,
 } from '@/api/references'
-import { uploadFile } from '@/api/files'
+import { attachFile, uploadFile } from '@/api/files'
 import { getFileUrl } from '@/api/files'
 import { useAuthStore } from '@/stores/auth.store'
 import { assistantPath } from '@/lib/ai-link'
@@ -2293,6 +2293,8 @@ function CostDialog({
   onDone: () => void
 }) {
   const { t } = useTranslation('repairs')
+  // Đính kèm ngay lúc ghi chi phí: file được gắn vào dòng chi phí sau khi lưu.
+  const [invoiceFileId, setInvoiceFileId] = useState<string | null>(null)
   const form = useForm<CostForm>({
     resolver: zodResolver(costSchema),
     defaultValues: {
@@ -2320,8 +2322,19 @@ function CostDialog({
             invoiceDate: values.invoiceDate || undefined,
             paidAt: values.paidAt || undefined,
           }
-          if (editing) await api.updateRepairCost(id, editing.id, body)
-          else await api.addRepairCost(id, body)
+          const saved = editing
+            ? await api.updateRepairCost(id, editing.id, body)
+            : await api.addRepairCost(id, body)
+          if (invoiceFileId) {
+            const costId = (saved as { id?: string } | undefined)?.id ?? editing?.id
+            if (costId)
+              await attachFile({
+                entityType: 'repair_cost',
+                entityId: costId,
+                fileId: invoiceFileId,
+                kind: 'invoice',
+              })
+          }
           toast.success(t('detail.costs.created'))
           onDone()
           onClose()
@@ -2344,6 +2357,12 @@ function CostDialog({
       <TextField control={form.control} name="invoiceNo" label={t('detail.costs.invoiceNoFull')} />
       <DateField control={form.control} name="invoiceDate" label={t('detail.costs.invoiceDate')} />
       <DatetimeField control={form.control} name="paidAt" label={t('detail.costs.paidAt')} />
+      <FileField
+        label={t('detail.costs.invoiceFile')}
+        value={invoiceFileId}
+        onChange={setInvoiceFileId}
+        accept="image/*,application/pdf"
+      />
     </FormDialog>
   )
 }

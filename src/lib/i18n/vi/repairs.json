@@ -113,6 +113,7 @@
       "receipt": "Biên nhận",
       "invoiceNoFull": "Số hoá đơn",
       "invoiceDate": "Ngày hoá đơn",
+      "invoiceFile": "Ảnh/PDF hoá đơn (không bắt buộc)",
       "paidAt": "Ngày thanh toán",
       "total": "Tổng: {{amount}}",
       "created": "Đã thêm chi phí",

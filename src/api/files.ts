@@ -24,3 +24,12 @@ export function getFileUrl(id: string, thumb = false) {
     }),
   )
 }
+/** Gắn tệp đã tải lên vào một bản ghi (hoá đơn của chi phí sửa chữa, ảnh…). */
+export function attachFile(body: {
+  entityType: string
+  entityId: string
+  fileId: string
+  kind: string
+}) {
+  return unwrap(api.POST('/v1/attachments', { body }))
+}
