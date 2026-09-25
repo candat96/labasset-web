@@ -28,7 +28,7 @@ export function AppShell() {
         <Topbar notifications={<NotificationBell />} />
         <AnnouncementBanner />
         <main className="flex-1">
-          <div className="mx-auto w-full max-w-[1920px] px-4 py-4 sm:px-5 sm:py-5">
+          <div className="w-full px-4 py-4 sm:px-5 sm:py-5">
             <Suspense fallback={<PageSkeleton />}>
               <Outlet />
             </Suspense>
