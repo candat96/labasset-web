@@ -64,5 +64,16 @@
   "jobCount": "{{n}} tác vụ",
   "reportList": "Danh sách báo cáo",
   "paramsHint": "Chọn tham số rồi bấm Xem hoặc xuất tệp.",
-  "definition": "Cấu hình báo cáo"
+  "definition": "Cấu hình báo cáo",
+  "groups": {
+    "equipment": "Thiết bị",
+    "repair": "Sửa chữa",
+    "maintenance": "Bảo dưỡng",
+    "calibration": "Kiểm định",
+    "stock": "Kho vật tư",
+    "stocktake": "Kiểm kê",
+    "request": "Phiếu yêu cầu",
+    "procurement": "Mua sắm",
+    "kpi": "Hiệu suất"
+  }
 }

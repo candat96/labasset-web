@@ -176,7 +176,7 @@ export function Component() {
             {groups.map((group) => (
               <section key={group.name}>
                 <h3 className="text-muted-foreground mb-1.5 text-[12px] font-semibold tracking-[0.05em] uppercase">
-                  {group.name}
+                  {t(`groups.${group.name}`, { defaultValue: group.name })}
                 </h3>
                 <ul className="space-y-0.5">
                   {group.items.map((row) => (
