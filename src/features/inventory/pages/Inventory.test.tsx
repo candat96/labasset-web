@@ -11,9 +11,12 @@ import { Component as ReceiptFormPage } from './ReceiptFormPage'
 import { Component as IssueFormPage } from './IssueFormPage'
 import { Component as TransfersPage } from './TransfersPage'
 
-/** Chờ FormDrawer mở xong và tự focus trường đầu trước khi thao tác. */
-async function settleDrawer() {
-  await screen.findByTestId('form-drawer')
+/**
+ * Chờ form dựng xong trước khi thao tác. Ba trang nhập/xuất/vật tư là TRANG (có
+ * thanh nút dính đáy), riêng Chuyển kho mở bằng drawer từ danh sách.
+ */
+async function settleForm() {
+  await screen.findByRole('button', { name: /^(Lưu|Lưu nháp)$/ })
   await new Promise((resolve) => setTimeout(resolve, 120))
 }
 
@@ -121,7 +124,7 @@ it('creates a supply', async () => {
     route: '/supplies/new',
     routes: [{ path: '/supplies/:id', element: <div>DETAIL</div> }],
   })
-  await settleDrawer()
+  await settleForm()
   await userEvent.type(screen.getByLabelText('Tên'), 'Huyết thanh mới')
   await userEvent.type(screen.getByLabelText('ĐVT'), 'Mil')
   await userEvent.click(await screen.findByRole('option', { name: /Mililit/ }))
@@ -152,7 +155,7 @@ it('creates a supply without code — body omits code and toast shows generated 
     route: '/supplies/new',
     routes: [{ path: '/supplies/:id', element: <div>DETAIL</div> }],
   })
-  await settleDrawer()
+  await settleForm()
   expect(screen.getByLabelText('Mã')).toHaveAttribute(
     'placeholder',
     'Để trống sẽ tự sinh (vd VT-00001)',
@@ -212,7 +215,7 @@ it('creates an issue with a body validated like the API', async () => {
     route: '/stock/issues/new',
     routes: [{ path: '/stock/issues/:id', element: <div>DETAIL</div> }],
   })
-  await settleDrawer()
+  await settleForm()
   await userEvent.type(screen.getByLabelText('Kho'), 'Kho')
   await userEvent.click(await screen.findByRole('option', { name: /Kho chính/ }))
   await userEvent.type(screen.getByLabelText('Khoa nhận'), 'XN')
@@ -269,7 +272,7 @@ it('creates a receipt with a body validated like the API', async () => {
     route: '/stock/receipts/new',
     routes: [{ path: '/stock/receipts/:id', element: <div>DETAIL</div> }],
   })
-  await settleDrawer()
+  await settleForm()
   await userEvent.type(screen.getByLabelText('Kho'), 'Kho')
   await userEvent.click(await screen.findByRole('option', { name: /Kho chính/ }))
   await userEvent.type(screen.getByLabelText('Nhà cung cấp'), 'Nhà')
@@ -328,7 +331,7 @@ it('creates a transfer with multiple validated lot lines', async () => {
   renderWithProviders(<TransfersPage />)
   await userEvent.click(screen.getByRole('button', { name: 'Tạo chuyển kho' }))
   await screen.findByTestId('form-drawer')
-  // FormDrawer tự focus trường đầu sau khi mở — chờ focus ổn định rồi mới thao tác.
+  // Drawer tự focus trường đầu sau khi mở — chờ focus ổn định rồi mới thao tác.
   await waitFor(() => expect(screen.getByLabelText('Số lượng')).toHaveFocus())
   await userEvent.type(screen.getByLabelText('Kho nguồn'), 'nguồn')
   await userEvent.click(await screen.findByRole('option', { name: /Kho nguồn/ }))
