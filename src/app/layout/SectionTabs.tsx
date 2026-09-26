@@ -23,8 +23,8 @@ export function SectionTabs() {
             cn(
               'rounded-lg px-3 py-1.5 text-[13.5px] font-medium whitespace-nowrap transition-colors',
               isActive
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                ? 'bg-primary text-primary-foreground shadow-[0_1px_2px_rgb(0_111_238/0.35)]'
+                : 'bg-muted text-foreground/80 hover:bg-muted/70 hover:text-foreground',
             )
           }
         >

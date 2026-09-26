@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react'
 import { useEffect, useState } from 'react'
-import { Separator } from '@/components/ui/separator'
 import { Breadcrumbs } from './Breadcrumbs'
 import { SectionTabs } from './SectionTabs'
 import { Brand } from './Brand'
@@ -21,21 +20,21 @@ export function Topbar({ notifications }: { notifications?: ReactNode }) {
   return (
     <header
       className={cn(
-        'bg-background sticky top-0 z-20 flex h-14 shrink-0 items-center gap-2 px-3 transition-shadow',
+        'bg-card border-divider sticky top-0 z-20 flex h-[68px] shrink-0 items-center gap-3 border-b px-4 transition-shadow',
         scrolled && 'shadow-[0_1px_2px_rgb(15_23_42/0.06),0_2px_6px_rgb(15_23_42/0.08)]',
       )}
     >
       <Brand />
-      <Separator orientation="vertical" className="mr-1 h-5!" />
-      <div className="flex min-w-0 flex-1 items-center gap-3">
+      {/* Tab nhóm căn giữa như Figma; màn hẹp thì thay bằng breadcrumb. */}
+      <div className="flex min-w-0 flex-1 items-center justify-center gap-3">
         <SectionTabs />
-        <div className="text-[13px] lg:hidden">
+        <div className="w-full text-[13px] lg:hidden">
           <Breadcrumbs />
         </div>
       </div>
       <GlobalSearch />
-      <AiButton />
       {notifications}
+      <AiButton />
       <UserMenu />
     </header>
   )

@@ -47,6 +47,27 @@ const ICON_CLASS: Record<string, string> = {
   'stock.value': 'bg-primary',
 }
 
+/** Thứ tự ô theo bố cục Figma (khác thứ tự API trả về ở hai ô kho/kiểm định). */
+const ORDER = [
+  'equipment.total',
+  'equipment.active',
+  'equipment.broken',
+  'repair.open',
+  'repair.overdueSla',
+  'maintenance.due30',
+  'stock.lowStock',
+  'calibration.due30',
+  'stock.expiring30',
+  'requests.pending',
+  'stock.value',
+]
+const sortByDesign = (kpis: DashboardKpi[]) =>
+  [...kpis].sort((a, b) => {
+    const ia = ORDER.indexOf(a.key)
+    const ib = ORDER.indexOf(b.key)
+    return (ia < 0 ? ORDER.length : ia) - (ib < 0 ? ORDER.length : ib)
+  })
+
 const display = (kpi: DashboardKpi) =>
   kpi.unit === 'VND' ? formatVnd(String(kpi.value)) : formatNumber(kpi.value)
 
@@ -69,7 +90,9 @@ function Tile({ kpi }: { kpi: DashboardKpi }) {
         >
           {display(kpi)}
         </span>
-        <span className="text-muted-foreground block truncate text-[13px]">{kpi.title}</span>
+        <span className="text-foreground/75 block truncate text-[14px] font-medium">
+          {kpi.title}
+        </span>
       </span>
     </Link>
   )
@@ -82,7 +105,7 @@ export function KpiTiles({ kpis, loading }: { kpis: DashboardKpi[]; loading: boo
       <div className="grid gap-x-4 gap-y-2 sm:grid-cols-2 xl:grid-cols-4">
         {loading
           ? Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-16" />)
-          : kpis.map((kpi) => <Tile key={kpi.key} kpi={kpi} />)}
+          : sortByDesign(kpis).map((kpi) => <Tile key={kpi.key} kpi={kpi} />)}
       </div>
     </section>
   )

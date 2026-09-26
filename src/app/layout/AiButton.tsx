@@ -29,16 +29,18 @@ export function AiButton() {
           variant="ghost"
           size="sm"
           className={cn(
-            'gap-1.5 rounded-full px-3 font-semibold',
+            'h-10 gap-2 rounded-full border pr-4 pl-1.5 font-semibold',
             active
-              ? 'bg-primary-soft text-primary'
-              : 'bg-brand-gradient text-white hover:opacity-90 hover:text-white',
+              ? 'border-primary bg-primary-soft text-primary'
+              : 'border-border bg-card text-foreground hover:bg-muted',
           )}
           data-testid="ai-header-button"
         >
           <Link to="/assistant" aria-label="Trợ lý AI">
-            <Sparkles className="size-4" aria-hidden />
-            <span className="hidden md:inline">Hỏi AI</span>
+            <span className="bg-success flex size-7 items-center justify-center rounded-full text-white">
+              <Sparkles className="size-4" aria-hidden />
+            </span>
+            <span className="hidden md:inline">AI Assistant</span>
           </Link>
         </Button>
       </TooltipTrigger>

@@ -40,10 +40,10 @@ export function NotificationBell() {
         <Button
           variant="ghost"
           size="icon"
-          className="relative"
+          className="bg-muted text-muted-foreground hover:bg-muted/80 relative size-10 rounded-full"
           aria-label={`${tn('title')}${unread ? ` (${unread} ${tn('unread').toLowerCase()})` : ''}`}
         >
-          <Bell className="size-4" aria-hidden />
+          <Bell className="size-[18px]" aria-hidden />
           {unread > 0 && (
             <span
               data-testid="unread-badge"

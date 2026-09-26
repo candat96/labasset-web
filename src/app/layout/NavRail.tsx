@@ -104,7 +104,7 @@ export function NavRail() {
 
   return (
     <div
-      className="relative z-30 flex shrink-0"
+      className="sticky top-0 z-30 flex h-dvh shrink-0"
       onMouseEnter={enter}
       onMouseLeave={leave}
       onFocus={enter}
@@ -112,7 +112,7 @@ export function NavRail() {
     >
       <nav
         aria-label="Điều hướng chính"
-        className="border-divider bg-card flex w-16 flex-col items-center gap-1 border-r py-3"
+        className="border-divider bg-card flex w-16 shrink-0 flex-col items-center gap-1 overflow-y-auto border-r py-3"
       >
         {groups.map((group) => {
           const Icon = GROUP_ICON[group.key] ?? LayoutDashboard
@@ -162,6 +162,7 @@ export function NavRail() {
           'border-divider bg-card overflow-hidden border-r transition-[width] duration-150',
           open ? 'w-60' : 'w-0',
         )}
+        style={{ maxHeight: '100dvh', overflowY: open ? 'auto' : 'hidden' }}
         data-testid="rail-flyout"
         aria-hidden={!open}
       >

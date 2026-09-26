@@ -52,14 +52,20 @@ export function Component() {
         description={`${hospitalName ? `${hospitalName} · ` : ''}${today}`}
         actions={
           <>
-            <Button asChild variant="outline">
+            <Button asChild variant="ghost" className="h-10 gap-2 pr-3 pl-1.5 font-semibold">
               <Link to="/repairs/new">
-                <Wrench aria-hidden /> Báo hỏng
+                <span className="bg-primary flex size-8 items-center justify-center rounded-full text-white">
+                  <Wrench className="size-4" aria-hidden />
+                </span>
+                Báo hỏng
               </Link>
             </Button>
-            <Button asChild>
+            <Button asChild variant="ghost" className="h-10 gap-2 pr-3 pl-1.5 font-semibold">
               <Link to="/requests/new">
-                <FileText aria-hidden /> Tạo phiếu yêu cầu
+                <span className="bg-primary flex size-8 items-center justify-center rounded-full text-white">
+                  <FileText className="size-4" aria-hidden />
+                </span>
+                Tạo phiếu yêu cầu
               </Link>
             </Button>
           </>

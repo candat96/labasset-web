@@ -54,24 +54,16 @@ export function GlobalSearch() {
 
   return (
     <>
-      <Button
-        variant="outline"
-        size="sm"
-        className="text-muted-foreground hidden w-56 justify-start gap-2 md:flex"
-        onClick={() => setOpen(true)}
-      >
-        <Search className="size-4" aria-hidden />
-        <span className="flex-1 text-left">{t('search.placeholder')}</span>
-        <kbd className="bg-muted rounded px-1.5 font-mono text-[10px]">⌘K</kbd>
-      </Button>
+      {/* Figma Medone: nút tròn nền xám, không phải ô nhập rộng. */}
       <Button
         variant="ghost"
         size="icon"
-        className="md:hidden"
-        aria-label={t('actions.search')}
+        className="bg-muted text-muted-foreground hover:bg-muted/80 size-10 rounded-full"
+        aria-label={`${t('actions.search')} (⌘K)`}
+        title={`${t('search.placeholder')} · ⌘K`}
         onClick={() => setOpen(true)}
       >
-        <Search className="size-4" aria-hidden />
+        <Search className="size-[18px]" aria-hidden />
       </Button>
       <CommandDialog
         open={open}
