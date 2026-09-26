@@ -33,7 +33,7 @@ export function ConditionPhotoPicker({
       </p>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         {files.map((file, index) => (
-          <div key={`${index}-${file.name}`} className="relative overflow-hidden rounded-xl border">
+          <div key={`${index}-${file.name}`} className="relative overflow-hidden rounded-md border">
             <img src={urls[index]} alt={file.name} className="aspect-square w-full object-cover" />
             <Button
               type="button"

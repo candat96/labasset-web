@@ -116,9 +116,9 @@ export function Component() {
       },
       {
         id: 'target',
-        header: t('issueTarget', { defaultValue: 'Khoa nhận / Máy' }),
+        header: t('issueTarget'),
         meta: {
-          label: t('issueTarget', { defaultValue: 'Khoa nhận / Máy' }),
+          label: t('issueTarget'),
           className: 'max-w-[380px] whitespace-normal',
         },
         cell: ({ row }) => {
@@ -155,7 +155,7 @@ export function Component() {
       },
       {
         id: 'lines',
-        header: t('lineCount', { defaultValue: 'Số dòng' }),
+        header: t('lineCount'),
         cell: ({ row }) => {
           const r = row.original as { items?: unknown[]; itemCount?: number }
           const n = r.itemCount ?? r.items?.length
@@ -235,9 +235,7 @@ export function Component() {
     <>
       <PageHeader
         title={t('issuesTitle')}
-        description={t('issuesHint', {
-          defaultValue: 'Phiếu xuất kho cho khoa, sửa chữa, bảo dưỡng; ghi sổ để trừ tồn.',
-        })}
+        description={t('issuesHint')}
         actions={
           canWrite && (
             <div className="flex gap-2">
@@ -268,9 +266,7 @@ export function Component() {
                   <SelectValue placeholder={t('status')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__all__">
-                    {t('common:all', { defaultValue: 'Tất cả' })}
-                  </SelectItem>
+                  <SelectItem value="__all__">{t('common:all')}</SelectItem>
                   {Object.entries(stockDocStatusMap).map(([value, entry]) => (
                     <SelectItem key={value} value={value}>
                       {entry.label}
@@ -290,9 +286,7 @@ export function Component() {
                   <SelectValue placeholder={t('type')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__all__">
-                    {t('common:all', { defaultValue: 'Tất cả' })}
-                  </SelectItem>
+                  <SelectItem value="__all__">{t('common:all')}</SelectItem>
                   {Object.entries(issueTypeLabels).map(([value, label]) => (
                     <SelectItem key={value} value={value}>
                       {label}
@@ -314,16 +308,16 @@ export function Component() {
                 showLabel={false}
               />
             </FilterPanelField>
-            <FilterPanelField label={t('fromDate', { defaultValue: 'Từ ngày' })}>
+            <FilterPanelField label={t('fromDate')}>
               <DatePicker
-                ariaLabel={t('fromDate', { defaultValue: 'Từ ngày' })}
+                ariaLabel={t('fromDate')}
                 value={f.from ?? ''}
                 onChange={(value) => table.setFilter('from', value)}
               />
             </FilterPanelField>
-            <FilterPanelField label={t('toDate', { defaultValue: 'Đến ngày' })}>
+            <FilterPanelField label={t('toDate')}>
               <DatePicker
-                ariaLabel={t('toDate', { defaultValue: 'Đến ngày' })}
+                ariaLabel={t('toDate')}
                 value={f.to ?? ''}
                 onChange={(value) => table.setFilter('to', value)}
               />

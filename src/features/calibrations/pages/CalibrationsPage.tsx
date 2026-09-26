@@ -140,12 +140,12 @@ export function Component() {
       },
       {
         id: 'department',
-        header: t('department', { defaultValue: 'Khoa/Phòng ban' }),
+        header: t('department'),
         cell: ({ row }) => equipmentNames.get(row.original.equipmentId)?.departmentName ?? '—',
       },
       {
         id: 'location',
-        header: t('location', { defaultValue: 'Vị trí' }),
+        header: t('location'),
         cell: ({ row }) =>
           [row.original.room?.name, equipmentNames.get(row.original.equipmentId)?.location]
             .filter(Boolean)
@@ -205,9 +205,7 @@ export function Component() {
     <>
       <PageHeader
         title={t('title')}
-        description={t('listHint', {
-          defaultValue: 'Lịch kiểm định – hiệu chuẩn của máy; theo dõi phiếu đến hạn và quá hạn.',
-        })}
+        description={t('listHint')}
         actions={
           <div className="flex gap-2">
             {canWrite && <Button onClick={() => setOpen(true)}>{t('create')}</Button>}
@@ -358,13 +356,9 @@ export function Component() {
             if (ok.length === 0) throw (results[0] as PromiseRejectedResult).reason
             toast.success(
               failed
-                ? t('savedMany', {
-                    defaultValue: 'Đã tạo {{n}} phiếu, {{f}} lỗi',
-                    n: ok.length,
-                    f: failed,
-                  })
+                ? t('savedMany', { n: ok.length, f: failed })
                 : ok.length > 1
-                  ? t('savedManyOk', { defaultValue: 'Đã tạo {{n}} phiếu kiểm định', n: ok.length })
+                  ? t('savedManyOk', { n: ok.length })
                   : t('saved'),
             )
             setOpen(false)
@@ -384,15 +378,13 @@ export function Component() {
           render={({ field }) => (
             <FormItem className="sm:col-span-full">
               <AsyncSelect
-                label={t('equipmentMulti', { defaultValue: 'Máy (chọn được nhiều)' })}
+                label={t('equipmentMulti')}
                 queryKey="equipment"
                 loadOptions={equipmentOptions}
                 multiple
                 value={field.value}
                 onChange={(v) => field.onChange(Array.isArray(v) ? v : v ? [v] : [])}
-                placeholder={t('equipmentMultiPlaceholder', {
-                  defaultValue: 'Chọn một hoặc nhiều máy — mỗi máy một phiếu',
-                })}
+                placeholder={t('equipmentMultiPlaceholder')}
               />
               <FormMessage />
             </FormItem>

@@ -127,10 +127,7 @@ export function Component() {
       <PageHeader
         eyebrow={t('templatesTitle')}
         title={editing ? t('editTemplate') : t('createTemplateTitle')}
-        description={t('templateFormHint', {
-          defaultValue:
-            'Đặt tên mẫu, phạm vi áp dụng và các mục kiểm tra (đạt/không, đo, ghi chú).',
-        })}
+        description={t('templateFormHint')}
         actions={
           editing &&
           canWrite && (
@@ -176,7 +173,7 @@ export function Component() {
       />
       <Form {...form}>
         <form className="space-y-5" noValidate onSubmit={form.handleSubmit(submit)}>
-          <SectionCard title={t('info', { defaultValue: 'Thông tin' })}>
+          <SectionCard title={t('info')}>
             <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
               <TextField control={form.control} name="name" label={t('name')} />
               <FormField
@@ -202,8 +199,8 @@ export function Component() {
             </div>
           </SectionCard>
           <SectionCard
-            title={t('items', { defaultValue: 'Mục kiểm tra' })}
-            description={t('itemCount', { defaultValue: '{{n}} mục', n: items.fields.length })}
+            title={t('items')}
+            description={t('itemCount', { n: items.fields.length })}
             actions={
               <Button
                 type="button"
@@ -227,7 +224,7 @@ export function Component() {
           >
             <ol className="space-y-3">
               {items.fields.map((field, index) => (
-                <li key={field.id} className="border-divider space-y-3 rounded-xl border p-4">
+                <li key={field.id} className="border-divider space-y-3 rounded-md border p-4">
                   <div className="flex justify-between">
                     <p className="font-medium">
                       {t('item')} {index + 1}

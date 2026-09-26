@@ -27,7 +27,7 @@ export function SectionCard({
 }) {
   return (
     <section
-      className={cn('bg-card shadow-card flex flex-col rounded-xl transition-shadow', className)}
+      className={cn('bg-card shadow-card flex flex-col rounded-md transition-shadow', className)}
     >
       {(title || actions) && (
         <header className="flex items-start justify-between gap-3 px-5 pt-4 pb-3">

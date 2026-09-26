@@ -211,7 +211,7 @@ export function AsyncSelect({
                     <span className="flex min-w-0 flex-col leading-5 whitespace-normal" aria-hidden>
                       <span className="text-[13.5px] font-medium">{option.name}</span>
                       {option.code && (
-                        <span className="text-muted-foreground font-mono text-[11px]">
+                        <span className="text-muted-foreground font-mono text-[12px]">
                           {option.code}
                         </span>
                       )}

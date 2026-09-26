@@ -78,12 +78,7 @@ export function CatalogPage({ slug }: { slug: CatalogSlug }) {
     },
     onError: (error) =>
       toast.error(
-        isApiError(error) && error.code === 'ROOM_IN_USE'
-          ? t('roomInUse', {
-              defaultValue:
-                'Phòng đang có máy nên không xoá được — hãy Sửa và tắt "Đang hoạt động".',
-            })
-          : messageFor(error),
+        isApiError(error) && error.code === 'ROOM_IN_USE' ? t('roomInUse') : messageFor(error),
       ),
   })
   const columns = useMemo<ColumnDef<CatalogRow>[]>(
@@ -176,9 +171,7 @@ export function CatalogPage({ slug }: { slug: CatalogSlug }) {
     <>
       <PageHeader
         title={t(`titles.${slug}`)}
-        description={t('listHint', {
-          defaultValue: 'Danh mục dùng chung; thêm, sửa, ngừng hoạt động các mục.',
-        })}
+        description={t('listHint')}
         actions={
           <>
             <Button variant="outline" onClick={() => setImportOpen(true)}>

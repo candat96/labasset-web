@@ -116,9 +116,7 @@ export function Component() {
         <div className="min-w-0 space-y-5">
           <SectionCard
             title={t('previewTitle')}
-            description={t('previewHint', {
-              defaultValue: 'Các mốc bảo dưỡng dự kiến trong năm; bấm sinh để tạo công việc.',
-            })}
+            description={t('previewHint')}
             actions={
               <div className="flex items-center gap-2">
                 <Input
@@ -158,10 +156,8 @@ export function Component() {
                 <TableHeader>
                   <TableRow>
                     <TableHead className="pl-5">{t('equipment')}</TableHead>
-                    <TableHead>{t('scheduledAt', { defaultValue: 'Ngày dự kiến' })}</TableHead>
-                    <TableHead className="pr-5">
-                      {t('status', { defaultValue: 'Trạng thái' })}
-                    </TableHead>
+                    <TableHead>{t('scheduledAt')}</TableHead>
+                    <TableHead className="pr-5">{t('status')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -176,7 +172,7 @@ export function Component() {
                               value="new"
                               map={{
                                 new: {
-                                  label: t('previewNew', { defaultValue: 'Sẽ tạo' }),
+                                  label: t('previewNew'),
                                   tone: 'info',
                                 },
                               }}
@@ -199,11 +195,11 @@ export function Component() {
                             value={exists ? 'exists' : 'new'}
                             map={{
                               exists: {
-                                label: t('previewHas', { defaultValue: 'Đã có task' }),
+                                label: t('previewHas'),
                                 tone: 'muted',
                               },
                               new: {
-                                label: t('previewNew', { defaultValue: 'Sẽ tạo' }),
+                                label: t('previewNew'),
                                 tone: 'info',
                               },
                             }}
@@ -218,24 +214,19 @@ export function Component() {
           </SectionCard>
           <SectionCard
             title={t('generatedTasks')}
-            description={t('taskCount', { defaultValue: '{{n}} công việc', n: taskRows.length })}
+            description={t('taskCount', { n: taskRows.length })}
             flush={taskRows.length > 0}
           >
             {taskRows.length === 0 ? (
-              <EmptyState
-                icon={ClipboardCheck}
-                title={t('noTasks', { defaultValue: 'Chưa sinh công việc nào' })}
-              />
+              <EmptyState icon={ClipboardCheck} title={t('noTasks')} />
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="pl-5">{t('code', { defaultValue: 'Mã' })}</TableHead>
-                    <TableHead>{t('scheduledAt', { defaultValue: 'Ngày dự kiến' })}</TableHead>
-                    <TableHead>{t('dueAt', { defaultValue: 'Hạn' })}</TableHead>
-                    <TableHead className="pr-5">
-                      {t('status', { defaultValue: 'Trạng thái' })}
-                    </TableHead>
+                    <TableHead className="pl-5">{t('code')}</TableHead>
+                    <TableHead>{t('scheduledAt')}</TableHead>
+                    <TableHead>{t('dueAt')}</TableHead>
+                    <TableHead className="pr-5">{t('status')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -262,7 +253,7 @@ export function Component() {
           </SectionCard>
         </div>
         <div className="space-y-5">
-          <SectionCard title={t('info', { defaultValue: 'Thông tin' })}>
+          <SectionCard title={t('info')}>
             <DataList
               columns={1}
               items={[

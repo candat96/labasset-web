@@ -137,11 +137,7 @@ export function Component() {
           tone="success"
         />
       </div>
-      <SectionCard
-        title={t('stockByLot')}
-        description={t('lotCount', { defaultValue: '{{n}} lô', n: lots.length })}
-        flush
-      >
+      <SectionCard title={t('stockByLot')} description={t('lotCount', { n: lots.length })} flush>
         {lots.length === 0 ? (
           <EmptyState icon={Boxes} title={t('noLots')} />
         ) : (
@@ -242,10 +238,7 @@ export function Component() {
       flush
     >
       {cardRows.length === 0 ? (
-        <EmptyState
-          icon={CalendarRange}
-          title={t('noCardRows', { defaultValue: 'Chưa có giao dịch' })}
-        />
+        <EmptyState icon={CalendarRange} title={t('noCardRows')} />
       ) : (
         <Table>
           <TableHeader>
@@ -289,10 +282,7 @@ export function Component() {
   const equipmentTab = (
     <SectionCard title={t('compatibleEquipment')} flush={compatible.length > 0}>
       {compatible.length === 0 ? (
-        <EmptyState
-          icon={Microscope}
-          title={t('noCompatibleEquipment', { defaultValue: 'Chưa gắn máy tương thích' })}
-        />
+        <EmptyState icon={Microscope} title={t('noCompatibleEquipment')} />
       ) : (
         <ul className="divide-divider divide-y">
           {compatible.map((item) => (
@@ -301,7 +291,7 @@ export function Component() {
                 className="hover:bg-muted/60 flex items-center gap-3 px-5 py-3 transition-colors"
                 to={`/equipment/${item.id}`}
               >
-                <span className="bg-primary-soft text-primary flex size-9 shrink-0 items-center justify-center rounded-lg">
+                <span className="bg-primary-soft text-primary flex size-9 shrink-0 items-center justify-center rounded-md">
                   <Microscope className="size-4" aria-hidden />
                 </span>
                 <span className="min-w-0">
@@ -400,16 +390,14 @@ export function Component() {
         }
         information={
           <>
-            <h2 className="mb-3 text-[15px] leading-6 font-semibold">
-              {t('info', { defaultValue: 'Thông tin' })}
-            </h2>
+            <h2 className="mb-3 text-[15px] leading-6 font-semibold">{t('info')}</h2>
             <DataList
               columns={1}
               items={[
                 { label: t('refPrice'), value: formatVnd(row.refPrice) || null },
                 { label: t('packaging'), value: row.packaging },
                 {
-                  label: t('manufacturerCode', { defaultValue: 'Mã hãng' }),
+                  label: t('manufacturerCode'),
                   value: row.manufacturerCode,
                 },
                 {

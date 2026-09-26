@@ -91,12 +91,7 @@ export function Component() {
       : ''
   return (
     <>
-      <PageHeader
-        title={t('balancesTitle')}
-        description={t('balancesHint', {
-          defaultValue: 'Tồn theo vật tư và kho; bật "Dưới tồn min" để lọc mặt hàng cần nhập thêm.',
-        })}
-      />
+      <PageHeader title={t('balancesTitle')} description={t('balancesHint')} />
       <div className="mb-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard
           title={t('stockValue')}
@@ -105,7 +100,7 @@ export function Component() {
           tone="info"
         />
         <KpiCard
-          title={t('balanceRows', { defaultValue: 'Mặt hàng có tồn' })}
+          title={t('balanceRows')}
           value={list.data?.total ?? '—'}
           icon={<Boxes />}
           tone="neutral"
@@ -117,7 +112,7 @@ export function Component() {
           tone="warning"
         />
         <KpiCard
-          title={t('warehouseCount', { defaultValue: 'Kho' })}
+          title={t('warehouseCount')}
           value={warehouses.data?.length ?? '—'}
           icon={<Warehouse />}
           tone="neutral"

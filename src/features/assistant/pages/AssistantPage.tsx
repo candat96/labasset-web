@@ -67,7 +67,7 @@ function ThreadSkeleton() {
     <div className="space-y-6" aria-hidden>
       {[0, 1].map((row) => (
         <div key={row} className="flex gap-3">
-          <Skeleton className="size-7 shrink-0 rounded-lg" />
+          <Skeleton className="size-7 shrink-0 rounded-md" />
           <Skeleton className={cn('h-20 flex-1 rounded-2xl', row === 1 && 'w-3/4')} />
         </div>
       ))}
@@ -304,7 +304,7 @@ export function Component() {
     <>
       <div
         data-testid="assistant-layout"
-        className="border-divider bg-card shadow-card relative flex h-[calc(100dvh-6rem)] min-h-[480px] overflow-hidden rounded-xl border"
+        className="border-divider bg-card shadow-card relative flex h-[calc(100dvh-6rem)] min-h-[480px] overflow-hidden rounded-md border"
       >
         {panelOpen && (
           <>
@@ -375,7 +375,7 @@ export function Component() {
                       <Sparkles className="size-7" aria-hidden />
                     </div>
                     <div>
-                      <p className="text-[18px] font-semibold">{t('emptyTitle')}</p>
+                      <p className="text-[20px] font-semibold">{t('emptyTitle')}</p>
                       <p className="text-muted-foreground mt-1 text-[13.5px]">{t('emptyHint')}</p>
                     </div>
                     <div className="grid w-full max-w-2xl gap-2 sm:grid-cols-2">
@@ -384,9 +384,9 @@ export function Component() {
                           key={suggestion.key}
                           type="button"
                           onClick={() => void submit(t(suggestion.key))}
-                          className="border-divider bg-card hover:border-primary/40 hover:bg-primary-soft/40 focus-visible:ring-ring/50 flex items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                          className="border-divider bg-card hover:border-primary/40 hover:bg-primary-soft/40 focus-visible:ring-ring/50 flex items-center gap-3 rounded-md border px-3 py-2.5 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none"
                         >
-                          <span className="bg-primary-soft text-primary grid size-8 shrink-0 place-items-center rounded-lg">
+                          <span className="bg-primary-soft text-primary grid size-8 shrink-0 place-items-center rounded-md">
                             <suggestion.icon className="size-4" aria-hidden />
                           </span>
                           <span className="text-[13.5px] leading-5 font-medium">

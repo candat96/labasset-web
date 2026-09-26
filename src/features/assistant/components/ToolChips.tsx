@@ -91,7 +91,7 @@ function ToolTable({ tool }: { tool: AiToolResult }) {
   const visible = keys.filter((key) => !ID_COLUMN.test(key) && !/Id$/.test(key))
   const columns = visible.length > 0 ? visible : keys
   return (
-    <div className="border-divider bg-card overflow-hidden rounded-lg border">
+    <div className="border-divider bg-card overflow-hidden rounded-md border">
       {rows.length > 0 ? (
         <div className="max-h-72 overflow-auto">
           <Table>

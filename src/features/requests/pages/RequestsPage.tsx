@@ -230,9 +230,7 @@ export function Component() {
       {dialog}
       <PageHeader
         title={t('title')}
-        description={t('listHint', {
-          defaultValue: 'Phiếu yêu cầu vật tư và sửa chữa từ các khoa; duyệt, cấp phát và nhận.',
-        })}
+        description={t('listHint')}
         actions={
           <div className="flex gap-2">
             {canStaff && selected.length > 0 && (

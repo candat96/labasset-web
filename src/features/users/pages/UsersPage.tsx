@@ -136,7 +136,7 @@ export function Component() {
     <>
       <PageHeader
         title={t('title')}
-        description={t('listHint', { defaultValue: 'Tài khoản người dùng và vai trò trong viện.' })}
+        description={t('listHint')}
         actions={canWrite && <Button onClick={() => setOpen(true)}>{t('add')}</Button>}
       />
       <FilterPanel

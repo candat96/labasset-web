@@ -210,7 +210,7 @@ export function Component() {
       />
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="min-w-0 space-y-5">
-          <SectionCard title={t('info', { defaultValue: 'Thông tin phiếu' })}>
+          <SectionCard title={t('info')}>
             <DataList
               columns={2}
               items={[
@@ -255,17 +255,12 @@ export function Component() {
               ]}
             />
           </SectionCard>
-          <SectionCard title={t('audit', { defaultValue: 'Nhật ký thay đổi' })}>
+          <SectionCard title={t('audit')}>
             <AuditTrail entityType="calibration" entityId={id} />
           </SectionCard>
         </div>
         <div className="space-y-5">
-          <SectionCard
-            title={t('equipmentHistory')}
-            description={t('equipmentHistoryHint', {
-              defaultValue: 'Các lần kiểm định/hiệu chuẩn của máy này',
-            })}
-          >
+          <SectionCard title={t('equipmentHistory')} description={t('equipmentHistoryHint')}>
             <Timeline
               events={(history.data ?? []).map((item) => ({
                 at: item.performedAt ?? item.scheduledAt ?? item.createdAt,

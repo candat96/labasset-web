@@ -127,7 +127,7 @@ export function Component() {
       },
       {
         id: 'equipmentCount',
-        header: t('catalogFields.rooms.equipmentCount', { defaultValue: 'Số máy' }),
+        header: t('catalogFields.rooms.equipmentCount'),
         cell: ({ row }) => {
           const count = counts.data?.get(row.original.code) ?? 0
           return count ? (
@@ -169,10 +169,7 @@ export function Component() {
                 if (
                   (await confirm({
                     title: t('deleteTitle', { name: row.original.name }),
-                    description: t('roomDeleteDesc', {
-                      defaultValue:
-                        'Phòng đang có máy sẽ không xoá được — hãy tắt "Đang hoạt động".',
-                    }),
+                    description: t('roomDeleteDesc'),
                     destructive: true,
                   })) !== false
                 )
@@ -212,10 +209,7 @@ export function Component() {
     <>
       <PageHeader
         title={t('titles.rooms')}
-        description={t('roomsHint', {
-          defaultValue:
-            'Vị trí vật lý đặt máy: phòng của từng Khoa/Phòng ban hoặc phòng dùng chung.',
-        })}
+        description={t('roomsHint')}
         actions={
           <>
             <Button variant="outline" onClick={() => setImportOpen(true)}>
@@ -227,7 +221,7 @@ export function Component() {
                 setFormOpen(true)
               }}
             >
-              {t('addRoom', { defaultValue: 'Thêm phòng' })}
+              {t('addRoom')}
             </Button>
           </>
         }
@@ -252,23 +246,18 @@ export function Component() {
                 showLabel={false}
               />
             </FilterPanelField>
-            <FilterPanelField label={t('filter.roomType', { defaultValue: 'Loại phòng' })}>
+            <FilterPanelField label={t('filter.roomType')}>
               <Select
                 value={roomType ?? 'all'}
                 onValueChange={(value) =>
                   table.setFilter('roomType', value === 'all' ? undefined : value)
                 }
               >
-                <SelectTrigger
-                  aria-label={t('filter.roomType', { defaultValue: 'Loại phòng' })}
-                  className="w-full"
-                >
+                <SelectTrigger aria-label={t('filter.roomType')} className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">
-                    {t('filter.allRoomTypes', { defaultValue: 'Mọi loại' })}
-                  </SelectItem>
+                  <SelectItem value="all">{t('filter.allRoomTypes')}</SelectItem>
                   {ROOM_TYPES.map((value) => (
                     <SelectItem key={value} value={value}>
                       {enumLabel('roomType', value)}
@@ -298,7 +287,7 @@ export function Component() {
         }
         toolbar={
           <Input
-            aria-label={t('search.roomLabel', { defaultValue: 'Tìm phòng' })}
+            aria-label={t('search.roomLabel')}
             value={table.inputQ}
             onChange={(event) => table.setQ(event.target.value)}
             placeholder={t('search.placeholder')}

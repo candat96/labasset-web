@@ -87,7 +87,7 @@ export function CatalogImportDialog({
               </p>
             )}
             {result.errors.length > 0 && (
-              <div className="border-divider max-h-64 overflow-auto rounded-lg border">
+              <div className="border-divider max-h-64 overflow-auto rounded-md border">
                 <Table>
                   <TableHeader>
                     <TableRow>

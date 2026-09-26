@@ -472,16 +472,14 @@ export function Component() {
                         {formatDateTime(item.createdAt)}
                       </span>
                     </div>
-                    <p className="bg-surface-2 mt-1 rounded-lg px-3 py-2 text-[13.5px] leading-5 whitespace-pre-wrap">
+                    <p className="bg-surface-2 mt-1 rounded-md px-3 py-2 text-[13.5px] leading-5 whitespace-pre-wrap">
                       {item.body}
                     </p>
                   </div>
                 </li>
               ))}
               {row.comments.length === 0 && (
-                <li className="text-muted-foreground text-[13px]">
-                  {t('noComments', { defaultValue: 'Chưa có bình luận' })}
-                </li>
+                <li className="text-muted-foreground text-[13px]">{t('noComments')}</li>
               )}
             </ul>
             <Textarea
@@ -489,9 +487,7 @@ export function Component() {
               onChange={(e) => setComment(e.target.value)}
               maxLength={2000}
               rows={3}
-              placeholder={t('commentPlaceholder', {
-                defaultValue: 'Viết bình luận… (Ctrl+Enter để gửi)',
-              })}
+              placeholder={t('commentPlaceholder')}
               aria-label={t('comments')}
               onKeyDown={(event) => {
                 if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
@@ -509,23 +505,17 @@ export function Component() {
         </div>
 
         <div className="space-y-5">
-          <SectionCard title={t('info', { defaultValue: 'Thông tin' })}>
+          <SectionCard title={t('info')}>
             <DataList
               columns={1}
               items={[
                 {
                   label: t('type'),
-                  value:
-                    row.type === 'supply'
-                      ? t('typeSupply')
-                      : t('typeRepair', { defaultValue: 'Sửa chữa' }),
+                  value: row.type === 'supply' ? t('typeSupply') : t('typeRepair'),
                 },
                 {
                   label: t('priority'),
-                  value:
-                    row.priority === 'urgent'
-                      ? t('urgent')
-                      : t('normal', { defaultValue: 'Bình thường' }),
+                  value: row.priority === 'urgent' ? t('urgent') : t('normal'),
                 },
                 { label: t('department'), value: row.departmentName },
                 { label: t('requester'), value: row.requesterName ?? row.requester?.fullName },
@@ -535,7 +525,7 @@ export function Component() {
                 ...(row.rejectedReason
                   ? [
                       {
-                        label: t('rejectedReason', { defaultValue: 'Lý do từ chối' }),
+                        label: t('rejectedReason'),
                         value: row.rejectedReason,
                         full: true,
                       },
@@ -544,7 +534,7 @@ export function Component() {
               ]}
             />
           </SectionCard>
-          <SectionCard title={t('history', { defaultValue: 'Lịch sử' })}>
+          <SectionCard title={t('history')}>
             <Timeline
               events={[
                 {
@@ -578,7 +568,7 @@ export function Component() {
           </SectionCard>
         </div>
       </div>
-      <SectionCard title={t('audit', { defaultValue: 'Nhật ký thay đổi' })} className="mt-5">
+      <SectionCard title={t('audit')} className="mt-5">
         <AuditTrail entityType="request" entityId={id} />
       </SectionCard>
     </>

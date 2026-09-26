@@ -47,7 +47,7 @@ export function Component() {
   return (
     <Card className="shadow-pop gap-5 py-7">
       <CardHeader className="px-7">
-        <CardTitle className="text-[22px] font-bold tracking-[-0.02em]">
+        <CardTitle className="text-[24px] font-bold tracking-[-0.02em]">
           {t('login.title')}
         </CardTitle>
         <CardDescription className="text-[13.5px]">{t('login.subtitle')}</CardDescription>
@@ -95,7 +95,7 @@ export function Component() {
               <Button
                 type="submit"
                 size="lg"
-                className="mt-1 w-full text-[14.5px] font-semibold shadow-[0_6px_16px_-6px_rgb(41_119_255/0.6)]"
+                className="mt-1 w-full text-[14px] font-semibold shadow-[0_6px_16px_-6px_rgb(41_119_255/0.6)]"
                 disabled={loginMut.isPending}
               >
                 {loginMut.isPending && <Loader2 className="animate-spin" aria-hidden />}

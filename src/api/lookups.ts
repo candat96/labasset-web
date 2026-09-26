@@ -38,6 +38,17 @@ export function useSupplierNames() {
   return useMemo(() => new Map((query.data ?? []).map((row) => [row.id, row.name])), [query.data])
 }
 
+/** id → tên cho một danh mục dùng chung (nhóm thiết bị, hãng…). */
+export function useCatalogLookup(slug: Parameters<typeof catalogOptions>[0], enabled = true) {
+  const query = useQuery({
+    queryKey: ['catalog-options', slug],
+    queryFn: () => catalogOptions(slug, ''),
+    enabled,
+    staleTime: 300_000,
+  })
+  return useMemo(() => new Map((query.data ?? []).map((row) => [row.id, row.name])), [query.data])
+}
+
 export function useDepartmentLookup(enabled = true) {
   const query = useQuery({
     queryKey: ['references', 'departments'],

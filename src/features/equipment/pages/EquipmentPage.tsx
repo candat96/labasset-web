@@ -41,7 +41,7 @@ import {
 } from '@/api/references'
 import { messageFor } from '@/api/errors'
 import { roomEquipmentCounts } from '@/api/room-counts'
-import { useDepartmentLookup } from '@/api/lookups'
+import { useDepartmentLookup, useCatalogLookup, useRoomLookup } from '@/api/lookups'
 import { listCatalog } from '@/features/catalogs/api'
 import { catalogOptions, exportEquipment, printQrLabels, userOptions } from '../api'
 import { useEquipmentList } from '../hooks'
@@ -105,6 +105,10 @@ export function Component() {
   })
   // Tên khoa cho mode "Theo phòng" và cho chip lọc khoa.
   const departmentNames = useDepartmentLookup()
+  // Bảng tra tên cho chip lọc đang áp (Phòng/Nhóm/Hãng/Phụ trách).
+  const roomNames = useRoomLookup()
+  const groupNames = useCatalogLookup('equipment-groups')
+  const manufacturerNames = useCatalogLookup('manufacturers')
   const table = useServerTable({
     filterKeys: [
       'departmentId',
@@ -319,10 +323,17 @@ export function Component() {
       `${t('filters.department')}: ${departmentNames.get(f.departmentId) ?? shortId(f.departmentId)}`,
       () => table.setFilters({ departmentId: undefined, roomId: undefined }),
     )
-  if (f.roomId) addChip('roomId', t('filters.room'))
-  if (f.groupId) addChip('groupId', t('filters.group'))
-  if (f.manufacturerId) addChip('manufacturerId', t('filters.manufacturer'))
-  if (f.staffId) addChip('staffId', t('filters.staff'))
+  if (f.roomId)
+    addChip('roomId', `${t('filters.room')}: ${roomNames.get(f.roomId)?.name ?? shortId(f.roomId)}`)
+  if (f.groupId)
+    addChip('groupId', `${t('filters.group')}: ${groupNames.get(f.groupId) ?? shortId(f.groupId)}`)
+  if (f.manufacturerId)
+    addChip(
+      'manufacturerId',
+      `${t('filters.manufacturer')}: ${manufacturerNames.get(f.manufacturerId) ?? shortId(f.manufacturerId)}`,
+    )
+  if (f.staffId)
+    addChip('staffId', `${t('filters.staff')}: ${staffNames.get(f.staffId) ?? shortId(f.staffId)}`)
   if (selectedStatus.length)
     addChip(
       'status',
@@ -584,7 +595,7 @@ export function Component() {
             <div
               role="region"
               aria-label={t('bulk.label')}
-              className="bg-primary-soft flex flex-wrap items-center gap-2 rounded-xl px-4 py-2 text-[13px]"
+              className="bg-primary-soft flex flex-wrap items-center gap-2 rounded-md px-4 py-2 text-[13px]"
             >
               <span className="mr-auto font-semibold tabular-nums">
                 {t('bulk.selected', { count: selected.length })}

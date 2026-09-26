@@ -136,14 +136,11 @@ export function Component() {
       <PageHeader
         eyebrow={t('title')}
         title={editing ? t('editTitle') : t('createTitle')}
-        description={t('formHint', {
-          defaultValue:
-            'Chọn loại yêu cầu, lý do và vật tư cần cấp; có thể lưu nháp hoặc gửi duyệt ngay.',
-        })}
+        description={t('formHint')}
       />
       <Form {...form}>
         <form className="space-y-5" noValidate>
-          <SectionCard title={t('info', { defaultValue: 'Thông tin' })}>
+          <SectionCard title={t('info')}>
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               <div className="col-span-full grid grid-cols-2 gap-3 md:max-w-md">
                 <Button
@@ -225,7 +222,7 @@ export function Component() {
           {type === 'supply' && (
             <SectionCard
               title={t('items')}
-              description={t('lineCount', { defaultValue: '{{n}} dòng', n: items.fields.length })}
+              description={t('lineCount', { n: items.fields.length })}
               actions={
                 <Button
                   type="button"
@@ -241,7 +238,7 @@ export function Component() {
               {items.fields.map((field, index) => (
                 <div
                   key={field.id}
-                  className="border-divider grid gap-3 rounded-xl border p-4 md:grid-cols-3"
+                  className="border-divider grid gap-3 rounded-md border p-4 md:grid-cols-3"
                 >
                   <FormField
                     control={form.control}
@@ -282,9 +279,7 @@ export function Component() {
                 </div>
               ))}
               {items.fields.length === 0 && (
-                <p className="text-muted-foreground text-[13px]">
-                  {t('noLines', { defaultValue: 'Chưa có dòng vật tư — bấm "Thêm dòng".' })}
-                </p>
+                <p className="text-muted-foreground text-[13px]">{t('noLines')}</p>
               )}
             </SectionCard>
           )}

@@ -58,7 +58,11 @@
       "duration": "Thời lượng (phút)",
       "minutes": "{{n}} phút",
       "created": "Đã ghi nhật ký",
-      "empty": "Chưa có nhật ký xử lý"
+      "empty": "Chưa có nhật ký xử lý",
+      "actions": {
+        "status": "Chuyển trạng thái: {{st}}",
+        "assignment": "Phản hồi phân công: {{r}}"
+      }
     },
     "parts": {
       "add": "Thêm linh kiện",
@@ -235,7 +239,12 @@
       "closed": "Đóng phiếu",
       "title": "Tiến trình"
     },
-    "info": "Thông tin"
+    "info": "Thông tin",
+    "equipmentHistory": {
+      "title": "Lịch sử sửa chữa máy này",
+      "all": "Tất cả ({{n}})",
+      "empty": "Chưa có lần sửa nào trước đó"
+    }
   },
   "presets": {
     "all": "Tất cả",

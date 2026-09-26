@@ -37,7 +37,7 @@ export function AiButton() {
           data-testid="ai-header-button"
         >
           <Link to="/assistant" aria-label="Trợ lý AI">
-            <span className="bg-success flex size-7 items-center justify-center rounded-full text-white">
+            <span className="bg-success flex size-7 items-center justify-center rounded-full text-white dark:text-background">
               <Sparkles className="size-4" aria-hidden />
             </span>
             <span className="hidden md:inline">AI Assistant</span>

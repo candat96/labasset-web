@@ -25,18 +25,18 @@ export function Component() {
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute -bottom-40 -left-20 size-96 rounded-full bg-[#0b1530]/25 blur-3xl"
+          className="pointer-events-none absolute -bottom-40 -left-20 size-96 rounded-full bg-brand-deep/25 blur-3xl"
         />
         <div className="relative flex items-center gap-3">
           <img
             src="/brand/medone-logo.png?v=2"
             alt="MedOne"
-            className="h-28 w-40 rounded-xl bg-white object-contain"
+            className="h-28 w-40 rounded-md bg-white object-contain"
           />
         </div>
         <div className="relative space-y-6">
           <div className="space-y-2">
-            <h1 className="text-[32px] leading-10 font-bold tracking-[-0.02em]">
+            <h1 className="text-[24px] leading-10 font-bold tracking-[-0.02em]">
               {t('app.tagline')}
             </h1>
             <p className="max-w-md text-[14px] leading-6 text-white/80">
@@ -47,7 +47,7 @@ export function Component() {
           <ul className="space-y-3">
             {POINTS.map(({ icon: Icon, text }) => (
               <li key={text} className="flex items-center gap-3 text-[13.5px] text-white/90">
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white/15">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-white/15">
                   <Icon className="size-4" aria-hidden />
                 </span>
                 {text}
@@ -66,7 +66,7 @@ export function Component() {
             <img
               src="/brand/medone-logo.png?v=2"
               alt="MedOne"
-              className="h-28 w-40 rounded-xl bg-white object-contain"
+              className="h-28 w-40 rounded-md bg-white object-contain"
             />
           </div>
           <Outlet />

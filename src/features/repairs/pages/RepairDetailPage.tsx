@@ -211,7 +211,7 @@ export function Component() {
     <>
       {dialog}
       <DetailLayout
-        eyebrow={`${t('title', { defaultValue: 'Phiếu sửa chữa' })} · ${row.code}`}
+        eyebrow={`${t('title')} · ${row.code}`}
         code={row.code}
         name={row.equipment ? `${row.equipment.code} – ${row.equipment.name}` : row.code}
         meta={<RepairMeta row={row} />}
@@ -635,7 +635,7 @@ function RepairInformation({ row }: { row: NonNullable<ReturnType<typeof useRepa
   const timeline = [
     {
       at: row.createdAt,
-      title: t('detail.timeline.created', { defaultValue: 'Tạo phiếu' }),
+      title: t('detail.timeline.created'),
       tone: 'muted' as const,
       icon: <ClipboardList />,
     },
@@ -643,7 +643,7 @@ function RepairInformation({ row }: { row: NonNullable<ReturnType<typeof useRepa
       ? [
           {
             at: row.startedAt,
-            title: t('detail.timeline.started', { defaultValue: 'Bắt đầu xử lý' }),
+            title: t('detail.timeline.started'),
             tone: 'primary' as const,
           },
         ]
@@ -652,7 +652,7 @@ function RepairInformation({ row }: { row: NonNullable<ReturnType<typeof useRepa
       ? [
           {
             at: row.completedAt,
-            title: t('detail.timeline.completed', { defaultValue: 'Hoàn thành' }),
+            title: t('detail.timeline.completed'),
             tone: 'success' as const,
           },
         ]
@@ -661,7 +661,7 @@ function RepairInformation({ row }: { row: NonNullable<ReturnType<typeof useRepa
       ? [
           {
             at: row.acceptedByDeptAt,
-            title: t('detail.timeline.acceptedByDept', { defaultValue: 'Khoa nghiệm thu' }),
+            title: t('detail.timeline.acceptedByDept'),
             tone: 'success' as const,
           },
         ]
@@ -670,7 +670,7 @@ function RepairInformation({ row }: { row: NonNullable<ReturnType<typeof useRepa
       ? [
           {
             at: row.acceptedAt,
-            title: t('detail.timeline.accepted', { defaultValue: 'Nghiệm thu' }),
+            title: t('detail.timeline.accepted'),
             tone: 'success' as const,
           },
         ]
@@ -679,7 +679,7 @@ function RepairInformation({ row }: { row: NonNullable<ReturnType<typeof useRepa
       ? [
           {
             at: row.closedAt,
-            title: t('detail.timeline.closed', { defaultValue: 'Đóng phiếu' }),
+            title: t('detail.timeline.closed'),
             tone: 'muted' as const,
           },
         ]
@@ -687,9 +687,7 @@ function RepairInformation({ row }: { row: NonNullable<ReturnType<typeof useRepa
   ]
   return (
     <>
-      <h2 className="mb-3 text-[15px] leading-6 font-semibold">
-        {t('detail.info', { defaultValue: 'Thông tin' })}
-      </h2>
+      <h2 className="mb-3 text-[15px] leading-6 font-semibold">{t('detail.info')}</h2>
       <DataList
         columns={1}
         items={[
@@ -720,7 +718,7 @@ function RepairInformation({ row }: { row: NonNullable<ReturnType<typeof useRepa
         ]}
       />
       <h2 className="mt-5 mb-3 text-[15px] leading-6 font-semibold">
-        {t('detail.timeline.title', { defaultValue: 'Tiến trình' })}
+        {t('detail.timeline.title')}
       </h2>
       <Timeline events={timeline} />
       <EquipmentRepairHistory equipmentId={row.equipmentId} currentId={row.id} />
@@ -748,23 +746,21 @@ function EquipmentRepairHistory({
     <>
       <div className="mt-5 mb-3 flex items-baseline justify-between">
         <h2 className="text-[15px] leading-6 font-semibold">
-          {t('detail.equipmentHistory.title', { defaultValue: 'Lịch sử sửa chữa máy này' })}
+          {t('detail.equipmentHistory.title')}
         </h2>
         {total > 0 && (
           <Link
             to={`/repairs?equipmentId=${equipmentId}`}
             className="text-primary text-[13px] font-medium"
           >
-            {t('detail.equipmentHistory.all', { defaultValue: 'Tất cả ({{n}})', n: total })}
+            {t('detail.equipmentHistory.all', { n: total })}
           </Link>
         )}
       </div>
       {q.isPending ? (
         <p className="text-muted-foreground text-[13px]">…</p>
       ) : others.length === 0 ? (
-        <p className="text-muted-foreground text-[13px]">
-          {t('detail.equipmentHistory.empty', { defaultValue: 'Chưa có lần sửa nào trước đó' })}
-        </p>
+        <p className="text-muted-foreground text-[13px]">{t('detail.equipmentHistory.empty')}</p>
       ) : (
         <ul className="divide-divider divide-y">
           {others.map((r) => (
@@ -800,7 +796,7 @@ function OverviewTab({
   const userName = useUserNames()
   return (
     <>
-      <SectionCard title={t('detail.overview.problem', { defaultValue: 'Sự cố' })}>
+      <SectionCard title={t('detail.overview.problem')}>
         <DataList
           columns={2}
           items={[
@@ -819,7 +815,7 @@ function OverviewTab({
               ) : null,
             },
             {
-              label: t('detail.overview.equipmentDown', { defaultValue: 'Máy ngừng hoạt động' }),
+              label: t('detail.overview.equipmentDown'),
               value: row.equipmentDown ? (
                 <StatusBadge
                   value="down"
@@ -832,7 +828,7 @@ function OverviewTab({
           ]}
         />
       </SectionCard>
-      <SectionCard title={t('detail.overview.resolution', { defaultValue: 'Chẩn đoán & xử lý' })}>
+      <SectionCard title={t('detail.overview.resolution')}>
         <DataList
           columns={2}
           items={[
@@ -879,14 +875,11 @@ function OverviewTab({
       </SectionCard>
       <SectionCard
         title={t('detail.overview.assignments')}
-        description={t('countPeople', { defaultValue: '{{n}} người', n: row.assignments.length })}
+        description={t('countPeople', { n: row.assignments.length })}
         flush={row.assignments.length > 0}
       >
         {row.assignments.length === 0 ? (
-          <EmptyState
-            icon={User}
-            title={t('detail.overview.noAssignments', { defaultValue: 'Chưa phân công' })}
-          />
+          <EmptyState icon={User} title={t('detail.overview.noAssignments')} />
         ) : (
           <Table>
             <TableHeader>
@@ -928,14 +921,11 @@ function logActionLabel(
   const [kind = action, value] = action.split(':')
   if (kind === 'status' && value) {
     const st = repairStatusMap[value]?.label ?? value
-    return t('detail.logs.actions.status', { defaultValue: 'Chuyển trạng thái: {{st}}', st })
+    return t('detail.logs.actions.status', { st })
   }
   if (kind === 'assignment' && value) {
     const map: Record<string, string> = { accepted: 'nhận việc', rejected: 'từ chối việc' }
-    return t('detail.logs.actions.assignment', {
-      defaultValue: 'Phản hồi phân công: {{r}}',
-      r: map[value] ?? value,
-    })
+    return t('detail.logs.actions.assignment', { r: map[value] ?? value })
   }
   const labels: Record<string, string> = {
     accepted: 'Tiếp nhận phiếu',
@@ -964,15 +954,10 @@ function LogsTab({
   return (
     <SectionCard
       title={t('detail.tabs.logs')}
-      description={t('countItems', { defaultValue: '{{n}} mục', n: logs.length })}
+      description={t('countItems', { n: logs.length })}
       actions={canWrite && <Button onClick={onAdd}>{t('detail.logs.add')}</Button>}
     >
-      {logs.length === 0 && (
-        <EmptyState
-          icon={ClipboardList}
-          title={t('detail.logs.empty', { defaultValue: 'Chưa có nhật ký xử lý' })}
-        />
-      )}
+      {logs.length === 0 && <EmptyState icon={ClipboardList} title={t('detail.logs.empty')} />}
       {logs.length > 0 && (
         <Timeline
           events={logs.map((item) => ({
@@ -1012,15 +997,12 @@ function PartsTab({
   return (
     <SectionCard
       title={t('detail.tabs.parts')}
-      description={t('countItems', { defaultValue: '{{n}} mục', n: parts.length })}
+      description={t('countItems', { n: parts.length })}
       actions={canWrite && <Button onClick={onAdd}>{t('detail.parts.add')}</Button>}
       flush
     >
       {parts.length === 0 ? (
-        <EmptyState
-          icon={Package}
-          title={t('detail.parts.empty', { defaultValue: 'Chưa ghi linh kiện/vật tư' })}
-        />
+        <EmptyState icon={Package} title={t('detail.parts.empty')} />
       ) : (
         <Table>
           <TableHeader>
@@ -1086,21 +1068,16 @@ function VendorsTab({
   return (
     <SectionCard
       title={t('detail.tabs.vendors')}
-      description={t('countItems', { defaultValue: '{{n}} mục', n: vendors.length })}
+      description={t('countItems', { n: vendors.length })}
       actions={canWrite && <Button onClick={onAdd}>{t('detail.vendors.add')}</Button>}
     >
-      {vendors.length === 0 && (
-        <EmptyState
-          icon={Truck}
-          title={t('detail.vendors.empty', { defaultValue: 'Chưa có nhà thầu' })}
-        />
-      )}
+      {vendors.length === 0 && <EmptyState icon={Truck} title={t('detail.vendors.empty')} />}
       <ul className="space-y-3 text-sm">
         {vendors.map((row) => (
-          <li key={row.id} className="border-divider rounded-xl border p-4">
+          <li key={row.id} className="border-divider rounded-md border p-4">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-3">
-                <span className="bg-primary-soft text-primary flex size-9 shrink-0 items-center justify-center rounded-lg">
+                <span className="bg-primary-soft text-primary flex size-9 shrink-0 items-center justify-center rounded-md">
                   <Truck className="size-4" aria-hidden />
                 </span>
                 <div>
@@ -1239,13 +1216,13 @@ function CostsTab({
       )}
       <SectionCard
         title={t('detail.tabs.costs')}
-        description={t('countItems', { defaultValue: '{{n}} mục', n: costs.length })}
+        description={t('countItems', { n: costs.length })}
         actions={canWrite && <Button onClick={onAdd}>{t('detail.costs.add')}</Button>}
         flush
         footer={
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground text-[13px]">
-              {t('detail.costs.totalLabel', { defaultValue: 'Tổng chi phí' })}
+              {t('detail.costs.totalLabel')}
             </span>
             <span className="text-[16px] font-bold tabular-nums">
               {t('detail.costs.total', { amount: formatVnd(total) || '0 ₫' })}
@@ -1254,10 +1231,7 @@ function CostsTab({
         }
       >
         {costs.length === 0 ? (
-          <EmptyState
-            icon={Coins}
-            title={t('detail.costs.empty', { defaultValue: 'Chưa ghi chi phí' })}
-          />
+          <EmptyState icon={Coins} title={t('detail.costs.empty')} />
         ) : (
           <Table>
             <TableHeader>
@@ -1628,7 +1602,7 @@ function ProposeFields({ control }: { control: Control<CompleteForm> }) {
       <div className="space-y-2">
         <p className="text-sm font-medium">{t('detail.complete.proposeSteps')}</p>
         {steps.fields.map((field, index) => (
-          <div key={field.id} className="border-divider space-y-2 rounded-lg border p-3">
+          <div key={field.id} className="border-divider space-y-2 rounded-md border p-3">
             <div className="flex items-center justify-between">
               <p className="text-sm">{t('detail.complete.step', { n: index + 1 })}</p>
               <DeleteIconButton onClick={() => steps.remove(index)} />

@@ -26,7 +26,14 @@ import { repairStats } from '@/features/repairs/api'
 import { endOfMonth, format as formatDate, startOfMonth, subMonths } from 'date-fns'
 
 /** Palette biểu đồ theo token Medone (primary · tím · xanh lá · vàng · hồng · xám). */
-const CHART_COLORS = ['#006fee', '#7828c8', '#17c964', '#f5a524', '#f31260', '#71717a']
+const CHART_COLORS = [
+  'var(--chart-1)',
+  'var(--chart-2)',
+  'var(--chart-3)',
+  'var(--chart-4)',
+  'var(--chart-5)',
+  'var(--chart-6)',
+]
 
 export function Component() {
   const q = useDashboard()
@@ -54,7 +61,7 @@ export function Component() {
           <>
             <Button asChild variant="ghost" className="h-10 gap-2 pr-3 pl-1.5 font-semibold">
               <Link to="/repairs/new">
-                <span className="bg-primary flex size-8 items-center justify-center rounded-full text-white">
+                <span className="bg-primary flex size-8 items-center justify-center rounded-full text-primary-foreground">
                   <Wrench className="size-4" aria-hidden />
                 </span>
                 Báo hỏng
@@ -62,7 +69,7 @@ export function Component() {
             </Button>
             <Button asChild variant="ghost" className="h-10 gap-2 pr-3 pl-1.5 font-semibold">
               <Link to="/requests/new">
-                <span className="bg-primary flex size-8 items-center justify-center rounded-full text-white">
+                <span className="bg-primary flex size-8 items-center justify-center rounded-full text-primary-foreground">
                   <FileText className="size-4" aria-hidden />
                 </span>
                 Tạo phiếu yêu cầu

@@ -99,7 +99,7 @@ export function Component() {
       },
       {
         id: 'lines',
-        header: t('lineCount', { defaultValue: 'Số dòng' }),
+        header: t('lineCount'),
         cell: ({ row }) => {
           const r = row.original as { items?: unknown[]; itemCount?: number }
           const n = r.itemCount ?? r.items?.length
@@ -186,9 +186,7 @@ export function Component() {
     <>
       <PageHeader
         title={t('receiptsTitle')}
-        description={t('receiptsHint', {
-          defaultValue: 'Phiếu nhập từ nhà cung cấp, khoa trả lại, điều chỉnh tăng.',
-        })}
+        description={t('receiptsHint')}
         actions={
           canWrite && (
             <Button asChild>
@@ -214,9 +212,7 @@ export function Component() {
                   <SelectValue placeholder={t('status')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__all__">
-                    {t('common:all', { defaultValue: 'Tất cả' })}
-                  </SelectItem>
+                  <SelectItem value="__all__">{t('common:all')}</SelectItem>
                   {Object.entries(stockDocStatusMap).map(([value, entry]) => (
                     <SelectItem key={value} value={value}>
                       {entry.label}
@@ -236,9 +232,7 @@ export function Component() {
                   <SelectValue placeholder={t('type')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__all__">
-                    {t('common:all', { defaultValue: 'Tất cả' })}
-                  </SelectItem>
+                  <SelectItem value="__all__">{t('common:all')}</SelectItem>
                   {Object.entries(receiptTypeLabels).map(([value, label]) => (
                     <SelectItem key={value} value={value}>
                       {label}
@@ -271,9 +265,7 @@ export function Component() {
                   <SelectValue placeholder="QC" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__all__">
-                    {t('common:all', { defaultValue: 'Tất cả' })}
-                  </SelectItem>
+                  <SelectItem value="__all__">{t('common:all')}</SelectItem>
                   {Object.entries(qcStatusMap).map(([value, entry]) => (
                     <SelectItem key={value} value={value}>
                       {entry.label}
@@ -282,16 +274,16 @@ export function Component() {
                 </SelectContent>
               </Select>
             </FilterPanelField>
-            <FilterPanelField label={t('fromDate', { defaultValue: 'Từ ngày' })}>
+            <FilterPanelField label={t('fromDate')}>
               <DatePicker
-                ariaLabel={t('fromDate', { defaultValue: 'Từ ngày' })}
+                ariaLabel={t('fromDate')}
                 value={f.from ?? ''}
                 onChange={(value) => table.setFilter('from', value)}
               />
             </FilterPanelField>
-            <FilterPanelField label={t('toDate', { defaultValue: 'Đến ngày' })}>
+            <FilterPanelField label={t('toDate')}>
               <DatePicker
-                ariaLabel={t('toDate', { defaultValue: 'Đến ngày' })}
+                ariaLabel={t('toDate')}
                 value={f.to ?? ''}
                 onChange={(value) => table.setFilter('to', value)}
               />

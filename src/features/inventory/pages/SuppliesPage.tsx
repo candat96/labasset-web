@@ -140,9 +140,7 @@ export function Component() {
     <>
       <PageHeader
         title={t('suppliesTitle')}
-        description={t('suppliesHint', {
-          defaultValue: 'Danh mục vật tư, hoá chất: mã, đơn vị, quy cách, theo dõi lô/hạn.',
-        })}
+        description={t('suppliesHint')}
         actions={
           <div className="flex gap-2">
             {canWrite && (
@@ -243,9 +241,7 @@ export function Component() {
                   <SelectValue placeholder={t('status')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__all__">
-                    {t('common:all', { defaultValue: 'Tất cả' })}
-                  </SelectItem>
+                  <SelectItem value="__all__">{t('common:all')}</SelectItem>
                   <SelectItem value="true">{commonStatusMap.active?.label}</SelectItem>
                   <SelectItem value="false">{commonStatusMap.inactive?.label}</SelectItem>
                 </SelectContent>
@@ -262,11 +258,9 @@ export function Component() {
                   <SelectValue placeholder={t('trackLot')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__all__">
-                    {t('common:all', { defaultValue: 'Tất cả' })}
-                  </SelectItem>
-                  <SelectItem value="true">{t('yes', { defaultValue: 'Có' })}</SelectItem>
-                  <SelectItem value="false">{t('no', { defaultValue: 'Không' })}</SelectItem>
+                  <SelectItem value="__all__">{t('common:all')}</SelectItem>
+                  <SelectItem value="true">{t('yes')}</SelectItem>
+                  <SelectItem value="false">{t('no')}</SelectItem>
                 </SelectContent>
               </Select>
             </FilterPanelField>

@@ -29,12 +29,12 @@ function blockText(b: GuideBlock): string {
 function Block({ b }: { b: GuideBlock }) {
   switch (b.type) {
     case 'p':
-      return <p className="text-[14.5px] leading-7">{b.text}</p>
+      return <p className="text-[14px] leading-7">{b.text}</p>
     case 'steps':
       return (
         <ol className="space-y-2">
           {b.items.map((it, i) => (
-            <li key={i} className="flex gap-3 text-[14.5px] leading-7">
+            <li key={i} className="flex gap-3 text-[14px] leading-7">
               <span className="bg-primary-soft text-primary mt-1 flex size-6 shrink-0 items-center justify-center rounded-full text-[12px] font-bold">
                 {i + 1}
               </span>
@@ -45,7 +45,7 @@ function Block({ b }: { b: GuideBlock }) {
       )
     case 'list':
       return (
-        <ul className="ml-5 list-disc space-y-1.5 text-[14.5px] leading-7 marker:text-primary">
+        <ul className="ml-5 list-disc space-y-1.5 text-[14px] leading-7 marker:text-primary">
           {b.items.map((it, i) => (
             <li key={i}>{it}</li>
           ))}
@@ -56,7 +56,7 @@ function Block({ b }: { b: GuideBlock }) {
       return (
         <div
           className={cn(
-            'rounded-lg border-l-4 px-4 py-3 text-[14px] leading-6',
+            'rounded-md border-l-4 px-4 py-3 text-[14px] leading-6',
             tone === 'info' && 'bg-info-bg text-info-fg border-primary',
             tone === 'warning' && 'bg-warning-bg text-warning-fg border-warning',
             tone === 'success' && 'bg-success-bg text-success-fg border-success',
@@ -242,7 +242,7 @@ export function Component() {
             <p className="text-[12px] tracking-[0.06em] text-muted-foreground uppercase">
               {GUIDE_META.product} · {GUIDE_META.tagline}
             </p>
-            <h1 className="text-[26px] font-bold">Hướng dẫn sử dụng</h1>
+            <h1 className="text-[24px] font-bold">Hướng dẫn sử dụng</h1>
             <p className="text-muted-foreground text-[13px]">
               Phiên bản {GUIDE_META.version} · Cập nhật {GUIDE_META.updated}
             </p>

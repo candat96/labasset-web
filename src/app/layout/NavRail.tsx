@@ -127,7 +127,7 @@ export function NavRail() {
                   data-testid="rail-group"
                   aria-current={isActive ? 'page' : undefined}
                   className={cn(
-                    'relative flex size-10 items-center justify-center rounded-xl transition-colors',
+                    'relative flex size-10 items-center justify-center rounded-md transition-colors',
                     isActive
                       ? 'bg-primary text-primary-foreground'
                       : 'text-muted-foreground hover:bg-primary-soft hover:text-secondary-foreground',
@@ -147,7 +147,7 @@ export function NavRail() {
           aria-pressed={pinned}
           aria-label={pinned ? 'Thu gọn menu' : 'Ghim menu mở rộng'}
           data-testid="rail-pin"
-          className="text-muted-foreground hover:bg-muted mt-auto flex size-10 items-center justify-center rounded-xl"
+          className="text-muted-foreground hover:bg-muted mt-auto flex size-10 items-center justify-center rounded-md"
         >
           <PanelLeft
             className={cn('size-5 transition-transform', pinned && 'rotate-180')}
@@ -169,7 +169,7 @@ export function NavRail() {
         <div className="w-60 py-3">
           {groups.map((group) => (
             <div key={group.key} className="mb-2">
-              <p className="text-subtle px-4 pb-1 text-[11.5px] font-semibold tracking-wide uppercase">
+              <p className="text-subtle px-4 pb-1 text-[12px] font-semibold tracking-wide uppercase">
                 {t(group.labelKey.replace('menu:', ''))}
               </p>
               {group.items.map((item) => (
@@ -179,7 +179,7 @@ export function NavRail() {
                   end={item.path === '/'}
                   className={({ isActive }) =>
                     cn(
-                      'mx-2 flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[13.5px]',
+                      'mx-2 flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13.5px]',
                       isActive
                         ? 'bg-primary-soft text-secondary-foreground font-medium'
                         : 'text-foreground/80 hover:bg-muted',

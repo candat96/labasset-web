@@ -96,7 +96,7 @@ export function ConversationSidebar({
               <li
                 key={row.id}
                 className={cn(
-                  'group/conv rounded-lg transition-colors',
+                  'group/conv rounded-md transition-colors',
                   active ? 'bg-card shadow-card' : 'hover:bg-card/70',
                 )}
               >
@@ -105,7 +105,7 @@ export function ConversationSidebar({
                     type="button"
                     aria-current={active ? 'true' : undefined}
                     aria-label={row.title}
-                    className="focus-visible:ring-ring/50 min-w-0 flex-1 rounded-lg px-2.5 pt-1.5 text-left focus-visible:ring-2 focus-visible:outline-none"
+                    className="focus-visible:ring-ring/50 min-w-0 flex-1 rounded-md px-2.5 pt-1.5 text-left focus-visible:ring-2 focus-visible:outline-none"
                     onClick={() => onSelect(row)}
                   >
                     <span
@@ -127,7 +127,7 @@ export function ConversationSidebar({
                     <Trash2 />
                   </Button>
                 </div>
-                <p className="text-subtle flex items-center gap-1 px-2.5 pb-1.5 text-[11px]">
+                <p className="text-subtle flex items-center gap-1 px-2.5 pb-1.5 text-[12px]">
                   <Clock3 className="size-3" aria-hidden />
                   {formatRelative(row.updatedAt)}
                 </p>

@@ -80,10 +80,7 @@ export function Component() {
       <PageHeader title={t('builderTitle')} />
       <p className="text-muted-foreground mb-4 text-sm">{t('builderNote')}</p>
       <div className="max-w-4xl space-y-4">
-        <SectionCard
-          title={t('definition', { defaultValue: 'Cấu hình báo cáo' })}
-          bodyClassName="space-y-4"
-        >
+        <SectionCard title={t('definition')} bodyClassName="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1">
               <Label htmlFor="report-name">{t('name')}</Label>
@@ -268,7 +265,7 @@ export function Component() {
         </SectionCard>
         {preview && (
           <SectionCard
-            title={t('preview', { defaultValue: 'Xem trước' })}
+            title={t('preview')}
             description={`${preview.rows.length} dòng${preview.truncated ? ' · đã rút gọn' : ''}`}
             flush
           >

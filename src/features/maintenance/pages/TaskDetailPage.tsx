@@ -173,7 +173,7 @@ export function Component() {
               {t('schedule')} {formatDateTime(row.scheduledAt)}
             </PageMeta>
             <PageMeta icon={<CalendarDays />}>
-              {t('due', { defaultValue: 'Hạn' })} {formatDateTime(row.dueAt)}
+              {t('due')} {formatDateTime(row.dueAt)}
             </PageMeta>
             {row.planId && (
               <PageMeta icon={<ClipboardList />}>
@@ -267,9 +267,7 @@ export function Component() {
         }
         information={
           <>
-            <h2 className="mb-3 text-[15px] leading-6 font-semibold">
-              {t('info', { defaultValue: 'Thông tin' })}
-            </h2>
+            <h2 className="mb-3 text-[15px] leading-6 font-semibold">{t('info')}</h2>
             <DataList
               columns={1}
               items={[
@@ -283,7 +281,7 @@ export function Component() {
                 },
                 { label: t('type'), value: <StatusBadge value={row.type} map={taskTypeMap} /> },
                 { label: t('schedule'), value: formatDateTime(row.scheduledAt) },
-                { label: t('due', { defaultValue: 'Hạn' }), value: formatDateTime(row.dueAt) },
+                { label: t('due'), value: formatDateTime(row.dueAt) },
                 {
                   label: t('result'),
                   value: row.overallPass == null ? null : row.overallPass ? t('pass') : t('fail'),
@@ -296,7 +294,7 @@ export function Component() {
               events={[
                 {
                   at: row.createdAt,
-                  title: t('createdAt', { defaultValue: 'Tạo công việc' }),
+                  title: t('createdAt'),
                   tone: 'muted',
                 },
                 ...(row.startedAt
@@ -335,10 +333,7 @@ export function Component() {
                 </SectionCard>
                 {row.templateItems.length === 0 && (
                   <SectionCard>
-                    <EmptyState
-                      icon={ListChecks}
-                      title={t('noChecklist', { defaultValue: 'Công việc này không có checklist' })}
-                    />
+                    <EmptyState icon={ListChecks} title={t('noChecklist')} />
                   </SectionCard>
                 )}
                 {row.templateItems.map((item) => {
@@ -354,7 +349,7 @@ export function Component() {
                     <div
                       key={item.key}
                       className={cn(
-                        'border-divider rounded-xl border p-4 transition-colors',
+                        'border-divider rounded-md border p-4 transition-colors',
                         missingKeys.has(item.key) && 'border-destructive bg-destructive-bg/40',
                         result.pass === true && 'border-success/40 bg-success-bg/30',
                         result.pass === false && 'border-destructive/40 bg-destructive-bg/30',
@@ -513,9 +508,7 @@ export function Component() {
                     </div>
                   ))}
                   {suppliesUsed.length === 0 && (
-                    <p className="text-muted-foreground text-[13px]">
-                      {t('noSuppliesUsed', { defaultValue: 'Chưa ghi vật tư tiêu hao' })}
-                    </p>
+                    <p className="text-muted-foreground text-[13px]">{t('noSuppliesUsed')}</p>
                   )}
                 </SectionCard>
               </>
@@ -543,7 +536,7 @@ export function Component() {
             value: 'audit',
             label: t('tabHistory'),
             content: (
-              <SectionCard title={t('audit', { defaultValue: 'Nhật ký thay đổi' })}>
+              <SectionCard title={t('audit')}>
                 <AuditTrail entityType="maintenance_task" entityId={id} />
               </SectionCard>
             ),

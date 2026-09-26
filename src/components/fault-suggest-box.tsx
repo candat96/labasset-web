@@ -50,7 +50,7 @@ export function FaultSuggestBox({
             <button
               type="button"
               className={cn(
-                'w-full rounded-lg border p-3 text-left',
+                'w-full rounded-md border p-3 text-left',
                 selected ? 'border-primary bg-primary/5' : 'hover:bg-muted/50',
               )}
               onClick={() => onSelect(row.fault.id)}

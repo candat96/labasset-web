@@ -6,10 +6,7 @@ export function Component() {
   const { t } = useTranslation('settings')
   return (
     <>
-      <PageHeader
-        title={t('backup.title')}
-        description={t('backupHint', { defaultValue: 'Sao lưu và khôi phục dữ liệu của viện.' })}
-      />
+      <PageHeader title={t('backup.title')} description={t('backupHint')} />
       <SectionCard>
         <p className="text-muted-foreground max-w-xl text-sm">
           {/* TODO(api): Tenant API chưa có endpoint backup/restore. Sao lưu do SYS vận hành. */}

@@ -71,7 +71,9 @@ export function useConfirm() {
           <AlertDialogCancel onClick={() => finish(false)}>Huỷ</AlertDialogCancel>
           <AlertDialogAction
             className={
-              options?.destructive ? 'bg-destructive text-white hover:bg-destructive/90' : ''
+              options?.destructive
+                ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
+                : ''
             }
             disabled={options?.requireReason && !reason.trim()}
             onClick={() => finish(reason.trim())}

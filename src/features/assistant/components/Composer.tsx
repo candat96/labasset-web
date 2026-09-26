@@ -134,10 +134,10 @@ export function Composer({
                   <img
                     src={image.previewUrl}
                     alt={image.name}
-                    className="border-divider size-14 rounded-lg border object-cover"
+                    className="border-divider size-14 rounded-md border object-cover"
                   />
                   {image.uploading && (
-                    <span className="bg-background/70 absolute inset-0 grid place-items-center rounded-lg">
+                    <span className="bg-background/70 absolute inset-0 grid place-items-center rounded-md">
                       <Loader2 className="text-primary size-4 animate-spin" aria-hidden />
                     </span>
                   )}
@@ -177,7 +177,7 @@ export function Composer({
             <textarea
               ref={textareaRef}
               rows={rows}
-              className="placeholder:text-subtle min-w-0 flex-1 resize-none bg-transparent px-1.5 py-[7px] text-[14.5px] leading-[22px] outline-none disabled:opacity-60"
+              className="placeholder:text-subtle min-w-0 flex-1 resize-none bg-transparent px-1.5 py-[7px] text-[14px] leading-[22px] outline-none disabled:opacity-60"
               style={{ maxHeight: MAX_ROWS * LINE_HEIGHT + 14 }}
               value={draft}
               onChange={(event) => onDraftChange(event.target.value)}
@@ -196,7 +196,7 @@ export function Composer({
               <Button
                 variant="destructive"
                 size="icon-sm"
-                className="shrink-0 rounded-xl"
+                className="shrink-0 rounded-md"
                 onClick={onStop}
                 aria-label={t('stop')}
                 title={t('stop')}
@@ -206,7 +206,7 @@ export function Composer({
             ) : (
               <Button
                 size="icon-sm"
-                className="shrink-0 rounded-xl"
+                className="shrink-0 rounded-md"
                 onClick={onSubmit}
                 disabled={!canSend}
                 aria-label={t('send')}
@@ -217,7 +217,7 @@ export function Composer({
             )}
           </div>
         </div>
-        <p className="text-subtle mt-1.5 text-center text-[11.5px]">{t('enterHint')}</p>
+        <p className="text-subtle mt-1.5 text-center text-[12px]">{t('enterHint')}</p>
       </div>
     </div>
   )

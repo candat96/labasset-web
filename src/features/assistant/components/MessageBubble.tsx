@@ -31,7 +31,7 @@ import { ToolChips } from './ToolChips'
 
 /** Định dạng markdown trong bong bóng trả lời (đậm, danh sách, code, bảng, trích dẫn…). */
 const MARKDOWN = [
-  'text-[14.5px] leading-[1.65]',
+  'text-[14px] leading-[1.65]',
   '[&>*:first-child]:mt-0 [&>*:last-child]:mb-0',
   '[&_p+p]:mt-3',
   '[&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5',
@@ -40,11 +40,11 @@ const MARKDOWN = [
   '[&_strong]:font-semibold',
   '[&_a]:text-primary [&_a]:font-medium [&_a]:underline [&_a]:underline-offset-2',
   '[&_code]:bg-card [&_code]:border-divider [&_code]:rounded [&_code]:border [&_code]:px-1 [&_code]:py-px [&_code]:font-mono [&_code]:text-[12.5px]',
-  '[&_pre]:bg-card [&_pre]:border-divider [&_pre]:my-2 [&_pre]:overflow-x-auto [&_pre]:rounded-lg [&_pre]:border [&_pre]:p-3',
+  '[&_pre]:bg-card [&_pre]:border-divider [&_pre]:my-2 [&_pre]:overflow-x-auto [&_pre]:rounded-md [&_pre]:border [&_pre]:p-3',
   '[&_pre_code]:border-0 [&_pre_code]:bg-transparent [&_pre_code]:p-0',
   '[&_h1]:mt-3 [&_h1]:text-[16px] [&_h1]:font-semibold',
   '[&_h2]:mt-3 [&_h2]:text-[15px] [&_h2]:font-semibold',
-  '[&_h3]:mt-2.5 [&_h3]:text-[14.5px] [&_h3]:font-semibold',
+  '[&_h3]:mt-2.5 [&_h3]:text-[14px] [&_h3]:font-semibold',
   '[&_blockquote]:border-primary/40 [&_blockquote]:text-muted-foreground [&_blockquote]:my-2 [&_blockquote]:border-l-2 [&_blockquote]:pl-3',
   '[&_hr]:border-divider [&_hr]:my-3',
   // Bảng: bọc trong div cuộn ngang (xem `components.table` bên dưới)
@@ -55,7 +55,7 @@ const MARKDOWN = [
 
 const MARKDOWN_COMPONENTS = {
   table: (props: React.ComponentProps<'table'>) => (
-    <div className="border-divider my-2 overflow-x-auto rounded-lg border" data-testid="md-table">
+    <div className="border-divider my-2 overflow-x-auto rounded-md border" data-testid="md-table">
       <table {...props} />
     </div>
   ),
@@ -148,7 +148,7 @@ export function MessageBubble({
   if (isUser)
     return (
       <div className="flex justify-end" data-role="user">
-        <div className="bg-primary-soft text-foreground max-w-[85%] rounded-2xl rounded-br-md px-4 py-2.5 text-[14.5px] leading-[1.6] sm:max-w-[70%]">
+        <div className="bg-primary-soft text-foreground max-w-[85%] rounded-2xl rounded-br-md px-4 py-2.5 text-[14px] leading-[1.6] sm:max-w-[70%]">
           <p className="break-words whitespace-pre-wrap">{message.content}</p>
           {message.attachmentFileIds && message.attachmentFileIds.length > 0 && (
             <p className="text-muted-foreground mt-1 text-[12px]">
@@ -169,7 +169,7 @@ export function MessageBubble({
 
   return (
     <div className="flex gap-3" data-role="assistant">
-      <div className="bg-primary-soft text-primary mt-1 grid size-7 shrink-0 place-items-center rounded-lg">
+      <div className="bg-primary-soft text-primary mt-1 grid size-7 shrink-0 place-items-center rounded-md">
         <Bot className="size-4" aria-hidden />
       </div>
       <div className="min-w-0 flex-1 space-y-2">
@@ -296,7 +296,7 @@ export function MessageBubble({
           />
           <DialogFooter>
             <Button variant="outline" onClick={() => setAskNote(false)}>
-              {t('common:actions.cancel', { defaultValue: 'Huỷ' })}
+              {t('common:actions.cancel')}
             </Button>
             <Button
               onClick={() => {

@@ -116,7 +116,7 @@ export function Component() {
       },
       {
         id: 'room',
-        header: t('columns.room', { defaultValue: 'Phòng' }),
+        header: t('columns.room'),
         cell: ({ row }) => row.original.room?.name ?? '—',
       },
       {
@@ -188,9 +188,7 @@ export function Component() {
     <>
       <PageHeader
         title={t('title')}
-        description={t('listHint', {
-          defaultValue: 'Phiếu báo hỏng và sửa chữa máy; theo dõi phân công, SLA và chi phí.',
-        })}
+        description={t('listHint')}
         actions={
           <Button asChild>
             <Link to="/repairs/new">{t('new')}</Link>

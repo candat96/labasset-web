@@ -135,13 +135,7 @@ export function Component() {
     value == null ? '—' : t('stats.hours', { n: formatNumber(value, 1) })
   return (
     <>
-      <PageHeader
-        title={t('stats.title')}
-        description={t('stats.hint', {
-          defaultValue:
-            'Số phiếu, chi phí, MTTR/MTBF theo khoảng thời gian; lọc theo ngày tạo phiếu.',
-        })}
-      />
+      <PageHeader title={t('stats.title')} description={t('stats.hint')} />
       {!canViewStats && <p role="alert">{t('stats.forbidden')}</p>}
       <FilterBar
         className="mb-4"

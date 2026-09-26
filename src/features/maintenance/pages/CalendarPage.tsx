@@ -83,10 +83,7 @@ export function Component() {
   }
   return (
     <>
-      <PageHeader
-        title={t('schedule')}
-        description={t('calendarHint', { defaultValue: 'Lịch bảo dưỡng, kiểm định theo tháng.' })}
-      />
+      <PageHeader title={t('schedule')} description={t('calendarHint')} />
       <div className="mb-3 flex flex-wrap gap-4 text-sm">
         {(['maintenance', 'calibration', 'repair'] as const).map((type) => (
           <label key={type} className="flex items-center gap-2">
@@ -107,7 +104,7 @@ export function Component() {
         </label>
       </div>
       {list.error && <ErrorState error={list.error} onRetry={() => void list.refetch()} />}
-      <div className="rounded-lg border bg-card p-3">
+      <div className="rounded-md border bg-card p-3">
         <FullCalendar
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
           initialView="dayGridMonth"

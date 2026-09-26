@@ -141,7 +141,7 @@ export function DataTable<T>({
   const hasFilterBar = isValidElement(toolbarLeft) && toolbarLeft.type === FilterBar
 
   return (
-    <div className="bg-card shadow-card overflow-hidden rounded-xl" data-slot="data-table">
+    <div className="bg-card shadow-card overflow-hidden rounded-md" data-slot="data-table">
       <div className="bg-surface-2 border-divider flex items-end justify-between gap-3 border-b px-4 py-3">
         <div className="min-w-0 flex-1">
           {toolbarLeft && (hasFilterBar ? toolbarLeft : <FilterBar>{toolbarLeft}</FilterBar>)}

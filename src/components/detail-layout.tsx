@@ -62,20 +62,20 @@ export function DetailLayout({
           }
         >
           <TabsList
-            className="bg-surface-2 mb-4 flex h-auto w-full flex-wrap justify-start gap-1 rounded-xl p-1"
+            className="bg-surface-2 mb-4 flex h-auto w-full flex-wrap justify-start gap-1 rounded-md p-1"
             data-slot="detail-tabs"
           >
             {tabs.map((t) => (
               <TabsTrigger
                 key={t.value}
                 value={t.value}
-                className="h-8 flex-none gap-1.5 rounded-lg px-3 text-[13px] font-medium after:hidden data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-[0_1px_2px_rgb(16_24_40/0.08),0_0_0_1px_rgb(16_24_40/0.06)]"
+                className="h-8 flex-none gap-1.5 rounded-md px-3 text-[13px] font-medium after:hidden data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-[0_1px_2px_rgb(16_24_40/0.08),0_0_0_1px_rgb(16_24_40/0.06)]"
               >
                 {t.label}
                 {typeof t.count === 'number' && (
                   <span
                     className={cn(
-                      'rounded-full px-1.5 text-[11px] leading-4 font-semibold tabular-nums',
+                      'rounded-full px-1.5 text-[12px] leading-4 font-semibold tabular-nums',
                       'bg-muted text-muted-foreground',
                     )}
                   >
@@ -91,7 +91,7 @@ export function DetailLayout({
             </TabsContent>
           ))}
         </Tabs>
-        <aside className="bg-card shadow-card rounded-xl p-5 lg:sticky lg:top-[72px] lg:self-start">
+        <aside className="bg-card shadow-card rounded-md p-5 lg:sticky lg:top-[72px] lg:self-start">
           {information}
         </aside>
       </div>

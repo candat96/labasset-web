@@ -50,7 +50,7 @@ export function KpiCard({
   return (
     <section
       className={cn(
-        'group/kpi bg-card shadow-card relative flex h-full flex-col overflow-hidden rounded-xl p-4 pl-5 transition-[box-shadow,transform] duration-200',
+        'group/kpi bg-card shadow-card relative flex h-full flex-col overflow-hidden rounded-md p-4 pl-5 transition-[box-shadow,transform] duration-200',
         'hover:shadow-card-hover hover:-translate-y-px',
         className,
       )}
@@ -66,7 +66,7 @@ export function KpiCard({
           <div
             data-testid="kpi-icon"
             className={cn(
-              'flex size-10 shrink-0 items-center justify-center rounded-lg [&_svg]:size-5',
+              'flex size-10 shrink-0 items-center justify-center rounded-md [&_svg]:size-5',
               TONE_CLASSES[effectiveTone],
             )}
           >
@@ -80,7 +80,7 @@ export function KpiCard({
           className="text-subtle size-4 opacity-0 transition-opacity group-hover/kpi:opacity-100"
         />
       </div>
-      <p className="mt-3 text-[26px] leading-8 font-bold tracking-[-0.02em] tabular-nums">
+      <p className="mt-3 text-[24px] leading-8 font-bold tracking-[-0.02em] tabular-nums">
         {value}
       </p>
       <h2 className="text-muted-foreground mt-0.5 text-[13px] leading-5 font-medium">{title}</h2>

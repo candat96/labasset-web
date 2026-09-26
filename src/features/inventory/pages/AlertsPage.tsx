@@ -124,12 +124,7 @@ export function Component() {
   ]
   return (
     <>
-      <PageHeader
-        title={t('alertsTitle')}
-        description={t('alertsHint', {
-          defaultValue: 'Cảnh báo tồn dưới định mức, lô sắp hết hạn và hết hạn.',
-        })}
-      />
+      <PageHeader title={t('alertsTitle')} description={t('alertsHint')} />
       <FilterPanel
         storageKey="stock-alerts"
         onReset={table.reset}
@@ -146,9 +141,7 @@ export function Component() {
                 <SelectValue placeholder={t('type')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="__all__">
-                  {t('common:all', { defaultValue: 'Tất cả' })}
-                </SelectItem>
+                <SelectItem value="__all__">{t('common:all')}</SelectItem>
                 {Object.entries(alertTypeMap).map(([value, entry]) => (
                   <SelectItem key={value} value={value}>
                     {entry.label}

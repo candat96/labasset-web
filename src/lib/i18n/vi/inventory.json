@@ -202,5 +202,10 @@
   "lineCount": "Số dòng",
   "createdBy": "Người tạo",
   "issueItems": "Vật tư xuất",
-  "receiptItems": "Vật tư nhập"
+  "receiptItems": "Vật tư nhập",
+  "fromDate": "Từ ngày",
+  "toDate": "Đến ngày",
+  "yes": "Có",
+  "searchTransfer": "Tìm phiếu chuyển",
+  "items": "Dòng vật tư"
 }

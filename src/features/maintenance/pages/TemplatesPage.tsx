@@ -61,9 +61,7 @@ export function Component() {
     <>
       <PageHeader
         title={t('templatesTitle')}
-        description={t('templatesHint', {
-          defaultValue: 'Mẫu checklist dùng cho công việc bảo dưỡng.',
-        })}
+        description={t('templatesHint')}
         actions={
           canWrite && (
             <Button asChild>

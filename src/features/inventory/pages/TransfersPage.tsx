@@ -129,13 +129,13 @@ export function Component() {
       },
       {
         accessorKey: 'issuedAt',
-        header: t('date', { defaultValue: 'Ngày' }),
+        header: t('date'),
         cell: ({ row }) =>
           formatDate(row.original.issuedAt ?? row.original.postedAt ?? undefined) || '—',
       },
       {
         id: 'createdBy',
-        header: t('createdBy', { defaultValue: 'Người tạo' }),
+        header: t('createdBy'),
         cell: ({ row }) => {
           const r = row.original as TransferRow & {
             createdBy?: string | null
@@ -148,7 +148,7 @@ export function Component() {
       },
       {
         id: 'lines',
-        header: t('lineCount', { defaultValue: 'Số dòng' }),
+        header: t('lineCount'),
         cell: ({ row }) => {
           const r = row.original as { items?: unknown[]; itemCount?: number }
           const n = r.itemCount ?? r.items?.length
@@ -200,9 +200,7 @@ export function Component() {
     <>
       <PageHeader
         title={t('transferTitle')}
-        description={t('stockTransfersHint', {
-          defaultValue: 'Chuyển vật tư giữa các kho theo lô.',
-        })}
+        description={t('stockTransfersHint')}
         actions={canWrite && <Button onClick={() => setOpen(true)}>{t('createTransfer')}</Button>}
       />
       <FilterPanel
@@ -226,8 +224,8 @@ export function Component() {
         }
         toolbar={
           <Input
-            aria-label={t('searchTransfer', { defaultValue: 'Tìm phiếu chuyển' })}
-            placeholder={t('searchTransfer', { defaultValue: 'Tìm phiếu chuyển' })}
+            aria-label={t('searchTransfer')}
+            placeholder={t('searchTransfer')}
             value={table.inputQ}
             onChange={(e) => table.setQ(e.target.value)}
             className="h-9 w-56"
@@ -271,7 +269,7 @@ export function Component() {
           }
         }}
       >
-        <SectionCard title={t('info', { defaultValue: 'Thông tin phiếu' })}>
+        <SectionCard title={t('info')}>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             <FormField
               control={form.control}
@@ -311,7 +309,7 @@ export function Component() {
           </div>
         </SectionCard>
         <SectionCard
-          title={t('items', { defaultValue: 'Dòng vật tư' })}
+          title={t('items')}
           actions={
             <Button
               type="button"
@@ -325,7 +323,7 @@ export function Component() {
           bodyClassName="space-y-3"
         >
           {items.fields.map((item, index) => (
-            <div key={item.id} className="border-divider grid gap-3 rounded-xl border p-4">
+            <div key={item.id} className="border-divider grid gap-3 rounded-md border p-4">
               <FormField
                 control={form.control}
                 name={`items.${index}.lotId`}

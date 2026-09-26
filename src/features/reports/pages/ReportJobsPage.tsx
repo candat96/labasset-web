@@ -47,10 +47,7 @@ export function Component() {
       <PageHeader title={t('jobsTitle')} description={t('jobsDesc')} />
       <SectionCard
         title={t('jobsTitle')}
-        description={t('jobCount', {
-          defaultValue: '{{n}} tác vụ',
-          n: jobs.data?.items.length ?? 0,
-        })}
+        description={t('jobCount', { n: jobs.data?.items.length ?? 0 })}
         flush
       >
         {jobs.isPending && (

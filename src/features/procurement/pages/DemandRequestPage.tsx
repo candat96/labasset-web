@@ -173,7 +173,7 @@ function SuggestChip({ line, onClick }: { line: DemandLine; onClick: () => void 
     <button
       type="button"
       onClick={onClick}
-      className="ring-primary/20 bg-primary/5 hover:bg-primary/10 max-w-56 truncate rounded-full px-2 py-0.5 text-left text-[11.5px] text-primary ring-1"
+      className="ring-primary/20 bg-primary/5 hover:bg-primary/10 max-w-56 truncate rounded-full px-2 py-0.5 text-left text-[12px] text-primary ring-1"
       title={`${t('suggestedQtyHint', { defaultValue: 'Gợi ý' })}: ${line.suggestedQty} (${parts.join(' · ')})`}
     >
       <Sparkles className="mr-1 inline size-3 align-[-1px]" />

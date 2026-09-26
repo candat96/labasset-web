@@ -75,13 +75,13 @@ export function AppSidebar() {
                   src="/brand/logo-64.png?v=2"
                   alt=""
                   aria-hidden
-                  className="size-9 shrink-0 rounded-lg bg-white p-0.5 shadow-[0_2px_8px_rgb(0_0_0/0.25)]"
+                  className="size-9 shrink-0 rounded-md bg-white p-0.5 shadow-[0_2px_8px_rgb(0_0_0/0.25)]"
                 />
                 <div className="grid min-w-0 leading-tight">
                   <span className="truncate text-[15px] font-bold tracking-[-0.01em] text-white">
                     {t('app.name')}
                   </span>
-                  <span className="text-sidebar-foreground/70 truncate text-[11.5px]">
+                  <span className="text-sidebar-foreground/70 truncate text-[12px]">
                     {hospitalName ?? t('app.tagline')}
                   </span>
                 </div>
@@ -151,9 +151,9 @@ export function AppSidebar() {
         ))}
       </SidebarContent>
       <SidebarFooter className="px-3 py-3">
-        <div className="text-sidebar-foreground/45 group-data-[collapsible=icon]:hidden flex items-center justify-between text-[11px]">
+        <div className="text-sidebar-foreground/45 group-data-[collapsible=icon]:hidden flex items-center justify-between text-[12px]">
           <span>{t('app.name')} v1.0</span>
-          <span className="bg-success/20 text-success-fg dark:text-success rounded-full px-1.5 py-0.5 text-[10px] font-semibold">
+          <span className="bg-success/20 text-success-fg dark:text-success rounded-full px-1.5 py-0.5 text-[12px] font-semibold">
             online
           </span>
         </div>

@@ -154,15 +154,13 @@ export function Component() {
         if (!next) navigate(-1)
       }}
       title={editing ? t('editSupply') : t('createSupply')}
-      description={t('supplyFormHint', {
-        defaultValue: 'Mã, tên, quy cách và cấu hình theo dõi lô/hạn, tồn tối thiểu – tối đa.',
-      })}
+      description={t('supplyFormHint')}
       form={form}
       submitting={form.formState.isSubmitting}
       submitLabel={t('save')}
       onSubmit={submit}
     >
-      <SectionCard title={t('info', { defaultValue: 'Thông tin chung' })}>
+      <SectionCard title={t('info')}>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           <TextField
             control={form.control}
@@ -248,7 +246,7 @@ export function Component() {
           />
         </div>
       </SectionCard>
-      <SectionCard title={t('stockSettings', { defaultValue: 'Tồn kho & theo dõi' })}>
+      <SectionCard title={t('stockSettings')}>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           <MoneyField control={form.control} name="refPrice" label={t('refPrice')} />
           <SwitchField control={form.control} name="trackLot" label={t('trackLotField')} />

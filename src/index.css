@@ -41,6 +41,18 @@
   --info-fg: #005bc4;
   --accent-strong: #7828c8;
   --accent-strong-bg: #f2eafa;
+  /* Bảng màu biểu đồ / biểu tượng chỉ số (Figma Medone) — không đổi theo chế độ tối. */
+  --chart-1: #006fee;
+  --chart-2: #7828c8;
+  --chart-3: #17c964;
+  --chart-4: #f5a524;
+  --chart-5: #f31260;
+  --chart-6: #71717a;
+  --tile-cyan: #06b7db;
+  --tile-pink: #ff95e1;
+  --tile-purple: #ae7ede;
+  --tile-blue: #66aaf9;
+  --brand-deep: #0b1530;
   --neutral-bg: #f4f4f5;
   --neutral-fg: #52525b;
   --border: #d4d4d8;
@@ -138,6 +150,18 @@
   --color-subtle: var(--subtle);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-accent-strong: var(--accent-strong);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-chart-6: var(--chart-6);
+  --color-tile-cyan: var(--tile-cyan);
+  --color-tile-pink: var(--tile-pink);
+  --color-tile-purple: var(--tile-purple);
+  --color-tile-blue: var(--tile-blue);
+  --color-brand-deep: var(--brand-deep);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-destructive-bg: var(--destructive-bg);

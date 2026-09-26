@@ -107,9 +107,7 @@ export function Component() {
     <>
       <PageHeader
         title={t('quotasTitle')}
-        description={t('quotasHint', {
-          defaultValue: 'Định mức vật tư theo khoa dùng để cảnh báo khi yêu cầu vượt mức.',
-        })}
+        description={t('quotasHint')}
         actions={
           canWrite && (
             <Button

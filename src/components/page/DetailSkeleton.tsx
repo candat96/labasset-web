@@ -27,7 +27,7 @@ export function CardSkeleton({
   table?: boolean
 }) {
   return (
-    <div className={cn('bg-card shadow-card rounded-xl p-5', className)} aria-hidden>
+    <div className={cn('bg-card shadow-card rounded-md p-5', className)} aria-hidden>
       <Skeleton className="mb-4 h-4 w-36" />
       {table ? (
         <div className="space-y-3">
@@ -85,8 +85,8 @@ export function PageSkeleton({ label = 'Đang tải…', kpis = 4 }: { label?: s
     <div role="status" aria-label={label}>
       <div className="mb-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {Array.from({ length: kpis }).map((_, i) => (
-          <div key={i} className="bg-card shadow-card rounded-xl p-4 pl-5" aria-hidden>
-            <Skeleton className="size-10 rounded-lg" />
+          <div key={i} className="bg-card shadow-card rounded-md p-4 pl-5" aria-hidden>
+            <Skeleton className="size-10 rounded-md" />
             <Skeleton className="mt-3 h-7 w-16" />
             <Skeleton className="mt-2 h-3.5 w-28" />
           </div>

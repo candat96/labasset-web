@@ -47,7 +47,7 @@ export function NotificationBell() {
           {unread > 0 && (
             <span
               data-testid="unread-badge"
-              className="bg-destructive text-destructive-foreground absolute -top-0.5 -right-0.5 min-w-4 rounded-full px-1 text-center text-[10px] leading-4 font-semibold"
+              className="bg-destructive text-destructive-foreground absolute -top-0.5 -right-0.5 min-w-4 rounded-full px-1 text-center text-[12px] leading-4 font-semibold"
             >
               {unread > 99 ? '99+' : unread}
             </span>
@@ -83,7 +83,7 @@ export function NotificationBell() {
                     {n.title}
                   </div>
                   <div className="text-muted-foreground line-clamp-2 text-xs">{n.body}</div>
-                  <div className="text-muted-foreground mt-0.5 text-[11px]">
+                  <div className="text-muted-foreground mt-0.5 text-[12px]">
                     {formatRelative(n.createdAt)}
                   </div>
                 </button>

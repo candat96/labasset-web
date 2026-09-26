@@ -375,7 +375,7 @@ export function Component() {
                 <div
                   key={stat.label}
                   className={cn(
-                    'bg-surface-2 rounded-lg px-2 py-2 text-center',
+                    'bg-surface-2 rounded-md px-2 py-2 text-center',
                     stat.warn && 'bg-warning-bg',
                   )}
                 >
@@ -388,13 +388,13 @@ export function Component() {
                   />
                   <p
                     className={cn(
-                      'mt-1 text-[18px] leading-6 font-bold tabular-nums',
+                      'mt-1 text-[20px] leading-6 font-bold tabular-nums',
                       stat.warn && 'text-warning-fg',
                     )}
                   >
                     {stat.value}
                   </p>
-                  <p className="text-muted-foreground text-[11px] leading-4">{stat.label}</p>
+                  <p className="text-muted-foreground text-[12px] leading-4">{stat.label}</p>
                 </div>
               ))}
             </div>
@@ -1039,7 +1039,7 @@ function SoftwareTab({ id, canWrite }: { id: string; canWrite: boolean }) {
     >
       {dialog}
       {key && (
-        <div className="bg-surface-2 mx-5 mb-3 flex items-center justify-between gap-3 rounded-lg px-3 py-2 font-mono text-[13px]">
+        <div className="bg-surface-2 mx-5 mb-3 flex items-center justify-between gap-3 rounded-md px-3 py-2 font-mono text-[13px]">
           <span className="truncate">{key}</span>
           <Button
             size="sm"
@@ -1234,7 +1234,7 @@ function SoftwareHistoryDrawer({
             <ErrorState error={history.error} onRetry={() => void history.refetch()} />
           )}
           {history.data?.map((item) => (
-            <div key={item.id} className="border-divider rounded-lg border p-3">
+            <div key={item.id} className="border-divider rounded-md border p-3">
               <p>
                 {t('software.historyFrom')}: {item.fromVersion ?? '—'} → {t('software.historyTo')}:{' '}
                 {item.toVersion}
@@ -1361,7 +1361,7 @@ function ComponentsTab({
           const bar = Math.min(100, Math.round(pct * 100))
           const color = bar >= 100 ? 'bg-destructive' : bar >= 80 ? 'bg-warning' : 'bg-success'
           return (
-            <li key={row.id} className="border-divider rounded-xl border p-4 text-sm">
+            <li key={row.id} className="border-divider rounded-md border p-4 text-sm">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="text-[14px] font-semibold">{row.name}</span>
                 <StatusBadge value={row.status} map={componentStatusMap} />
@@ -1590,7 +1590,7 @@ function ReplacementsDrawer({
             <ErrorState error={history.error} onRetry={() => void history.refetch()} />
           )}
           {history.data?.map((item) => (
-            <div key={item.id} className="border-divider rounded-lg border p-3">
+            <div key={item.id} className="border-divider rounded-md border p-3">
               <p className="font-medium">{formatDateTime(item.replacedAt)}</p>
               <p>
                 {t('components.historyReason')}: {item.reason}
@@ -2199,7 +2199,7 @@ function TransfersTab({
       {dialog}
       <ul className="space-y-3 text-sm">
         {list.data.items.map((row) => (
-          <li key={row.id} className="border-divider rounded-xl border p-4">
+          <li key={row.id} className="border-divider rounded-md border p-4">
             <div className="flex flex-wrap items-center gap-2">
               <StatusBadge value={row.status} map={transferStatusMap} />
               <span className="inline-flex items-center gap-1.5 text-[14px] font-semibold">
@@ -2420,7 +2420,7 @@ function TimelineTab({ id, userNames }: { id: string; userNames: Map<string, str
       }
       bodyClassName="space-y-4"
     >
-      <div className="bg-surface-2 flex gap-2 rounded-lg p-2">
+      <div className="bg-surface-2 flex gap-2 rounded-md p-2">
         <Input
           aria-label={t('actions.addNote')}
           value={note}

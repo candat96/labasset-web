@@ -115,9 +115,7 @@ export function Component() {
         if (!next) navigate(-1)
       }}
       title={editing ? t('editIssue') : t('createIssue')}
-      description={t('issueFormHint', {
-        defaultValue: 'Chọn loại xuất, kho và các dòng vật tư; phiếu được lưu ở trạng thái nháp.',
-      })}
+      description={t('issueFormHint')}
       form={form}
       submitting={form.formState.isSubmitting}
       submitLabel={t('saveDraft')}
@@ -175,7 +173,7 @@ export function Component() {
         }
       }}
     >
-      <SectionCard title={t('info', { defaultValue: 'Thông tin phiếu' })}>
+      <SectionCard title={t('info')}>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           <SelectField
             control={form.control}
@@ -264,7 +262,7 @@ export function Component() {
         </div>
       </SectionCard>
       <SectionCard
-        title={t('issueItems', { defaultValue: 'Vật tư xuất' })}
+        title={t('issueItems')}
         actions={
           <Button
             type="button"
@@ -280,7 +278,7 @@ export function Component() {
         {items.fields.map((field, index) => (
           <div
             key={field.id}
-            className="border-divider grid gap-3 rounded-xl border p-4 md:grid-cols-3"
+            className="border-divider grid gap-3 rounded-md border p-4 md:grid-cols-3"
           >
             <FormField
               control={form.control}
@@ -396,9 +394,7 @@ export function Component() {
           </div>
         ))}
         {items.fields.length === 0 && (
-          <p className="text-muted-foreground text-[13px]">
-            {t('noLines', { defaultValue: 'Chưa có dòng vật tư — bấm "Thêm dòng".' })}
-          </p>
+          <p className="text-muted-foreground text-[13px]">{t('noLines')}</p>
         )}
       </SectionCard>
     </FormDrawer>

@@ -67,7 +67,7 @@ export function FilterPanel({
         <aside
           data-testid="filter-panel"
           aria-label={t('filters', { defaultValue: 'Bộ lọc' })}
-          className="bg-card shadow-card sticky top-[84px] hidden max-h-[calc(100dvh-100px)] w-60 shrink-0 flex-col rounded-xl lg:flex"
+          className="bg-card shadow-card sticky top-[84px] hidden max-h-[calc(100dvh-100px)] w-60 shrink-0 flex-col rounded-md lg:flex"
         >
           <header className="border-divider flex items-center justify-between border-b px-4 py-2.5">
             <h2 className="text-[14px] font-semibold">

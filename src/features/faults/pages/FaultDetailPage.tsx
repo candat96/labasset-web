@@ -57,7 +57,7 @@ function StepImage({ fileId }: { fileId: string }) {
     <img
       src={url.data.url}
       alt=""
-      className="border-divider mt-2 max-h-48 rounded-lg border object-contain"
+      className="border-divider mt-2 max-h-48 rounded-md border object-contain"
     />
   )
 }
@@ -117,7 +117,7 @@ function FaultBody({ row }: { row: FaultDetail }) {
                     </p>
                   )}
                   {step.cautions && (
-                    <p className="bg-warning-bg text-warning-fg mt-2 inline-flex items-start gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] leading-5">
+                    <p className="bg-warning-bg text-warning-fg mt-2 inline-flex items-start gap-1.5 rounded-md px-2.5 py-1.5 text-[13px] leading-5">
                       <AlertTriangle className="mt-0.5 size-3.5 shrink-0" aria-hidden />
                       {t('detail.cautions', { text: step.cautions })}
                     </p>

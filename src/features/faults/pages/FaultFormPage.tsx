@@ -346,7 +346,7 @@ export function Component() {
           <SectionCard title={t('form.steps')}>
             <ol className="space-y-4">
               {steps.fields.map((field, index) => (
-                <li key={field.id} className="border-divider space-y-3 rounded-xl border p-4">
+                <li key={field.id} className="border-divider space-y-3 rounded-md border p-4">
                   <div className="flex items-center justify-between">
                     <p className="font-medium">{t('form.step', { n: index + 1 })}</p>
                     <div className="flex gap-1">
@@ -425,7 +425,7 @@ export function Component() {
           <SectionCard title={t('form.parts')}>
             <ul className="mt-4 space-y-4">
               {parts.fields.map((field, index) => (
-                <li key={field.id} className="border-divider space-y-3 rounded-xl border p-4">
+                <li key={field.id} className="border-divider space-y-3 rounded-md border p-4">
                   <div className="flex justify-end">
                     <DeleteIconButton onClick={() => parts.remove(index)} />
                   </div>

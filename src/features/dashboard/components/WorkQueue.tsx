@@ -86,7 +86,7 @@ export function WorkQueue() {
 
   return (
     <div className="flex flex-col gap-3">
-      <section className="bg-card shadow-card rounded-xl p-4" aria-labelledby="work-today">
+      <section className="bg-card shadow-card rounded-md p-4" aria-labelledby="work-today">
         <h2 id="work-today" className="mb-3 text-[15px] font-semibold">
           Công việc hôm nay
         </h2>
@@ -109,7 +109,7 @@ export function WorkQueue() {
                   <Link
                     to={row.to}
                     data-testid="work-row"
-                    className={`flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-[13.5px] font-medium transition-opacity hover:opacity-85 ${TONE_ROW[row.tone]}`}
+                    className={`flex items-center gap-2.5 rounded-md px-3 py-2.5 text-[13.5px] font-medium transition-opacity hover:opacity-85 ${TONE_ROW[row.tone]}`}
                   >
                     <Icon className="size-4 shrink-0" aria-hidden />
                     <span className="min-w-0 flex-1 truncate">{row.label}</span>
@@ -124,7 +124,7 @@ export function WorkQueue() {
         )}
       </section>
 
-      <section className="bg-card shadow-card rounded-xl p-4" aria-labelledby="my-notifications">
+      <section className="bg-card shadow-card rounded-md p-4" aria-labelledby="my-notifications">
         <div className="mb-3 flex items-center gap-2">
           <h2 id="my-notifications" className="text-[15px] font-semibold">
             Thông báo của tôi
@@ -167,7 +167,7 @@ export function WorkQueue() {
                   {to ? (
                     <Link
                       to={to}
-                      className="hover:bg-surface-2 flex gap-2 rounded-lg px-2 py-2 transition-colors"
+                      className="hover:bg-surface-2 flex gap-2 rounded-md px-2 py-2 transition-colors"
                     >
                       {body}
                     </Link>
@@ -183,7 +183,7 @@ export function WorkQueue() {
         )}
         <Link
           to="/notifications"
-          className="text-primary mt-3 block rounded-lg border border-current/25 py-1.5 text-center text-[13.5px] font-medium hover:bg-primary-soft"
+          className="text-primary mt-3 block rounded-md border border-current/25 py-1.5 text-center text-[13.5px] font-medium hover:bg-primary-soft"
         >
           Xem tất cả
         </Link>

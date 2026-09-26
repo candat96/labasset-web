@@ -48,14 +48,14 @@ export function Component() {
           <>
             <ul className="mb-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-5 text-sm">
               {Object.entries(stats).map(([key, value]) => (
-                <li key={key} className="bg-surface-2 rounded-lg p-3">
+                <li key={key} className="bg-surface-2 rounded-md p-3">
                   <div className="text-muted-foreground">{key}</div>
                   <div className="font-medium">{String(value)}</div>
                 </li>
               ))}
             </ul>
             {digest.data.content ? (
-              <Markdown content={digest.data.content} className="bg-surface-2 rounded-xl p-4" />
+              <Markdown content={digest.data.content} className="bg-surface-2 rounded-md p-4" />
             ) : (
               <p className="text-muted-foreground text-sm">{t('notConfigured')}</p>
             )}

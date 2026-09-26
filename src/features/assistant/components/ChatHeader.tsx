@@ -96,7 +96,7 @@ export function ChatHeader({
           <PanelLeft />
         </Button>
       )}
-      <div className="bg-primary-soft text-primary grid size-7 shrink-0 place-items-center rounded-lg">
+      <div className="bg-primary-soft text-primary grid size-7 shrink-0 place-items-center rounded-md">
         <Bot className="size-4" aria-hidden />
       </div>
       <div className="flex min-w-0 flex-1 items-center gap-1.5">

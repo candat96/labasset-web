@@ -168,14 +168,14 @@ export function Component() {
       />
       <div className="grid gap-5 lg:grid-cols-[260px_minmax(0,1fr)]">
         <SectionCard
-          title={t('reportList', { defaultValue: 'Danh sách báo cáo' })}
+          title={t('reportList')}
           className="lg:sticky lg:top-[72px] lg:self-start"
           bodyClassName="space-y-4"
         >
           <div data-testid="report-list" className="space-y-4">
             {groups.map((group) => (
               <section key={group.name}>
-                <h3 className="text-muted-foreground mb-1.5 text-[11.5px] font-semibold tracking-[0.05em] uppercase">
+                <h3 className="text-muted-foreground mb-1.5 text-[12px] font-semibold tracking-[0.05em] uppercase">
                   {group.name}
                 </h3>
                 <ul className="space-y-0.5">
@@ -184,7 +184,7 @@ export function Component() {
                       <button
                         type="button"
                         className={cn(
-                          'hover:bg-muted/70 w-full rounded-lg px-2.5 py-1.5 text-left text-[13.5px] transition-colors',
+                          'hover:bg-muted/70 w-full rounded-md px-2.5 py-1.5 text-left text-[13.5px] transition-colors',
                           row.key === key
                             ? 'bg-primary-soft text-primary font-semibold'
                             : 'text-foreground',
@@ -205,9 +205,7 @@ export function Component() {
             <div className="space-y-5">
               <SectionCard
                 title={selected.title}
-                description={t('paramsHint', {
-                  defaultValue: 'Chọn tham số rồi bấm Xem hoặc xuất tệp.',
-                })}
+                description={t('paramsHint')}
                 footer={
                   <div className="flex flex-wrap gap-2">
                     <Button type="button" onClick={onView} disabled={view.isFetching}>

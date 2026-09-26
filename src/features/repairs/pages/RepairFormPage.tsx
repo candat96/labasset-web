@@ -106,18 +106,12 @@ export function Component() {
   }
   return (
     <>
-      <PageHeader
-        eyebrow={t('title', { defaultValue: 'Phiếu sửa chữa' })}
-        title={t('form.title')}
-        description={t('form.hint', {
-          defaultValue: 'Chọn máy, mô tả sự cố và mức độ; hệ thống gợi ý lỗi tương tự bên phải.',
-        })}
-      />
+      <PageHeader eyebrow={t('title')} title={t('form.title')} description={t('form.hint')} />
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
         <Form {...form}>
           <form className="min-w-0 space-y-5" noValidate onSubmit={form.handleSubmit(submit)}>
             <fieldset disabled={!!createdId.current || form.formState.isSubmitting}>
-              <SectionCard title={t('form.info', { defaultValue: 'Thông tin sự cố' })}>
+              <SectionCard title={t('form.info')}>
                 <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
                   <FormField
                     control={form.control}

@@ -108,12 +108,12 @@ export function Component() {
       },
       {
         id: 'department',
-        header: t('department', { defaultValue: 'Khoa/Phòng ban' }),
+        header: t('department'),
         cell: ({ row }) => equipmentNames.get(row.original.equipmentId)?.departmentName ?? '—',
       },
       {
         id: 'location',
-        header: t('location', { defaultValue: 'Vị trí' }),
+        header: t('location'),
         cell: ({ row }) =>
           [row.original.room?.name, equipmentNames.get(row.original.equipmentId)?.location]
             .filter(Boolean)
@@ -152,10 +152,7 @@ export function Component() {
     <>
       <PageHeader
         title={t('tasksTitle')}
-        description={t('tasksHint', {
-          defaultValue:
-            'Công việc bảo dưỡng định kỳ và đột xuất; theo dõi hạn và kết quả checklist.',
-        })}
+        description={t('tasksHint')}
         actions={canWrite && <Button onClick={() => setOpen(true)}>{t('createAdhoc')}</Button>}
       />
       <DataTable

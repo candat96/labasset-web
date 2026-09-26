@@ -50,7 +50,7 @@ export function Component() {
             mutation.mutate(Object.values(changes))
           }}
         >
-          <div className="bg-card divide-y rounded-lg border">
+          <div className="bg-card divide-y rounded-md border">
             {types.map((type) => {
               const row = changes[type] ??
                 list.data?.find((p) => p.type === type) ?? { type, push: true, inapp: true }

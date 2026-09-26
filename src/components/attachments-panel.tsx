@@ -51,8 +51,8 @@ function AttachmentItem({
     <li
       className={
         grid
-          ? 'border-divider overflow-hidden rounded-xl border'
-          : 'border-divider flex items-center gap-3 rounded-lg border p-2.5'
+          ? 'border-divider overflow-hidden rounded-md border'
+          : 'border-divider flex items-center gap-3 rounded-md border p-2.5'
       }
     >
       {grid ? (

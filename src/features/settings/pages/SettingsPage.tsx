@@ -446,12 +446,7 @@ export function Component() {
   const areaWeightSum = kpiArea.repair + kpiArea.maintenance + kpiArea.calibration
   return (
     <>
-      <PageHeader
-        title={t('title')}
-        description={t('hint', {
-          defaultValue: 'Thông tin viện, quy trình duyệt, kho, cảnh báo, đánh số và trợ lý AI.',
-        })}
-      />
+      <PageHeader title={t('title')} description={t('hint')} />
       <Form {...form}>
         <form className="space-y-4" noValidate onSubmit={form.handleSubmit(submit)}>
           <Tabs
@@ -466,7 +461,7 @@ export function Component() {
           >
             <TabsList
               variant="line"
-              className="bg-card shadow-card w-full flex-row flex-wrap items-stretch gap-1 rounded-xl border-b-0 p-2 lg:sticky lg:top-[72px] lg:flex-col"
+              className="bg-card shadow-card w-full flex-row flex-wrap items-stretch gap-1 rounded-md border-b-0 p-2 lg:sticky lg:top-[72px] lg:flex-col"
             >
               {(
                 [
@@ -483,7 +478,7 @@ export function Component() {
                 <TabsTrigger
                   key={value}
                   value={value}
-                  className="h-9 justify-start gap-2 rounded-lg px-3 text-[13.5px] after:hidden data-[state=active]:bg-primary-soft! data-[state=active]:text-primary"
+                  className="h-9 justify-start gap-2 rounded-md px-3 text-[13.5px] after:hidden data-[state=active]:bg-primary-soft! data-[state=active]:text-primary"
                 >
                   <Icon className="size-4" aria-hidden />
                   {t(`tabs.${value}`)}
@@ -686,7 +681,7 @@ export function Component() {
                     {numberingTypes.map((type) => (
                       <div
                         key={type}
-                        className="border-divider grid items-end gap-3 rounded-xl border p-4 sm:grid-cols-[180px_1fr_auto]"
+                        className="border-divider grid items-end gap-3 rounded-md border p-4 sm:grid-cols-[180px_1fr_auto]"
                       >
                         <label className="text-sm font-medium" htmlFor={`number-${type}`}>
                           {t(`numbering.${type}`)}
@@ -742,7 +737,7 @@ export function Component() {
               >
                 <SectionCard title={t('kpi.title')} description={t('kpi.hint')}>
                   <div className="space-y-4">
-                    <fieldset className="border-divider space-y-3 rounded-xl border p-4">
+                    <fieldset className="border-divider space-y-3 rounded-md border p-4">
                       <legend className="px-1 text-sm font-medium">{t('kpi.areaWeights')}</legend>
                       <div className="grid gap-4 sm:grid-cols-3">
                         <NumberField
@@ -770,7 +765,7 @@ export function Component() {
                         </p>
                       )}
                     </fieldset>
-                    <fieldset className="border-divider space-y-4 rounded-xl border p-4">
+                    <fieldset className="border-divider space-y-4 rounded-md border p-4">
                       <legend className="px-1 text-sm font-medium">{t('kpi.metricWeights')}</legend>
                       <div className="space-y-2">
                         <p className="text-muted-foreground text-[12.5px] font-semibold uppercase">
@@ -898,7 +893,7 @@ export function Component() {
                     {aiStatus.data && (
                       <dl
                         role="group"
-                        className="border-divider grid gap-x-6 gap-y-2 rounded-xl border p-4 text-[13px] sm:grid-cols-2 lg:grid-cols-4"
+                        className="border-divider grid gap-x-6 gap-y-2 rounded-md border p-4 text-[13px] sm:grid-cols-2 lg:grid-cols-4"
                         aria-label={t('ai.statusTitle')}
                       >
                         <div>
@@ -945,7 +940,7 @@ export function Component() {
                         </div>
                       </dl>
                     )}
-                    <div className="bg-surface-2 flex items-center justify-between gap-4 rounded-lg px-4 py-3">
+                    <div className="bg-surface-2 flex items-center justify-between gap-4 rounded-md px-4 py-3">
                       <Label htmlFor="ai-enabled">{t('ai.enabled')}</Label>
                       <Switch
                         id="ai-enabled"
@@ -956,7 +951,7 @@ export function Component() {
                       />
                     </div>
                     <div className="grid gap-4 md:grid-cols-2">
-                      <fieldset className="border-divider space-y-3 rounded-xl border p-4">
+                      <fieldset className="border-divider space-y-3 rounded-md border p-4">
                         <legend className="px-1 text-sm font-medium">{t('ai.chat')}</legend>
                         <div className="grid gap-3 sm:grid-cols-2">
                           <div className="space-y-2">
@@ -1124,7 +1119,7 @@ export function Component() {
                           </CollapsiblePrimitive.Content>
                         </CollapsiblePrimitive.Root>
                       </fieldset>
-                      <fieldset className="border-divider space-y-3 rounded-xl border p-4">
+                      <fieldset className="border-divider space-y-3 rounded-md border p-4">
                         <legend className="px-1 text-sm font-medium">{t('ai.embedding')}</legend>
                         <div className="grid gap-3 sm:grid-cols-2">
                           <div className="space-y-2">
@@ -1378,7 +1373,7 @@ export function Component() {
               <TabsContent value="other" forceMount className="data-[state=inactive]:hidden">
                 <SectionCard title={t('tabs.other')}>
                   <div className="space-y-4">
-                    <pre className="bg-surface-2 overflow-auto rounded-lg p-4 text-[12px] leading-5">
+                    <pre className="bg-surface-2 overflow-auto rounded-md p-4 text-[12px] leading-5">
                       {JSON.stringify(other, null, 2)}
                     </pre>
                   </div>

@@ -144,7 +144,7 @@ export function Component() {
         }
       />
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <SectionCard title={t('info', { defaultValue: 'Thông tin tài khoản' })}>
+        <SectionCard title={t('info')}>
           <DataList
             columns={2}
             items={[

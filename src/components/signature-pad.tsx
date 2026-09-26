@@ -20,7 +20,8 @@ export function SignaturePad({ onFile }: { onFile: (file: File | null) => void }
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     ctx.strokeStyle =
       getComputedStyle(document.documentElement).getPropertyValue('--foreground').trim() ||
-      '#0f172a'
+      getComputedStyle(canvas).color ||
+      'currentColor'
     ctx.lineWidth = 2
     ctx.lineCap = 'round'
     ctx.lineJoin = 'round'

@@ -74,7 +74,7 @@ export function PeriodBar({
   )
 
   return (
-    <div className="bg-card shadow-card mb-5 flex flex-col gap-3 rounded-xl p-3">
+    <div className="bg-card shadow-card mb-5 flex flex-col gap-3 rounded-md p-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Tabs value={type} onValueChange={(value) => onTypeChange(value as KpiPeriodType)}>
           <TabsList aria-label={t('title')}>

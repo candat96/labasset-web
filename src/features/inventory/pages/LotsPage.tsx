@@ -133,12 +133,7 @@ export function Component() {
   )
   return (
     <>
-      <PageHeader
-        title={t('lotsTitle')}
-        description={t('lotsHint', {
-          defaultValue: 'Lô vật tư theo kho với hạn dùng và số lượng khả dụng.',
-        })}
-      />
+      <PageHeader title={t('lotsTitle')} description={t('lotsHint')} />
       <FilterPanel
         storageKey="stock-lots"
         onReset={table.reset}
@@ -219,9 +214,7 @@ export function Component() {
                   <SelectValue placeholder={t('status')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__all__">
-                    {t('common:all', { defaultValue: 'Tất cả' })}
-                  </SelectItem>
+                  <SelectItem value="__all__">{t('common:all')}</SelectItem>
                   {Object.entries(lotStatusMap).map(([value, entry]) => (
                     <SelectItem key={value} value={value}>
                       {entry.label}

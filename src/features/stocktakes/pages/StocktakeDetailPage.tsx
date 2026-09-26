@@ -234,7 +234,7 @@ function CountPanel({
         )
       ) : null}
       {batch.length > 0 && (
-        <ul className="divide-divider bg-surface-2 divide-y rounded-lg px-3">
+        <ul className="divide-divider bg-surface-2 divide-y rounded-md px-3">
           {batch.map((line) => (
             <li key={line.clientId} className="flex items-center gap-2 py-2">
               <ScanLine className="text-subtle size-3.5" aria-hidden />
@@ -881,7 +881,7 @@ export function Component() {
             />
           </SectionCard>
           <SectionCard title={t('progress')}>
-            <p className="text-[28px] leading-8 font-bold tracking-[-0.02em] tabular-nums">
+            <p className="text-[24px] leading-8 font-bold tracking-[-0.02em] tabular-nums">
               {progress.data?.percent ?? 0}%
             </p>
             <p className="text-muted-foreground mt-1 text-[13px]">

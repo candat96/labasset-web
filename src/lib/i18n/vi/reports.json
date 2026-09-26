@@ -63,5 +63,6 @@
   "allOption": "Tất cả",
   "jobCount": "{{n}} tác vụ",
   "reportList": "Danh sách báo cáo",
-  "paramsHint": "Chọn tham số rồi bấm Xem hoặc xuất tệp."
+  "paramsHint": "Chọn tham số rồi bấm Xem hoặc xuất tệp.",
+  "definition": "Cấu hình báo cáo"
 }

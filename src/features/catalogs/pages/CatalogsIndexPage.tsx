@@ -26,7 +26,7 @@ export function Component() {
           {catalogSlugs.map((slug, index) => (
             <li key={slug}>
               <Link
-                className="bg-surface-2 hover:bg-accent block rounded-lg p-4"
+                className="bg-surface-2 hover:bg-accent block rounded-md p-4"
                 to={`/admin/catalogs/${slug}`}
               >
                 <h2 className="font-medium">{t(`titles.${slug}`)}</h2>

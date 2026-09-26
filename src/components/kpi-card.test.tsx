@@ -6,7 +6,7 @@ describe('KpiCard (handoff 10 §4)', () => {
   it('render nhãn 13 muted, số 26/700 tabular', () => {
     render(<KpiCard title="Số máy" value={12} tone="info" />)
     expect(screen.getByText('Số máy')).toHaveClass('text-[13px]')
-    expect(screen.getByText('12')).toHaveClass('text-[26px]', 'font-bold', 'tabular-nums')
+    expect(screen.getByText('12')).toHaveClass('text-[24px]', 'font-bold', 'tabular-nums')
   })
 
   it('giá trị 0 → neutral, kể cả khi tone là success', () => {

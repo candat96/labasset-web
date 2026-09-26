@@ -139,7 +139,7 @@ export function Component() {
                   className="text-primary hover:underline"
                   to={`/requests/${extended.requestId}`}
                 >
-                  {t('request', { defaultValue: 'Phiếu yêu cầu' })}
+                  {t('request')}
                 </Link>
               </PageMeta>
             )}
@@ -252,24 +252,20 @@ export function Component() {
         <Alert variant="warning" className="mb-5" role="alert">
           <TriangleAlert />
           <AlertTitle>{t('fefoWarning')}</AlertTitle>
-          <AlertDescription>
-            {t('fefoWarningHint', {
-              defaultValue: 'Có lô hạn dùng gần hơn chưa được xuất trước.',
-            })}
-          </AlertDescription>
+          <AlertDescription>{t('fefoWarningHint')}</AlertDescription>
         </Alert>
       )}
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="min-w-0 space-y-5">
           <SectionCard
-            title={t('issueItems', { defaultValue: 'Vật tư xuất' })}
-            description={`${row.items.length} ${t('supply', { defaultValue: 'vật tư' }).toLowerCase()}`}
+            title={t('issueItems')}
+            description={`${row.items.length} ${t('supply').toLowerCase()}`}
             flush
           >
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="pl-5">{t('supply', { defaultValue: 'Vật tư' })}</TableHead>
+                  <TableHead className="pl-5">{t('supply')}</TableHead>
                   <TableHead>{t('lot')}</TableHead>
                   <TableHead className="pr-5 text-right">{t('quantity')}</TableHead>
                 </TableRow>
@@ -304,14 +300,14 @@ export function Component() {
                 {row.items.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={3} className="text-muted-foreground py-8 text-center">
-                      {t('noItems', { defaultValue: 'Chưa có dòng vật tư' })}
+                      {t('noItems')}
                     </TableCell>
                   </TableRow>
                 )}
               </TableBody>
             </Table>
           </SectionCard>
-          <SectionCard title={t('attachments', { defaultValue: 'Đính kèm' })}>
+          <SectionCard title={t('attachments')}>
             <AttachmentsPanel
               entityType="stock_issue"
               entityId={id}
@@ -324,7 +320,7 @@ export function Component() {
           </SectionCard>
         </div>
         <div className="space-y-5">
-          <SectionCard title={t('info', { defaultValue: 'Thông tin' })}>
+          <SectionCard title={t('info')}>
             <DataList
               columns={1}
               items={[
@@ -340,7 +336,7 @@ export function Component() {
               ]}
             />
           </SectionCard>
-          <SectionCard title={t('history', { defaultValue: 'Lịch sử' })}>
+          <SectionCard title={t('history')}>
             <Timeline
               events={[
                 ...(row.issuedAt
@@ -354,7 +350,7 @@ export function Component() {
           </SectionCard>
         </div>
       </div>
-      <SectionCard title={t('audit', { defaultValue: 'Nhật ký thay đổi' })} className="mt-5">
+      <SectionCard title={t('audit')} className="mt-5">
         <AuditTrail entityType="stock_issue" entityId={id} />
       </SectionCard>
       <Dialog open={signOpen} onOpenChange={setSignOpen}>

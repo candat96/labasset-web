@@ -36,7 +36,7 @@ export function Timeline({ events, className }: { events: TimelineEvent[]; class
             <span
               aria-hidden
               className={cn(
-                'mt-1 flex size-4 shrink-0 items-center justify-center rounded-full ring-4 [&_svg]:size-2.5 [&_svg]:text-white',
+                'mt-1 flex size-4 shrink-0 items-center justify-center rounded-full ring-4 [&_svg]:size-2.5 [&_svg]:text-white dark:[&_svg]:text-background',
                 DOT[tone],
               )}
             >
@@ -51,7 +51,7 @@ export function Timeline({ events, className }: { events: TimelineEvent[]; class
               </div>
               {e.by && <p className="text-muted-foreground text-[12.5px]">{e.by}</p>}
               {e.summary && (
-                <p className="bg-surface-2 mt-2 rounded-lg px-3 py-2 text-[13px] leading-5 whitespace-pre-wrap">
+                <p className="bg-surface-2 mt-2 rounded-md px-3 py-2 text-[13px] leading-5 whitespace-pre-wrap">
                   {e.summary}
                 </p>
               )}

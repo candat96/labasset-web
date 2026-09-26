@@ -35,15 +35,15 @@ const ICONS: Record<string, LucideIcon> = {
 /** Màu biểu tượng từng chỉ số — theo Figma Medone (node 3:3614). */
 const ICON_CLASS: Record<string, string> = {
   'equipment.total': 'bg-primary',
-  'equipment.active': 'bg-[#7828c8]',
+  'equipment.active': 'bg-accent-strong',
   'equipment.broken': 'bg-success',
   'repair.open': 'bg-warning',
   'repair.overdueSla': 'bg-destructive',
-  'maintenance.due30': 'bg-[#06b7db]',
-  'calibration.due30': 'bg-[#ff95e1]',
+  'maintenance.due30': 'bg-tile-cyan',
+  'calibration.due30': 'bg-tile-pink',
   'stock.lowStock': 'bg-warning',
-  'stock.expiring30': 'bg-[#ae7ede]',
-  'requests.pending': 'bg-[#66aaf9]',
+  'stock.expiring30': 'bg-tile-purple',
+  'requests.pending': 'bg-tile-blue',
   'stock.value': 'bg-primary',
 }
 
@@ -77,16 +77,16 @@ function Tile({ kpi }: { kpi: DashboardKpi }) {
     <Link
       to={kpi.to}
       data-testid="kpi-tile"
-      className="hover:bg-surface-2 flex items-center gap-3 rounded-xl p-3 transition-colors"
+      className="hover:bg-surface-2 flex items-center gap-3 rounded-md p-3 transition-colors"
     >
       <span
-        className={`flex size-9 shrink-0 items-center justify-center rounded-full text-white ${ICON_CLASS[kpi.key] ?? 'bg-primary'}`}
+        className={`flex size-9 shrink-0 items-center justify-center rounded-full text-primary-foreground ${ICON_CLASS[kpi.key] ?? 'bg-primary'}`}
       >
         <Icon className="size-[18px]" aria-hidden />
       </span>
       <span className="min-w-0">
         <span
-          className={`block leading-8 font-semibold whitespace-nowrap tabular-nums ${kpi.unit === 'VND' ? 'text-[19px]' : 'text-[24px]'}`}
+          className={`block leading-8 font-semibold whitespace-nowrap tabular-nums ${kpi.unit === 'VND' ? 'text-[20px]' : 'text-[24px]'}`}
         >
           {display(kpi)}
         </span>
@@ -101,7 +101,7 @@ function Tile({ kpi }: { kpi: DashboardKpi }) {
 /** Lưới chỉ số tổng quan — 4 cột, mọi ô đồng hạng như thiết kế Figma. */
 export function KpiTiles({ kpis, loading }: { kpis: DashboardKpi[]; loading: boolean }) {
   return (
-    <section className="bg-card shadow-card rounded-xl p-4" aria-label="Chỉ số tổng quan">
+    <section className="bg-card shadow-card rounded-md p-4" aria-label="Chỉ số tổng quan">
       <div className="grid gap-x-4 gap-y-2 sm:grid-cols-2 xl:grid-cols-4">
         {loading
           ? Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-16" />)

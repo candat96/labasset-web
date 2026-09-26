@@ -297,8 +297,8 @@ export function Component() {
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="min-w-0 space-y-5">
           <SectionCard
-            title={t('receiptItems', { defaultValue: 'Vật tư nhập' })}
-            description={`${receiptItems.length} ${t('supply', { defaultValue: 'vật tư' }).toLowerCase()}`}
+            title={t('receiptItems')}
+            description={`${receiptItems.length} ${t('supply').toLowerCase()}`}
             flush
             footer={
               <div className="flex items-center justify-between">
@@ -312,14 +312,12 @@ export function Component() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="pl-5">{t('supply', { defaultValue: 'Vật tư' })}</TableHead>
+                  <TableHead className="pl-5">{t('supply')}</TableHead>
                   <TableHead>{t('lot')}</TableHead>
-                  <TableHead>{t('expiresAt', { defaultValue: 'Hạn dùng' })}</TableHead>
+                  <TableHead>{t('expiresAt')}</TableHead>
                   <TableHead className="text-right">{t('quantity')}</TableHead>
                   <TableHead className="text-right">{t('unitCost')}</TableHead>
-                  <TableHead className="pr-5 text-right">
-                    {t('lineTotalLabel', { defaultValue: 'Thành tiền' })}
-                  </TableHead>
+                  <TableHead className="pr-5 text-right">{t('lineTotalLabel')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -363,14 +361,14 @@ export function Component() {
                 {receiptItems.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={6} className="text-muted-foreground py-8 text-center">
-                      {t('noItems', { defaultValue: 'Chưa có dòng vật tư' })}
+                      {t('noItems')}
                     </TableCell>
                   </TableRow>
                 )}
               </TableBody>
             </Table>
           </SectionCard>
-          <SectionCard title={t('attachments', { defaultValue: 'Đính kèm' })}>
+          <SectionCard title={t('attachments')}>
             <AttachmentsPanel
               entityType="stock_receipt"
               entityId={id}
@@ -384,7 +382,7 @@ export function Component() {
           </SectionCard>
         </div>
         <div className="space-y-5">
-          <SectionCard title={t('info', { defaultValue: 'Thông tin' })}>
+          <SectionCard title={t('info')}>
             <DataList
               columns={1}
               items={[
@@ -408,7 +406,7 @@ export function Component() {
                 ...(extended.qcNote
                   ? [
                       {
-                        label: t('qcNote', { defaultValue: 'Ghi chú QC' }),
+                        label: t('qcNote'),
                         value: extended.qcNote,
                         full: true,
                       },
@@ -417,7 +415,7 @@ export function Component() {
               ]}
             />
           </SectionCard>
-          <SectionCard title={t('history', { defaultValue: 'Lịch sử' })}>
+          <SectionCard title={t('history')}>
             <Timeline
               events={[
                 ...(row.receivedAt
@@ -445,7 +443,7 @@ export function Component() {
           </SectionCard>
         </div>
       </div>
-      <SectionCard title={t('audit', { defaultValue: 'Nhật ký thay đổi' })} className="mt-5">
+      <SectionCard title={t('audit')} className="mt-5">
         <AuditTrail entityType="stock_receipt" entityId={id} />
       </SectionCard>
       <Button variant="link" asChild className="mt-2 px-0">
