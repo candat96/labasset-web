@@ -27,16 +27,6 @@ import { usePublicRepairSettings } from '../hooks'
 import { repairCreateSchema, type RepairCreateForm } from '../schema'
 import { REPAIR_SEVERITIES } from '../types'
 
-/**
- * Ô nhập theo §Chuẩn thành phần: nền --muted, KHÔNG viền, bo 12, cao 44, nhãn trên ô,
- * focus vòng sáng. Áp cho mọi ô trong form bằng biến thể hậu duệ để không phải sửa
- * component dùng chung (ui/input, ui/select, form/fields).
- */
-const FORM_SCOPE =
-  '[&_input]:h-11 [&_input]:rounded-xl [&_input]:border-0 [&_input]:bg-muted [&_input]:px-3.5 [&_input]:text-sm [&_input]:placeholder:text-muted-foreground [&_input]:focus-visible:ring-2 ' +
-  '[&_textarea]:rounded-xl [&_textarea]:border-0 [&_textarea]:bg-muted [&_textarea]:px-3.5 [&_textarea]:text-sm [&_textarea]:placeholder:text-muted-foreground [&_textarea]:focus-visible:ring-2 ' +
-  '[&_[role=combobox]]:h-11 [&_[role=combobox]]:rounded-xl [&_[role=combobox]]:border-0 [&_[role=combobox]]:bg-muted [&_[role=combobox]]:px-3.5 [&_[role=combobox]]:text-sm [&_[role=combobox]]:focus-visible:ring-2'
-
 export function Component() {
   const { t } = useTranslation('repairs')
   const navigate = useNavigate()
@@ -125,11 +115,7 @@ export function Component() {
       />
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
         <Form {...form}>
-          <form
-            className={`min-w-0 space-y-5 ${FORM_SCOPE}`}
-            noValidate
-            onSubmit={form.handleSubmit(submit)}
-          >
+          <form className="min-w-0 space-y-5" noValidate onSubmit={form.handleSubmit(submit)}>
             <fieldset disabled={!!createdId.current || form.formState.isSubmitting}>
               <SectionCard title={t('form.info', { defaultValue: 'Thông tin sự cố' })}>
                 <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">

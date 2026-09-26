@@ -36,7 +36,7 @@ export function MultiSelect({
           variant="outline"
           role="combobox"
           aria-label={ariaLabel ?? placeholder}
-          className="h-9 w-full justify-between overflow-hidden px-3 font-normal"
+          className="bg-muted hover:bg-muted h-11 w-full justify-between overflow-hidden rounded-md border-0 px-3.5 font-normal shadow-none"
         >
           <span className="flex min-w-0 gap-1 overflow-hidden">
             {selected.length ? (

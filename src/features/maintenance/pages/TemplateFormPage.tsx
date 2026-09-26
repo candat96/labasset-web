@@ -25,12 +25,6 @@ import { useInvalidateTemplates, useTemplate } from '../hooks'
 import { templateSchema, type TemplateForm } from '../schema'
 import { useTranslation } from 'react-i18next'
 
-/** Ô nhập theo §Chuẩn thành phần: nền --muted, không viền, bo 12, cao 44, focus vòng sáng. */
-const FORM_SCOPE =
-  '[&_input]:h-11 [&_input]:rounded-xl [&_input]:border-0 [&_input]:bg-muted [&_input]:px-3.5 [&_input]:text-sm [&_input]:placeholder:text-muted-foreground [&_input]:focus-visible:ring-2 ' +
-  '[&_textarea]:rounded-xl [&_textarea]:border-0 [&_textarea]:bg-muted [&_textarea]:px-3.5 [&_textarea]:text-sm [&_textarea]:placeholder:text-muted-foreground [&_textarea]:focus-visible:ring-2 ' +
-  '[&_[role=combobox]]:h-11 [&_[role=combobox]]:rounded-xl [&_[role=combobox]]:border-0 [&_[role=combobox]]:bg-muted [&_[role=combobox]]:px-3.5 [&_[role=combobox]]:text-sm [&_[role=combobox]]:focus-visible:ring-2'
-
 function slugify(label: string) {
   return label
     .normalize('NFD')
@@ -181,7 +175,7 @@ export function Component() {
         }
       />
       <Form {...form}>
-        <form className={`space-y-5 ${FORM_SCOPE}`} noValidate onSubmit={form.handleSubmit(submit)}>
+        <form className="space-y-5" noValidate onSubmit={form.handleSubmit(submit)}>
           <SectionCard title={t('info', { defaultValue: 'Thông tin' })}>
             <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
               <TextField control={form.control} name="name" label={t('name')} />

@@ -1,7 +1,5 @@
-import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import {
   Select,
   SelectContent,
@@ -10,6 +8,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { formatNumber } from '@/lib/format/number'
+import { TablePager } from './TablePager'
 
 export const PAGE_SIZES = [20, 50, 100]
 
@@ -63,27 +62,7 @@ export function DataTablePagination({
             ))}
           </SelectContent>
         </Select>
-        <span className="tabular-nums">
-          {page} / {pages}
-        </span>
-        <Button
-          variant="outline"
-          size="icon-sm"
-          aria-label={t('table.prev')}
-          disabled={page <= 1}
-          onClick={() => onPageChange(page - 1)}
-        >
-          <ChevronLeft aria-hidden />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon-sm"
-          aria-label={t('table.next')}
-          disabled={page >= pages}
-          onClick={() => onPageChange(page + 1)}
-        >
-          <ChevronRight aria-hidden />
-        </Button>
+        <TablePager page={page} pages={pages} onPageChange={onPageChange} />
       </div>
     </div>
   )
