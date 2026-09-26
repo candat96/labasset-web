@@ -73,7 +73,10 @@ export function Component() {
     {
       id: 'equipmentId',
       header: t('transfers.equipment'),
-      meta: { label: t('transfers.equipment'), className: 'max-w-[380px] whitespace-normal' },
+      meta: {
+        label: t('transfers.equipment'),
+        className: 'max-w-[380px] min-w-[220px] whitespace-normal',
+      },
       cell: ({ row: r }) => (
         <Link
           className="text-primary font-medium hover:text-primary/80"

@@ -91,16 +91,18 @@ export function Component() {
       {
         id: 'equipment',
         header: t('equipment'),
-        meta: { label: t('equipment'), className: 'max-w-[380px] whitespace-normal' },
+        meta: { label: t('equipment'), className: 'max-w-[380px] min-w-[220px] whitespace-normal' },
         cell: ({ row }) => {
           const r = row.original as Task & { equipment?: { code?: string; name?: string } | null }
           const e = equipmentNames.get(r.equipmentId) ?? r.equipment
           const code = e?.code ?? shortId(r.equipmentId)
           return (
             <Link className="min-w-0" to={`/equipment/${r.equipmentId}`}>
-              <span className="text-primary font-semibold">{code}</span>
+              <span className="text-primary block font-semibold whitespace-nowrap">{code}</span>
               {e?.name && (
-                <span className="text-muted-foreground block text-[12.5px]">{e.name}</span>
+                <span className="text-muted-foreground line-clamp-2 block text-[12.5px]">
+                  {e.name}
+                </span>
               )}
             </Link>
           )

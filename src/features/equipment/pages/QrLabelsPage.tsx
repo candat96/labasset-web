@@ -61,7 +61,10 @@ export function Component() {
       {
         accessorKey: 'name',
         header: t('fields.name'),
-        meta: { label: t('fields.name'), className: 'max-w-[420px] whitespace-normal' },
+        meta: {
+          label: t('fields.name'),
+          className: 'max-w-[420px] min-w-[240px] whitespace-normal',
+        },
       },
       {
         accessorKey: 'status',

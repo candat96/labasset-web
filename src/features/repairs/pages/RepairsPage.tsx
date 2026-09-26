@@ -101,11 +101,23 @@ export function Component() {
       {
         id: 'equipment',
         header: t('columns.equipment'),
-        meta: { label: t('columns.equipment'), className: 'max-w-[380px] whitespace-normal' },
-        cell: ({ row }) =>
-          row.original.equipment
-            ? `${row.original.equipment.code} – ${row.original.equipment.name}`
-            : row.original.equipmentId,
+        meta: {
+          label: t('columns.equipment'),
+          className: 'max-w-[380px] min-w-[220px] whitespace-normal',
+        },
+        // Mã một dòng không bẻ, tên máy xuống dòng dưới tối đa 2 dòng (§Chuẩn thành phần).
+        cell: ({ row }) => {
+          const e = row.original.equipment
+          if (!e) return row.original.equipmentId
+          return (
+            <span className="block min-w-0">
+              <span className="text-primary block font-semibold whitespace-nowrap">{e.code}</span>
+              <span className="text-muted-foreground line-clamp-2 block text-[12.5px]">
+                {e.name}
+              </span>
+            </span>
+          )
+        },
       },
       {
         accessorKey: 'reportedDepartmentId',

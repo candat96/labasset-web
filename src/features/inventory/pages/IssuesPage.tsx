@@ -119,7 +119,7 @@ export function Component() {
         header: t('issueTarget'),
         meta: {
           label: t('issueTarget'),
-          className: 'max-w-[380px] whitespace-normal',
+          className: 'max-w-[380px] min-w-[220px] whitespace-normal',
         },
         cell: ({ row }) => {
           const r = row.original as Issue & {
