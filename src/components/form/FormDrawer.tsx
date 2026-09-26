@@ -41,6 +41,7 @@ export function FormDrawer<T extends FieldValues, O extends FieldValues = T>({
   onSubmit,
   submitting,
   submitLabel,
+  secondaryAction,
   children,
   className,
 }: {
@@ -52,6 +53,8 @@ export function FormDrawer<T extends FieldValues, O extends FieldValues = T>({
   onSubmit: (values: O) => void | Promise<unknown>
   submitting?: boolean
   submitLabel?: string
+  /** Nút phụ bên trái Huỷ — ví dụ "Lưu nháp"; tự đặt `type="button"` và `onClick` riêng. */
+  secondaryAction?: ReactNode
   children: ReactNode
   className?: string
 }) {
@@ -111,7 +114,8 @@ export function FormDrawer<T extends FieldValues, O extends FieldValues = T>({
                 <FormRootError form={form as unknown as UseFormReturn<T>} />
                 {children}
               </div>
-              <footer className="border-divider bg-card sticky bottom-0 flex justify-end gap-2 border-t px-6 py-3">
+              <footer className="border-divider bg-card sticky bottom-0 flex items-center justify-end gap-2 border-t px-6 py-3">
+                {secondaryAction}
                 <Button type="button" variant="outline" onClick={() => requestClose(false)}>
                   {t('actions.cancel')}
                 </Button>
