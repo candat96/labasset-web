@@ -25,8 +25,9 @@ export function SignaturePad({ onFile }: { onFile: (file: File | null) => void }
     const ctx = canvas.getContext('2d')
     if (!ctx) return
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-    const fore = getComputedStyle(document.documentElement).getPropertyValue('--foreground')
-    ctx.strokeStyle = fore.trim() || '#0f172a'
+    // Màu nét lấy từ token --foreground; dự phòng là màu chữ đã tính của canvas (không mã cứng).
+    const fore = getComputedStyle(document.documentElement).getPropertyValue('--foreground').trim()
+    ctx.strokeStyle = fore || getComputedStyle(canvas).color || 'currentColor'
     ctx.lineWidth = 2
     ctx.lineCap = 'round'
     ctx.lineJoin = 'round'

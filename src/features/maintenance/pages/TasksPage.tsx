@@ -81,7 +81,7 @@ export function Component() {
         header: t('code'),
         cell: ({ row }) => (
           <Link
-            className="text-primary font-mono text-xs hover:underline"
+            className="text-primary font-mono text-xs"
             to={`/maintenance/tasks/${row.original.id}`}
           >
             {row.original.code}
@@ -97,7 +97,7 @@ export function Component() {
           const e = equipmentNames.get(r.equipmentId) ?? r.equipment
           const code = e?.code ?? shortId(r.equipmentId)
           return (
-            <Link className="min-w-0 hover:underline" to={`/equipment/${r.equipmentId}`}>
+            <Link className="min-w-0" to={`/equipment/${r.equipmentId}`}>
               <span className="text-primary font-semibold">{code}</span>
               {e?.name && (
                 <span className="text-muted-foreground block text-[12.5px]">{e.name}</span>

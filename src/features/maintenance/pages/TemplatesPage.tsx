@@ -32,10 +32,7 @@ export function Component() {
         accessorKey: 'name',
         header: t('name'),
         cell: ({ row }) => (
-          <Link
-            className="text-primary hover:underline"
-            to={`/maintenance/templates/${row.original.id}/edit`}
-          >
+          <Link className="text-primary" to={`/maintenance/templates/${row.original.id}/edit`}>
             {row.original.name}
           </Link>
         ),

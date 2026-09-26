@@ -243,7 +243,7 @@ export function Component() {
                     <TableRow key={task.id}>
                       <TableCell className="pl-5">
                         <Link
-                          className="text-primary font-semibold hover:underline"
+                          className="text-primary font-semibold"
                           to={`/maintenance/tasks/${task.id}`}
                         >
                           {task.code}

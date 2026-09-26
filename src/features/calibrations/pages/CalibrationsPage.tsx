@@ -115,10 +115,7 @@ export function Component() {
         accessorKey: 'code',
         header: t('code'),
         cell: ({ row }) => (
-          <Link
-            className="text-primary font-mono text-xs hover:underline"
-            to={`/calibrations/${row.original.id}`}
-          >
+          <Link className="text-primary font-mono text-xs" to={`/calibrations/${row.original.id}`}>
             {row.original.code}
           </Link>
         ),
@@ -132,7 +129,7 @@ export function Component() {
           const e = equipmentNames.get(r.equipmentId) ?? r.equipment
           const code = e?.code ?? shortId(r.equipmentId)
           return (
-            <Link className="min-w-0 hover:underline" to={`/equipment/${r.equipmentId}`}>
+            <Link className="min-w-0" to={`/equipment/${r.equipmentId}`}>
               <span className="text-primary font-semibold">{code}</span>
               {e?.name && (
                 <span className="text-muted-foreground block text-[12.5px]">{e.name}</span>

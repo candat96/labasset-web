@@ -696,7 +696,7 @@ function RepairInformation({ row }: { row: NonNullable<ReturnType<typeof useRepa
           {
             label: t('detail.equipment'),
             value: row.equipment ? (
-              <Link className="text-primary hover:underline" to={`/equipment/${row.equipmentId}`}>
+              <Link className="text-primary" to={`/equipment/${row.equipmentId}`}>
                 {row.equipment.code} – {row.equipment.name}
               </Link>
             ) : (
@@ -753,7 +753,7 @@ function EquipmentRepairHistory({
         {total > 0 && (
           <Link
             to={`/repairs?equipmentId=${equipmentId}`}
-            className="text-primary text-[13px] font-medium hover:underline"
+            className="text-primary text-[13px] font-medium"
           >
             {t('detail.equipmentHistory.all', { defaultValue: 'Tất cả ({{n}})', n: total })}
           </Link>
@@ -770,7 +770,7 @@ function EquipmentRepairHistory({
           {others.map((r) => (
             <li key={r.id} className="flex items-center justify-between gap-2 py-2 text-[13px]">
               <div className="min-w-0">
-                <Link to={`/repairs/${r.id}`} className="text-primary font-medium hover:underline">
+                <Link to={`/repairs/${r.id}`} className="text-primary font-medium">
                   {r.code}
                 </Link>
                 <p className="text-muted-foreground truncate">{r.description}</p>
@@ -813,7 +813,7 @@ function OverviewTab({
             {
               label: t('detail.overview.fault'),
               value: row.faultId ? (
-                <Link className="text-primary hover:underline" to={`/faults/${row.faultId}`}>
+                <Link className="text-primary" to={`/faults/${row.faultId}`}>
                   {faultTitle ?? row.faultId}
                 </Link>
               ) : null,
@@ -1155,12 +1155,7 @@ function FileLink({ fileId, label }: { fileId: string | null; label: string }) {
   if (!fileId) return <span>—</span>
   if (!url.data) return <span className="text-muted-foreground">…</span>
   return (
-    <a
-      className="text-primary hover:underline"
-      href={url.data.url}
-      target="_blank"
-      rel="noreferrer"
-    >
+    <a className="text-primary" href={url.data.url} target="_blank" rel="noreferrer">
       {label}
     </a>
   )
@@ -1350,7 +1345,7 @@ function AssignDialog({
             <li key={row.id}>
               <button
                 type="button"
-                className="text-primary hover:underline"
+                className="text-primary"
                 onClick={() => form.setValue('primaryUserId', row.id)}
               >
                 {row.fullName} ({row.openTickets} {t('stats.openTickets').toLowerCase()})

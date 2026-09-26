@@ -164,7 +164,7 @@ export function Component() {
         meta={
           <>
             <PageMeta icon={<Microscope />}>
-              <Link className="text-primary hover:underline" to={`/equipment/${row.equipmentId}`}>
+              <Link className="text-primary" to={`/equipment/${row.equipmentId}`}>
                 {row.equipment?.code ? `${row.equipment.code} – ` : ''}
                 {row.equipment?.name ?? t('equipment')}
               </Link>
@@ -177,10 +177,7 @@ export function Component() {
             </PageMeta>
             {row.planId && (
               <PageMeta icon={<ClipboardList />}>
-                <Link
-                  className="text-primary hover:underline"
-                  to={`/maintenance/plans/${row.planId}`}
-                >
+                <Link className="text-primary" to={`/maintenance/plans/${row.planId}`}>
                   {t('plan')}
                 </Link>
               </PageMeta>
@@ -279,10 +276,7 @@ export function Component() {
                 {
                   label: t('equipment'),
                   value: (
-                    <Link
-                      className="text-primary hover:underline"
-                      to={`/equipment/${row.equipmentId}`}
-                    >
+                    <Link className="text-primary" to={`/equipment/${row.equipmentId}`}>
                       {row.equipment?.code} – {row.equipment?.name}
                     </Link>
                   ),

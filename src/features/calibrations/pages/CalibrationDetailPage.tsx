@@ -146,7 +146,7 @@ export function Component() {
         meta={
           <>
             <PageMeta icon={<Microscope />}>
-              <Link className="text-primary hover:underline" to={`/equipment/${row.equipmentId}`}>
+              <Link className="text-primary" to={`/equipment/${row.equipmentId}`}>
                 {row.equipment?.code} – {row.equipment?.name}
               </Link>
             </PageMeta>
@@ -163,10 +163,7 @@ export function Component() {
             )}
             {row.repairTicketId && (
               <PageMeta icon={<Wrench />}>
-                <Link
-                  className="text-primary hover:underline"
-                  to={`/repairs/${row.repairTicketId}`}
-                >
+                <Link className="text-primary" to={`/repairs/${row.repairTicketId}`}>
                   {t('repairTicket')}
                 </Link>
               </PageMeta>
@@ -220,10 +217,7 @@ export function Component() {
                 {
                   label: t('equipment'),
                   value: (
-                    <Link
-                      className="text-primary hover:underline"
-                      to={`/equipment/${row.equipmentId}`}
-                    >
+                    <Link className="text-primary" to={`/equipment/${row.equipmentId}`}>
                       {row.equipment?.code} – {row.equipment?.name}
                     </Link>
                   ),
@@ -251,10 +245,7 @@ export function Component() {
                       {
                         label: t('repairTicket'),
                         value: (
-                          <Link
-                            className="text-primary hover:underline"
-                            to={`/repairs/${row.repairTicketId}`}
-                          >
+                          <Link className="text-primary" to={`/repairs/${row.repairTicketId}`}>
                             {row.repairTicketId}
                           </Link>
                         ),
