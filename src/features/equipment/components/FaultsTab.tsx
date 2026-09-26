@@ -61,7 +61,7 @@ export function FaultsTab({
       title={t('tabs.faults', { defaultValue: 'Lỗi thường gặp' })}
       actions={
         <>
-          <Link className="text-primary text-sm hover:underline" to="/faults">
+          <Link className="text-primary text-sm font-medium hover:text-primary/80" to="/faults">
             {t('faultsTab.library', { defaultValue: 'Thư viện lỗi' })}
           </Link>
           {canWrite && (
@@ -93,7 +93,10 @@ export function FaultsTab({
             return (
               <li key={f.id} className="flex flex-wrap items-start gap-x-3 gap-y-1 py-3">
                 <div className="min-w-0 flex-1">
-                  <Link className="hover:underline" to={`/faults/${f.id}`}>
+                  <Link
+                    className="text-primary font-medium hover:text-primary/80"
+                    to={`/faults/${f.id}`}
+                  >
                     {f.errorCode ? (
                       <span className="text-primary mr-2 font-mono text-xs">{f.errorCode}</span>
                     ) : null}

@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { endOfDay } from 'date-fns'
 import { http, HttpResponse } from 'msw'
@@ -19,6 +19,8 @@ const plusDays = (days: number) => {
 
 beforeEach(() => {
   urls = []
+  // Panel lọc mặc định thu khi màn < 1600 (jsdom rộng 1024) → mở sẵn cho các test dùng Select.
+  localStorage.setItem('filter-panel:equipment', '1')
   useAuthStore.getState().setSession(fakeSession())
   server.use(
     http.get('/v1/equipment', ({ request }) => {
@@ -120,10 +122,64 @@ it('bỏ chọn khi đổi trang', async () => {
   )
   renderWithProviders(<Component />)
   await userEvent.click(await screen.findByRole('checkbox', { name: 'Chọn TB-2026-00001' }))
-  const print = screen.getByRole('button', { name: 'In tem QR' })
-  expect(print).toBeEnabled()
+  expect(screen.getByRole('region', { name: 'Thao tác hàng loạt' })).toHaveTextContent(
+    'Đã chọn 1 máy',
+  )
+  expect(screen.getByRole('button', { name: 'In tem QR' })).toBeEnabled()
   await userEvent.click(screen.getByRole('button', { name: 'Trang sau' }))
-  await waitFor(() => expect(print).toBeDisabled())
+  await waitFor(() =>
+    expect(screen.queryByRole('region', { name: 'Thao tác hàng loạt' })).not.toBeInTheDocument(),
+  )
+})
+
+it('chọn cả trang và bỏ chọn qua thanh hành động hàng loạt', async () => {
+  renderWithProviders(<Component />)
+  await screen.findByRole('link', { name: 'TB-2026-00001' })
+  expect(screen.queryByRole('button', { name: 'In tem QR' })).not.toBeInTheDocument()
+  await userEvent.click(screen.getByRole('checkbox', { name: 'Chọn cả trang' }))
+  expect(screen.getByRole('checkbox', { name: 'Chọn TB-2026-00001' })).toBeChecked()
+  expect(screen.getByRole('button', { name: 'So sánh' })).toBeDisabled()
+  await userEvent.click(screen.getByRole('button', { name: 'Bỏ chọn' }))
+  expect(screen.getByRole('checkbox', { name: 'Chọn TB-2026-00001' })).not.toBeChecked()
+})
+
+it('đổi bộ lọc trong panel gọi API đúng tham số', async () => {
+  renderWithProviders(<Component />)
+  await screen.findByRole('link', { name: 'TB-2026-00001' })
+  expect(screen.getByTestId('filter-panel')).toBeInTheDocument()
+  await userEvent.click(screen.getByRole('combobox', { name: 'Khoa' }))
+  await userEvent.click(await screen.findByRole('option', { name: /Huyết học/ }))
+  await waitFor(() => {
+    const last = new URL(urls.filter((u) => u.includes('/v1/equipment')).at(-1) ?? '', 'http://x')
+    expect(last.searchParams.get('departmentId')).toBe('d1')
+  })
+})
+
+it('chip lọc nhanh "Quá hạn kiểm định" bật/tắt', async () => {
+  renderWithProviders(<Component />)
+  await screen.findByRole('link', { name: 'TB-2026-00001' })
+  const chip = screen.getByRole('button', { name: 'Quá hạn kiểm định' })
+  await userEvent.click(chip)
+  await waitFor(() => expect(urls.at(-1)).toContain('calibrationOverdue=true'))
+  await userEvent.click(screen.getByRole('button', { name: 'Quá hạn kiểm định' }))
+  await waitFor(() => expect(urls.at(-1)).not.toContain('calibrationOverdue'))
+})
+
+it('panel thu: bộ lọc đang áp hiện thành chip gỡ được', async () => {
+  localStorage.setItem('filter-panel:equipment', '0')
+  const { router } = renderWithProviders(<Component />, {
+    route: '/equipment?departmentId=d1&calibrationOverdue=true',
+  })
+  await screen.findByRole('link', { name: 'TB-2026-00001' })
+  expect(screen.queryByTestId('filter-panel')).not.toBeInTheDocument()
+  const chips = screen.getByTestId('filter-panel-active-chips')
+  expect(await within(chips).findByRole('button', { name: /Khoa: Huyết học/ })).toBeVisible()
+  await userEvent.click(within(chips).getByRole('button', { name: /Quá hạn kiểm định/ }))
+  await waitFor(() => expect(router.state.location.search).not.toContain('calibrationOverdue'))
+  expect(router.state.location.search).toContain('departmentId=d1')
+  await userEvent.click(within(chips).getByRole('button', { name: 'Xoá lọc' }))
+  await waitFor(() => expect(router.state.location.search).not.toContain('departmentId'))
+  expect(screen.queryByTestId('filter-panel-active-chips')).not.toBeInTheDocument()
 })
 
 it('in tem QR gửi danh sách id đã chọn', async () => {

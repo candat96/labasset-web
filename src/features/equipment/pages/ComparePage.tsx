@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { AsyncSelect } from '@/components/form/async-select'
 import { PageHeader } from '@/components/page/PageHeader'
+import { SectionCard } from '@/components/page/SectionCard'
 import { ErrorState } from '@/components/page/ErrorState'
 import { compareEquipment, listEquipment, resolveEquipmentOption } from '../api'
 import { equipmentKeys } from '../hooks'
@@ -115,7 +116,7 @@ export function Component() {
           defaultValue: 'Chọn hai máy để so sánh thông số cạnh nhau.',
         })}
       />
-      <div className="mb-4 grid gap-4 sm:grid-cols-2">
+      <SectionCard className="mb-3" bodyClassName="grid gap-4 sm:grid-cols-2">
         <AsyncSelect
           label={t('compare.machine', { index: 1 })}
           queryKey="eq-a"
@@ -136,23 +137,24 @@ export function Component() {
           resolveOption={resolveEquipmentOption}
           clearable
         />
-      </div>
+      </SectionCard>
       {ids.length !== 2 && <p className="text-muted-foreground">{t('actions.selectTwo')}</p>}
       {compare.isPending && ids.length === 2 && <p role="status">{t('compare.loading')}</p>}
       {compare.error && <ErrorState error={compare.error} onRetry={() => void compare.refetch()} />}
       {compare.data && (
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-2">
           {compare.data.items.map((item) => (
-            <section key={item.id} className="rounded border p-3 text-sm">
-              <h2 className="font-medium">
-                {item.code} · {item.name}
-              </h2>
+            <SectionCard
+              key={item.id}
+              title={`${item.code} · ${item.name}`}
+              bodyClassName="space-y-0.5 text-sm"
+            >
               {fields.map((path) => (
                 <p key={path} className={cn(diff.includes(path) && 'bg-warning/15 rounded px-1')}>
                   {path}: {valueAt(item, path)}
                 </p>
               ))}
-            </section>
+            </SectionCard>
           ))}
         </div>
       )}

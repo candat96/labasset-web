@@ -50,7 +50,10 @@ export function Component() {
         accessorKey: 'code',
         header: t('fields.code'),
         cell: ({ row }) => (
-          <Link className="text-primary hover:underline" to={`/equipment/${row.original.id}`}>
+          <Link
+            className="text-primary font-medium hover:text-primary/80"
+            to={`/equipment/${row.original.id}`}
+          >
             {row.original.code}
           </Link>
         ),

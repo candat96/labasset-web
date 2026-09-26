@@ -75,7 +75,10 @@ export function Component() {
       header: t('transfers.equipment'),
       meta: { label: t('transfers.equipment'), className: 'max-w-[380px] whitespace-normal' },
       cell: ({ row: r }) => (
-        <Link className="text-primary hover:underline" to={`/equipment/${r.original.equipmentId}`}>
+        <Link
+          className="text-primary font-medium hover:text-primary/80"
+          to={`/equipment/${r.original.equipmentId}`}
+        >
           {equipmentName(r.original.equipmentId)}
         </Link>
       ),
@@ -184,7 +187,10 @@ export function Component() {
             <div className="space-y-3 p-4 text-sm">
               <div className="flex flex-wrap items-center gap-2">
                 <StatusBadge value={row.status} map={transferStatusMap} />
-                <Link className="text-primary hover:underline" to={`/equipment/${row.equipmentId}`}>
+                <Link
+                  className="text-primary font-medium hover:text-primary/80"
+                  to={`/equipment/${row.equipmentId}`}
+                >
                   {equipmentName(row.equipmentId)}
                 </Link>
               </div>

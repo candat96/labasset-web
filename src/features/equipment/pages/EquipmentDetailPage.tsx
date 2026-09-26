@@ -571,7 +571,10 @@ function Overview({ row }: { row: NonNullable<ReturnType<typeof useEquipment>['d
     {
       label: t('fields.room'),
       value: row.room ? (
-        <Link className="text-primary hover:underline" to={`/equipment?roomId=${row.room.id}`}>
+        <Link
+          className="text-primary font-medium hover:text-primary/80"
+          to={`/equipment?roomId=${row.room.id}`}
+        >
           {row.room.name}
         </Link>
       ) : null,
@@ -2001,7 +2004,7 @@ function RepairsTab({ id }: { id: string }) {
               <TableRow key={row.id}>
                 <TableCell className="pl-5">
                   <Link
-                    className="text-primary font-semibold hover:underline"
+                    className="text-primary font-semibold hover:text-primary/80"
                     to={`/repairs/${row.id}`}
                   >
                     {row.code}
@@ -2061,7 +2064,7 @@ function MaintenanceTab({ id }: { id: string }) {
                 <TableRow key={row.id}>
                   <TableCell className="pl-5">
                     <Link
-                      className="text-primary font-semibold hover:underline"
+                      className="text-primary font-semibold hover:text-primary/80"
                       to={`/maintenance/tasks/${row.id}`}
                     >
                       {row.code}
@@ -2103,7 +2106,7 @@ function MaintenanceTab({ id }: { id: string }) {
                 <TableRow key={row.id}>
                   <TableCell className="pl-5">
                     <Link
-                      className="text-primary font-semibold hover:underline"
+                      className="text-primary font-semibold hover:text-primary/80"
                       to={`/calibrations/${row.id}`}
                     >
                       {row.code}
