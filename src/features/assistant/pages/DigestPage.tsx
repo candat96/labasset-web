@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Markdown } from '../components/MessageBubble'
 import { PageHeader } from '@/components/page/PageHeader'
+import { SectionCard } from '@/components/page/SectionCard'
 import { DatePicker } from '@/components/date-picker'
 import { Label } from '@/components/ui/label'
 import { getWeeklyDigest } from '../api'
@@ -26,39 +27,41 @@ export function Component() {
   return (
     <>
       <PageHeader title={t('digest')} />
-      <div className="mb-4 max-w-xs space-y-1">
-        <Label htmlFor="week-start">{t('weekStart')}</Label>
-        <DatePicker
-          ariaLabel={t('weekStart')}
-          value={weekStart}
-          onChange={(value) => value && setWeekStart(value)}
-        />
-      </div>
-      {digest.isPending && <p role="status">{t('digestLoading')}</p>}
-      {digest.error && (
-        <p role="alert">
-          {isApiError(digest.error) && digest.error.code === 'AI_DIGEST_NOT_FOUND'
-            ? t('digestEmpty')
-            : messageFor(digest.error)}
-        </p>
-      )}
-      {digest.data && (
-        <>
-          <ul className="mb-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-5 text-sm">
-            {Object.entries(stats).map(([key, value]) => (
-              <li key={key} className="rounded border p-3">
-                <div className="text-muted-foreground">{key}</div>
-                <div className="font-medium">{String(value)}</div>
-              </li>
-            ))}
-          </ul>
-          {digest.data.content ? (
-            <Markdown content={digest.data.content} className="bg-surface-2 rounded-xl p-4" />
-          ) : (
-            <p className="text-muted-foreground text-sm">{t('notConfigured')}</p>
-          )}
-        </>
-      )}
+      <SectionCard>
+        <div className="mb-4 max-w-xs space-y-1">
+          <Label htmlFor="week-start">{t('weekStart')}</Label>
+          <DatePicker
+            ariaLabel={t('weekStart')}
+            value={weekStart}
+            onChange={(value) => value && setWeekStart(value)}
+          />
+        </div>
+        {digest.isPending && <p role="status">{t('digestLoading')}</p>}
+        {digest.error && (
+          <p role="alert" className="text-destructive">
+            {isApiError(digest.error) && digest.error.code === 'AI_DIGEST_NOT_FOUND'
+              ? t('digestEmpty')
+              : messageFor(digest.error)}
+          </p>
+        )}
+        {digest.data && (
+          <>
+            <ul className="mb-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-5 text-sm">
+              {Object.entries(stats).map(([key, value]) => (
+                <li key={key} className="bg-surface-2 rounded-lg p-3">
+                  <div className="text-muted-foreground">{key}</div>
+                  <div className="font-medium">{String(value)}</div>
+                </li>
+              ))}
+            </ul>
+            {digest.data.content ? (
+              <Markdown content={digest.data.content} className="bg-surface-2 rounded-xl p-4" />
+            ) : (
+              <p className="text-muted-foreground text-sm">{t('notConfigured')}</p>
+            )}
+          </>
+        )}
+      </SectionCard>
     </>
   )
 }

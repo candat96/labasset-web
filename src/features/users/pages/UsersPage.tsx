@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { DataTable, useServerTable } from '@/components/data-table'
-import { FilterBar, FilterField } from '@/components/filter-bar'
+import { FilterPanel, FilterPanelField } from '@/components/page/FilterPanel'
 import { PageHeader } from '@/components/page/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -107,6 +107,31 @@ export function Component() {
       cell: ({ row }) => formatDateTime(row.original.lastLoginAt) || '—',
     },
   ]
+  const activeFilters = [
+    filters.role
+      ? {
+          key: 'role',
+          label: roleLabel(filters.role),
+          onRemove: () => table.setFilter('role', undefined),
+        }
+      : null,
+    filters.departmentId
+      ? {
+          key: 'departmentId',
+          label:
+            departments.data?.find((d) => d.id === filters.departmentId)?.name ??
+            filters.departmentId,
+          onRemove: () => table.setFilter('departmentId', undefined),
+        }
+      : null,
+    filters.isActive !== undefined
+      ? {
+          key: 'isActive',
+          label: t(filters.isActive === 'true' ? 'filter.active' : 'filter.locked'),
+          onRemove: () => table.setFilter('isActive', undefined),
+        }
+      : null,
+  ].filter((filter): filter is NonNullable<typeof filter> => filter !== null)
   return (
     <>
       <PageHeader
@@ -114,29 +139,13 @@ export function Component() {
         description={t('listHint', { defaultValue: 'Tài khoản người dùng và vai trò trong viện.' })}
         actions={canWrite && <Button onClick={() => setOpen(true)}>{t('add')}</Button>}
       />
-      <DataTable
-        tableId="users"
-        columns={columns}
-        data={list.data?.items}
-        total={list.data?.total ?? 0}
-        params={table.params}
-        onPageChange={table.setPage}
-        onLimitChange={table.setLimit}
-        isLoading={list.isPending}
-        error={list.error}
-        onRetry={() => void list.refetch()}
-        getRowId={(r) => r.id}
-        toolbarLeft={
-          <FilterBar>
-            <FilterField label={t('search.label')}>
-              <Input
-                aria-label={t('search.label')}
-                placeholder={t('search.placeholder')}
-                value={table.inputQ}
-                onChange={(e) => table.setQ(e.target.value)}
-              />
-            </FilterField>
-            <FilterField label={t('filter.role')}>
+      <FilterPanel
+        storageKey="users"
+        onReset={table.reset}
+        activeFilters={activeFilters}
+        fields={
+          <>
+            <FilterPanelField label={t('filter.role')}>
               <Select
                 value={filters.role ?? 'all'}
                 onValueChange={(v) => table.setFilter('role', v === 'all' ? undefined : v)}
@@ -153,8 +162,8 @@ export function Component() {
                   ))}
                 </SelectContent>
               </Select>
-            </FilterField>
-            <FilterField label={t('filter.department')}>
+            </FilterPanelField>
+            <FilterPanelField label={t('filter.department')}>
               <AsyncSelect
                 label={t('filter.department')}
                 queryKey="departments"
@@ -162,12 +171,13 @@ export function Component() {
                 resolveOption={resolveDepartment}
                 value={filters.departmentId ?? null}
                 clearable
+                showLabel={false}
                 onChange={(v) =>
                   table.setFilter('departmentId', typeof v === 'string' ? v : undefined)
                 }
               />
-            </FilterField>
-            <FilterField label={t('filter.status')}>
+            </FilterPanelField>
+            <FilterPanelField label={t('filter.status')}>
               <Select
                 value={filters.isActive ?? 'all'}
                 onValueChange={(v) => table.setFilter('isActive', v === 'all' ? undefined : v)}
@@ -181,10 +191,33 @@ export function Component() {
                   <SelectItem value="false">{t('filter.locked')}</SelectItem>
                 </SelectContent>
               </Select>
-            </FilterField>
-          </FilterBar>
+            </FilterPanelField>
+          </>
         }
-      />
+        toolbar={
+          <Input
+            aria-label={t('search.label')}
+            placeholder={t('search.placeholder')}
+            value={table.inputQ}
+            onChange={(e) => table.setQ(e.target.value)}
+            className="h-9 w-56"
+          />
+        }
+      >
+        <DataTable
+          tableId="users"
+          columns={columns}
+          data={list.data?.items}
+          total={list.data?.total ?? 0}
+          params={table.params}
+          onPageChange={table.setPage}
+          onLimitChange={table.setLimit}
+          isLoading={list.isPending}
+          error={list.error}
+          onRetry={() => void list.refetch()}
+          getRowId={(r) => r.id}
+        />
+      </FilterPanel>
       <UserFormDialog open={open} onOpenChange={setOpen} onPassword={setPassword} />
       <TemporaryPasswordDialog password={password} onClose={() => setPassword(null)} />
     </>

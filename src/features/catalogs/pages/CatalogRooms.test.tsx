@@ -56,6 +56,7 @@ function mockDepartments() {
 
 it('hiện danh mục Phòng: tên khoa, "Dùng chung", Toà/Tầng, loại phòng và lọc theo khoa', async () => {
   const urls: string[] = []
+  localStorage.setItem('filter-panel:rooms', '1')
   mockDepartments()
   server.use(
     http.get('/v1/catalogs/rooms', ({ request }) => {

@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { DataTable, useServerTable } from '@/components/data-table'
-import { FilterBar, FilterField } from '@/components/filter-bar'
+import { FilterPanel, FilterPanelField } from '@/components/page/FilterPanel'
 import { PageHeader } from '@/components/page/PageHeader'
 import { StatusBadge } from '@/components/status-badge'
 import { AsyncSelect } from '@/components/form/async-select'
@@ -185,6 +185,29 @@ export function Component() {
     ],
     [confirm, counts.data, departmentNames, remove, t, tc],
   )
+  const activeFilters = [
+    f.departmentId
+      ? {
+          key: 'departmentId',
+          label: departmentNames.get(String(f.departmentId)) ?? String(f.departmentId),
+          onRemove: () => table.setFilter('departmentId', undefined),
+        }
+      : null,
+    roomType
+      ? {
+          key: 'roomType',
+          label: enumLabel('roomType', roomType),
+          onRemove: () => table.setFilter('roomType', undefined),
+        }
+      : null,
+    f.isActive !== undefined
+      ? {
+          key: 'isActive',
+          label: t(f.isActive === 'true' ? 'filter.active' : 'filter.inactive'),
+          onRemove: () => table.setFilter('isActive', undefined),
+        }
+      : null,
+  ].filter((filter): filter is NonNullable<typeof filter> => filter !== null)
   return (
     <>
       <PageHeader
@@ -209,29 +232,13 @@ export function Component() {
           </>
         }
       />
-      <DataTable
-        tableId="rooms"
-        columns={columns}
-        data={list.data?.items}
-        total={list.data?.total ?? 0}
-        params={table.params}
-        onPageChange={table.setPage}
-        onLimitChange={table.setLimit}
-        isLoading={list.isPending}
-        error={list.error}
-        onRetry={() => void list.refetch()}
-        getRowId={(row) => row.id}
-        toolbarLeft={
-          <FilterBar onClear={table.params.q || Object.keys(f).length ? table.reset : undefined}>
-            <FilterField label={t('search.roomLabel', { defaultValue: 'Tìm phòng' })}>
-              <Input
-                aria-label={t('search.roomLabel', { defaultValue: 'Tìm phòng' })}
-                value={table.inputQ}
-                onChange={(event) => table.setQ(event.target.value)}
-                placeholder={t('search.placeholder')}
-              />
-            </FilterField>
-            <FilterField label={t('filter.department')}>
+      <FilterPanel
+        storageKey="rooms"
+        onReset={table.params.q || Object.keys(f).length ? table.reset : undefined}
+        activeFilters={activeFilters}
+        fields={
+          <>
+            <FilterPanelField label={t('filter.department')}>
               <AsyncSelect
                 label={t('filter.department')}
                 queryKey="departments"
@@ -244,8 +251,8 @@ export function Component() {
                 clearable
                 showLabel={false}
               />
-            </FilterField>
-            <FilterField label={t('filter.roomType', { defaultValue: 'Loại phòng' })}>
+            </FilterPanelField>
+            <FilterPanelField label={t('filter.roomType', { defaultValue: 'Loại phòng' })}>
               <Select
                 value={roomType ?? 'all'}
                 onValueChange={(value) =>
@@ -269,8 +276,8 @@ export function Component() {
                   ))}
                 </SelectContent>
               </Select>
-            </FilterField>
-            <FilterField label={t('filter.status')}>
+            </FilterPanelField>
+            <FilterPanelField label={t('filter.status')}>
               <Select
                 value={f.isActive ?? 'all'}
                 onValueChange={(value) =>
@@ -286,15 +293,38 @@ export function Component() {
                   <SelectItem value="false">{t('filter.inactive')}</SelectItem>
                 </SelectContent>
               </Select>
-            </FilterField>
-          </FilterBar>
+            </FilterPanelField>
+          </>
         }
-        toolbarRight={
-          <Button variant="outline" onClick={() => void exportCatalog('rooms', params)}>
-            {tc('actions.export')}
-          </Button>
+        toolbar={
+          <Input
+            aria-label={t('search.roomLabel', { defaultValue: 'Tìm phòng' })}
+            value={table.inputQ}
+            onChange={(event) => table.setQ(event.target.value)}
+            placeholder={t('search.placeholder')}
+            className="h-9 w-56"
+          />
         }
-      />
+      >
+        <DataTable
+          tableId="rooms"
+          columns={columns}
+          data={list.data?.items}
+          total={list.data?.total ?? 0}
+          params={table.params}
+          onPageChange={table.setPage}
+          onLimitChange={table.setLimit}
+          isLoading={list.isPending}
+          error={list.error}
+          onRetry={() => void list.refetch()}
+          getRowId={(row) => row.id}
+          toolbarRight={
+            <Button variant="outline" onClick={() => void exportCatalog('rooms', params)}>
+              {tc('actions.export')}
+            </Button>
+          }
+        />
+      </FilterPanel>
       <RoomDialog row={editing} open={formOpen} onOpenChange={setFormOpen} />
       <CatalogImportDialog slug="rooms" open={importOpen} onOpenChange={setImportOpen} />
       {dialog}
