@@ -25,7 +25,7 @@ import {
 } from '@/api/references'
 import { RoomFormDialog } from '@/components/room-form-dialog'
 import { Button } from '@/components/ui/button'
-import { Plus } from 'lucide-react'
+import { ArrowLeft, Plus } from 'lucide-react'
 import { useCan } from '@/app/guards/useCan'
 import { STAFF } from '@/routes/roles'
 import type { ReferenceOption } from '@/components/form/async-select'
@@ -235,11 +235,23 @@ export function Component() {
         description={t('formHint', {
           defaultValue: 'Nhập thông tin chung, thông số kỹ thuật; các trường có * là bắt buộc.',
         })}
+        actions={
+          <Button
+            type="button"
+            size="icon-sm"
+            className="rounded-full"
+            aria-label={t('actions.back', { ns: 'common', defaultValue: 'Quay lại' })}
+            title={t('actions.back', { ns: 'common', defaultValue: 'Quay lại' })}
+            onClick={() => navigate(-1)}
+          >
+            <ArrowLeft />
+          </Button>
+        }
       />
       <Form {...form}>
         <form className="space-y-5" noValidate onSubmit={form.handleSubmit(submit)}>
           <SectionCard title={t('sections.general')}>
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
               <TextField
                 control={form.control}
                 name="code"
@@ -408,7 +420,7 @@ export function Component() {
             </div>
           </SectionCard>
           <SectionCard title={t('sections.specs')}>
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
               <TextField control={form.control} name="specs.voltage" label={t('fields.voltage')} />
               <TextField control={form.control} name="specs.power" label={t('fields.power')} />
               <TextField

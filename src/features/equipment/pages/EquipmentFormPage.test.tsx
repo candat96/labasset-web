@@ -245,6 +245,30 @@ it('sửa máy: khoá mã máy và không gửi code/departmentId', async () => 
   expect(await screen.findByText('DETAIL')).toBeVisible()
 })
 
+it('render đủ nhóm trường trong SectionCard, lưới 3 cột và nút quay lại tròn', async () => {
+  renderWithProviders(<Component />, {
+    path: '/equipment/new',
+    route: '/equipment/new',
+    routes: formRoutes,
+  })
+  // mỗi nhóm trường nằm trong một SectionCard (tiêu đề h2)
+  const general = await screen.findByRole('heading', { name: 'Thông tin chung' })
+  const specs = screen.getByRole('heading', { name: 'Thông số kỹ thuật' })
+  expect(general).toBeVisible()
+  expect(specs).toBeVisible()
+  // lưới ô nhập 3 cột, khoảng cách 20px
+  const grid = general.closest('section')!.querySelector('div.grid')
+  expect(grid).toHaveClass('gap-5')
+  expect(grid).toHaveClass('lg:grid-cols-3')
+  // trường đại diện của từng nhóm đều render
+  for (const label of ['Mã máy', 'Tên', 'Model', 'Serial', 'Hãng', 'Nguyên giá'])
+    expect(screen.getByLabelText(label)).toBeInTheDocument()
+  for (const label of ['Điện áp', 'Công suất', 'Kích thước', 'Khối lượng', 'Nhiệt độ môi trường'])
+    expect(screen.getByLabelText(label)).toBeInTheDocument()
+  // nút quay lại dạng tròn ở dải tiêu đề
+  expect(screen.getByRole('button', { name: 'Quay lại' })).toHaveClass('rounded-full')
+})
+
 it('nguyên giá phải là chuỗi số nguyên', async () => {
   const patches: unknown[] = []
   server.use(
