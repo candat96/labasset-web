@@ -55,7 +55,8 @@ const TONE: Record<StatusTone, 'success' | 'warning' | 'danger' | 'info' | 'neut
 }
 
 /** Palette biểu đồ Clean Enterprise (handoff 10 §6). */
-const CHART_COLORS = ['#2977ff', '#60a5fa', '#14b8a6', '#f59e0b', '#ef4444', '#64748b']
+// Palette biểu đồ theo token Medone (primary · tím · xanh lá · vàng · hồng · xám).
+const CHART_COLORS = ['#006fee', '#7828c8', '#17c964', '#f5a524', '#f31260', '#71717a']
 
 export function Component() {
   const { t } = useTranslation('dashboard')

@@ -3,64 +3,63 @@
 @import 'tw-animate-css';
 @custom-variant dark (&:is(.dark *));
 
-/* Token "Clean Enterprise" theo docs/superpowers/handoff/web/10-design-polish.md
-   (đồng bộ bộ màu với mobile handoff 08 §1). */
+/* Token theo thiết kế Figma Medone (Z3jY6G2YHCOtXGda5fz0fD) —
+   xem docs/superpowers/plans/2026-09-26-theme-medone.md §"Bảng token chuẩn".
+   Giá trị được khoá bằng src/lib/__tests__/theme-tokens.test.ts. */
 :root {
   --background: #ffffff;
-  --surface-2: #f6f8fc;
-  --foreground: #0f172a;
+  --surface-2: #f4f4f5;
+  --foreground: #11181c;
   --card: #ffffff;
-  --card-foreground: #0f172a;
+  --card-foreground: #11181c;
   --popover: #ffffff;
-  --popover-foreground: #0f172a;
-  --primary: #2977ff;
+  --popover-foreground: #11181c;
+  --primary: #006fee;
   --primary-foreground: #ffffff;
-  --primary-hover: #1e63e0;
-  --primary-pressed: #1a55c2;
-  --primary-soft: #e8f0ff;
-  --secondary: #e8f0ff;
-  --secondary-foreground: #1747a6;
-  --muted: #eef2f8;
-  --muted-foreground: #64748b;
-  --subtle: #94a3b8;
-  --accent: #eef2f8;
-  --accent-foreground: #0f172a;
-  --destructive: #b91c1c;
+  --primary-hover: #005bc4;
+  --primary-pressed: #004a9e;
+  --primary-soft: #e6f1fe;
+  --secondary: #e6f1fe;
+  --secondary-foreground: #005bc4;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --subtle: #a1a1aa;
+  --accent: #f4f4f5;
+  --accent-foreground: #11181c;
+  --destructive: #f31260;
   --destructive-foreground: #ffffff;
-  --destructive-bg: #fee2e2;
-  --destructive-fg: #991b1b;
-  --success: #15803d;
-  --success-bg: #dcfce7;
-  --success-fg: #166534;
-  --warning: #b45309;
-  --warning-bg: #fef3c7;
-  --warning-fg: #92400e;
-  --info: #2977ff;
-  --info-bg: #e8f0ff;
-  --info-fg: #1747a6;
-  --neutral-bg: #eef2f8;
-  --neutral-fg: #475569;
-  --border: #e2e8f0;
-  --divider: #eef2f7;
-  --input: #e2e8f0;
-  --ring: #2977ff;
-  --shadow-card:
-    0 0 0 1px rgb(16 24 40 / 0.06), 0 1px 2px rgb(16 24 40 / 0.04),
-    0 4px 14px -8px rgb(16 24 40 / 0.08);
-  --shadow-card-hover:
-    0 0 0 1px rgb(41 119 255 / 0.25), 0 2px 4px rgb(16 24 40 / 0.05),
-    0 10px 24px -10px rgb(16 24 40 / 0.16);
+  --destructive-bg: #fee7ef;
+  --destructive-fg: #c40f4c;
+  --success: #17c964;
+  --success-bg: #e8faf0;
+  --success-fg: #0e7a3c;
+  --warning: #f5a524;
+  --warning-bg: #fefce8;
+  --warning-fg: #a35f06;
+  --info: #006fee;
+  --info-bg: #e6f1fe;
+  --info-fg: #005bc4;
+  --accent-strong: #7828c8;
+  --accent-strong-bg: #f2eafa;
+  --neutral-bg: #f4f4f5;
+  --neutral-fg: #52525b;
+  --border: #d4d4d8;
+  --divider: #e4e4e7;
+  --input: #d4d4d8;
+  --ring: #006fee;
+  --shadow-card: 0 0 0 1px rgb(17 17 17 / 0.07), 0 1px 2px rgb(0 0 0 / 0.05);
+  --shadow-card-hover: 0 0 0 1px rgb(0 111 238 / 0.24), 0 2px 6px rgb(0 0 0 / 0.07);
   --shadow-pop: 0 8px 24px -8px rgb(16 24 40 / 0.18), 0 0 0 1px rgb(16 24 40 / 0.04);
-  --gradient-brand: linear-gradient(135deg, #2977ff 0%, #5c9bff 100%);
-  --sidebar: #0b1530;
-  --sidebar-foreground: #aab6cf;
-  --sidebar-primary: #5c9bff;
+  --gradient-brand: linear-gradient(135deg, #006fee 0%, #66aaf9 100%);
+  --sidebar: #ffffff;
+  --sidebar-foreground: #52525b;
+  --sidebar-primary: #006fee;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #16234a;
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #1a2a52;
-  --sidebar-ring: #5c9bff;
-  --radius: 0.625rem;
+  --sidebar-accent: #e6f1fe;
+  --sidebar-accent-foreground: #005bc4;
+  --sidebar-border: #e4e4e7;
+  --sidebar-ring: #006fee;
+  --radius: 12px;
 }
 
 .dark {
@@ -71,49 +70,51 @@
   --card-foreground: #e5eaf2;
   --popover: #151e2e;
   --popover-foreground: #e5eaf2;
-  --primary: #5c9bff;
-  --primary-foreground: #0b1a33;
-  --primary-hover: #7db0ff;
-  --primary-pressed: #4a8cf5;
-  --primary-soft: #132b57;
-  --secondary: #132b57;
-  --secondary-foreground: #bfd6ff;
+  --primary: #4c9dff;
+  --primary-foreground: #08182e;
+  --primary-hover: #6fb2ff;
+  --primary-pressed: #3d8ae6;
+  --primary-soft: #0a2a52;
+  --secondary: #0a2a52;
+  --secondary-foreground: #bfd9ff;
   --muted: #1a2434;
   --muted-foreground: #94a3b8;
   --subtle: #64748b;
   --accent: #1a2434;
   --accent-foreground: #e5eaf2;
-  --destructive: #f87171;
+  --destructive: #f76191;
   --destructive-foreground: #0b1220;
-  --destructive-bg: #341417;
-  --destructive-fg: #f87171;
-  --success: #4ade80;
-  --success-bg: #0f2a1a;
-  --success-fg: #4ade80;
-  --warning: #fbbf24;
-  --warning-bg: #2e2109;
-  --warning-fg: #fbbf24;
-  --info: #5c9bff;
-  --info-bg: #132b57;
-  --info-fg: #7db0ff;
+  --destructive-bg: #3a0f21;
+  --destructive-fg: #f76191;
+  --success: #45d483;
+  --success-bg: #0d2a1a;
+  --success-fg: #45d483;
+  --warning: #f7b74d;
+  --warning-bg: #2f2209;
+  --warning-fg: #f7b74d;
+  --info: #4c9dff;
+  --info-bg: #0a2a52;
+  --info-fg: #6fb2ff;
+  --accent-strong: #b17ce0;
+  --accent-strong-bg: #24153a;
   --neutral-bg: #1a2434;
   --neutral-fg: #94a3b8;
   --border: #22304a;
   --divider: #1c2739;
   --input: #22304a;
-  --ring: #5c9bff;
+  --ring: #4c9dff;
   --shadow-card: 0 0 0 1px var(--border);
   --shadow-card-hover: 0 0 0 1px #2d3d5e;
   --shadow-pop: 0 8px 24px -8px rgb(0 0 0 / 0.6), 0 0 0 1px var(--border);
-  --gradient-brand: linear-gradient(135deg, #2977ff 0%, #5c9bff 100%);
+  --gradient-brand: linear-gradient(135deg, #006fee 0%, #66aaf9 100%);
   --sidebar: #070d1f;
   --sidebar-foreground: #aab6cf;
-  --sidebar-primary: #5c9bff;
+  --sidebar-primary: #4c9dff;
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #131f3f;
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: #182648;
-  --sidebar-ring: #5c9bff;
+  --sidebar-ring: #4c9dff;
 }
 
 @theme inline {

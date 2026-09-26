@@ -39,7 +39,7 @@ import type { KpiAreaScore, KpiPeriodType } from '../api'
 const AREAS = ['repair', 'maintenance', 'calibration'] as const
 type Area = (typeof AREAS)[number]
 const VALID_TYPES: KpiPeriodType[] = ['week', 'month', 'quarter', 'year']
-const CHART_COLOR = '#2977ff'
+const CHART_COLOR = '#006fee'
 
 function num(value: number | null | undefined, digits = 1) {
   return value == null ? '—' : formatNumber(value, digits)
