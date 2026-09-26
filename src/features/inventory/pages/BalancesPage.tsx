@@ -1,11 +1,14 @@
 import { useMemo } from 'react'
+import { Link } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { DataTable, useServerTable } from '@/components/data-table'
-import { FilterBar, FilterField } from '@/components/filter-bar'
+import { FilterPreset } from '@/components/filter-bar'
+import { FilterPanel, FilterPanelField } from '@/components/page/FilterPanel'
 import { PageHeader } from '@/components/page/PageHeader'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
+import { AsyncSelect } from '@/components/form/async-select'
 import { formatVnd } from '@/lib/format/money'
 import { formatQty } from '@/lib/format/number'
 import { KpiCard } from '@/components/kpi-card'
@@ -50,7 +53,19 @@ export function Component() {
   )
   const columns = useMemo<ColumnDef<Balance>[]>(
     () => [
-      { accessorKey: 'code', header: t('code') },
+      {
+        accessorKey: 'code',
+        header: t('code'),
+        meta: { label: t('code'), className: 'sticky left-0 z-[1] bg-card' },
+        cell: ({ row }) => (
+          <Link
+            className="text-primary font-mono text-xs"
+            to={`/supplies/${row.original.supplyId}`}
+          >
+            {row.original.code}
+          </Link>
+        ),
+      },
       { accessorKey: 'name', header: t('name') },
       {
         accessorKey: 'warehouseId',
@@ -108,28 +123,46 @@ export function Component() {
           tone="neutral"
         />
       </div>
-      <DataTable
-        tableId="stock-balances"
-        columns={columns}
-        data={list.data?.items}
-        total={list.data?.total ?? 0}
-        params={table.params}
-        onPageChange={table.setPage}
-        onLimitChange={table.setLimit}
-        isLoading={list.isPending}
-        error={list.error}
-        onRetry={() => void list.refetch()}
-        toolbarLeft={
-          <FilterBar>
-            <FilterField label={t('searchBalance')}>
-              <Input
-                aria-label={t('searchBalance')}
-                value={table.inputQ}
-                onChange={(e) => table.setQ(e.target.value)}
+      <FilterPanel
+        storageKey="stock-balances"
+        onReset={table.reset}
+        activeFilters={[
+          ...(f.warehouseId
+            ? [
+                {
+                  key: 'warehouseId',
+                  label: warehouseNames.get(f.warehouseId) ?? f.warehouseId,
+                  onRemove: () => table.setFilter('warehouseId', undefined),
+                },
+              ]
+            : []),
+          ...(f.belowMin === 'true'
+            ? [
+                {
+                  key: 'belowMin',
+                  label: t('belowMin'),
+                  onRemove: () => table.setFilter('belowMin', undefined),
+                },
+              ]
+            : []),
+        ]}
+        fields={
+          <>
+            <FilterPanelField label={t('warehouse')}>
+              <AsyncSelect
+                label={t('warehouse')}
+                queryKey="warehouses"
+                loadOptions={(q) => catalogOptions('warehouses', q)}
+                value={f.warehouseId ?? null}
+                onChange={(value) =>
+                  table.setFilter('warehouseId', typeof value === 'string' ? value : undefined)
+                }
+                clearable
+                showLabel={false}
               />
-            </FilterField>
-            <FilterField label={t('belowMin')}>
-              <div className="flex h-9 items-center">
+            </FilterPanelField>
+            <FilterPanelField label={t('belowMin')}>
+              <div className="flex h-11 items-center">
                 <Switch
                   id="belowMin"
                   checked={f.belowMin === 'true'}
@@ -137,10 +170,42 @@ export function Component() {
                   aria-label={t('belowMin')}
                 />
               </div>
-            </FilterField>
-          </FilterBar>
+            </FilterPanelField>
+          </>
         }
-      />
+        toolbar={
+          <div className="flex flex-wrap items-center gap-2">
+            <Input
+              aria-label={t('searchBalance')}
+              placeholder={t('searchBalance')}
+              value={table.inputQ}
+              onChange={(e) => table.setQ(e.target.value)}
+              className="h-9 w-56"
+            />
+            <FilterPreset
+              active={f.belowMin === 'true'}
+              onClick={() =>
+                table.setFilter('belowMin', f.belowMin === 'true' ? undefined : 'true')
+              }
+            >
+              {t('belowMin')}
+            </FilterPreset>
+          </div>
+        }
+      >
+        <DataTable
+          tableId="stock-balances"
+          columns={columns}
+          data={list.data?.items}
+          total={list.data?.total ?? 0}
+          params={table.params}
+          onPageChange={table.setPage}
+          onLimitChange={table.setLimit}
+          isLoading={list.isPending}
+          error={list.error}
+          onRetry={() => void list.refetch()}
+        />
+      </FilterPanel>
     </>
   )
 }

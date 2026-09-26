@@ -11,6 +11,12 @@ import { Component as ReceiptFormPage } from './ReceiptFormPage'
 import { Component as IssueFormPage } from './IssueFormPage'
 import { Component as TransfersPage } from './TransfersPage'
 
+/** Chờ FormDrawer mở xong và tự focus trường đầu trước khi thao tác. */
+async function settleDrawer() {
+  await screen.findByTestId('form-drawer')
+  await new Promise((resolve) => setTimeout(resolve, 120))
+}
+
 beforeEach(() => {
   useAuthStore.getState().setSession(fakeSession())
   server.use(
@@ -115,6 +121,7 @@ it('creates a supply', async () => {
     route: '/supplies/new',
     routes: [{ path: '/supplies/:id', element: <div>DETAIL</div> }],
   })
+  await settleDrawer()
   await userEvent.type(screen.getByLabelText('Tên'), 'Huyết thanh mới')
   await userEvent.type(screen.getByLabelText('ĐVT'), 'Mil')
   await userEvent.click(await screen.findByRole('option', { name: /Mililit/ }))
@@ -145,6 +152,7 @@ it('creates a supply without code — body omits code and toast shows generated 
     route: '/supplies/new',
     routes: [{ path: '/supplies/:id', element: <div>DETAIL</div> }],
   })
+  await settleDrawer()
   expect(screen.getByLabelText('Mã')).toHaveAttribute(
     'placeholder',
     'Để trống sẽ tự sinh (vd VT-00001)',
@@ -204,6 +212,7 @@ it('creates an issue with a body validated like the API', async () => {
     route: '/stock/issues/new',
     routes: [{ path: '/stock/issues/:id', element: <div>DETAIL</div> }],
   })
+  await settleDrawer()
   await userEvent.type(screen.getByLabelText('Kho'), 'Kho')
   await userEvent.click(await screen.findByRole('option', { name: /Kho chính/ }))
   await userEvent.type(screen.getByLabelText('Khoa nhận'), 'XN')
@@ -260,6 +269,7 @@ it('creates a receipt with a body validated like the API', async () => {
     route: '/stock/receipts/new',
     routes: [{ path: '/stock/receipts/:id', element: <div>DETAIL</div> }],
   })
+  await settleDrawer()
   await userEvent.type(screen.getByLabelText('Kho'), 'Kho')
   await userEvent.click(await screen.findByRole('option', { name: /Kho chính/ }))
   await userEvent.type(screen.getByLabelText('Nhà cung cấp'), 'Nhà')
@@ -317,6 +327,9 @@ it('creates a transfer with multiple validated lot lines', async () => {
   )
   renderWithProviders(<TransfersPage />)
   await userEvent.click(screen.getByRole('button', { name: 'Tạo chuyển kho' }))
+  await screen.findByTestId('form-drawer')
+  // FormDrawer tự focus trường đầu sau khi mở — chờ focus ổn định rồi mới thao tác.
+  await waitFor(() => expect(screen.getByLabelText('Số lượng')).toHaveFocus())
   await userEvent.type(screen.getByLabelText('Kho nguồn'), 'nguồn')
   await userEvent.click(await screen.findByRole('option', { name: /Kho nguồn/ }))
   await userEvent.type(screen.getByLabelText('Kho đích'), 'đích')
@@ -330,3 +343,48 @@ it('creates a transfer with multiple validated lot lines', async () => {
   await userEvent.click(screen.getByRole('button', { name: 'Lưu' }))
   await waitFor(() => expect(saved).toHaveLength(1))
 }, 15_000)
+
+it('gọi API đúng tham số lọc và hiện chip lọc đang áp khi panel thu', async () => {
+  localStorage.setItem('filter-panel:stock-receipts', '0')
+  let url = ''
+  server.use(
+    http.get('/v1/stock/receipts', ({ request }) => {
+      url = request.url
+      return HttpResponse.json({
+        items: [
+          {
+            id: 'r1',
+            code: 'NK-1',
+            type: 'purchase',
+            status: 'draft',
+            totalAmount: '1000',
+            items: [],
+          },
+        ],
+        total: 1,
+        page: 1,
+        limit: 20,
+      })
+    }),
+  )
+  renderWithProviders(<ReceiptsPage />, { route: '/?status=draft' })
+  expect(await screen.findByTestId('filter-panel-active-chips')).toHaveTextContent('Nháp')
+  await waitFor(() => expect(url).toContain('status=draft'))
+  localStorage.removeItem('filter-panel:stock-receipts')
+})
+
+it('chọn trạng thái trong panel lọc gọi API với tham số mới', async () => {
+  localStorage.setItem('filter-panel:stock-receipts', '1')
+  let url = ''
+  server.use(
+    http.get('/v1/stock/receipts', ({ request }) => {
+      url = request.url
+      return HttpResponse.json({ items: [], total: 0, page: 1, limit: 20 })
+    }),
+  )
+  renderWithProviders(<ReceiptsPage />)
+  await userEvent.click(await screen.findByLabelText('Trạng thái'))
+  await userEvent.click(await screen.findByRole('option', { name: 'Nháp' }))
+  await waitFor(() => expect(url).toContain('status=draft'))
+  localStorage.removeItem('filter-panel:stock-receipts')
+})

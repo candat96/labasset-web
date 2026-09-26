@@ -5,7 +5,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { toast } from 'sonner'
 import { DataTable, useServerTable } from '@/components/data-table'
-import { FilterBar, FilterField } from '@/components/filter-bar'
+import { FilterPreset } from '@/components/filter-bar'
+import { FilterPanel, FilterPanelField } from '@/components/page/FilterPanel'
 import { PageHeader } from '@/components/page/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -108,11 +109,9 @@ export function Component() {
       {
         accessorKey: 'code',
         header: t('code'),
+        meta: { label: t('code'), className: 'sticky left-0 z-[1] bg-card' },
         cell: ({ row }) => (
-          <Link
-            className="text-primary font-mono text-xs hover:underline"
-            to={`/requests/${row.original.id}`}
-          >
+          <Link className="text-primary font-mono text-xs" to={`/requests/${row.original.id}`}>
             {row.original.code}
           </Link>
         ),
@@ -172,6 +171,60 @@ export function Component() {
     ],
     [selected, t],
   )
+  const activeFilters = [
+    ...(f.pendingFor === 'me'
+      ? [
+          {
+            key: 'pendingFor',
+            label: t('pendingMine'),
+            onRemove: () => table.setFilter('pendingFor', undefined),
+          },
+        ]
+      : []),
+    ...(f.requesterId === 'mine'
+      ? [
+          {
+            key: 'requesterId',
+            label: t('mine'),
+            onRemove: () => table.setFilter('requesterId', undefined),
+          },
+        ]
+      : []),
+    ...(f.status
+      ? [
+          {
+            key: 'status',
+            label: f.status
+              .split(',')
+              .map((status) => requestStatusMap[status]?.label ?? status)
+              .join(', '),
+            onRemove: () => table.setFilter('status', undefined),
+          },
+        ]
+      : []),
+    ...(f.type
+      ? [
+          {
+            key: 'type',
+            label: requestTypeLabels[f.type] ?? f.type,
+            onRemove: () => table.setFilter('type', undefined),
+          },
+        ]
+      : []),
+    ...(f.departmentId
+      ? [
+          {
+            key: 'departmentId',
+            label: t('department'),
+            onRemove: () => table.setFilter('departmentId', undefined),
+          },
+        ]
+      : []),
+    ...(f.from
+      ? [{ key: 'from', label: f.from, onRemove: () => table.setFilter('from', undefined) }]
+      : []),
+    ...(f.to ? [{ key: 'to', label: f.to, onRemove: () => table.setFilter('to', undefined) }] : []),
+  ]
   return (
     <>
       {dialog}
@@ -224,78 +277,13 @@ export function Component() {
           </div>
         }
       />
-      <div className="mb-3 flex flex-wrap gap-2">
-        <Button
-          size="sm"
-          variant={!f.pendingFor && !f.status ? 'default' : 'outline'}
-          onClick={() =>
-            table.setFilters({ pendingFor: undefined, status: undefined, requesterId: undefined })
-          }
-        >
-          {t('all')}
-        </Button>
-        {canHead && (
-          <Button
-            size="sm"
-            variant={f.pendingFor === 'me' ? 'default' : 'outline'}
-            onClick={() => table.setFilters({ pendingFor: 'me', status: undefined })}
-          >
-            {t('pendingMine')}
-            {pending.data?.total ? ` (${pending.data.total})` : ''}
-          </Button>
-        )}
-        <Button
-          size="sm"
-          variant={f.requesterId === 'mine' ? 'default' : 'outline'}
-          onClick={() => table.setFilters({ requesterId: 'mine', pendingFor: undefined })}
-        >
-          {t('mine')}
-        </Button>
-        <Button
-          size="sm"
-          variant={f.status === 'approved,partially_approved' ? 'default' : 'outline'}
-          onClick={() => table.setFilter('status', 'approved,partially_approved')}
-        >
-          {t('awaitingIssue')}
-        </Button>
-        <Button
-          size="sm"
-          variant={f.status === 'issued' ? 'default' : 'outline'}
-          onClick={() => table.setFilter('status', 'issued')}
-        >
-          {t('awaitingReceive')}
-        </Button>
-        <Button size="sm" variant="outline" asChild>
-          <Link to="/requests/quotas">{t('quotas')}</Link>
-        </Button>
-        <Button size="sm" variant="outline" asChild>
-          <Link to="/requests/recurring">{t('recurring')}</Link>
-        </Button>
-      </div>
-      <DataTable
-        tableId="requests"
-        columns={columns}
-        data={list.data?.items}
-        total={list.data?.total ?? 0}
-        params={table.params}
-        onPageChange={table.setPage}
-        onLimitChange={table.setLimit}
-        isLoading={list.isPending}
-        error={list.error}
-        onRetry={() => void list.refetch()}
-        getRowId={(row) => row.id}
-        onRowClick={(row) => navigate(`/requests/${row.id}`)}
-        toolbarLeft={
-          <FilterBar>
-            <FilterField label={t('searchRequest')}>
-              <Input
-                aria-label={t('searchRequest')}
-                value={table.inputQ}
-                onChange={(e) => table.setQ(e.target.value)}
-                placeholder={t('searchRequest')}
-              />
-            </FilterField>
-            <FilterField label={t('status')}>
+      <FilterPanel
+        storageKey="requests"
+        onReset={table.reset}
+        activeFilters={activeFilters}
+        fields={
+          <>
+            <FilterPanelField label={t('status')}>
               <Select
                 value={f.status ?? 'all'}
                 onValueChange={(value) =>
@@ -324,8 +312,8 @@ export function Component() {
                   ))}
                 </SelectContent>
               </Select>
-            </FilterField>
-            <FilterField label={t('type')}>
+            </FilterPanelField>
+            <FilterPanelField label={t('type')}>
               <Select
                 value={f.type ?? 'all'}
                 onValueChange={(value) =>
@@ -341,8 +329,8 @@ export function Component() {
                   <SelectItem value="repair">{t('typeRepair')}</SelectItem>
                 </SelectContent>
               </Select>
-            </FilterField>
-            <FilterField label={t('department')}>
+            </FilterPanelField>
+            <FilterPanelField label={t('department')}>
               <AsyncSelect
                 label={t('department')}
                 queryKey="request-departments"
@@ -352,25 +340,98 @@ export function Component() {
                   table.setFilter('departmentId', typeof value === 'string' ? value : undefined)
                 }
                 clearable
+                showLabel={false}
               />
-            </FilterField>
-            <FilterField label={t('from')}>
+            </FilterPanelField>
+            <FilterPanelField label={t('from')}>
               <DatePicker
                 ariaLabel={t('from')}
                 value={f.from}
                 onChange={(value) => table.setFilter('from', value)}
               />
-            </FilterField>
-            <FilterField label={t('to')}>
+            </FilterPanelField>
+            <FilterPanelField label={t('to')}>
               <DatePicker
                 ariaLabel={t('to')}
                 value={f.to}
                 onChange={(value) => table.setFilter('to', value)}
               />
-            </FilterField>
-          </FilterBar>
+            </FilterPanelField>
+          </>
         }
-      />
+        toolbar={
+          <div className="flex flex-wrap items-center gap-2">
+            <Input
+              aria-label={t('searchRequest')}
+              value={table.inputQ}
+              onChange={(e) => table.setQ(e.target.value)}
+              placeholder={t('searchRequest')}
+              className="h-9 w-56"
+            />
+            <FilterPreset
+              active={!f.pendingFor && !f.status}
+              onClick={() =>
+                table.setFilters({
+                  pendingFor: undefined,
+                  status: undefined,
+                  requesterId: undefined,
+                })
+              }
+            >
+              {t('all')}
+            </FilterPreset>
+            {canHead && (
+              <FilterPreset
+                active={f.pendingFor === 'me'}
+                onClick={() => table.setFilters({ pendingFor: 'me', status: undefined })}
+              >
+                {t('pendingMine')}
+                {pending.data?.total ? ` (${pending.data.total})` : ''}
+              </FilterPreset>
+            )}
+            <FilterPreset
+              active={f.requesterId === 'mine'}
+              onClick={() => table.setFilters({ requesterId: 'mine', pendingFor: undefined })}
+            >
+              {t('mine')}
+            </FilterPreset>
+            <FilterPreset
+              active={f.status === 'approved,partially_approved'}
+              onClick={() => table.setFilter('status', 'approved,partially_approved')}
+            >
+              {t('awaitingIssue')}
+            </FilterPreset>
+            <FilterPreset
+              active={f.status === 'issued'}
+              onClick={() => table.setFilter('status', 'issued')}
+            >
+              {t('awaitingReceive')}
+            </FilterPreset>
+            <Button size="sm" variant="outline" asChild>
+              <Link to="/requests/quotas">{t('quotas')}</Link>
+            </Button>
+            <Button size="sm" variant="outline" asChild>
+              <Link to="/requests/recurring">{t('recurring')}</Link>
+            </Button>
+          </div>
+        }
+      >
+        <DataTable
+          tableId="requests"
+          columns={columns}
+          data={list.data?.items}
+          total={list.data?.total ?? 0}
+          params={table.params}
+          onPageChange={table.setPage}
+          onLimitChange={table.setLimit}
+          isLoading={list.isPending}
+          error={list.error}
+          onRetry={() => void list.refetch()}
+          getRowId={(row) => row.id}
+          onRowClick={(row) => navigate(`/requests/${row.id}`)}
+          selectedCount={selected.length}
+        />
+      </FilterPanel>
     </>
   )
 }

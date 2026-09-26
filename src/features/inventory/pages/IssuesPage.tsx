@@ -10,10 +10,18 @@ import { z } from 'zod'
 import type { ColumnDef } from '@tanstack/react-table'
 import { toast } from 'sonner'
 import { DataTable, useServerTable } from '@/components/data-table'
-import { FilterBar, FilterField } from '@/components/filter-bar'
+import { FilterPanel, FilterPanelField } from '@/components/page/FilterPanel'
 import { PageHeader } from '@/components/page/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { DatePicker } from '@/components/date-picker'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { StatusBadge } from '@/components/status-badge'
 import { stockDocStatusMap } from '@/lib/status-maps'
 import { FormDialog } from '@/components/form/FormDialog'
@@ -88,11 +96,9 @@ export function Component() {
       {
         accessorKey: 'code',
         header: t('code'),
+        meta: { label: t('code'), className: 'sticky left-0 z-[1] bg-card' },
         cell: ({ row }) => (
-          <Link
-            className="text-primary font-mono text-xs hover:underline"
-            to={`/stock/issues/${row.original.id}`}
-          >
+          <Link className="text-primary font-mono text-xs" to={`/stock/issues/${row.original.id}`}>
             {row.original.code}
           </Link>
         ),
@@ -125,7 +131,7 @@ export function Component() {
           if (r.equipmentId) {
             const e = equipmentNames.get(r.equipmentId)
             return e ? (
-              <Link className="text-primary hover:underline" to={`/equipment/${r.equipmentId}`}>
+              <Link className="text-primary" to={`/equipment/${r.equipmentId}`}>
                 {e.code} — {e.name}
               </Link>
             ) : (
@@ -192,6 +198,39 @@ export function Component() {
     ],
     [canWrite, invalidate, t, warehouseNames, departmentNames, equipmentNames],
   )
+  const activeFilters = [
+    ...(f.status
+      ? [
+          {
+            key: 'status',
+            label: stockDocStatusMap[f.status]?.label ?? f.status,
+            onRemove: () => table.setFilter('status', undefined),
+          },
+        ]
+      : []),
+    ...(f.type
+      ? [
+          {
+            key: 'type',
+            label: issueTypeLabels[f.type] ?? f.type,
+            onRemove: () => table.setFilter('type', undefined),
+          },
+        ]
+      : []),
+    ...(f.warehouseId
+      ? [
+          {
+            key: 'warehouseId',
+            label: warehouseNames.get(f.warehouseId) ?? shortId(f.warehouseId),
+            onRemove: () => table.setFilter('warehouseId', undefined),
+          },
+        ]
+      : []),
+    ...(f.from
+      ? [{ key: 'from', label: f.from, onRemove: () => table.setFilter('from', undefined) }]
+      : []),
+    ...(f.to ? [{ key: 'to', label: f.to, onRemove: () => table.setFilter('to', undefined) }] : []),
+  ]
   return (
     <>
       <PageHeader
@@ -212,32 +251,110 @@ export function Component() {
           )
         }
       />
-      <DataTable
-        tableId="stock-issues"
-        columns={columns}
-        data={list.data?.items}
-        total={list.data?.total ?? 0}
-        params={table.params}
-        onPageChange={table.setPage}
-        onLimitChange={table.setLimit}
-        isLoading={list.isPending}
-        error={list.error}
-        onRetry={() => void list.refetch()}
-        getRowId={(row) => row.id}
-        onRowClick={(row) => navigate(`/stock/issues/${row.id}`)}
-        toolbarLeft={
-          <FilterBar>
-            <FilterField label={t('searchIssue')}>
-              <Input
-                aria-label={t('searchIssue')}
-                value={table.inputQ}
-                onChange={(e) => table.setQ(e.target.value)}
-                placeholder={t('searchIssue')}
+      <FilterPanel
+        storageKey="stock-issues"
+        onReset={table.reset}
+        activeFilters={activeFilters}
+        fields={
+          <>
+            <FilterPanelField label={t('status')}>
+              <Select
+                value={f.status ?? '__all__'}
+                onValueChange={(value) =>
+                  table.setFilter('status', value === '__all__' ? undefined : value)
+                }
+              >
+                <SelectTrigger aria-label={t('status')} className="w-full">
+                  <SelectValue placeholder={t('status')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">
+                    {t('common:all', { defaultValue: 'Tất cả' })}
+                  </SelectItem>
+                  {Object.entries(stockDocStatusMap).map(([value, entry]) => (
+                    <SelectItem key={value} value={value}>
+                      {entry.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FilterPanelField>
+            <FilterPanelField label={t('type')}>
+              <Select
+                value={f.type ?? '__all__'}
+                onValueChange={(value) =>
+                  table.setFilter('type', value === '__all__' ? undefined : value)
+                }
+              >
+                <SelectTrigger aria-label={t('type')} className="w-full">
+                  <SelectValue placeholder={t('type')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">
+                    {t('common:all', { defaultValue: 'Tất cả' })}
+                  </SelectItem>
+                  {Object.entries(issueTypeLabels).map(([value, label]) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FilterPanelField>
+            <FilterPanelField label={t('warehouse')}>
+              <AsyncSelect
+                label={t('warehouse')}
+                queryKey="warehouses"
+                loadOptions={(q) => catalogOptions('warehouses', q)}
+                value={f.warehouseId ?? null}
+                onChange={(value) =>
+                  table.setFilter('warehouseId', typeof value === 'string' ? value : undefined)
+                }
+                clearable
+                showLabel={false}
               />
-            </FilterField>
-          </FilterBar>
+            </FilterPanelField>
+            <FilterPanelField label={t('fromDate', { defaultValue: 'Từ ngày' })}>
+              <DatePicker
+                ariaLabel={t('fromDate', { defaultValue: 'Từ ngày' })}
+                value={f.from ?? ''}
+                onChange={(value) => table.setFilter('from', value)}
+              />
+            </FilterPanelField>
+            <FilterPanelField label={t('toDate', { defaultValue: 'Đến ngày' })}>
+              <DatePicker
+                ariaLabel={t('toDate', { defaultValue: 'Đến ngày' })}
+                value={f.to ?? ''}
+                onChange={(value) => table.setFilter('to', value)}
+              />
+            </FilterPanelField>
+          </>
         }
-      />
+        toolbar={
+          <Input
+            aria-label={t('searchIssue')}
+            value={table.inputQ}
+            onChange={(e) => table.setQ(e.target.value)}
+            placeholder={t('searchIssue')}
+            className="h-9 w-56"
+          />
+        }
+      >
+        <DataTable
+          tableId="stock-issues"
+          columns={columns}
+          data={list.data?.items}
+          total={list.data?.total ?? 0}
+          params={table.params}
+          onPageChange={table.setPage}
+          onLimitChange={table.setLimit}
+          isLoading={list.isPending}
+          error={list.error}
+          onRetry={() => void list.refetch()}
+          getRowId={(row) => row.id}
+          onRowClick={(row) => navigate(`/stock/issues/${row.id}`)}
+        />
+      </FilterPanel>
       <FormDialog
         open={quick}
         onOpenChange={setQuick}

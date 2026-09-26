@@ -144,3 +144,34 @@ it('creates a recurring request with validated items', async () => {
   await userEvent.click(screen.getByRole('button', { name: 'Lưu' }))
   await waitFor(() => expect(saved).toHaveLength(1))
 }, 15_000)
+
+it('hiện chip lọc đang áp khi panel thu và gọi API đúng tham số', async () => {
+  localStorage.setItem('filter-panel:requests', '0')
+  const urls: string[] = []
+  server.use(
+    http.get('/v1/requests', ({ request }) => {
+      urls.push(request.url)
+      return HttpResponse.json({ items: [row], total: 1, page: 1, limit: 20 })
+    }),
+  )
+  renderWithProviders(<RequestsPage />, { route: '/?status=submitted' })
+  expect(await screen.findByTestId('filter-panel-active-chips')).toHaveTextContent('Đã gửi')
+  await waitFor(() => expect(urls.some((u) => u.includes('status=submitted'))).toBe(true))
+  localStorage.removeItem('filter-panel:requests')
+})
+
+it('đổi bộ lọc trong panel gọi API với tham số mới', async () => {
+  localStorage.setItem('filter-panel:requests', '1')
+  const urls: string[] = []
+  server.use(
+    http.get('/v1/requests', ({ request }) => {
+      urls.push(request.url)
+      return HttpResponse.json({ items: [row], total: 1, page: 1, limit: 20 })
+    }),
+  )
+  renderWithProviders(<RequestsPage />)
+  await userEvent.click(await screen.findByLabelText('Loại'))
+  await userEvent.click(await screen.findByRole('option', { name: 'Yêu cầu sửa chữa' }))
+  await waitFor(() => expect(urls.some((u) => u.includes('type=repair'))).toBe(true))
+  localStorage.removeItem('filter-panel:requests')
+})

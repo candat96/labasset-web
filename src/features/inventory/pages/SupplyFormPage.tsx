@@ -5,11 +5,9 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
-import { PageHeader } from '@/components/page/PageHeader'
 import { SectionCard } from '@/components/page/SectionCard'
-import { FormFooter } from '@/components/page/FormFooter'
+import { FormDrawer } from '@/components/form/FormDrawer'
 import { ErrorState } from '@/components/page/ErrorState'
-import { Form } from '@/components/ui/form'
 import { TextField, SwitchField } from '@/components/form/fields'
 import { MoneyField } from '@/components/form/money-field'
 import { QtyField } from '@/components/form/qty-field'
@@ -150,140 +148,129 @@ export function Component() {
     }
   }
   return (
-    <>
-      <PageHeader
-        eyebrow={t('suppliesTitle')}
-        title={editing ? t('editSupply') : t('createSupply')}
-        description={t('supplyFormHint', {
-          defaultValue: 'Mã, tên, quy cách và cấu hình theo dõi lô/hạn, tồn tối thiểu – tối đa.',
-        })}
-      />
-      <Form {...form}>
-        <form className="space-y-5" noValidate onSubmit={form.handleSubmit(submit)}>
-          <SectionCard title={t('info', { defaultValue: 'Thông tin chung' })}>
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              <TextField
-                control={form.control}
-                name="code"
-                label={t('code')}
-                placeholder={t('codeAutoExample', { example: 'VT-00001' })}
-                transform={(v) => v.toUpperCase()}
-              />
-              <TextField control={form.control} name="name" label={t('name')} />
-              <TextField control={form.control} name="packaging" label={t('packaging')} />
-              <TextField
-                control={form.control}
-                name="manufacturerCode"
-                label={t('manufacturerCode')}
-              />
-              <FormField
-                control={form.control}
-                name="groupId"
-                render={({ field }) => (
-                  <FormItem>
-                    <AsyncSelect
-                      label={t('group')}
-                      queryKey="supply-groups"
-                      loadOptions={(q) => catalogOptions('supply-groups', q)}
-                      resolveOption={(groupId) => resolveCatalogItem('supply-groups', groupId)}
-                      value={field.value}
-                      onChange={field.onChange}
-                      clearable
-                    />
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="unitId"
-                render={({ field }) => (
-                  <FormItem>
-                    <AsyncSelect
-                      label={t('unit')}
-                      queryKey="units"
-                      loadOptions={(q) => catalogOptions('units', q)}
-                      resolveOption={(unitId) => resolveCatalogItem('units', unitId)}
-                      value={field.value}
-                      onChange={field.onChange}
-                      clearable
-                    />
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="manufacturerId"
-                render={({ field }) => (
-                  <FormItem>
-                    <AsyncSelect
-                      label={t('manufacturer')}
-                      queryKey="manufacturers"
-                      loadOptions={(q) => catalogOptions('manufacturers', q)}
-                      resolveOption={(value) => resolveCatalogItem('manufacturers', value)}
-                      value={field.value}
-                      onChange={field.onChange}
-                      clearable
-                    />
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="defaultSupplierId"
-                render={({ field }) => (
-                  <FormItem>
-                    <AsyncSelect
-                      label={t('defaultSupplier')}
-                      queryKey="suppliers"
-                      loadOptions={(q) => catalogOptions('suppliers', q)}
-                      resolveOption={(value) => resolveCatalogItem('suppliers', value)}
-                      value={field.value}
-                      onChange={field.onChange}
-                      clearable
-                    />
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </SectionCard>
-          <SectionCard title={t('stockSettings', { defaultValue: 'Tồn kho & theo dõi' })}>
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              <MoneyField control={form.control} name="refPrice" label={t('refPrice')} />
-              <SwitchField control={form.control} name="trackLot" label={t('trackLotField')} />
-              <SwitchField
-                control={form.control}
-                name="trackExpiry"
-                label={t('trackExpiry')}
-                disabled={!trackLot}
-              />
-              <QtyField control={form.control} name="minStock" label={t('minStock')} />
-              <QtyField control={form.control} name="maxStock" label={t('maxStock')} />
-              <TextField
-                control={form.control}
-                name="openVialDays"
-                label={t('openVialDays')}
-                type="number"
-              />
-              <TextField
-                control={form.control}
-                name="storageCondition"
-                label={t('storageCondition')}
-              />
-              <SwitchField control={form.control} name="isActive" label={t('isActive')} />
-              <TextField control={form.control} name="notes" label={t('notes')} />
-            </div>
-          </SectionCard>
-          <FormFooter
-            onCancel={() => navigate(-1)}
-            submitting={form.formState.isSubmitting}
-            saveLabel={t('save')}
+    <FormDrawer
+      open
+      onOpenChange={(next) => {
+        if (!next) navigate(-1)
+      }}
+      title={editing ? t('editSupply') : t('createSupply')}
+      description={t('supplyFormHint', {
+        defaultValue: 'Mã, tên, quy cách và cấu hình theo dõi lô/hạn, tồn tối thiểu – tối đa.',
+      })}
+      form={form}
+      submitting={form.formState.isSubmitting}
+      submitLabel={t('save')}
+      onSubmit={submit}
+    >
+      <SectionCard title={t('info', { defaultValue: 'Thông tin chung' })}>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <TextField
+            control={form.control}
+            name="code"
+            label={t('code')}
+            placeholder={t('codeAutoExample', { example: 'VT-00001' })}
+            transform={(v) => v.toUpperCase()}
           />
-        </form>
-      </Form>
-    </>
+          <TextField control={form.control} name="name" label={t('name')} />
+          <TextField control={form.control} name="packaging" label={t('packaging')} />
+          <TextField control={form.control} name="manufacturerCode" label={t('manufacturerCode')} />
+          <FormField
+            control={form.control}
+            name="groupId"
+            render={({ field }) => (
+              <FormItem>
+                <AsyncSelect
+                  label={t('group')}
+                  queryKey="supply-groups"
+                  loadOptions={(q) => catalogOptions('supply-groups', q)}
+                  resolveOption={(groupId) => resolveCatalogItem('supply-groups', groupId)}
+                  value={field.value}
+                  onChange={field.onChange}
+                  clearable
+                />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="unitId"
+            render={({ field }) => (
+              <FormItem>
+                <AsyncSelect
+                  label={t('unit')}
+                  queryKey="units"
+                  loadOptions={(q) => catalogOptions('units', q)}
+                  resolveOption={(unitId) => resolveCatalogItem('units', unitId)}
+                  value={field.value}
+                  onChange={field.onChange}
+                  clearable
+                />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="manufacturerId"
+            render={({ field }) => (
+              <FormItem>
+                <AsyncSelect
+                  label={t('manufacturer')}
+                  queryKey="manufacturers"
+                  loadOptions={(q) => catalogOptions('manufacturers', q)}
+                  resolveOption={(value) => resolveCatalogItem('manufacturers', value)}
+                  value={field.value}
+                  onChange={field.onChange}
+                  clearable
+                />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="defaultSupplierId"
+            render={({ field }) => (
+              <FormItem>
+                <AsyncSelect
+                  label={t('defaultSupplier')}
+                  queryKey="suppliers"
+                  loadOptions={(q) => catalogOptions('suppliers', q)}
+                  resolveOption={(value) => resolveCatalogItem('suppliers', value)}
+                  value={field.value}
+                  onChange={field.onChange}
+                  clearable
+                />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+      </SectionCard>
+      <SectionCard title={t('stockSettings', { defaultValue: 'Tồn kho & theo dõi' })}>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <MoneyField control={form.control} name="refPrice" label={t('refPrice')} />
+          <SwitchField control={form.control} name="trackLot" label={t('trackLotField')} />
+          <SwitchField
+            control={form.control}
+            name="trackExpiry"
+            label={t('trackExpiry')}
+            disabled={!trackLot}
+          />
+          <QtyField control={form.control} name="minStock" label={t('minStock')} />
+          <QtyField control={form.control} name="maxStock" label={t('maxStock')} />
+          <TextField
+            control={form.control}
+            name="openVialDays"
+            label={t('openVialDays')}
+            type="number"
+          />
+          <TextField control={form.control} name="storageCondition" label={t('storageCondition')} />
+          <SwitchField control={form.control} name="isActive" label={t('isActive')} />
+          <TextField control={form.control} name="notes" label={t('notes')} />
+        </div>
+      </SectionCard>
+    </FormDrawer>
   )
 }

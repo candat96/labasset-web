@@ -4,16 +4,25 @@ import { useQuery } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { toast } from 'sonner'
 import { DataTable, useServerTable } from '@/components/data-table'
-import { FilterBar, FilterField } from '@/components/filter-bar'
+import { FilterPanel, FilterPanelField } from '@/components/page/FilterPanel'
 import { PageHeader } from '@/components/page/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { AsyncSelect } from '@/components/form/async-select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { StatusBadge } from '@/components/status-badge'
 import { commonStatusMap } from '@/lib/status-maps'
 import { formatVnd } from '@/lib/format/money'
 import { useCan } from '@/app/guards/useCan'
 import { STAFF } from '@/routes/roles'
 import { messageFor } from '@/api/errors'
+import { catalogOptions } from '@/api/references'
 import {
   asSupplyPage,
   downloadSupplyTemplate,
@@ -39,7 +48,10 @@ export function Component() {
     page: table.params.page,
     limit: table.params.limit,
     q: table.params.q || undefined,
+    groupId: f.groupId,
+    manufacturerId: f.manufacturerId,
     isActive: f.isActive === undefined ? undefined : f.isActive === 'true',
+    trackLot: f.trackLot === undefined ? undefined : f.trackLot === 'true',
   }
   const list = useQuery({
     queryKey: ['supplies', params],
@@ -51,11 +63,9 @@ export function Component() {
       {
         accessorKey: 'code',
         header: t('code'),
+        meta: { label: t('code'), className: 'sticky left-0 z-[1] bg-card' },
         cell: ({ row }) => (
-          <Link
-            className="text-primary font-mono text-xs hover:underline"
-            to={`/supplies/${row.original.id}`}
-          >
+          <Link className="text-primary font-mono text-xs" to={`/supplies/${row.original.id}`}>
             {row.original.code}
           </Link>
         ),
@@ -88,6 +98,44 @@ export function Component() {
     ],
     [t],
   )
+  const activeFilters = [
+    ...(f.groupId
+      ? [
+          {
+            key: 'groupId',
+            label: t('group'),
+            onRemove: () => table.setFilter('groupId', undefined),
+          },
+        ]
+      : []),
+    ...(f.manufacturerId
+      ? [
+          {
+            key: 'manufacturerId',
+            label: t('manufacturer'),
+            onRemove: () => table.setFilter('manufacturerId', undefined),
+          },
+        ]
+      : []),
+    ...(f.isActive !== undefined
+      ? [
+          {
+            key: 'isActive',
+            label: commonStatusMap[f.isActive === 'true' ? 'active' : 'inactive']?.label ?? '',
+            onRemove: () => table.setFilter('isActive', undefined),
+          },
+        ]
+      : []),
+    ...(f.trackLot !== undefined
+      ? [
+          {
+            key: 'trackLot',
+            label: t('trackLot'),
+            onRemove: () => table.setFilter('trackLot', undefined),
+          },
+        ]
+      : []),
+  ]
   return (
     <>
       <PageHeader
@@ -152,32 +200,103 @@ export function Component() {
           </div>
         }
       />
-      <DataTable
-        tableId="supplies"
-        columns={columns}
-        data={list.data?.items}
-        total={list.data?.total ?? 0}
-        params={table.params}
-        onPageChange={table.setPage}
-        onLimitChange={table.setLimit}
-        isLoading={list.isPending}
-        error={list.error}
-        onRetry={() => void list.refetch()}
-        getRowId={(row) => row.id}
-        onRowClick={(row) => navigate(`/supplies/${row.id}`)}
-        toolbarLeft={
-          <FilterBar>
-            <FilterField label={t('searchSupply')}>
-              <Input
-                aria-label={t('searchSupply')}
-                value={table.inputQ}
-                onChange={(e) => table.setQ(e.target.value)}
-                placeholder={t('searchSupply')}
+      <FilterPanel
+        storageKey="supplies"
+        onReset={table.reset}
+        activeFilters={activeFilters}
+        fields={
+          <>
+            <FilterPanelField label={t('group')}>
+              <AsyncSelect
+                label={t('group')}
+                queryKey="supply-groups"
+                loadOptions={(q) => catalogOptions('supply-groups', q)}
+                value={f.groupId ?? null}
+                onChange={(value) =>
+                  table.setFilter('groupId', typeof value === 'string' ? value : undefined)
+                }
+                clearable
+                showLabel={false}
               />
-            </FilterField>
-          </FilterBar>
+            </FilterPanelField>
+            <FilterPanelField label={t('manufacturer')}>
+              <AsyncSelect
+                label={t('manufacturer')}
+                queryKey="manufacturers"
+                loadOptions={(q) => catalogOptions('manufacturers', q)}
+                value={f.manufacturerId ?? null}
+                onChange={(value) =>
+                  table.setFilter('manufacturerId', typeof value === 'string' ? value : undefined)
+                }
+                clearable
+                showLabel={false}
+              />
+            </FilterPanelField>
+            <FilterPanelField label={t('status')}>
+              <Select
+                value={f.isActive ?? '__all__'}
+                onValueChange={(value) =>
+                  table.setFilter('isActive', value === '__all__' ? undefined : value)
+                }
+              >
+                <SelectTrigger aria-label={t('status')} className="w-full">
+                  <SelectValue placeholder={t('status')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">
+                    {t('common:all', { defaultValue: 'Tất cả' })}
+                  </SelectItem>
+                  <SelectItem value="true">{commonStatusMap.active?.label}</SelectItem>
+                  <SelectItem value="false">{commonStatusMap.inactive?.label}</SelectItem>
+                </SelectContent>
+              </Select>
+            </FilterPanelField>
+            <FilterPanelField label={t('trackLot')}>
+              <Select
+                value={f.trackLot ?? '__all__'}
+                onValueChange={(value) =>
+                  table.setFilter('trackLot', value === '__all__' ? undefined : value)
+                }
+              >
+                <SelectTrigger aria-label={t('trackLot')} className="w-full">
+                  <SelectValue placeholder={t('trackLot')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">
+                    {t('common:all', { defaultValue: 'Tất cả' })}
+                  </SelectItem>
+                  <SelectItem value="true">{t('yes', { defaultValue: 'Có' })}</SelectItem>
+                  <SelectItem value="false">{t('no', { defaultValue: 'Không' })}</SelectItem>
+                </SelectContent>
+              </Select>
+            </FilterPanelField>
+          </>
         }
-      />
+        toolbar={
+          <Input
+            aria-label={t('searchSupply')}
+            value={table.inputQ}
+            onChange={(e) => table.setQ(e.target.value)}
+            placeholder={t('searchSupply')}
+            className="h-9 w-56"
+          />
+        }
+      >
+        <DataTable
+          tableId="supplies"
+          columns={columns}
+          data={list.data?.items}
+          total={list.data?.total ?? 0}
+          params={table.params}
+          onPageChange={table.setPage}
+          onLimitChange={table.setLimit}
+          isLoading={list.isPending}
+          error={list.error}
+          onRetry={() => void list.refetch()}
+          getRowId={(row) => row.id}
+          onRowClick={(row) => navigate(`/supplies/${row.id}`)}
+        />
+      </FilterPanel>
     </>
   )
 }

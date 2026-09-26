@@ -5,11 +5,9 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
-import { PageHeader } from '@/components/page/PageHeader'
 import { SectionCard } from '@/components/page/SectionCard'
-import { FormFooter } from '@/components/page/FormFooter'
+import { FormDrawer } from '@/components/form/FormDrawer'
 import { Button } from '@/components/ui/button'
-import { Form } from '@/components/ui/form'
 import { TextField, SelectField } from '@/components/form/fields'
 import { DateField } from '@/components/form/date-field'
 import { MoneyField } from '@/components/form/money-field'
@@ -164,198 +162,190 @@ export function Component() {
     }
   }
   return (
-    <>
-      <PageHeader
-        eyebrow={t('receiptsTitle')}
-        title={editing ? t('editReceipt') : t('createReceipt')}
-        description={t('receiptFormHint', {
-          defaultValue:
-            'Chọn loại nhập, kho, hoá đơn và các dòng vật tư; phiếu được lưu ở trạng thái nháp.',
-        })}
-      />
-      <Form {...form}>
-        <form className="space-y-5" noValidate onSubmit={form.handleSubmit(submit)}>
-          <SectionCard title={t('info', { defaultValue: 'Thông tin phiếu' })}>
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              <SelectField
-                control={form.control}
-                name="type"
-                label={t('type')}
-                options={[
-                  { value: 'purchase', label: t('receiptTypePurchase') },
-                  { value: 'return_from_dept', label: t('receiptTypeReturn') },
-                  { value: 'adjust_in', label: t('receiptTypeAdjustIn') },
-                ]}
-              />
-              <FormField
-                control={form.control}
-                name="warehouseId"
-                render={({ field }) => (
-                  <FormItem>
-                    <AsyncSelect
-                      label={t('warehouse')}
-                      queryKey="warehouses"
-                      loadOptions={(q) => catalogOptions('warehouses', q)}
-                      value={field.value || null}
-                      onChange={(v) => field.onChange(typeof v === 'string' ? v : '')}
-                    />
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              {form.watch('type') === 'purchase' && (
-                <FormField
-                  control={form.control}
-                  name="supplierId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <AsyncSelect
-                        label={t('supplier')}
-                        queryKey="suppliers"
-                        loadOptions={(q) => catalogOptions('suppliers', q)}
-                        value={field.value}
-                        onChange={field.onChange}
-                        clearable
-                      />
-                      <FormMessage />
-                    </FormItem>
-                  )}
+    <FormDrawer
+      open
+      onOpenChange={(next) => {
+        if (!next) navigate(-1)
+      }}
+      title={editing ? t('editReceipt') : t('createReceipt')}
+      description={t('receiptFormHint', {
+        defaultValue:
+          'Chọn loại nhập, kho, hoá đơn và các dòng vật tư; phiếu được lưu ở trạng thái nháp.',
+      })}
+      form={form}
+      submitting={form.formState.isSubmitting}
+      submitLabel={t('saveDraft')}
+      onSubmit={submit}
+    >
+      <SectionCard title={t('info', { defaultValue: 'Thông tin phiếu' })}>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <SelectField
+            control={form.control}
+            name="type"
+            label={t('type')}
+            options={[
+              { value: 'purchase', label: t('receiptTypePurchase') },
+              { value: 'return_from_dept', label: t('receiptTypeReturn') },
+              { value: 'adjust_in', label: t('receiptTypeAdjustIn') },
+            ]}
+          />
+          <FormField
+            control={form.control}
+            name="warehouseId"
+            render={({ field }) => (
+              <FormItem>
+                <AsyncSelect
+                  label={t('warehouse')}
+                  queryKey="warehouses"
+                  loadOptions={(q) => catalogOptions('warehouses', q)}
+                  value={field.value || null}
+                  onChange={(v) => field.onChange(typeof v === 'string' ? v : '')}
                 />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          {form.watch('type') === 'purchase' && (
+            <FormField
+              control={form.control}
+              name="supplierId"
+              render={({ field }) => (
+                <FormItem>
+                  <AsyncSelect
+                    label={t('supplier')}
+                    queryKey="suppliers"
+                    loadOptions={(q) => catalogOptions('suppliers', q)}
+                    value={field.value}
+                    onChange={field.onChange}
+                    clearable
+                  />
+                  <FormMessage />
+                </FormItem>
               )}
-              {form.watch('type') === 'return_from_dept' && (
-                <FormField
-                  control={form.control}
-                  name="fromDepartmentId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <AsyncSelect
-                        label={t('fromDepartment')}
-                        queryKey="departments"
-                        loadOptions={departmentOptions}
-                        value={field.value}
-                        onChange={field.onChange}
-                        clearable
-                      />
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+            />
+          )}
+          {form.watch('type') === 'return_from_dept' && (
+            <FormField
+              control={form.control}
+              name="fromDepartmentId"
+              render={({ field }) => (
+                <FormItem>
+                  <AsyncSelect
+                    label={t('fromDepartment')}
+                    queryKey="departments"
+                    loadOptions={departmentOptions}
+                    value={field.value}
+                    onChange={field.onChange}
+                    clearable
+                  />
+                  <FormMessage />
+                </FormItem>
               )}
-              <TextField control={form.control} name="invoiceNo" label={t('invoiceNo')} />
-              <DateField control={form.control} name="invoiceDate" label={t('invoiceDate')} />
-              <DateField control={form.control} name="receivedAt" label={t('receivedAt')} />
-              <SelectField
-                control={form.control}
-                name="qcStatus"
-                label="QC"
-                options={[
-                  { value: 'pending', label: t('qcPending') },
-                  { value: 'passed', label: t('qcPassed') },
-                  { value: 'failed', label: t('qcFailed') },
-                ]}
-              />
-              <TextField control={form.control} name="qcNote" label={t('qcNote')} />
-              <TextField control={form.control} name="notes" label={t('notes')} />
-            </div>
-          </SectionCard>
-          <SectionCard
-            title={t('receiptItems', { defaultValue: 'Vật tư nhập' })}
-            actions={
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  items.append({
-                    supplyId: '',
-                    lotNo: '',
-                    expiresAt: '',
-                    quantity: '1',
-                    unitCost: '0',
-                  })
-                }
-              >
-                {t('addLine')}
-              </Button>
-            }
-            bodyClassName="space-y-3"
-            footer={
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground text-[13px]">{t('totalAmount')}</span>
-                <span className="text-[16px] font-bold tabular-nums">{formatVnd(total)}</span>
-              </div>
+            />
+          )}
+          <TextField control={form.control} name="invoiceNo" label={t('invoiceNo')} />
+          <DateField control={form.control} name="invoiceDate" label={t('invoiceDate')} />
+          <DateField control={form.control} name="receivedAt" label={t('receivedAt')} />
+          <SelectField
+            control={form.control}
+            name="qcStatus"
+            label="QC"
+            options={[
+              { value: 'pending', label: t('qcPending') },
+              { value: 'passed', label: t('qcPassed') },
+              { value: 'failed', label: t('qcFailed') },
+            ]}
+          />
+          <TextField control={form.control} name="qcNote" label={t('qcNote')} />
+          <TextField control={form.control} name="notes" label={t('notes')} />
+        </div>
+      </SectionCard>
+      <SectionCard
+        title={t('receiptItems', { defaultValue: 'Vật tư nhập' })}
+        actions={
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              items.append({
+                supplyId: '',
+                lotNo: '',
+                expiresAt: '',
+                quantity: '1',
+                unitCost: '0',
+              })
             }
           >
-            {items.fields.map((field, index) => (
-              <div
-                key={field.id}
-                className="border-divider grid gap-3 rounded-xl border p-4 md:grid-cols-3 xl:grid-cols-5"
-              >
-                <FormField
-                  control={form.control}
-                  name={`items.${index}.supplyId`}
-                  render={({ field: f }) => (
-                    <FormItem>
-                      <AsyncSelect
-                        label={t('supply')}
-                        queryKey="supplies"
-                        loadOptions={supplyOptions}
-                        value={f.value || null}
-                        onChange={(v) => f.onChange(typeof v === 'string' ? v : '')}
-                      />
-                      <FormMessage />
-                    </FormItem>
+            {t('addLine')}
+          </Button>
+        }
+        bodyClassName="space-y-3"
+        footer={
+          <div className="flex items-center justify-between">
+            <span className="text-muted-foreground text-[13px]">{t('totalAmount')}</span>
+            <span className="text-[16px] font-bold tabular-nums">{formatVnd(total)}</span>
+          </div>
+        }
+      >
+        {items.fields.map((field, index) => (
+          <div
+            key={field.id}
+            className="border-divider grid gap-3 rounded-xl border p-4 md:grid-cols-3 xl:grid-cols-5"
+          >
+            <FormField
+              control={form.control}
+              name={`items.${index}.supplyId`}
+              render={({ field: f }) => (
+                <FormItem>
+                  <AsyncSelect
+                    label={t('supply')}
+                    queryKey="supplies"
+                    loadOptions={supplyOptions}
+                    value={f.value || null}
+                    onChange={(v) => f.onChange(typeof v === 'string' ? v : '')}
+                  />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <TextField control={form.control} name={`items.${index}.lotNo`} label={t('lot')} />
+            <DateField
+              control={form.control}
+              name={`items.${index}.expiresAt`}
+              label={t('expiry')}
+            />
+            <QtyField
+              control={form.control}
+              name={`items.${index}.quantity`}
+              label={t('quantity')}
+            />
+            <MoneyField
+              control={form.control}
+              name={`items.${index}.unitCost`}
+              label={t('unitCost')}
+            />
+            <div className="col-span-full flex items-center justify-between gap-3">
+              <p className="text-[13px]">
+                <span className="text-muted-foreground">{t('lineTotal')}</span>{' '}
+                <span className="font-semibold tabular-nums">
+                  {formatVnd(
+                    moneyMul(watched[index]?.quantity ?? '0', watched[index]?.unitCost ?? '0'),
                   )}
-                />
-                <TextField control={form.control} name={`items.${index}.lotNo`} label={t('lot')} />
-                <DateField
-                  control={form.control}
-                  name={`items.${index}.expiresAt`}
-                  label={t('expiry')}
-                />
-                <QtyField
-                  control={form.control}
-                  name={`items.${index}.quantity`}
-                  label={t('quantity')}
-                />
-                <MoneyField
-                  control={form.control}
-                  name={`items.${index}.unitCost`}
-                  label={t('unitCost')}
-                />
-                <div className="col-span-full flex items-center justify-between gap-3">
-                  <p className="text-[13px]">
-                    <span className="text-muted-foreground">{t('lineTotal')}</span>{' '}
-                    <span className="font-semibold tabular-nums">
-                      {formatVnd(
-                        moneyMul(watched[index]?.quantity ?? '0', watched[index]?.unitCost ?? '0'),
-                      )}
-                    </span>
-                  </p>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => items.remove(index)}
-                  >
-                    {t('removeLine')}
-                  </Button>
-                </div>
-              </div>
-            ))}
-            {items.fields.length === 0 && (
-              <p className="text-muted-foreground text-[13px]">
-                {t('noLines', { defaultValue: 'Chưa có dòng vật tư — bấm "Thêm dòng".' })}
+                </span>
               </p>
-            )}
-          </SectionCard>
-          <FormFooter
-            onCancel={() => navigate(-1)}
-            submitting={form.formState.isSubmitting}
-            saveLabel={t('saveDraft')}
-          />
-        </form>
-      </Form>
-    </>
+              <Button type="button" variant="ghost" size="sm" onClick={() => items.remove(index)}>
+                {t('removeLine')}
+              </Button>
+            </div>
+          </div>
+        ))}
+        {items.fields.length === 0 && (
+          <p className="text-muted-foreground text-[13px]">
+            {t('noLines', { defaultValue: 'Chưa có dòng vật tư — bấm "Thêm dòng".' })}
+          </p>
+        )}
+      </SectionCard>
+    </FormDrawer>
   )
 }

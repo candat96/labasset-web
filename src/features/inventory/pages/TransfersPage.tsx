@@ -9,8 +9,11 @@ import { toast } from 'sonner'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { PageHeader } from '@/components/page/PageHeader'
+import { SectionCard } from '@/components/page/SectionCard'
+import { FilterPanel, FilterPanelField } from '@/components/page/FilterPanel'
 import { Button } from '@/components/ui/button'
-import { FormDialog } from '@/components/form/FormDialog'
+import { Input } from '@/components/ui/input'
+import { FormDrawer } from '@/components/form/FormDrawer'
 import { QtyField } from '@/components/form/qty-field'
 import { FormField, FormItem, FormMessage } from '@/components/ui/form'
 import { AsyncSelect } from '@/components/form/async-select'
@@ -54,11 +57,25 @@ export function Component() {
   const navigate = useNavigate()
   const qc = useQueryClient()
   const [open, setOpen] = useState(false)
-  const table = useServerTable({ filterKeys: [] })
+  const table = useServerTable({ filterKeys: ['warehouseId'] })
+  const f = table.params.filters
   const list = useQuery({
-    queryKey: ['stock', 'transfers', table.params.page, table.params.limit],
+    queryKey: [
+      'stock',
+      'transfers',
+      table.params.page,
+      table.params.limit,
+      table.params.q,
+      f.warehouseId,
+    ],
     queryFn: () =>
-      listIssues({ type: 'transfer_out', page: table.params.page, limit: table.params.limit }),
+      listIssues({
+        type: 'transfer_out',
+        page: table.params.page,
+        limit: table.params.limit,
+        q: table.params.q || undefined,
+        warehouseId: f.warehouseId,
+      }),
     placeholderData: (previous) => previous,
   })
   const form = useForm<FormValues>({
@@ -88,8 +105,9 @@ export function Component() {
       {
         accessorKey: 'code',
         header: t('code'),
+        meta: { label: t('code'), className: 'sticky left-0 z-[1] bg-card' },
         cell: ({ row }) => (
-          <Link className="text-primary hover:underline" to={`/stock/issues/${row.original.id}`}>
+          <Link className="text-primary font-mono text-xs" to={`/stock/issues/${row.original.id}`}>
             {row.original.transferCode ?? row.original.code}
           </Link>
         ),
@@ -169,6 +187,15 @@ export function Component() {
     ],
     [invalidate, isAdm, t, warehouseNames, userNames],
   )
+  const activeFilters = f.warehouseId
+    ? [
+        {
+          key: 'warehouseId',
+          label: warehouseNames.get(f.warehouseId) ?? shortId(f.warehouseId),
+          onRemove: () => table.setFilter('warehouseId', undefined),
+        },
+      ]
+    : []
   return (
     <>
       <PageHeader
@@ -178,25 +205,56 @@ export function Component() {
         })}
         actions={canWrite && <Button onClick={() => setOpen(true)}>{t('createTransfer')}</Button>}
       />
-      <DataTable
-        tableId="stock-transfers"
-        columns={columns}
-        data={(list.data?.items ?? []) as TransferRow[]}
-        total={list.data?.total ?? 0}
-        params={table.params}
-        onPageChange={table.setPage}
-        onLimitChange={table.setLimit}
-        isLoading={list.isPending}
-        error={list.error}
-        onRetry={() => void list.refetch()}
-        getRowId={(row) => row.id}
-        onRowClick={(row) => navigate(`/stock/issues/${row.id}`)}
-      />
-      <FormDialog
+      <FilterPanel
+        storageKey="stock-transfers"
+        onReset={table.reset}
+        activeFilters={activeFilters}
+        fields={
+          <FilterPanelField label={t('fromWarehouse')}>
+            <AsyncSelect
+              label={t('fromWarehouse')}
+              queryKey="warehouses-filter"
+              loadOptions={(q) => catalogOptions('warehouses', q)}
+              value={f.warehouseId ?? null}
+              onChange={(value) =>
+                table.setFilter('warehouseId', typeof value === 'string' ? value : undefined)
+              }
+              clearable
+              showLabel={false}
+            />
+          </FilterPanelField>
+        }
+        toolbar={
+          <Input
+            aria-label={t('searchTransfer', { defaultValue: 'Tìm phiếu chuyển' })}
+            placeholder={t('searchTransfer', { defaultValue: 'Tìm phiếu chuyển' })}
+            value={table.inputQ}
+            onChange={(e) => table.setQ(e.target.value)}
+            className="h-9 w-56"
+          />
+        }
+      >
+        <DataTable
+          tableId="stock-transfers"
+          columns={columns}
+          data={(list.data?.items ?? []) as TransferRow[]}
+          total={list.data?.total ?? 0}
+          params={table.params}
+          onPageChange={table.setPage}
+          onLimitChange={table.setLimit}
+          isLoading={list.isPending}
+          error={list.error}
+          onRetry={() => void list.refetch()}
+          getRowId={(row) => row.id}
+          onRowClick={(row) => navigate(`/stock/issues/${row.id}`)}
+        />
+      </FilterPanel>
+      <FormDrawer
         open={open}
         onOpenChange={setOpen}
         title={t('createTransfer')}
         form={form}
+        submitting={form.formState.isSubmitting}
         onSubmit={async (values) => {
           try {
             await createTransfer(values)
@@ -213,64 +271,36 @@ export function Component() {
           }
         }}
       >
-        <FormField
-          control={form.control}
-          name="fromWarehouseId"
-          render={({ field }) => (
-            <FormItem>
-              <AsyncSelect
-                label={t('fromWarehouse')}
-                queryKey="warehouses-from"
-                loadOptions={(q) => catalogOptions('warehouses', q)}
-                value={field.value || null}
-                onChange={(value) => {
-                  field.onChange(typeof value === 'string' ? value : '')
-                  form.setValue('items', [{ lotId: '', quantity: '1' }])
-                }}
-              />
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="toWarehouseId"
-          render={({ field }) => (
-            <FormItem>
-              <AsyncSelect
-                label={t('toWarehouse')}
-                queryKey="warehouses-to"
-                loadOptions={(q) => catalogOptions('warehouses', q)}
-                value={field.value || null}
-                onChange={(value) => field.onChange(typeof value === 'string' ? value : '')}
-              />
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        {items.fields.map((item, index) => (
-          <div key={item.id} className="space-y-2 rounded border p-3">
+        <SectionCard title={t('info', { defaultValue: 'Thông tin phiếu' })}>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             <FormField
               control={form.control}
-              name={`items.${index}.lotId`}
+              name="fromWarehouseId"
               render={({ field }) => (
                 <FormItem>
                   <AsyncSelect
-                    label={t('lot')}
-                    queryKey={`transfer-lots-${form.watch('fromWarehouseId')}`}
-                    loadOptions={async (q) => {
-                      const data = await listLots({
-                        warehouseId: form.getValues('fromWarehouseId'),
-                        q,
-                        page: 1,
-                        limit: 50,
-                      })
-                      return data.items.map((lot) => ({
-                        id: lot.id,
-                        code: lot.lotNo,
-                        name: `${lot.supplyId.slice(0, 8)} · ${t('available')}: ${lot.available}`,
-                      }))
+                    label={t('fromWarehouse')}
+                    queryKey="warehouses-from"
+                    loadOptions={(q) => catalogOptions('warehouses', q)}
+                    value={field.value || null}
+                    onChange={(value) => {
+                      field.onChange(typeof value === 'string' ? value : '')
+                      form.setValue('items', [{ lotId: '', quantity: '1' }])
                     }}
+                  />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="toWarehouseId"
+              render={({ field }) => (
+                <FormItem>
+                  <AsyncSelect
+                    label={t('toWarehouse')}
+                    queryKey="warehouses-to"
+                    loadOptions={(q) => catalogOptions('warehouses', q)}
                     value={field.value || null}
                     onChange={(value) => field.onChange(typeof value === 'string' ? value : '')}
                   />
@@ -278,26 +308,68 @@ export function Component() {
                 </FormItem>
               )}
             />
-            <QtyField
-              control={form.control}
-              name={`items.${index}.quantity`}
-              label={t('quantity')}
-            />
-            {items.fields.length > 1 && (
-              <Button type="button" variant="ghost" onClick={() => items.remove(index)}>
-                {t('removeLine')}
-              </Button>
-            )}
           </div>
-        ))}
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => items.append({ lotId: '', quantity: '1' })}
+        </SectionCard>
+        <SectionCard
+          title={t('items', { defaultValue: 'Dòng vật tư' })}
+          actions={
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => items.append({ lotId: '', quantity: '1' })}
+            >
+              {t('addLine')}
+            </Button>
+          }
+          bodyClassName="space-y-3"
         >
-          {t('addLine')}
-        </Button>
-      </FormDialog>
+          {items.fields.map((item, index) => (
+            <div key={item.id} className="border-divider grid gap-3 rounded-xl border p-4">
+              <FormField
+                control={form.control}
+                name={`items.${index}.lotId`}
+                render={({ field }) => (
+                  <FormItem>
+                    <AsyncSelect
+                      label={t('lot')}
+                      queryKey={`transfer-lots-${form.watch('fromWarehouseId')}`}
+                      loadOptions={async (q) => {
+                        const data = await listLots({
+                          warehouseId: form.getValues('fromWarehouseId'),
+                          q,
+                          page: 1,
+                          limit: 50,
+                        })
+                        return data.items.map((lot) => ({
+                          id: lot.id,
+                          code: lot.lotNo,
+                          name: `${lot.supplyId.slice(0, 8)} · ${t('available')}: ${lot.available}`,
+                        }))
+                      }}
+                      value={field.value || null}
+                      onChange={(value) => field.onChange(typeof value === 'string' ? value : '')}
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <QtyField
+                control={form.control}
+                name={`items.${index}.quantity`}
+                label={t('quantity')}
+              />
+              {items.fields.length > 1 && (
+                <div className="flex justify-end">
+                  <Button type="button" variant="ghost" onClick={() => items.remove(index)}>
+                    {t('removeLine')}
+                  </Button>
+                </div>
+              )}
+            </div>
+          ))}
+        </SectionCard>
+      </FormDrawer>
     </>
   )
 }
