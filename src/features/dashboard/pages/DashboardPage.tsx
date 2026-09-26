@@ -76,11 +76,11 @@ export function Component() {
           Không tải được dashboard.
         </p>
       )}
-      <div className="grid gap-5 min-[1440px]:grid-cols-[minmax(0,1fr)_340px]">
-        <div className="flex min-w-0 flex-col gap-5">
+      <div className="grid gap-3 min-[1440px]:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="flex min-w-0 flex-col gap-3">
           <KpiTiles kpis={q.data?.kpis ?? []} loading={q.isPending} />
           {!q.isPending && q.data && (
-            <div className="grid gap-5 lg:grid-cols-2">
+            <div className="grid gap-3 lg:grid-cols-2">
               <SectionCard title="Sửa chữa 6 tháng" description="Số phiếu mở theo tháng">
                 <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">

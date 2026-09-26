@@ -85,7 +85,7 @@ export function WorkQueue() {
   const pending = rows.filter((r) => r.value > 0)
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-3">
       <section className="bg-card shadow-card rounded-xl p-4" aria-labelledby="work-today">
         <h2 id="work-today" className="mb-3 text-[15px] font-semibold">
           Công việc hôm nay

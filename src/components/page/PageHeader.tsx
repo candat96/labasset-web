@@ -26,7 +26,11 @@ export function PageHeader({
 }) {
   return (
     <div
-      className={cn('mb-5 flex flex-wrap items-start justify-between gap-x-6 gap-y-3', className)}
+      className={cn(
+        // Dải tiêu đề trắng tràn viền ngay dưới thanh trên, gọn như Figma Medone.
+        'bg-card border-divider -mx-3 -mt-3 mb-3 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b px-3 py-2.5 sm:-mx-4 sm:-mt-4 sm:px-4',
+        className,
+      )}
     >
       <div className="min-w-0">
         {eyebrow && (
@@ -35,11 +39,11 @@ export function PageHeader({
           </p>
         )}
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-          <h1 className="text-[24px] leading-8 font-bold tracking-[-0.02em]">{title}</h1>
+          <h1 className="text-[20px] leading-7 font-semibold tracking-[-0.01em]">{title}</h1>
           {badge}
         </div>
         {description && (
-          <p className="text-muted-foreground mt-1 max-w-2xl text-[13.5px] leading-5">
+          <p className="text-muted-foreground mt-0.5 max-w-2xl text-[13px] leading-5">
             {description}
           </p>
         )}
