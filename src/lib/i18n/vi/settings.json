@@ -11,6 +11,7 @@
     "stock": "Kho",
     "alerts": "Cảnh báo",
     "numbering": "Đánh số",
+    "kpi": "KPI",
     "ai": "AI",
     "other": "Khác"
   },
@@ -71,6 +72,26 @@
     "preview": "Xem trước",
     "previewSaved": "Xem trước đã lưu: {{value}}",
     "invalid": "Mẫu số phải chứa {SEQ} hoặc {SEQ:1..32} và chỉ dùng token hợp lệ (YYYY, YY, MM, DD, TYPE)"
+  },
+  "kpi": {
+    "title": "Cấu hình KPI hiệu suất kỹ thuật",
+    "hint": "Trọng số tính điểm ba mảng và ngưỡng xếp hạng. Chỉ áp dụng cho kỳ chưa chốt.",
+    "areaWeights": "Trọng số mảng (%)",
+    "repair": "Sửa chữa",
+    "maintenance": "Bảo dưỡng",
+    "calibration": "Kiểm định",
+    "metricWeights": "Trọng số chỉ số trong mảng (%)",
+    "volume": "Khối lượng",
+    "onTime": "Đúng hạn",
+    "speed": "Tốc độ",
+    "quality": "Chất lượng",
+    "assistantWeight": "Hệ số công trợ lý (0–1)",
+    "countBy": "Mốc tính kỳ sửa chữa",
+    "countByCompleted": "Ngày hoàn tất",
+    "countByClosed": "Ngày đóng phiếu",
+    "minItems": "Số việc tối thiểu để xếp hạng",
+    "staffCanSeeRanking": "Cho nhân viên xem bảng xếp hạng",
+    "weightSumWarn": "Tổng trọng số mảng đang khác 100 (hệ thống vẫn chia theo tỷ lệ)."
   },
   "ai": {
     "enabled": "Bật trợ lý AI",

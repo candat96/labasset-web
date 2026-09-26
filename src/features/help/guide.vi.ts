@@ -530,6 +530,42 @@ export const GUIDE: GuideSection[] = [
     ],
   },
   {
+    id: 'hieu-suat-ky-thuat',
+    title: '16. Hiệu suất kỹ thuật (KPI)',
+    roles: ['Quản trị viện', 'Nhân viên VT-TBYT'],
+    blocks: [
+      {
+        type: 'p',
+        text: 'Màn Hiệu suất kỹ thuật (menu Hiệu suất kỹ thuật) chấm điểm và xếp hạng kỹ thuật viên theo kỳ trên ba mảng: sửa chữa, bảo dưỡng và kiểm định. Chỉ đầu việc đã hoàn tất trong kỳ mới được tính; việc bị huỷ không tính. Ban lãnh đạo dùng bảng này để bình xét.',
+      },
+      {
+        type: 'steps',
+        items: [
+          'Chọn loại kỳ Tuần / Tháng / Quý / Năm ở thanh trên, dùng nút ◀ ▶ để lùi/tới từng kỳ. Kỳ đang diễn ra luôn tính trực tiếp và cập nhật mới nhất.',
+          'Bốn thẻ tổng viện: đầu việc hoàn tất, tỷ lệ đúng hạn, thời gian xử lý trung bình và điểm chất lượng trung bình, kèm mũi tên so kỳ trước.',
+          'Bảng xếp hạng: Hạng · Kỹ thuật viên · Công · ba điểm mảng SC/BD/KĐ · Điểm tổng (thanh ngang) · thay đổi hạng. Ba người đầu có huy hiệu; người ít việc hơn ngưỡng tối thiểu nằm ở nhóm "Chưa đủ mẫu" cuối bảng và không nhận thứ hạng. Bấm một dòng để mở chi tiết.',
+          'Chi tiết một người: ba điểm mảng, bốn chỉ số của mảng đang chọn dạng thanh, danh sách đầu việc trong kỳ (cuộn trang) và biểu đồ cột điểm tổng 6 kỳ gần nhất.',
+          'Kỳ tuần/tháng/quý đã kết thúc: quản trị viện bấm "Chốt kỳ" để khoá bản điểm kèm trọng số tại thời điểm chốt. Sau khi chốt, sửa phiếu cũ hay đổi trọng số không làm đổi điểm; bấm "Bỏ chốt" để tính lại. Kỳ năm chỉ để xem tổng hợp — không chốt được.',
+          '"Xuất Excel" tải bảng điểm; "Tờ trình PDF" mở bản in để trình ký (Trưởng phòng VT-TBYT và Ban giám đốc).',
+          'Quản trị viện chỉnh cấu hình chấm điểm tại Cấu hình → KPI: trọng số ba mảng, trọng số từng chỉ số, hệ số công trợ lý, mốc tính kỳ sửa chữa, số việc tối thiểu và cho nhân viên xem bảng xếp hạng hay không.',
+        ],
+      },
+      {
+        type: 'list',
+        items: [
+          'Công: phiếu sửa chữa tính 1,0 công cho người phụ trách lúc hoàn tất và 0,5 công cho trợ lý đã nhận việc; mỗi lượt bảo dưỡng và kiểm định tính 1 công.',
+          'Khối lượng quy theo người dẫn đầu viện trong kỳ (= 100); tốc độ cắt trần 100, không đủ dữ liệu thì bỏ qua và chia lại trọng số trong mảng; chất lượng chưa có dữ liệu chấm thì lấy trung bình viện, không phạt.',
+          'Người đã nghỉ việc vẫn hiện nếu có việc trong kỳ, gắn nhãn "Đã nghỉ". Người chỉ làm một mảng vẫn có điểm đầy đủ (trọng số hai mảng còn lại được chia lại).',
+        ],
+      },
+      {
+        type: 'note',
+        tone: 'info',
+        text: 'Bản chốt không lưu thời gian xử lý trung bình nên với kỳ đã chốt thẻ này hiện dấu "—" kèm gợi ý. Đổi trọng số chỉ ảnh hưởng các kỳ chưa chốt.',
+      },
+    ],
+  },
+  {
     id: 'cau-hoi',
     title: '14. Câu hỏi thường gặp',
     blocks: [

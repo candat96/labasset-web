@@ -37,6 +37,7 @@ import {
   Table2,
   Tags,
   Truck,
+  Trophy,
   Users,
   Wrench,
 } from 'lucide-react'
@@ -103,6 +104,12 @@ export const MENU: MenuGroup[] = [
       // API `/v1/repairs/stats` chỉ ADM/VT (workload chỉ ADM) → menu theo đúng quyền API.
       { path: '/repairs/stats', labelKey: 'menu:items.repairStats', icon: BarChart3, roles: STAFF },
     ],
+  },
+  {
+    key: 'performance',
+    labelKey: 'menu:groups.performance',
+    roles: STAFF,
+    items: [{ path: '/performance', labelKey: 'menu:items.performance', icon: Trophy }],
   },
   {
     key: 'maintenance',

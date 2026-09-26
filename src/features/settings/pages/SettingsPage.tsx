@@ -16,6 +16,7 @@ import {
   Braces,
   Building2,
   DatabaseZap,
+  Gauge,
   GitBranch,
   Hash,
   Loader2,
@@ -37,7 +38,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { TextField, NumberField, SwitchField } from '@/components/form/fields'
+import { TextField, NumberField, SwitchField, SelectField } from '@/components/form/fields'
 import { FormField, FormItem, FormMessage } from '@/components/ui/form'
 import { AsyncSelect } from '@/components/form/async-select'
 import { FileField } from '@/components/form/file-field'
@@ -200,6 +201,12 @@ const known = new Set([
   'alerts.calibrationDaysBefore',
   'alerts.repairCostPctOfValue',
   'maintenance.dueGraceDays',
+  'kpi.areaWeights',
+  'kpi.metricWeights',
+  'kpi.assistantWeight',
+  'kpi.countBy',
+  'kpi.minItems',
+  'kpi.staffCanSeeRanking',
   // Đánh số: nhóm gốc + các loại mã tự sinh mới (handoff 16)
   ...[...NUMBER_TYPES, ...AUTO_CODE_NUMBER_TYPES].map((type) => `numbering.${type}`),
 ])
@@ -209,7 +216,7 @@ function previewText(result: { example?: string } | string) {
   return result.example ?? JSON.stringify(result)
 }
 
-const TABS = ['hospital', 'workflow', 'stock', 'alerts', 'numbering', 'ai', 'other'] as const
+const TABS = ['hospital', 'workflow', 'stock', 'alerts', 'numbering', 'kpi', 'ai', 'other'] as const
 
 export function Component() {
   const { t } = useTranslation('settings')
@@ -435,6 +442,8 @@ export function Component() {
     }
     mutation.mutate(body)
   }
+  const kpiArea = form.watch('kpi.areaWeights')
+  const areaWeightSum = kpiArea.repair + kpiArea.maintenance + kpiArea.calibration
   return (
     <>
       <PageHeader
@@ -466,6 +475,7 @@ export function Component() {
                   ['stock', Boxes],
                   ['alerts', Bell],
                   ['numbering', Hash],
+                  ['kpi', Gauge],
                   ['ai', Bot],
                   ['other', Braces],
                 ] as const
@@ -722,6 +732,163 @@ export function Component() {
                         </Button>
                       </div>
                     ))}
+                  </div>
+                </SectionCard>
+              </TabsContent>
+              <TabsContent
+                value="kpi"
+                forceMount
+                className="space-y-4 data-[state=inactive]:hidden"
+              >
+                <SectionCard title={t('kpi.title')} description={t('kpi.hint')}>
+                  <div className="space-y-4">
+                    <fieldset className="border-divider space-y-3 rounded-xl border p-4">
+                      <legend className="px-1 text-sm font-medium">{t('kpi.areaWeights')}</legend>
+                      <div className="grid gap-4 sm:grid-cols-3">
+                        <NumberField
+                          control={form.control}
+                          name="kpi.areaWeights.repair"
+                          label={t('kpi.repair')}
+                          min={0}
+                        />
+                        <NumberField
+                          control={form.control}
+                          name="kpi.areaWeights.maintenance"
+                          label={t('kpi.maintenance')}
+                          min={0}
+                        />
+                        <NumberField
+                          control={form.control}
+                          name="kpi.areaWeights.calibration"
+                          label={t('kpi.calibration')}
+                          min={0}
+                        />
+                      </div>
+                      {areaWeightSum !== 100 && (
+                        <p className="text-warning-fg text-xs" role="status">
+                          {t('kpi.weightSumWarn')}
+                        </p>
+                      )}
+                    </fieldset>
+                    <fieldset className="border-divider space-y-4 rounded-xl border p-4">
+                      <legend className="px-1 text-sm font-medium">{t('kpi.metricWeights')}</legend>
+                      <div className="space-y-2">
+                        <p className="text-muted-foreground text-[12.5px] font-semibold uppercase">
+                          {t('kpi.repair')}
+                        </p>
+                        <div className="grid gap-4 sm:grid-cols-4">
+                          <NumberField
+                            control={form.control}
+                            name="kpi.metricWeights.repair.volume"
+                            label={t('kpi.volume')}
+                            min={0}
+                          />
+                          <NumberField
+                            control={form.control}
+                            name="kpi.metricWeights.repair.onTime"
+                            label={t('kpi.onTime')}
+                            min={0}
+                          />
+                          <NumberField
+                            control={form.control}
+                            name="kpi.metricWeights.repair.speed"
+                            label={t('kpi.speed')}
+                            min={0}
+                          />
+                          <NumberField
+                            control={form.control}
+                            name="kpi.metricWeights.repair.quality"
+                            label={t('kpi.quality')}
+                            min={0}
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <p className="text-muted-foreground text-[12.5px] font-semibold uppercase">
+                          {t('kpi.maintenance')}
+                        </p>
+                        <div className="grid gap-4 sm:grid-cols-4">
+                          <NumberField
+                            control={form.control}
+                            name="kpi.metricWeights.maintenance.volume"
+                            label={t('kpi.volume')}
+                            min={0}
+                          />
+                          <NumberField
+                            control={form.control}
+                            name="kpi.metricWeights.maintenance.onTime"
+                            label={t('kpi.onTime')}
+                            min={0}
+                          />
+                          <NumberField
+                            control={form.control}
+                            name="kpi.metricWeights.maintenance.speed"
+                            label={t('kpi.speed')}
+                            min={0}
+                          />
+                          <NumberField
+                            control={form.control}
+                            name="kpi.metricWeights.maintenance.quality"
+                            label={t('kpi.quality')}
+                            min={0}
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <p className="text-muted-foreground text-[12.5px] font-semibold uppercase">
+                          {t('kpi.calibration')}
+                        </p>
+                        <div className="grid gap-4 sm:grid-cols-4">
+                          <NumberField
+                            control={form.control}
+                            name="kpi.metricWeights.calibration.volume"
+                            label={t('kpi.volume')}
+                            min={0}
+                          />
+                          <NumberField
+                            control={form.control}
+                            name="kpi.metricWeights.calibration.onTime"
+                            label={t('kpi.onTime')}
+                            min={0}
+                          />
+                          <NumberField
+                            control={form.control}
+                            name="kpi.metricWeights.calibration.quality"
+                            label={t('kpi.quality')}
+                            min={0}
+                          />
+                        </div>
+                      </div>
+                    </fieldset>
+                    <div className="grid gap-4 sm:grid-cols-3">
+                      <NumberField
+                        control={form.control}
+                        name="kpi.assistantWeight"
+                        label={t('kpi.assistantWeight')}
+                        min={0}
+                        step={0.1}
+                      />
+                      <SelectField
+                        control={form.control}
+                        name="kpi.countBy"
+                        label={t('kpi.countBy')}
+                        options={[
+                          { value: 'completed', label: t('kpi.countByCompleted') },
+                          { value: 'closed', label: t('kpi.countByClosed') },
+                        ]}
+                      />
+                      <NumberField
+                        control={form.control}
+                        name="kpi.minItems"
+                        label={t('kpi.minItems')}
+                        min={0}
+                      />
+                    </div>
+                    <SwitchField
+                      control={form.control}
+                      name="kpi.staffCanSeeRanking"
+                      label={t('kpi.staffCanSeeRanking')}
+                    />
                   </div>
                 </SectionCard>
               </TabsContent>

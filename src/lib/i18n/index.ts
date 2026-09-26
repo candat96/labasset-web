@@ -24,6 +24,7 @@ import calibrations from './vi/calibrations.json'
 import reports from './vi/reports.json'
 import assistant from './vi/assistant.json'
 import procurement from './vi/procurement.json'
+import performance from './vi/performance.json'
 
 export const resources = {
   vi: {
@@ -50,6 +51,7 @@ export const resources = {
     reports,
     assistant,
     procurement,
+    performance,
   },
 } as const
 

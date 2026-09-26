@@ -38,5 +38,35 @@ export const settingsSchema = z.object({
   maintenance: z.object({
     dueGraceDays: z.number().int().min(0),
   }),
+  kpi: z.object({
+    areaWeights: z.object({
+      repair: z.number().min(0),
+      maintenance: z.number().min(0),
+      calibration: z.number().min(0),
+    }),
+    metricWeights: z.object({
+      repair: z.object({
+        volume: z.number().min(0),
+        onTime: z.number().min(0),
+        speed: z.number().min(0),
+        quality: z.number().min(0),
+      }),
+      maintenance: z.object({
+        volume: z.number().min(0),
+        onTime: z.number().min(0),
+        speed: z.number().min(0),
+        quality: z.number().min(0),
+      }),
+      calibration: z.object({
+        volume: z.number().min(0),
+        onTime: z.number().min(0),
+        quality: z.number().min(0),
+      }),
+    }),
+    assistantWeight: z.number().min(0).max(1),
+    countBy: z.enum(['completed', 'closed']),
+    minItems: z.number().int().min(0).max(100),
+    staffCanSeeRanking: z.boolean(),
+  }),
 })
 export type SettingsForm = z.infer<typeof settingsSchema>

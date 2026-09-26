@@ -8,6 +8,12 @@ function asNumber(value: unknown, fallback: number) {
 
 export function values(settings: Settings): SettingsForm {
   const sla = settings['repair.sla'] as Record<string, unknown> | undefined
+  const areaWeights = settings['kpi.areaWeights'] as Record<string, unknown> | undefined
+  const metricWeights = settings['kpi.metricWeights'] as
+    Record<string, Record<string, unknown>> | undefined
+  const repairWeights = metricWeights?.repair
+  const maintenanceWeights = metricWeights?.maintenance
+  const calibrationWeights = metricWeights?.calibration
   return {
     hospital: {
       name: String(settings['hospital.name'] ?? ''),
@@ -43,6 +49,36 @@ export function values(settings: Settings): SettingsForm {
       repairCostPctOfValue: asNumber(settings['alerts.repairCostPctOfValue'], 50),
     },
     maintenance: { dueGraceDays: asNumber(settings['maintenance.dueGraceDays'], 7) },
+    kpi: {
+      areaWeights: {
+        repair: asNumber(areaWeights?.repair, 50),
+        maintenance: asNumber(areaWeights?.maintenance, 30),
+        calibration: asNumber(areaWeights?.calibration, 20),
+      },
+      metricWeights: {
+        repair: {
+          volume: asNumber(repairWeights?.volume, 30),
+          onTime: asNumber(repairWeights?.onTime, 30),
+          speed: asNumber(repairWeights?.speed, 20),
+          quality: asNumber(repairWeights?.quality, 20),
+        },
+        maintenance: {
+          volume: asNumber(maintenanceWeights?.volume, 30),
+          onTime: asNumber(maintenanceWeights?.onTime, 30),
+          speed: asNumber(maintenanceWeights?.speed, 20),
+          quality: asNumber(maintenanceWeights?.quality, 20),
+        },
+        calibration: {
+          volume: asNumber(calibrationWeights?.volume, 40),
+          onTime: asNumber(calibrationWeights?.onTime, 40),
+          quality: asNumber(calibrationWeights?.quality, 20),
+        },
+      },
+      assistantWeight: asNumber(settings['kpi.assistantWeight'], 0.5),
+      countBy: settings['kpi.countBy'] === 'closed' ? 'closed' : 'completed',
+      minItems: asNumber(settings['kpi.minItems'], 3),
+      staffCanSeeRanking: settings['kpi.staffCanSeeRanking'] !== false,
+    },
   }
 }
 
@@ -90,6 +126,17 @@ export function changedSettings(
     before.alerts.repairCostPctOfValue,
   )
   put('maintenance.dueGraceDays', after.maintenance.dueGraceDays, before.maintenance.dueGraceDays)
+  const areaChanged = (['repair', 'maintenance', 'calibration'] as const).some(
+    (area) => after.kpi.areaWeights[area] !== before.kpi.areaWeights[area],
+  )
+  if (areaChanged) body['kpi.areaWeights'] = { ...after.kpi.areaWeights }
+  const metricChanged =
+    JSON.stringify(after.kpi.metricWeights) !== JSON.stringify(before.kpi.metricWeights)
+  if (metricChanged) body['kpi.metricWeights'] = structuredClone(after.kpi.metricWeights)
+  put('kpi.assistantWeight', after.kpi.assistantWeight, before.kpi.assistantWeight)
+  put('kpi.countBy', after.kpi.countBy, before.kpi.countBy)
+  put('kpi.minItems', after.kpi.minItems, before.kpi.minItems)
+  put('kpi.staffCanSeeRanking', after.kpi.staffCanSeeRanking, before.kpi.staffCanSeeRanking)
   const allTypes: readonly string[] = [...NUMBER_TYPES, ...AUTO_CODE_NUMBER_TYPES]
   for (const type of allTypes) {
     const saved =
@@ -103,6 +150,8 @@ export function changedSettings(
 
 export function settingField(key: string): string | undefined {
   if (key === 'repair.sla') return 'repair.sla.low'
+  if (key === 'kpi.areaWeights') return 'kpi.areaWeights.repair'
+  if (key === 'kpi.metricWeights') return 'kpi.metricWeights.repair.volume'
   const allowed = new Set([
     'hospital.name',
     'hospital.address',
@@ -118,6 +167,10 @@ export function settingField(key: string): string | undefined {
     'alerts.calibrationDaysBefore',
     'alerts.repairCostPctOfValue',
     'maintenance.dueGraceDays',
+    'kpi.assistantWeight',
+    'kpi.countBy',
+    'kpi.minItems',
+    'kpi.staffCanSeeRanking',
   ])
   if (key.startsWith('numbering.')) return key
   return allowed.has(key) ? key : undefined

@@ -3495,6 +3495,134 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/performance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["KpiController_board"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/performance/departments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["KpiController_departments"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/performance/export.xlsx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["KpiController_exportXlsx"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/performance/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["KpiController_me"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/performance/periods": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["KpiController_periods"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/performance/periods/{type}/{start}/lock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["KpiController_lock"];
+        delete: operations["KpiController_unlock"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/performance/summary.pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["KpiController_summaryPdf"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/performance/users/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["KpiController_user"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/repairs": {
         parameters: {
             query?: never;
@@ -5512,6 +5640,7 @@ export interface components {
             certificateFileId: string | null;
             certificateNo: string | null;
             code: string;
+            completedBy: string | null;
             cost: string;
             /** Format: date-time */
             createdAt: string;
@@ -5556,6 +5685,7 @@ export interface components {
             certificateFileId: string | null;
             certificateNo: string | null;
             code: string;
+            completedBy: string | null;
             cost: string;
             /** Format: date-time */
             createdAt: string;
@@ -7104,6 +7234,203 @@ export interface components {
             /** @enum {string} */
             type: "object";
         };
+        KpiAreaScoreDto: {
+            credits: number;
+            items: number;
+            onTime: number | null;
+            quality: number | null;
+            score: number | null;
+            skipped: number;
+            speed: number | null;
+            volume: number | null;
+        };
+        KpiAreasDto: {
+            calibration: components["schemas"]["KpiAreaScoreDto"] | null;
+            maintenance: components["schemas"]["KpiAreaScoreDto"] | null;
+            repair: components["schemas"]["KpiAreaScoreDto"] | null;
+        };
+        KpiAreaWeightsDto: {
+            calibration: number;
+            maintenance: number;
+            repair: number;
+        };
+        KpiBoardResponseDto: {
+            /** @example 2026-09-30 */
+            end: string;
+            locked: boolean;
+            /** Format: date-time */
+            lockedAt: string | null;
+            lockedBy: string | null;
+            note: string | null;
+            staff: components["schemas"]["KpiStaffRowDto"][];
+            /** @example 2026-09-01 */
+            start: string;
+            totals: components["schemas"]["KpiTotalsDto"];
+            /** @enum {string} */
+            type: "week" | "month" | "quarter" | "year";
+            weights: components["schemas"]["KpiWeightsDto"];
+        };
+        KpiDepartmentRowDto: {
+            avgHandleHours: number | null;
+            avgQuality: number | null;
+            credits: number;
+            departmentId: string | null;
+            items: number;
+            name: string;
+            onTime: number | null;
+        };
+        KpiDepartmentsResponseDto: {
+            departments: components["schemas"]["KpiDepartmentRowDto"][];
+            end: string;
+            start: string;
+            /** @enum {string} */
+            type: "week" | "month" | "quarter" | "year";
+        };
+        KpiLockBodyDto: {
+            /** @example Bình xét tháng */
+            note?: string;
+        };
+        KpiLockResponseDto: {
+            end: string;
+            /** Format: date-time */
+            lockedAt: string | null;
+            lockedBy: string | null;
+            note: string | null;
+            start: string;
+            /** @enum {string} */
+            type: "week" | "month" | "quarter" | "year";
+        };
+        KpiMetricWeightsDto: {
+            calibration: {
+                [key: string]: unknown;
+            };
+            maintenance: {
+                [key: string]: unknown;
+            };
+            repair: {
+                [key: string]: unknown;
+            };
+        };
+        KpiPeriodItemDto: {
+            end: string;
+            locked: boolean;
+            /** Format: date-time */
+            lockedAt: string | null;
+            lockedBy: string | null;
+            note: string | null;
+            start: string;
+            /** @enum {string} */
+            type: "week" | "month" | "quarter" | "year";
+        };
+        KpiPeriodsResponseDto: {
+            periods: components["schemas"]["KpiPeriodItemDto"][];
+            /** @enum {string} */
+            type: "week" | "month" | "quarter" | "year";
+        };
+        KpiPersonResponseDto: {
+            areas: components["schemas"]["KpiAreasDto"];
+            credits: number;
+            end: string;
+            fullName: string;
+            inactive: boolean;
+            insufficient: boolean;
+            items: number;
+            onTime: number | null;
+            periods: components["schemas"]["KpiPointDto"][];
+            rank: number | null;
+            skipped: number;
+            start: string;
+            total: number | null;
+            /** @enum {string} */
+            type: "week" | "month" | "quarter" | "year";
+            userId: string;
+            weights: components["schemas"]["KpiWeightsDto"];
+        };
+        KpiPointDto: {
+            end: string;
+            rank: number | null;
+            start: string;
+            total: number | null;
+            /** @enum {string} */
+            type: "week" | "month" | "quarter" | "year";
+        };
+        KpiStaffRowDto: {
+            areas: components["schemas"]["KpiAreasDto"];
+            avgHandleHours: number | null;
+            avgQuality: number | null;
+            credits: number;
+            departmentId: string | null;
+            fullName: string;
+            inactive: boolean;
+            insufficient: boolean;
+            items: number;
+            onTime: number | null;
+            rank: number | null;
+            rankChange: number | null;
+            skipped: number;
+            total: number | null;
+            userId: string;
+        };
+        KpiTaskItemDto: {
+            /** @enum {string} */
+            area: "repair" | "maintenance" | "calibration";
+            code: string;
+            /** Format: date-time */
+            completedAt: string;
+            departmentName: string | null;
+            equipmentName: string | null;
+            id: string;
+            onTime: boolean;
+            quality: number | null;
+            title: string;
+        };
+        KpiTaskPageDto: {
+            items: components["schemas"]["KpiTaskItemDto"][];
+            limit: number;
+            page: number;
+            total: number;
+        };
+        KpiTasksDto: {
+            /** @description Hạng trong kỳ, null khi ẩn hoặc chưa đủ mẫu */
+            rank: number | null;
+            /** @description Điểm KPI tháng hiện tại, null khi chưa có việc */
+            total: number | null;
+        };
+        KpiTotalsDto: {
+            avgHandleHours: number | null;
+            avgQuality: number | null;
+            credits: number;
+            items: number;
+            onTime: number | null;
+        };
+        KpiUserResponseDto: {
+            areas: components["schemas"]["KpiAreasDto"];
+            credits: number;
+            end: string;
+            fullName: string;
+            inactive: boolean;
+            insufficient: boolean;
+            items: number;
+            onTime: number | null;
+            periods: components["schemas"]["KpiPointDto"][];
+            rank: number | null;
+            skipped: number;
+            start: string;
+            tasks: components["schemas"]["KpiTaskPageDto"];
+            total: number | null;
+            /** @enum {string} */
+            type: "week" | "month" | "quarter" | "year";
+            userId: string;
+            weights: components["schemas"]["KpiWeightsDto"];
+        };
+        KpiWeightsDto: {
+            areaWeights: components["schemas"]["KpiAreaWeightsDto"];
+            assistantWeight: number;
+            /** @enum {string} */
+            countBy: "completed" | "closed";
+            metricWeights: components["schemas"]["KpiMetricWeightsDto"];
+            minItems: number;
+        };
         LicenseResponseDto: {
             equipmentId: string;
             licenseKey: string | null;
@@ -7157,6 +7484,7 @@ export interface components {
         MyTasksResponseDto: {
             alerts: components["schemas"]["AlertTasksDto"];
             demand: components["schemas"]["DemandTasksDto"];
+            kpi: components["schemas"]["KpiTasksDto"];
             maintenance: components["schemas"]["MaintenanceTasksDto"];
             repairs: components["schemas"]["RepairTasksDto"];
             requests: components["schemas"]["RequestTasksDto"];
@@ -15690,7 +16018,7 @@ export interface operations {
     EquipmentToolsController_compare: {
         parameters: {
             query?: {
-                /** @description Comma-separated UUIDs */
+                /** @description Comma-separated UUIDs (max 500) */
                 ids?: string;
             };
             header?: {
@@ -15715,7 +16043,7 @@ export interface operations {
     EquipmentToolsController_labels: {
         parameters: {
             query?: {
-                /** @description Comma-separated UUIDs */
+                /** @description Comma-separated UUIDs (max 500) */
                 ids?: string;
                 layout?: "a4" | "roll";
             };
@@ -17096,6 +17424,241 @@ export interface operations {
             };
         };
     };
+    KpiController_board: {
+        parameters: {
+            query?: {
+                departmentId?: string;
+                start?: string;
+                type?: "week" | "month" | "quarter" | "year";
+            };
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KpiBoardResponseDto"];
+                };
+            };
+        };
+    };
+    KpiController_departments: {
+        parameters: {
+            query?: {
+                departmentId?: string;
+                start?: string;
+                type?: "week" | "month" | "quarter" | "year";
+            };
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KpiDepartmentsResponseDto"];
+                };
+            };
+        };
+    };
+    KpiController_exportXlsx: {
+        parameters: {
+            query?: {
+                departmentId?: string;
+                start?: string;
+                type?: "week" | "month" | "quarter" | "year";
+            };
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
+            };
+        };
+    };
+    KpiController_me: {
+        parameters: {
+            query?: {
+                start?: string;
+                type?: "week" | "month" | "quarter" | "year";
+            };
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KpiPersonResponseDto"];
+                };
+            };
+        };
+    };
+    KpiController_periods: {
+        parameters: {
+            query?: {
+                start?: string;
+                type?: "week" | "month" | "quarter" | "year";
+            };
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KpiPeriodsResponseDto"];
+                };
+            };
+        };
+    };
+    KpiController_lock: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                start: string;
+                type: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KpiLockBodyDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KpiLockResponseDto"];
+                };
+            };
+        };
+    };
+    KpiController_unlock: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                start: string;
+                type: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    KpiController_summaryPdf: {
+        parameters: {
+            query?: {
+                departmentId?: string;
+                start?: string;
+                type?: "week" | "month" | "quarter" | "year";
+            };
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+        };
+    };
+    KpiController_user: {
+        parameters: {
+            query?: {
+                limit?: number;
+                page?: number;
+                start?: string;
+                type?: "week" | "month" | "quarter" | "year";
+            };
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KpiUserResponseDto"];
+                };
+            };
+        };
+    };
     RepairController_list: {
         parameters: {
             query?: {
@@ -17981,7 +18544,9 @@ export interface operations {
                 limit?: number;
                 page?: number;
                 sessionId?: string;
+                start?: string;
                 to?: string;
+                type?: "week" | "month" | "quarter" | "year";
                 warehouseId?: string;
                 withinDays?: number;
             };
