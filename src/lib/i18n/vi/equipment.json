@@ -130,7 +130,8 @@
     "overdue": "Quá hạn kiểm định",
     "selectRow": "Chọn {{code}}",
     "all": "Tất cả",
-    "room": "Phòng"
+    "room": "Phòng",
+    "selectPage": "Chọn cả trang"
   },
   "tabs": {
     "overview": "Tổng quan",
@@ -434,5 +435,10 @@
     "empty": "Chưa có lỗi nào trong thư viện cho máy này",
     "times": "Đã gặp {{on}} lần trên máy này · {{model}} máy cùng model",
     "add": "Thêm lỗi"
+  },
+  "bulk": {
+    "label": "Thao tác hàng loạt",
+    "selected": "Đã chọn {{count}} máy",
+    "clear": "Bỏ chọn"
   }
 }

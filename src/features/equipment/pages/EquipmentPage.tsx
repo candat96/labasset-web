@@ -147,7 +147,7 @@ export function Component() {
         id: 'select',
         header: () => (
           <Checkbox
-            aria-label={t('filters.selectPage', { defaultValue: 'Chọn cả trang' })}
+            aria-label={t('filters.selectPage')}
             checked={allOnPage ? true : selected.length > 0 ? 'indeterminate' : false}
             onCheckedChange={(value) => setSelected(value === true ? pageIds : [])}
           />
@@ -348,9 +348,7 @@ export function Component() {
     <>
       <PageHeader
         title={t('title')}
-        description={t('listHint', {
-          defaultValue: 'Toàn bộ trang thiết bị theo khoa, trạng thái và nhóm máy.',
-        })}
+        description={t('listHint')}
         actions={
           <>
             <Button
@@ -585,14 +583,11 @@ export function Component() {
             // Thao tác hàng loạt thay vì lặp nút trên từng hàng (§UX quyết định 5).
             <div
               role="region"
-              aria-label={t('bulk.label', { defaultValue: 'Thao tác hàng loạt' })}
+              aria-label={t('bulk.label')}
               className="bg-primary-soft flex flex-wrap items-center gap-2 rounded-xl px-4 py-2 text-[13px]"
             >
               <span className="mr-auto font-semibold tabular-nums">
-                {t('bulk.selected', {
-                  count: selected.length,
-                  defaultValue: 'Đã chọn {{count}} máy',
-                })}
+                {t('bulk.selected', { count: selected.length })}
               </span>
               <Button
                 variant="outline"
@@ -617,7 +612,7 @@ export function Component() {
                 {t('actions.compare')}
               </Button>
               <Button variant="ghost" size="sm" onClick={clearSelection}>
-                {t('bulk.clear', { defaultValue: 'Bỏ chọn' })}
+                {t('bulk.clear')}
               </Button>
             </div>
           )}

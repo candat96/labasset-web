@@ -153,7 +153,7 @@ export function DataTable<T>({
       </div>
       <div className="overflow-auto">
         <Table>
-          <TableHeader className="bg-card sticky top-0 z-10">
+          <TableHeader className="sticky top-0 z-10">
             {table.getHeaderGroups().map((hg) => (
               <TableRow key={hg.id} className="hover:bg-transparent border-divider">
                 {hg.headers.map((h) => {
@@ -163,6 +163,15 @@ export function DataTable<T>({
                   return (
                     <TableHead
                       key={h.id}
+                      aria-sort={
+                        canSort
+                          ? dir === 'asc'
+                            ? 'ascending'
+                            : dir === 'desc'
+                              ? 'descending'
+                              : 'none'
+                          : undefined
+                      }
                       className={cn(
                         meta?.align === 'right' && 'text-right',
                         meta?.align === 'center' && 'text-center',
@@ -199,7 +208,7 @@ export function DataTable<T>({
               Array.from({ length: 10 }).map((_, i) => (
                 <TableRow key={`s${i}`} aria-busy>
                   {Array.from({ length: colCount }).map((__, j) => (
-                    <TableCell key={j} className="h-11">
+                    <TableCell key={j} className="h-12">
                       <Skeleton className="h-4 w-full" />
                     </TableCell>
                   ))}
@@ -234,7 +243,7 @@ export function DataTable<T>({
                       <TableCell
                         key={cell.id}
                         className={cn(
-                          'h-11 py-1',
+                          'h-12 py-1',
                           meta?.align === 'right' && 'text-right tabular-nums',
                           meta?.align === 'center' && 'text-center',
                           meta?.className,
