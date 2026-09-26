@@ -59,8 +59,27 @@ export function Component() {
   })
   const columns = useMemo<ColumnDef<Row>[]>(
     () => [
-      { accessorKey: 'departmentId', header: 'Khoa/Phòng ban' },
-      { accessorKey: 'supplyId', header: t('supply') },
+      {
+        id: 'department',
+        header: 'Khoa/Phòng ban',
+        cell: ({ row }) => row.original.departmentName ?? row.original.departmentId,
+      },
+      {
+        id: 'supply',
+        header: t('supply'),
+        cell: ({ row }) => (
+          <span className="block min-w-0">
+            <span className="block truncate">
+              {row.original.supplyName ?? row.original.supplyId}
+            </span>
+            {row.original.supplyCode && (
+              <span className="text-muted-foreground block truncate text-[12.5px]">
+                {row.original.supplyCode}
+              </span>
+            )}
+          </span>
+        ),
+      },
       { accessorKey: 'monthlyQty', header: t('monthlyQty') },
       {
         accessorKey: 'isActive',

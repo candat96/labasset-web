@@ -7709,10 +7709,13 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
             departmentId: string;
+            departmentName?: string | null;
             id: string;
             isActive: boolean;
             monthlyQty: string;
+            supplyCode?: string | null;
             supplyId: string;
+            supplyName?: string | null;
             /** Format: date-time */
             updatedAt: string;
         };
