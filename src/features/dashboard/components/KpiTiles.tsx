@@ -50,6 +50,21 @@ const TONE_CLASS: Record<string, ToneClass> = {
   neutral: NEUTRAL,
 }
 
+/** Màu biểu tượng từng chỉ số — theo Figma Medone, mỗi ô một màu riêng. */
+const ICON_CLASS: Record<string, string> = {
+  'equipment.total': 'bg-primary text-white',
+  'equipment.active': 'bg-[#7828c8] text-white',
+  'equipment.broken': 'bg-success text-white',
+  'repair.open': 'bg-warning text-white',
+  'repair.overdueSla': 'bg-destructive text-white',
+  'maintenance.due30': 'bg-[#06b7db] text-white',
+  'calibration.due30': 'bg-[#ff95e1] text-white',
+  'stock.lowStock': 'bg-warning text-white',
+  'stock.expiring30': 'bg-[#ae7ede] text-white',
+  'requests.pending': 'bg-[#66aaf9] text-white',
+  'stock.value': 'bg-primary text-white',
+}
+
 const display = (kpi: DashboardKpi) =>
   kpi.unit === 'VND' ? formatVnd(String(kpi.value)) : formatNumber(kpi.value)
 
@@ -62,10 +77,10 @@ function UrgentTile({ kpi }: { kpi: DashboardKpi }) {
     <Link
       to={kpi.to}
       data-testid="kpi-urgent"
-      className="border-border hover:border-primary/40 hover:bg-surface-2 flex items-center gap-3 rounded-xl border p-3 transition-colors"
+      className="hover:bg-surface-2 flex items-center gap-3 rounded-xl p-3 transition-colors"
     >
       <span
-        className={`flex size-10 shrink-0 items-center justify-center rounded-full ${empty ? NEUTRAL.chip : tone.chip}`}
+        className={`flex size-10 shrink-0 items-center justify-center rounded-full ${empty ? NEUTRAL.chip : (ICON_CLASS[kpi.key] ?? tone.chip)}`}
       >
         <Icon className="size-5" aria-hidden />
       </span>
@@ -90,7 +105,11 @@ function PlainTile({ kpi }: { kpi: DashboardKpi }) {
       data-testid="kpi-plain"
       className="hover:bg-surface-2 flex items-center gap-2.5 rounded-lg px-2.5 py-2 transition-colors"
     >
-      <Icon className="text-subtle size-4 shrink-0" aria-hidden />
+      <span
+        className={`flex size-8 shrink-0 items-center justify-center rounded-full opacity-90 ${ICON_CLASS[kpi.key] ?? NEUTRAL.chip}`}
+      >
+        <Icon className="size-4" aria-hidden />
+      </span>
       <span className="min-w-0">
         <span className="block text-[17px] leading-6 font-semibold tabular-nums">
           {display(kpi)}

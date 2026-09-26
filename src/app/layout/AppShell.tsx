@@ -27,7 +27,8 @@ export function AppShell() {
       <SidebarInset className="min-w-0">
         <Topbar notifications={<NotificationBell />} />
         <AnnouncementBanner />
-        <main className="flex-1">
+        {/* Vùng nội dung nền xám, thẻ trắng nổi lên — theo Figma Medone. */}
+        <main className="bg-surface-2 flex-1">
           <div className="w-full px-4 py-4 sm:px-5 sm:py-5">
             <Suspense fallback={<PageSkeleton />}>
               <Outlet />
