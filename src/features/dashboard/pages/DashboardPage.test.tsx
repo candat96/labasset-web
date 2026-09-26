@@ -19,6 +19,13 @@ beforeEach(() => {
             value: 3,
             link: '/equipment?status=active',
           },
+          { key: 'equipment.broken', title: 'Hỏng', value: 2, link: '/equipment?status=broken' },
+          {
+            key: 'repair.overdueSla',
+            title: 'Quá hạn SLA',
+            value: 5,
+            link: '/repairs?overdue=true',
+          },
           {
             key: 'stock.value',
             title: 'Giá trị tồn',
@@ -32,9 +39,18 @@ beforeEach(() => {
   )
 })
 
-it('renders KPI cards from GET /v1/dashboard including VND strings', async () => {
+it('chia hai tầng: việc phải xử lý ngay nổi lên trên, chỉ số khác xuống dải nhỏ', async () => {
   renderWithProviders(<DashboardPage />)
-  expect(await screen.findAllByTestId('kpi-card')).toHaveLength(3)
-  expect(screen.getByText('Tổng thiết bị')).toBeVisible()
-  expect(screen.getByText('1.000.000 ₫')).toBeVisible()
+  // equipment.broken + repair.overdueSla là hai trong bốn chỉ số "xử lý ngay"
+  const urgent = await screen.findAllByTestId('kpi-urgent')
+  expect(urgent).toHaveLength(2)
+  expect(urgent.map((el) => el.textContent).join(' ')).toContain('Quá hạn SLA')
+  // ba chỉ số còn lại nằm ở dải nhỏ
+  expect(screen.getAllByTestId('kpi-plain')).toHaveLength(3)
+})
+
+it('hiển thị tiền tệ và liên kết sang danh sách đã lọc', async () => {
+  renderWithProviders(<DashboardPage />)
+  expect(await screen.findByText('1.000.000 ₫')).toBeVisible()
+  expect(screen.getByText('Hỏng').closest('a')).toHaveAttribute('href', '/equipment?status=broken')
 })
