@@ -26,7 +26,6 @@ import { dayRangeToIso } from '@/lib/format/date-range'
 import { departmentOptions, equipmentOptions, staffUserOptions } from '@/api/references'
 import { useCan } from '@/app/guards/useCan'
 import { ADM } from '@/routes/roles'
-import { useAuthStore } from '@/stores/auth.store'
 import { useDepartmentNames, useRepairs } from '../hooks'
 import {
   REPAIR_SEVERITIES,
@@ -42,7 +41,6 @@ type Preset = (typeof PRESETS)[number]
 export function Component() {
   const { t } = useTranslation('repairs')
   const navigate = useNavigate()
-  const me = useAuthStore((s) => s.user?.id)
   const canListUsers = useCan(ADM)
   const departmentName = useDepartmentNames()
   const table = useServerTable({
@@ -271,21 +269,6 @@ export function Component() {
                   clearable
                   showLabel={false}
                 />
-              </FilterField>
-            )}
-            {me && (
-              <FilterField label={t('filters.me')}>
-                <Button
-                  className="w-full"
-                  type="button"
-                  size="sm"
-                  variant={f.assigneeId === 'me' ? 'default' : 'outline'}
-                  onClick={() =>
-                    table.setFilter('assigneeId', f.assigneeId === 'me' ? undefined : 'me')
-                  }
-                >
-                  {t('filters.me')}
-                </Button>
               </FilterField>
             )}
             <FilterField label={t('filters.department')}>
