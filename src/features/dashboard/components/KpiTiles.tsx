@@ -18,14 +18,6 @@ import { formatNumber } from '@/lib/format/number'
 import { formatVnd } from '@/lib/format/money'
 import type { DashboardKpi } from '../hooks'
 
-/** Bốn chỉ số "phải xử lý ngay" — xem plans/2026-09-26-theme-medone.md §UX quyết định 2. */
-const URGENT_KEYS = [
-  'equipment.broken',
-  'repair.overdueSla',
-  'calibration.due30',
-  'stock.lowStock',
-] as const
-
 const ICONS: Record<string, LucideIcon> = {
   'equipment.total': Microscope,
   'equipment.active': CircleCheck,
@@ -40,53 +32,40 @@ const ICONS: Record<string, LucideIcon> = {
   'stock.value': Wallet,
 }
 
-type ToneClass = { chip: string; value: string }
-const NEUTRAL: ToneClass = { chip: 'bg-muted text-muted-foreground', value: 'text-foreground' }
-const TONE_CLASS: Record<string, ToneClass> = {
-  danger: { chip: 'bg-destructive-bg text-destructive-fg', value: 'text-destructive-fg' },
-  warning: { chip: 'bg-warning-bg text-warning-fg', value: 'text-warning-fg' },
-  success: { chip: 'bg-success-bg text-success-fg', value: 'text-foreground' },
-  info: { chip: 'bg-primary-soft text-secondary-foreground', value: 'text-foreground' },
-  neutral: NEUTRAL,
-}
-
-/** Màu biểu tượng từng chỉ số — theo Figma Medone, mỗi ô một màu riêng. */
+/** Màu biểu tượng từng chỉ số — theo Figma Medone (node 3:3614). */
 const ICON_CLASS: Record<string, string> = {
-  'equipment.total': 'bg-primary text-white',
-  'equipment.active': 'bg-[#7828c8] text-white',
-  'equipment.broken': 'bg-success text-white',
-  'repair.open': 'bg-warning text-white',
-  'repair.overdueSla': 'bg-destructive text-white',
-  'maintenance.due30': 'bg-[#06b7db] text-white',
-  'calibration.due30': 'bg-[#ff95e1] text-white',
-  'stock.lowStock': 'bg-warning text-white',
-  'stock.expiring30': 'bg-[#ae7ede] text-white',
-  'requests.pending': 'bg-[#66aaf9] text-white',
-  'stock.value': 'bg-primary text-white',
+  'equipment.total': 'bg-primary',
+  'equipment.active': 'bg-[#7828c8]',
+  'equipment.broken': 'bg-success',
+  'repair.open': 'bg-warning',
+  'repair.overdueSla': 'bg-destructive',
+  'maintenance.due30': 'bg-[#06b7db]',
+  'calibration.due30': 'bg-[#ff95e1]',
+  'stock.lowStock': 'bg-warning',
+  'stock.expiring30': 'bg-[#ae7ede]',
+  'requests.pending': 'bg-[#66aaf9]',
+  'stock.value': 'bg-primary',
 }
 
 const display = (kpi: DashboardKpi) =>
   kpi.unit === 'VND' ? formatVnd(String(kpi.value)) : formatNumber(kpi.value)
 
-/** Ô lớn: việc cần xử lý ngay — số to, có màu trạng thái, bấm sang danh sách đã lọc. */
-function UrgentTile({ kpi }: { kpi: DashboardKpi }) {
+function Tile({ kpi }: { kpi: DashboardKpi }) {
   const Icon = ICONS[kpi.key] ?? Microscope
-  const tone = TONE_CLASS[kpi.tone] ?? NEUTRAL
-  const empty = Number(kpi.value) === 0
   return (
     <Link
       to={kpi.to}
-      data-testid="kpi-urgent"
+      data-testid="kpi-tile"
       className="hover:bg-surface-2 flex items-center gap-3 rounded-xl p-3 transition-colors"
     >
       <span
-        className={`flex size-10 shrink-0 items-center justify-center rounded-full ${empty ? NEUTRAL.chip : (ICON_CLASS[kpi.key] ?? tone.chip)}`}
+        className={`flex size-9 shrink-0 items-center justify-center rounded-full text-white ${ICON_CLASS[kpi.key] ?? 'bg-primary'}`}
       >
-        <Icon className="size-5" aria-hidden />
+        <Icon className="size-[18px]" aria-hidden />
       </span>
       <span className="min-w-0">
         <span
-          className={`block text-[26px] leading-8 font-semibold tabular-nums ${empty ? 'text-foreground' : tone.value}`}
+          className={`block leading-8 font-semibold whitespace-nowrap tabular-nums ${kpi.unit === 'VND' ? 'text-[19px]' : 'text-[24px]'}`}
         >
           {display(kpi)}
         </span>
@@ -96,62 +75,15 @@ function UrgentTile({ kpi }: { kpi: DashboardKpi }) {
   )
 }
 
-/** Ô nhỏ: chỉ số tham khảo — không tô màu, chữ nhỏ hơn một bậc. */
-function PlainTile({ kpi }: { kpi: DashboardKpi }) {
-  const Icon = ICONS[kpi.key] ?? Microscope
-  return (
-    <Link
-      to={kpi.to}
-      data-testid="kpi-plain"
-      className="hover:bg-surface-2 flex items-center gap-2.5 rounded-lg px-2.5 py-2 transition-colors"
-    >
-      <span
-        className={`flex size-8 shrink-0 items-center justify-center rounded-full opacity-90 ${ICON_CLASS[kpi.key] ?? NEUTRAL.chip}`}
-      >
-        <Icon className="size-4" aria-hidden />
-      </span>
-      <span className="min-w-0">
-        <span className="block text-[17px] leading-6 font-semibold tabular-nums">
-          {display(kpi)}
-        </span>
-        <span className="text-muted-foreground block truncate text-[12.5px]">{kpi.title}</span>
-      </span>
-    </Link>
-  )
-}
-
+/** Lưới chỉ số tổng quan — 4 cột, mọi ô đồng hạng như thiết kế Figma. */
 export function KpiTiles({ kpis, loading }: { kpis: DashboardKpi[]; loading: boolean }) {
-  if (loading)
-    return (
-      <div className="bg-card shadow-card rounded-xl p-4">
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-16" />
-          ))}
-        </div>
-        <Skeleton className="mt-4 h-16" />
-      </div>
-    )
-
-  const urgent = URGENT_KEYS.map((key) => kpis.find((k) => k.key === key)).filter(
-    (k): k is DashboardKpi => !!k,
-  )
-  const rest = kpis.filter((k) => !URGENT_KEYS.includes(k.key as (typeof URGENT_KEYS)[number]))
-
   return (
     <section className="bg-card shadow-card rounded-xl p-4" aria-label="Chỉ số tổng quan">
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {urgent.map((kpi) => (
-          <UrgentTile key={kpi.key} kpi={kpi} />
-        ))}
+      <div className="grid gap-x-4 gap-y-2 sm:grid-cols-2 xl:grid-cols-4">
+        {loading
+          ? Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-16" />)
+          : kpis.map((kpi) => <Tile key={kpi.key} kpi={kpi} />)}
       </div>
-      {rest.length > 0 && (
-        <div className="border-divider mt-3 grid gap-1 border-t pt-3 sm:grid-cols-3 xl:grid-cols-4">
-          {rest.map((kpi) => (
-            <PlainTile key={kpi.key} kpi={kpi} />
-          ))}
-        </div>
-      )}
     </section>
   )
 }

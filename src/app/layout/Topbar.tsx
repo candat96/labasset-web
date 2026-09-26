@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react'
 import { useEffect, useState } from 'react'
 import { Separator } from '@/components/ui/separator'
-import { SidebarTrigger } from '@/components/ui/sidebar'
 import { Breadcrumbs } from './Breadcrumbs'
+import { SectionTabs } from './SectionTabs'
+import { Brand } from './Brand'
 import { GlobalSearch } from './GlobalSearch'
 import { UserMenu } from './UserMenu'
 import { AiButton } from './AiButton'
@@ -24,10 +25,13 @@ export function Topbar({ notifications }: { notifications?: ReactNode }) {
         scrolled && 'shadow-[0_1px_2px_rgb(15_23_42/0.06),0_2px_6px_rgb(15_23_42/0.08)]',
       )}
     >
-      <SidebarTrigger />
+      <Brand />
       <Separator orientation="vertical" className="mr-1 h-5!" />
-      <div className="min-w-0 flex-1 text-[13px]">
-        <Breadcrumbs />
+      <div className="flex min-w-0 flex-1 items-center gap-3">
+        <SectionTabs />
+        <div className="text-[13px] lg:hidden">
+          <Breadcrumbs />
+        </div>
       </div>
       <GlobalSearch />
       <AiButton />

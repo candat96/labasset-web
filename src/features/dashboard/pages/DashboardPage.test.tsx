@@ -39,14 +39,12 @@ beforeEach(() => {
   )
 })
 
-it('chia hai tầng: việc phải xử lý ngay nổi lên trên, chỉ số khác xuống dải nhỏ', async () => {
+it('vẽ đủ ô chỉ số theo thứ tự API trả về', async () => {
   renderWithProviders(<DashboardPage />)
-  // equipment.broken + repair.overdueSla là hai trong bốn chỉ số "xử lý ngay"
-  const urgent = await screen.findAllByTestId('kpi-urgent')
-  expect(urgent).toHaveLength(2)
-  expect(urgent.map((el) => el.textContent).join(' ')).toContain('Quá hạn SLA')
-  // ba chỉ số còn lại nằm ở dải nhỏ
-  expect(screen.getAllByTestId('kpi-plain')).toHaveLength(3)
+  const tiles = await screen.findAllByTestId('kpi-tile')
+  expect(tiles).toHaveLength(5)
+  expect(tiles[0]?.textContent).toContain('Tổng thiết bị')
+  expect(tiles.map((el) => el.textContent).join(' ')).toContain('Quá hạn SLA')
 })
 
 it('hiển thị tiền tệ và liên kết sang danh sách đã lọc', async () => {

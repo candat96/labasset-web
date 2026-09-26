@@ -1,9 +1,8 @@
 import { AnnouncementBanner } from '@/components/announcement-banner'
 import { Suspense } from 'react'
 import { Outlet } from 'react-router'
-import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { Skeleton } from '@/components/ui/skeleton'
-import { AppSidebar } from './AppSidebar'
+import { NavRail } from './NavRail'
 import { Topbar } from './Topbar'
 import { NotificationBell } from './NotificationBell'
 import { useBootstrapSession, usePublicSettings } from '@/features/auth/hooks'
@@ -22,9 +21,9 @@ export function AppShell() {
   useBootstrapSession()
   usePublicSettings()
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset className="min-w-0">
+    <div className="flex min-h-dvh">
+      <NavRail />
+      <div className="flex min-w-0 flex-1 flex-col">
         <Topbar notifications={<NotificationBell />} />
         <AnnouncementBanner />
         {/* Vùng nội dung nền xám, thẻ trắng nổi lên — theo Figma Medone. */}
@@ -35,7 +34,7 @@ export function AppShell() {
             </Suspense>
           </div>
         </main>
-      </SidebarInset>
-    </SidebarProvider>
+      </div>
+    </div>
   )
 }
