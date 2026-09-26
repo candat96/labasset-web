@@ -235,7 +235,7 @@ it('lists attachment groups, opens image lightbox, uploads and removes with conf
   expect(screen.getByRole('dialog')).toBeVisible()
   await userEvent.keyboard('{Escape}')
   await userEvent.upload(
-    screen.getByLabelText('Thêm Ảnh'),
+    screen.getByLabelText('Chọn ảnh'),
     new NativeFile(['image'], 'a.png', { type: 'image/png' }) as unknown as File,
   )
   await waitFor(() =>
@@ -246,7 +246,7 @@ it('lists attachment groups, opens image lightbox, uploads and removes with conf
       entityId: 'e1',
     }),
   )
-  await userEvent.click(screen.getByRole('button', { name: 'Xoá' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Xoá Ảnh máy' }))
   await userEvent.click(screen.getByRole('button', { name: 'Xác nhận' }))
   await waitFor(() => expect(removed).toHaveBeenCalled())
 })
@@ -261,7 +261,7 @@ it('hides attachment mutations for department readers', async () => {
     />,
   )
   expect(await screen.findByText('Ảnh')).toBeVisible()
-  expect(screen.queryByLabelText('Thêm Ảnh')).not.toBeInTheDocument()
+  expect(screen.queryByLabelText('Chọn ảnh')).not.toBeInTheDocument()
 })
 it('dismisses announcements persistently by id', async () => {
   server.use(

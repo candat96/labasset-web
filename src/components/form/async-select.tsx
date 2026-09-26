@@ -105,7 +105,7 @@ export function AsyncSelect({
             aria-label={label}
             variant="outline"
             disabled={disabled}
-            className="bg-muted hover:bg-muted h-11 w-full justify-between overflow-hidden rounded-md border-0 px-3.5 font-normal shadow-none"
+            className="border-border bg-card hover:bg-card h-11 w-full justify-between overflow-hidden rounded-md border px-3.5 font-normal shadow-none"
           >
             <span className="flex min-w-0 flex-1 items-center gap-1 overflow-hidden">
               {selection.length ? (

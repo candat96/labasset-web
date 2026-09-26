@@ -1,3 +1,4 @@
+import { File as NativeFile } from 'node:buffer'
 import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
@@ -73,9 +74,14 @@ it('retries failed report photos on the same ticket without creating a duplicate
       return HttpResponse.json({ id: 'r-photo' })
     }),
     http.post('/v1/files/presign', () =>
-      HttpResponse.json({ fileId: 'f-photo', uploadUrl: '/photo-upload', headers: {} }),
+      // URL kho lưu trữ phải tuyệt đối: msw không chặn fetch tới đường dẫn tương đối.
+      HttpResponse.json({
+        fileId: 'f-photo',
+        uploadUrl: 'http://storage.test/photo-upload',
+        headers: {},
+      }),
     ),
-    http.put('/photo-upload', () => new HttpResponse(null, { status: 200 })),
+    http.put('http://storage.test/photo-upload', () => new HttpResponse(null, { status: 200 })),
     http.post('/v1/files/f-photo/complete', () => HttpResponse.json({ id: 'f-photo' })),
     http.post('/v1/attachments', async ({ request }) => {
       attached.push(await request.json())
@@ -91,7 +97,8 @@ it('retries failed report photos on the same ticket without creating a duplicate
   await userEvent.type(screen.getByLabelText('Mô tả'), 'Máy kẹt kim')
   await userEvent.upload(
     screen.getByLabelText('Ảnh tình trạng khi báo hỏng'),
-    new File(['photo'], 'hong.jpg', { type: 'image/jpeg' }),
+    // File của jsdom không dùng được làm body của fetch.
+    new NativeFile(['photo'], 'hong.jpg', { type: 'image/jpeg' }) as unknown as File,
   )
   await userEvent.click(screen.getByRole('button', { name: 'Tạo phiếu' }))
   await screen.findByText(/Đã tạo phiếu, nhưng chưa tải đủ ảnh/)

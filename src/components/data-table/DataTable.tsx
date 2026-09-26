@@ -142,7 +142,14 @@ export function DataTable<T>({
 
   return (
     <div className="bg-card shadow-card overflow-hidden rounded-md" data-slot="data-table">
-      <div className="bg-surface-2 border-divider flex items-end justify-between gap-3 border-b px-4 py-3">
+      {/* Màn dùng FilterPanel đặt bộ lọc ở ngoài bảng, khi đó thanh này chỉ còn nút
+          "Cột" — thu gọn lại thay vì để một dải trắng rỗng cao bằng hàng lọc. */}
+      <div
+        className={cn(
+          'bg-card border-divider flex items-end justify-between gap-3 border-b px-4',
+          toolbarLeft ? 'py-3' : 'py-2',
+        )}
+      >
         <div className="min-w-0 flex-1">
           {toolbarLeft && (hasFilterBar ? toolbarLeft : <FilterBar>{toolbarLeft}</FilterBar>)}
         </div>

@@ -1,3 +1,4 @@
+import { File as NativeFile } from 'node:buffer'
 import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
@@ -57,9 +58,13 @@ it.each(['repair_ticket', 'maintenance_task'])(
         return HttpResponse.json([])
       }),
       http.post('/v1/files/presign', () =>
-        HttpResponse.json({ fileId: 'f1', uploadUrl: '/upload-photo', headers: {} }),
+        HttpResponse.json({
+          fileId: 'f1',
+          uploadUrl: 'http://storage.test/upload-photo',
+          headers: {},
+        }),
       ),
-      http.put('/upload-photo', () => new HttpResponse(null, { status: 200 })),
+      http.put('http://storage.test/upload-photo', () => new HttpResponse(null, { status: 200 })),
       http.post('/v1/files/f1/complete', () => HttpResponse.json({ id: 'f1' })),
       http.post('/v1/attachments', async ({ request }) => {
         bodies.push(await request.json())
@@ -78,7 +83,12 @@ it.each(['repair_ticket', 'maintenance_task'])(
     await screen.findByText(/Ảnh chỉ thuộc lần xử lý này/)
     const camera = screen.getByLabelText('Chụp ảnh tình trạng')
     expect(camera).toHaveAttribute('capture', 'environment')
-    await userEvent.upload(camera, new File(['photo'], 'condition.jpg', { type: 'image/jpeg' }))
+    // File của jsdom không dùng được làm body của fetch (undici không tuần tự hoá
+    // được), nên phải lấy File từ `node:buffer` — giống test upload ở shared.test.
+    await userEvent.upload(
+      camera,
+      new NativeFile(['photo'], 'condition.jpg', { type: 'image/jpeg' }) as unknown as File,
+    )
     await waitFor(() =>
       expect(bodies).toEqual([{ fileId: 'f1', kind: 'photo', entityType, entityId: 'order-1' }]),
     )

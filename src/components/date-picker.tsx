@@ -43,7 +43,7 @@ export function DatePicker({
           disabled={disabled}
           aria-label={ariaLabel}
           className={cn(
-            'h-11 w-full justify-start rounded-md border-0 bg-muted px-3.5 font-normal shadow-none hover:bg-muted',
+            'border-border bg-card hover:bg-card h-11 w-full justify-start rounded-md border px-3.5 font-normal shadow-none',
             !selected && 'text-muted-foreground',
             className,
           )}
@@ -118,7 +118,7 @@ export function DateRangePicker({
           variant="outline"
           aria-label={ariaLabel}
           className={cn(
-            'h-11 w-full justify-start rounded-md border-0 bg-muted px-3.5 font-normal shadow-none hover:bg-muted',
+            'border-border bg-card hover:bg-card h-11 w-full justify-start rounded-md border px-3.5 font-normal shadow-none',
             !range?.from && 'text-muted-foreground',
           )}
         >

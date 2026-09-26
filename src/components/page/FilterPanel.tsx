@@ -102,7 +102,7 @@ export function FilterPanel({
       )}
 
       <div className="min-w-0 flex-1 space-y-2">
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="bg-card shadow-card flex flex-wrap items-center gap-2 rounded-md px-4 py-3">
           {!open && (
             <Button
               type="button"
@@ -125,7 +125,7 @@ export function FilterPanel({
 
         {!open && chips.length > 0 && (
           <div
-            className="flex flex-wrap items-center gap-1.5"
+            className="bg-card shadow-card flex flex-wrap items-center gap-1.5 rounded-md px-4 py-2.5"
             data-testid="filter-panel-active-chips"
           >
             {chips.map((filter) => (
