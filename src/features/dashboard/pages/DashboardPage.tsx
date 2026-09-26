@@ -13,6 +13,7 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
+  Legend,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -51,6 +52,11 @@ export function Component() {
   })
   const hospitalName = useUiStore((s) => s.hospitalName)
   const today = format(new Date(), 'EEEE, dd/MM/yyyy', { locale: vi })
+  // Cảnh báo kho: các chỉ số stock.* đếm được (bỏ giá trị tồn tính bằng tiền).
+  const stockAlerts = (q.data?.kpis ?? [])
+    .filter((row) => row.key.startsWith('stock.') && row.unit !== 'VND')
+    .map((row) => ({ name: row.title, value: Number(row.value) }))
+    .filter((row) => row.value > 0)
 
   return (
     <>
@@ -132,26 +138,45 @@ export function Component() {
                 description="Vật tư dưới mức tối thiểu, sắp hết hạn"
               >
                 <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={q.data.kpis
-                          .filter((row) => row.key.startsWith('stock.') && row.unit !== 'VND')
-                          .map((row) => ({ name: row.title, value: Number(row.value) }))}
-                        dataKey="value"
-                        nameKey="name"
-                        innerRadius={45}
-                        outerRadius={80}
-                      >
-                        {q.data.kpis
-                          .filter((row) => row.key.startsWith('stock.') && row.unit !== 'VND')
-                          .map((_, i) => (
-                            <Cell key={i} fill={CHART_COLORS[(i + 3) % CHART_COLORS.length]} />
+                  {stockAlerts.length === 0 ? (
+                    <p className="text-muted-foreground flex h-full items-center justify-center text-[13.5px]">
+                      Không có cảnh báo kho nào.
+                    </p>
+                  ) : (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={stockAlerts}
+                          dataKey="value"
+                          nameKey="name"
+                          innerRadius={45}
+                          outerRadius={80}
+                          /* Recharts 3: để hiệu ứng động bật thì Pie không vẽ sector nào. */
+                          isAnimationActive={false}
+                        >
+                          {stockAlerts.map((row, i) => (
+                            <Cell
+                              key={row.name}
+                              fill={CHART_COLORS[(i + 3) % CHART_COLORS.length]}
+                            />
                           ))}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
+                        </Pie>
+                        <Tooltip />
+                        <Legend
+                          verticalAlign="bottom"
+                          iconType="circle"
+                          formatter={(value: string, entry) => (
+                            <span className="text-foreground text-[13px]">
+                              {value} ·{' '}
+                              <span className="font-semibold tabular-nums">
+                                {(entry?.payload as { value?: number })?.value ?? 0}
+                              </span>
+                            </span>
+                          )}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  )}
                 </div>
               </SectionCard>
             </div>
