@@ -252,5 +252,12 @@
   "removeSubstituteConfirm": "Xoá vật tư này khỏi danh sách thay thế?",
   "expiredOn": "Đã hết hiệu lực",
   "expiringSoon": "Còn {{days}} ngày",
-  "expiringAlert": "Sắp hết hiệu lực"
+  "expiringAlert": "Sắp hết hiệu lực",
+  "unitMode": "Đơn vị nhập",
+  "unitUsage": "Đơn vị dùng",
+  "unitPurchase": "Đơn vị mua",
+  "quantityByPurchaseUnit": "Số lượng theo đơn vị mua",
+  "conversionLine": "{{qty}} {{purchaseUnit}} = {{converted}} {{usageUnit}}",
+  "circulationExpiredInForm": "Vật tư {{code}} đã hết hiệu lực số lưu hành từ {{date}}",
+  "viewReceipt": "Xem phiếu nhập"
 }

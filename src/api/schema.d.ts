@@ -7958,7 +7958,8 @@ export interface components {
         ReceiptItemDto: {
             expiresAt?: string;
             lotNo?: string;
-            quantity: string;
+            purchaseQuantity?: string;
+            quantity?: string;
             supplyId: string;
             unitCost: string;
         };

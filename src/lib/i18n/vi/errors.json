@@ -102,6 +102,7 @@
   "SUPPLY_NOT_FOUND": "Không tìm thấy vật tư",
   "SUPPLY_TRACKING_INVALID": "Theo dõi hạn chỉ bật khi theo dõi lô",
   "CONVERSION_FACTOR_INVALID": "Hệ số quy đổi phải lớn hơn 0",
+  "CONVERSION_FACTOR_MISSING": "Vật tư chưa khai hệ số quy đổi nên không nhập được theo đơn vị mua",
   "SUBSTITUTE_SELF": "Không thể chọn chính vật tư này làm vật tư thay thế",
   "SUBSTITUTE_EXISTS": "Vật tư thay thế đã tồn tại",
   "SUBSTITUTE_NOT_FOUND": "Không tìm thấy liên kết vật tư thay thế",

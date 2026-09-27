@@ -356,7 +356,7 @@ export function Component() {
                       {formatVnd(item.unitCost)}
                     </TableCell>
                     <TableCell className="pr-5 text-right font-medium tabular-nums">
-                      {formatVnd(lineTotal(item.quantity, item.unitCost))}
+                      {formatVnd(lineTotal(item.quantity ?? '0', item.unitCost))}
                     </TableCell>
                   </TableRow>
                 ))}
