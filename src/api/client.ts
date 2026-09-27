@@ -162,6 +162,7 @@ async function untypedRequest(
 export const untypedApi = {
   GET: (path: string, init?: UntypedInit) => untypedRequest('GET', path, init),
   POST: (path: string, init?: UntypedInit) => untypedRequest('POST', path, init),
+  PUT: (path: string, init?: UntypedInit) => untypedRequest('PUT', path, init),
   PATCH: (path: string, init?: UntypedInit) => untypedRequest('PATCH', path, init),
   DELETE: (path: string, init?: UntypedInit) => untypedRequest('DELETE', path, init),
 }

@@ -56,6 +56,8 @@ import {
 import { FileField } from '@/components/form/file-field'
 import { AsyncSelect } from '@/components/form/async-select'
 import { SignaturePad } from '@/components/signature-pad'
+import { DocumentSigningCard } from '@/features/signing/components/SignedDocumentsPanel'
+import { DOC_DEFAULT_SLOTS } from '@/features/signing/api'
 import { staffUserOptions, supplyOptions } from '@/api/references'
 import { uploadFile } from '@/api/files'
 import * as api from '../api'
@@ -518,18 +520,25 @@ export function Component() {
             value: 'docs',
             label: t('tabDocs'),
             content: (
-              <SectionCard title={t('tabDocs')}>
-                <AttachmentsPanel
-                  entityType="maintenance_task"
-                  entityId={id}
-                  kinds={[
-                    { value: 'photo', label: t('attachmentPhoto') },
-                    { value: 'signature_technician', label: t('attachmentSignatureTechnician') },
-                    { value: 'signature_department', label: t('attachmentSignatureDepartment') },
-                    { value: 'report', label: t('attachmentReport') },
-                  ]}
+              <>
+                <SectionCard title={t('tabDocs')}>
+                  <AttachmentsPanel
+                    entityType="maintenance_task"
+                    entityId={id}
+                    kinds={[
+                      { value: 'photo', label: t('attachmentPhoto') },
+                      { value: 'signature_technician', label: t('attachmentSignatureTechnician') },
+                      { value: 'signature_department', label: t('attachmentSignatureDepartment') },
+                      { value: 'report', label: t('attachmentReport') },
+                    ]}
+                  />
+                </SectionCard>
+                <DocumentSigningCard
+                  docType="maintenance.task"
+                  id={id}
+                  slots={DOC_DEFAULT_SLOTS['maintenance.task']}
                 />
-              </SectionCard>
+              </>
             ),
           },
           {

@@ -1,6 +1,15 @@
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
-import { KeyRound, LogOut, MonitorSmartphone, Moon, Sun, SunMoon, User } from 'lucide-react'
+import {
+  KeyRound,
+  LogOut,
+  MonitorSmartphone,
+  Moon,
+  PenLine,
+  Sun,
+  SunMoon,
+  User,
+} from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
@@ -60,6 +69,11 @@ export function UserMenu() {
         <DropdownMenuItem asChild>
           <Link to="/change-password">
             <KeyRound /> {t('menu:items.changePassword')}
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link to="/settings/signing">
+            <PenLine /> {t('menu:items.signingProfile')}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>

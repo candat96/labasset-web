@@ -47,6 +47,8 @@ import {
 import { SignaturePad } from '@/components/signature-pad'
 import { StatusBadge } from '@/components/status-badge'
 import { AttachmentsPanel } from '@/components/attachments-panel'
+import { DocumentSigningCard } from '@/features/signing/components/SignedDocumentsPanel'
+import { DOC_DEFAULT_SLOTS } from '@/features/signing/api'
 import { AuditTrail } from '@/components/audit-trail'
 import { useConfirm } from '@/components/confirm-dialog'
 import { stockDocStatusMap } from '@/lib/status-maps'
@@ -318,6 +320,11 @@ export function Component() {
               ]}
             />
           </SectionCard>
+          <DocumentSigningCard
+            docType="stock.issue"
+            id={id}
+            slots={DOC_DEFAULT_SLOTS['stock.issue']}
+          />
         </div>
         <div className="space-y-5">
           <SectionCard title={t('info')}>

@@ -34,6 +34,7 @@ import {
   QrCode,
   Scale,
   Settings,
+  ShieldCheck,
   ShoppingCart,
   Table2,
   Tags,
@@ -45,6 +46,8 @@ import {
 import { ADM, HEADS, STAFF, type Role } from './roles'
 // Nạp bản dịch của tính năng (kể cả nhãn menu) — xem `features/admin/i18n.ts`.
 import '@/features/admin/i18n'
+// Nhãn menu chữ ký số do tính năng tự đăng ký.
+import '@/features/signing/i18n'
 
 export interface MenuItem {
   path: string
@@ -196,6 +199,7 @@ export const MENU: MenuGroup[] = [
         icon: FileSignature,
       },
       { path: '/admin/settings', labelKey: 'menu:items.settings', icon: Settings },
+      { path: '/admin/signing', labelKey: 'menu:items.signingConfig', icon: ShieldCheck },
       { path: '/admin/numbering', labelKey: 'menu:items.numbering', icon: Hash },
       { path: '/admin/audit-logs', labelKey: 'menu:items.auditLogs', icon: History },
       { path: '/admin/backup', labelKey: 'menu:items.backup', icon: DatabaseBackup },
@@ -234,6 +238,7 @@ export const MENU: MenuGroup[] = [
 export const EXTRA_ITEMS: MenuItem[] = [
   { path: '/notifications/preferences', labelKey: 'notifications:preferences' },
   { path: '/profile', labelKey: 'menu:items.profile' },
+  { path: '/settings/signing', labelKey: 'menu:items.signingProfile' },
   { path: '/change-password', labelKey: 'menu:items.changePassword' },
   { path: '/sessions', labelKey: 'menu:items.sessions' },
   { path: '/equipment/compare', labelKey: 'menu:items.equipmentCompare' },

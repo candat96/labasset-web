@@ -126,6 +126,8 @@ import {
 } from '../schema'
 import { COST_CATEGORIES, PART_SOURCES, RESOLUTION_TYPES } from '../types'
 import { SignaturePad } from '@/components/signature-pad'
+import { DocumentSigningCard } from '@/features/signing/components/SignedDocumentsPanel'
+import { DOC_DEFAULT_SLOTS } from '@/features/signing/api'
 import { StarRating } from '../components/StarRating'
 import type { components } from '@/api/schema'
 
@@ -469,34 +471,41 @@ export function Component() {
             value: 'docs',
             label: t('detail.tabs.docs'),
             content: (
-              <SectionCard
-                title={t('detail.tabs.docs')}
-                actions={
-                  (canSignTechnician || canSignDepartment) && (
-                    <Button onClick={() => setOpen('sign')}>{t('detail.docs.sign')}</Button>
-                  )
-                }
-              >
-                <AttachmentsPanel
-                  entityType="repair_ticket"
-                  entityId={id}
-                  canWrite={canAttach}
-                  kinds={[
-                    { value: 'photo', label: t('detail.attachments.photo') },
-                    { value: 'video', label: t('detail.attachments.video') },
-                    {
-                      value: 'signature_technician',
-                      label: t('detail.attachments.signatureTechnician'),
-                    },
-                    {
-                      value: 'signature_department',
-                      label: t('detail.attachments.signatureDepartment'),
-                    },
-                    { value: 'report', label: t('detail.attachments.report') },
-                    { value: 'other', label: t('detail.attachments.other') },
-                  ]}
+              <>
+                <SectionCard
+                  title={t('detail.tabs.docs')}
+                  actions={
+                    (canSignTechnician || canSignDepartment) && (
+                      <Button onClick={() => setOpen('sign')}>{t('detail.docs.sign')}</Button>
+                    )
+                  }
+                >
+                  <AttachmentsPanel
+                    entityType="repair_ticket"
+                    entityId={id}
+                    canWrite={canAttach}
+                    kinds={[
+                      { value: 'photo', label: t('detail.attachments.photo') },
+                      { value: 'video', label: t('detail.attachments.video') },
+                      {
+                        value: 'signature_technician',
+                        label: t('detail.attachments.signatureTechnician'),
+                      },
+                      {
+                        value: 'signature_department',
+                        label: t('detail.attachments.signatureDepartment'),
+                      },
+                      { value: 'report', label: t('detail.attachments.report') },
+                      { value: 'other', label: t('detail.attachments.other') },
+                    ]}
+                  />
+                </SectionCard>
+                <DocumentSigningCard
+                  docType="repair.completion"
+                  id={id}
+                  slots={DOC_DEFAULT_SLOTS['repair.completion']}
                 />
-              </SectionCard>
+              </>
             ),
           },
           {

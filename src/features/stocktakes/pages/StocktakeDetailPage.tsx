@@ -35,6 +35,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { StatusBadge } from '@/components/status-badge'
 import { AuditTrail } from '@/components/audit-trail'
+import { DocumentSigningCard } from '@/features/signing/components/SignedDocumentsPanel'
+import { DOC_DEFAULT_SLOTS } from '@/features/signing/api'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useConfirm } from '@/components/confirm-dialog'
 import { FormDialog } from '@/components/form/FormDialog'
@@ -859,6 +861,11 @@ export function Component() {
               <SectionCard title={t('history')}>
                 <AuditTrail entityType="stocktake_session" entityId={id} />
               </SectionCard>
+              <DocumentSigningCard
+                docType="stocktake.result"
+                id={id}
+                slots={DOC_DEFAULT_SLOTS['stocktake.result']}
+              />
             </TabsContent>
           </Tabs>
         </div>

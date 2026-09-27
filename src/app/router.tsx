@@ -24,6 +24,8 @@ const implemented: RouteObject[] = [
     path: 'admin/doc-templates',
     lazy: () => import('@/features/admin/pages/DocTemplatesPage'),
   },
+  { path: 'admin/signing', lazy: () => import('@/features/signing/pages/SigningConfigPage') },
+  { path: 'settings/signing', lazy: () => import('@/features/signing/pages/SigningProfilePage') },
   { path: 'admin/rooms', lazy: () => import('@/features/catalogs/pages/RoomsPage') },
   { path: 'admin/settings', lazy: () => import('@/features/settings/pages/SettingsPage') },
   { path: 'admin/numbering', element: <Navigate to="/admin/settings?tab=numbering" replace /> },

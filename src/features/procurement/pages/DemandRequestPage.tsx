@@ -18,6 +18,8 @@ import {
 } from 'lucide-react'
 import { PageHeader, PageMeta } from '@/components/page/PageHeader'
 import { SectionCard } from '@/components/page/SectionCard'
+import { DocumentSigningCard } from '@/features/signing/components/SignedDocumentsPanel'
+import { DOC_DEFAULT_SLOTS } from '@/features/signing/api'
 import { DetailSkeleton } from '@/components/page/DetailSkeleton'
 import { ErrorState } from '@/components/page/ErrorState'
 import { StatusBadge } from '@/components/status-badge'
@@ -1057,6 +1059,11 @@ export function Component() {
           </Table>
         </div>
       </SectionCard>
+      <DocumentSigningCard
+        docType="demand.proposal"
+        id={row.id}
+        slots={DOC_DEFAULT_SLOTS['demand.proposal']}
+      />
       <ImportExcelDialog
         open={importOpen}
         onOpenChange={setImportOpen}

@@ -11,6 +11,8 @@ import { ActionMenu } from '@/components/page/ActionMenu'
 import { DataList } from '@/components/page/DataList'
 import { DetailSkeleton } from '@/components/page/DetailSkeleton'
 import { AuditTrail } from '@/components/audit-trail'
+import { DocumentSigningCard } from '@/features/signing/components/SignedDocumentsPanel'
+import { DOC_DEFAULT_SLOTS } from '@/features/signing/api'
 import { ErrorState } from '@/components/page/ErrorState'
 import {
   Award,
@@ -258,6 +260,11 @@ export function Component() {
           <SectionCard title={t('audit')}>
             <AuditTrail entityType="calibration" entityId={id} />
           </SectionCard>
+          <DocumentSigningCard
+            docType="calibration.result"
+            id={id}
+            slots={DOC_DEFAULT_SLOTS['calibration.result']}
+          />
         </div>
         <div className="space-y-5">
           <SectionCard title={t('equipmentHistory')} description={t('equipmentHistoryHint')}>

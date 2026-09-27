@@ -142,5 +142,14 @@
   "AI_PROVIDER_ERROR": "Nhà cung cấp AI tạm lỗi",
   "AI_CONVERSATION_NOT_FOUND": "Không tìm thấy hội thoại",
   "AI_ATTACHMENT_INVALID": "Tệp đính kèm không hợp lệ",
-  "AI_DIGEST_NOT_FOUND": "Chưa có tóm tắt tuần này"
+  "AI_DIGEST_NOT_FOUND": "Chưa có tóm tắt tuần này",
+  "SIGNING_NOT_CONFIGURED": "Bệnh viện chưa cấu hình nhà cung cấp ký số",
+  "SIGNING_PROFILE_MISSING": "Tài khoản chưa cài đặt chữ ký số",
+  "SIGNING_PASSWORD_REQUIRED": "Cần mật khẩu tài khoản ký số",
+  "SIGNING_PIN_REQUIRED": "Cần mã PIN để ký",
+  "CERTIFICATE_EXPIRED": "Chứng thư số đã hết hạn, cập nhật lại trong cài đặt chữ ký số",
+  "CERTIFICATE_INVALID": "Không tìm thấy chứng thư đã chọn trên tài khoản ký số",
+  "SIGNATURE_SLOT_NOT_IN_TEMPLATE": "Mẫu của chứng từ này không có ô ký đã chọn",
+  "SIGNATURE_SLOT_UNKNOWN": "Ô ký không hợp lệ",
+  "SIGN_DOCUMENT_FAILED": "Ký số thất bại, vui lòng thử lại"
 }
