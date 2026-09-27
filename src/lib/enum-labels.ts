@@ -47,6 +47,7 @@ export const alertTypeLabels: EnumLabels = {
   expired: 'Hết hạn',
   open_vial_expiring: 'Sắp hết hạn sau mở',
   stale: 'Tồn đọng',
+  circulation_expiring: 'Số lưu hành sắp hết hiệu lực',
 }
 export const alertSeverityLabels: EnumLabels = {
   info: 'Thông tin',
