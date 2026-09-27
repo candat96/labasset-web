@@ -20,6 +20,10 @@ const implemented: RouteObject[] = [
   { path: 'admin/catalogs', lazy: () => import('@/features/catalogs/pages/CatalogsIndexPage') },
   { path: 'admin/catalogs/rooms', element: <Navigate to="/admin/rooms" replace /> },
   { path: 'admin/catalogs/:name', lazy: () => import('@/features/catalogs/pages/CatalogPage') },
+  {
+    path: 'admin/doc-templates',
+    lazy: () => import('@/features/admin/pages/DocTemplatesPage'),
+  },
   { path: 'admin/rooms', lazy: () => import('@/features/catalogs/pages/RoomsPage') },
   { path: 'admin/settings', lazy: () => import('@/features/settings/pages/SettingsPage') },
   { path: 'admin/numbering', element: <Navigate to="/admin/settings?tab=numbering" replace /> },

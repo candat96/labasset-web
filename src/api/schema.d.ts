@@ -2324,6 +2324,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/doc-templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DocTemplateController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/doc-templates/{docType}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DocTemplateController_detail"];
+        put: operations["DocTemplateController_save"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/doc-templates/{docType}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["DocTemplateController_preview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/equipment": {
         parameters: {
             query?: never;
@@ -6677,6 +6725,26 @@ export interface components {
             faultId?: string | null;
             /** @enum {string|null} */
             resolutionType?: "internal" | "vendor" | "warranty" | "spare_equipment" | null;
+        };
+        DocTemplateDetailDto: {
+            body: Record<string, never>;
+            /** @example repair.completion */
+            docType: string;
+            name: string | null;
+            /** @enum {string} */
+            source: "tenant" | "builtin";
+            version: number | null;
+        };
+        DocTemplateListDto: {
+            items: components["schemas"]["DocTemplateSummaryDto"][];
+        };
+        DocTemplateSummaryDto: {
+            /** @example repair.completion */
+            docType: string;
+            name: string | null;
+            /** @enum {string} */
+            source: "tenant" | "builtin";
+            version: number | null;
         };
         EquipmentCatalogDto: {
             code: string;
@@ -14816,6 +14884,106 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    DocTemplateController_list: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocTemplateListDto"];
+                };
+            };
+        };
+    };
+    DocTemplateController_detail: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                docType: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocTemplateDetailDto"];
+                };
+            };
+        };
+    };
+    DocTemplateController_save: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                docType: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocTemplateSummaryDto"];
+                };
+            };
+        };
+    };
+    DocTemplateController_preview: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                docType: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
             };
         };
     };

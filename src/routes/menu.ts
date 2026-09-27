@@ -16,6 +16,7 @@ import {
   Cog,
   DatabaseBackup,
   FileCheck,
+  FileSignature,
   FileText,
   FlaskConical,
   Gauge,
@@ -42,6 +43,8 @@ import {
   Wrench,
 } from 'lucide-react'
 import { ADM, HEADS, STAFF, type Role } from './roles'
+// Nạp bản dịch của tính năng (kể cả nhãn menu) — xem `features/admin/i18n.ts`.
+import '@/features/admin/i18n'
 
 export interface MenuItem {
   path: string
@@ -187,6 +190,11 @@ export const MENU: MenuGroup[] = [
       { path: '/admin/rooms', labelKey: 'menu:items.rooms', icon: DoorOpen },
       { path: '/admin/users', labelKey: 'menu:items.users', icon: Users },
       { path: '/admin/catalogs', labelKey: 'menu:items.catalogs', icon: Tags },
+      {
+        path: '/admin/doc-templates',
+        labelKey: 'menu:items.docTemplates',
+        icon: FileSignature,
+      },
       { path: '/admin/settings', labelKey: 'menu:items.settings', icon: Settings },
       { path: '/admin/numbering', labelKey: 'menu:items.numbering', icon: Hash },
       { path: '/admin/audit-logs', labelKey: 'menu:items.auditLogs', icon: History },
