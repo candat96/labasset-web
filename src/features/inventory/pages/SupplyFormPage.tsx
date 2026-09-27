@@ -4,14 +4,16 @@ import { useNavigate, useParams } from 'react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import Big from 'big.js'
 import { toast } from 'sonner'
 import { SectionCard } from '@/components/page/SectionCard'
 import { PageHeader } from '@/components/page/PageHeader'
 import { FormFooter } from '@/components/page/FormFooter'
 import { ErrorState } from '@/components/page/ErrorState'
-import { TextField, SwitchField } from '@/components/form/fields'
+import { TextField, SwitchField, SelectField } from '@/components/form/fields'
 import { MoneyField } from '@/components/form/money-field'
 import { QtyField } from '@/components/form/qty-field'
+import { DateField } from '@/components/form/date-field'
 import { Form, FormField, FormItem, FormMessage } from '@/components/ui/form'
 import { AsyncSelect } from '@/components/form/async-select'
 import { applyServerErrors, messageFor } from '@/api/errors'
@@ -53,6 +55,39 @@ const schema = z.object({
     }),
   storageCondition: z.string(),
   isActive: z.boolean(),
+  // Hồ sơ vật tư tiêu hao chi tiết. Mọi trường để trống được (nullable).
+  circulationNumber: z.string().max(64),
+  circulationValidTo: z.string(),
+  riskClass: z.string().nullable(),
+  countryOfOrigin: z.string().max(100),
+  insuranceCode: z.string().max(64),
+  insuranceName: z.string().max(255),
+  insuranceRate: decimalString({ maxScale: 2, min: '0' }).refine(
+    (value) => value === '' || Number(value) <= 100,
+    i18n.t('inventory:insuranceRateInvalid'),
+  ),
+  insurancePrice: decimalString({ maxScale: 0, min: '0' }),
+  bidPackage: z.string().max(255),
+  bidDecisionNo: z.string().max(128),
+  bidPrice: decimalString({ maxScale: 0, min: '0' }),
+  bidValidTo: z.string(),
+  purchaseUnitId: z.string().nullable(),
+  conversionFactor: decimalString({ maxScale: 4, min: '0' }).refine((value) => {
+    if (value === '') return true
+    try {
+      // Hệ số phải > 0: `0` và số âm bị chặn với mã CONVERSION_FACTOR_INVALID.
+      return new Big(value).gt(0)
+    } catch {
+      return false
+    }
+  }, i18n.t('inventory:conversionFactorInvalid')),
+  minShelfLifeDays: z
+    .string()
+    .refine(
+      (value) =>
+        value === '' || (/^\d+$/.test(value) && Number(value) >= 1 && Number(value) <= 3650),
+      i18n.t('inventory:minShelfLifeInvalid'),
+    ),
   notes: z.string(),
 })
 type FormValues = z.infer<typeof schema>
@@ -73,6 +108,21 @@ const empty: FormValues = {
   openVialDays: '',
   storageCondition: '',
   isActive: true,
+  circulationNumber: '',
+  circulationValidTo: '',
+  riskClass: null,
+  countryOfOrigin: '',
+  insuranceCode: '',
+  insuranceName: '',
+  insuranceRate: '',
+  insurancePrice: '',
+  bidPackage: '',
+  bidDecisionNo: '',
+  bidPrice: '',
+  bidValidTo: '',
+  purchaseUnitId: null,
+  conversionFactor: '',
+  minShelfLifeDays: '',
   notes: '',
 }
 
@@ -90,6 +140,19 @@ export function Component() {
   })
   const form = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: empty })
   const trackLot = form.watch('trackLot')
+  const purchaseUnitId = form.watch('purchaseUnitId')
+  const usageUnitId = form.watch('unitId')
+  const conversionFactor = form.watch('conversionFactor')
+  // Danh mục đơn vị để diễn giải "1 Thùng = 100 Cái" ngay dưới ô hệ số.
+  const units = useQuery({
+    queryKey: ['reference', 'units', ''],
+    queryFn: () => catalogOptions('units', ''),
+  })
+  const unitName = (unitId: string | null) =>
+    units.data?.find((unit) => unit.id === unitId)?.name ?? null
+  const purchaseUnitName = unitName(purchaseUnitId)
+  const usageUnitName = unitName(usageUnitId || null)
+  const showConversion = !!(purchaseUnitName && usageUnitName && conversionFactor)
   useEffect(() => {
     if (!trackLot) form.setValue('trackExpiry', false)
   }, [form, trackLot])
@@ -112,6 +175,22 @@ export function Component() {
       openVialDays: detail.data.openVialDays == null ? '' : String(detail.data.openVialDays),
       storageCondition: detail.data.storageCondition ?? '',
       isActive: detail.data.isActive,
+      circulationNumber: detail.data.circulationNumber ?? '',
+      circulationValidTo: detail.data.circulationValidTo ?? '',
+      riskClass: detail.data.riskClass,
+      countryOfOrigin: detail.data.countryOfOrigin ?? '',
+      insuranceCode: detail.data.insuranceCode ?? '',
+      insuranceName: detail.data.insuranceName ?? '',
+      insuranceRate: detail.data.insuranceRate ?? '',
+      insurancePrice: detail.data.insurancePrice ?? '',
+      bidPackage: detail.data.bidPackage ?? '',
+      bidDecisionNo: detail.data.bidDecisionNo ?? '',
+      bidPrice: detail.data.bidPrice ?? '',
+      bidValidTo: detail.data.bidValidTo ?? '',
+      purchaseUnitId: detail.data.purchaseUnitId,
+      conversionFactor: detail.data.conversionFactor ?? '',
+      minShelfLifeDays:
+        detail.data.minShelfLifeDays == null ? '' : String(detail.data.minShelfLifeDays),
       notes: detail.data.notes ?? '',
     })
   }, [detail.data, form])
@@ -130,6 +209,21 @@ export function Component() {
       maxStock: values.maxStock || null,
       openVialDays: values.openVialDays ? Number(values.openVialDays) : null,
       storageCondition: values.storageCondition || null,
+      circulationNumber: values.circulationNumber || null,
+      circulationValidTo: values.circulationValidTo || null,
+      riskClass: values.riskClass || null,
+      countryOfOrigin: values.countryOfOrigin || null,
+      insuranceCode: values.insuranceCode || null,
+      insuranceName: values.insuranceName || null,
+      insuranceRate: values.insuranceRate || null,
+      insurancePrice: values.insurancePrice || null,
+      bidPackage: values.bidPackage || null,
+      bidDecisionNo: values.bidDecisionNo || null,
+      bidPrice: values.bidPrice || null,
+      bidValidTo: values.bidValidTo || null,
+      purchaseUnitId: values.purchaseUnitId,
+      conversionFactor: values.conversionFactor || null,
+      minShelfLifeDays: values.minShelfLifeDays ? Number(values.minShelfLifeDays) : null,
       notes: values.notes || null,
     }
     try {
@@ -148,6 +242,12 @@ export function Component() {
       if (!applyServerErrors(form, error)) toast.error(messageFor(error))
     }
   }
+  const riskOptions = [
+    { value: 'A', label: t('riskClassA') },
+    { value: 'B', label: t('riskClassB') },
+    { value: 'C', label: t('riskClassC') },
+    { value: 'D', label: t('riskClassD') },
+  ]
   return (
     <>
       <PageHeader
@@ -244,10 +344,6 @@ export function Component() {
                   </FormItem>
                 )}
               />
-            </div>
-          </SectionCard>
-          <SectionCard title={t('stockSettings')}>
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               <MoneyField control={form.control} name="refPrice" label={t('refPrice')} />
               <SwitchField control={form.control} name="trackLot" label={t('trackLotField')} />
               <SwitchField
@@ -258,6 +354,105 @@ export function Component() {
               />
               <QtyField control={form.control} name="minStock" label={t('minStock')} />
               <QtyField control={form.control} name="maxStock" label={t('maxStock')} />
+              <SwitchField control={form.control} name="isActive" label={t('isActive')} />
+            </div>
+          </SectionCard>
+          <SectionCard title={t('legalSection')}>
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <TextField
+                control={form.control}
+                name="circulationNumber"
+                label={t('circulationNumber')}
+              />
+              <DateField
+                control={form.control}
+                name="circulationValidTo"
+                label={t('circulationValidTo')}
+              />
+              <SelectField
+                control={form.control}
+                name="riskClass"
+                label={t('riskClass')}
+                options={riskOptions}
+                emptyLabel={t('notSelected')}
+              />
+              <TextField
+                control={form.control}
+                name="countryOfOrigin"
+                label={t('countryOfOrigin')}
+              />
+            </div>
+          </SectionCard>
+          <SectionCard title={t('insuranceSection')}>
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <TextField control={form.control} name="insuranceCode" label={t('insuranceCode')} />
+              <TextField control={form.control} name="insuranceName" label={t('insuranceName')} />
+              <TextField
+                control={form.control}
+                name="insuranceRate"
+                label={t('insuranceRate')}
+                inputMode="decimal"
+              />
+              <MoneyField
+                control={form.control}
+                name="insurancePrice"
+                label={t('insurancePrice')}
+              />
+            </div>
+          </SectionCard>
+          <SectionCard title={t('bidSection')}>
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <TextField control={form.control} name="bidPackage" label={t('bidPackage')} />
+              <TextField control={form.control} name="bidDecisionNo" label={t('bidDecisionNo')} />
+              <MoneyField control={form.control} name="bidPrice" label={t('bidPrice')} />
+              <DateField control={form.control} name="bidValidTo" label={t('bidValidTo')} />
+            </div>
+          </SectionCard>
+          <SectionCard title={t('conversionSection')}>
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <FormField
+                control={form.control}
+                name="purchaseUnitId"
+                render={({ field }) => (
+                  <FormItem>
+                    <AsyncSelect
+                      label={t('purchaseUnit')}
+                      queryKey="units"
+                      loadOptions={(q) => catalogOptions('units', q)}
+                      resolveOption={(unitId) => resolveCatalogItem('units', unitId)}
+                      value={field.value}
+                      onChange={field.onChange}
+                      clearable
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div>
+                <TextField
+                  control={form.control}
+                  name="conversionFactor"
+                  label={t('conversionFactor')}
+                  inputMode="decimal"
+                  placeholder={t('conversionFactorHint')}
+                />
+                {showConversion && (
+                  <p
+                    className="text-muted-foreground mt-1.5 text-[13px]"
+                    data-testid="conversion-preview"
+                  >
+                    {t('conversionPreview', {
+                      purchaseUnit: purchaseUnitName,
+                      factor: conversionFactor,
+                      unit: usageUnitName,
+                    })}
+                  </p>
+                )}
+              </div>
+            </div>
+          </SectionCard>
+          <SectionCard title={t('shelfLifeSection')}>
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               <TextField
                 control={form.control}
                 name="openVialDays"
@@ -269,7 +464,16 @@ export function Component() {
                 name="storageCondition"
                 label={t('storageCondition')}
               />
-              <SwitchField control={form.control} name="isActive" label={t('isActive')} />
+              <TextField
+                control={form.control}
+                name="minShelfLifeDays"
+                label={t('minShelfLifeDays')}
+                type="number"
+              />
+            </div>
+          </SectionCard>
+          <SectionCard title={t('notesSection')}>
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               <TextField control={form.control} name="notes" label={t('notes')} />
             </div>
           </SectionCard>

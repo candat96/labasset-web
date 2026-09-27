@@ -20,6 +20,22 @@ export interface Supply {
   storageCondition: string | null
   isActive: boolean
   notes: string | null
+  // Hồ sơ vật tư tiêu hao chi tiết (Task 2). Mọi trường nullable.
+  circulationNumber: string | null
+  circulationValidTo: string | null
+  riskClass: 'A' | 'B' | 'C' | 'D' | null
+  countryOfOrigin: string | null
+  insuranceCode: string | null
+  insuranceName: string | null
+  insuranceRate: string | null
+  insurancePrice: string | null
+  bidPackage: string | null
+  bidDecisionNo: string | null
+  bidPrice: string | null
+  bidValidTo: string | null
+  purchaseUnitId: string | null
+  conversionFactor: string | null
+  minShelfLifeDays: number | null
   updatedAt?: string
 }
 

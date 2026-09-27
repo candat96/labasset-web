@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import Big from 'big.js'
+import { differenceInCalendarDays, isValid, parseISO } from 'date-fns'
 import { Link, useParams } from 'react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
@@ -22,7 +23,25 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { ErrorState } from '@/components/page/ErrorState'
-import { Boxes, CalendarRange, Layers, Microscope, Package, Tag, TrendingDown } from 'lucide-react'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
+import { ConfirmDialog } from '@/components/page/ConfirmDialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { AsyncSelect } from '@/components/form/async-select'
+import {
+  Boxes,
+  CalendarRange,
+  CircleAlert,
+  Layers,
+  Microscope,
+  Package,
+  PackageSearch,
+  Plus,
+  Tag,
+  Trash2,
+  TrendingDown,
+} from 'lucide-react'
 import { formatQty } from '@/lib/format/number'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/status-badge'
@@ -36,9 +55,19 @@ import { applyServerErrors, messageFor } from '@/api/errors'
 import { FormDialog } from '@/components/form/FormDialog'
 import { QtyField } from '@/components/form/qty-field'
 import { TextField } from '@/components/form/fields'
-import { catalogOptions } from '@/api/references'
+import { catalogOptions, supplyOptions } from '@/api/references'
 import { decimalString } from '@/lib/validation/decimal'
-import { adjustStock, exportSupplyCard, getSupply, getSupplyStock, openLot } from '../api'
+import {
+  addSupplySubstitute,
+  adjustStock,
+  exportSupplyCard,
+  getSupply,
+  getSupplyStock,
+  getSupplySubstitutes,
+  openLot,
+  removeSupplySubstitute,
+  type SupplySubstitute,
+} from '../api'
 import { useTranslation } from 'react-i18next'
 import i18n from '@/lib/i18n'
 
@@ -60,6 +89,158 @@ const adjustSchema = z.object({
   reason: z.string().trim().min(1, i18n.t('common:form.required')).max(2000),
 })
 type AdjustValues = z.infer<typeof adjustSchema>
+
+/** Mức cảnh báo hiệu lực: đã qua → đỏ, còn ≤ 60 ngày → vàng. */
+function expiryLevel(value?: string | null): { level: 'danger' | 'warning'; days: number } | null {
+  if (!value) return null
+  const date = parseISO(value)
+  if (!isValid(date)) return null
+  const days = differenceInCalendarDays(date, new Date())
+  if (days < 0) return { level: 'danger', days }
+  if (days <= 60) return { level: 'warning', days }
+  return null
+}
+
+/**
+ * Khối vật tư thay thế: danh sách (đọc hai chiều từ API), thêm bằng autocomplete
+ * vật tư, xoá có xác nhận. Quan hệ lưu một chiều nên chỉ hiện vật tư còn lại.
+ */
+function SubstitutesSection({ supplyId, canWrite }: { supplyId: string; canWrite: boolean }) {
+  const { t } = useTranslation('inventory')
+  const qc = useQueryClient()
+  const [chosen, setChosen] = useState<string | null>(null)
+  const [notes, setNotes] = useState('')
+  const [removing, setRemoving] = useState<SupplySubstitute | null>(null)
+  const [saving, setSaving] = useState(false)
+  const query = useQuery({
+    queryKey: ['supplies', supplyId, 'substitutes'],
+    queryFn: () => getSupplySubstitutes(supplyId),
+    enabled: !!supplyId,
+  })
+  const rows = query.data ?? []
+  const excluded = new Set([supplyId, ...rows.map((row) => row.id)])
+  const invalidate = () => qc.invalidateQueries({ queryKey: ['supplies', supplyId, 'substitutes'] })
+  const add = async () => {
+    if (!chosen) return
+    setSaving(true)
+    try {
+      await addSupplySubstitute(supplyId, { substituteId: chosen, notes: notes || null })
+      toast.success(t('substituteAdded'))
+      setChosen(null)
+      setNotes('')
+      void invalidate()
+    } catch (error) {
+      toast.error(messageFor(error))
+    } finally {
+      setSaving(false)
+    }
+  }
+  const remove = async () => {
+    if (!removing) return
+    setSaving(true)
+    try {
+      await removeSupplySubstitute(supplyId, removing.id)
+      toast.success(t('substituteRemoved'))
+      setRemoving(null)
+      void invalidate()
+    } catch (error) {
+      toast.error(messageFor(error))
+    } finally {
+      setSaving(false)
+    }
+  }
+  return (
+    <SectionCard
+      title={t('substitutesSection')}
+      description={t('substituteHint')}
+      flush={rows.length > 0}
+    >
+      {canWrite && (
+        <div className="flex flex-col gap-3 px-5 pt-1 pb-4 sm:flex-row sm:items-end">
+          <AsyncSelect
+            className="flex-1"
+            label={t('substitute')}
+            queryKey="supply-substitutes"
+            loadOptions={(q) =>
+              supplyOptions(q).then((list) => list.filter((option) => !excluded.has(option.id)))
+            }
+            value={chosen}
+            onChange={(value) => setChosen(typeof value === 'string' ? value : null)}
+            clearable
+            disabled={saving}
+          />
+          <div className="space-y-1.5 sm:w-64">
+            <Label htmlFor="substitute-notes">{t('substituteNotes')}</Label>
+            <Input
+              id="substitute-notes"
+              value={notes}
+              onChange={(event) => setNotes(event.target.value)}
+            />
+          </div>
+          <Button type="button" disabled={!chosen || saving} onClick={() => void add()}>
+            <Plus className="size-4" /> {t('addSubstitute')}
+          </Button>
+        </div>
+      )}
+      {query.error ? (
+        <div className="px-5 pb-5">
+          <ErrorState error={query.error} onRetry={() => void query.refetch()} />
+        </div>
+      ) : rows.length === 0 ? (
+        <EmptyState icon={PackageSearch} title={t('noSubstitutes')} />
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="pl-5">{t('code')}</TableHead>
+              <TableHead>{t('name')}</TableHead>
+              <TableHead>{t('unit')}</TableHead>
+              <TableHead>{t('notes')}</TableHead>
+              {canWrite && <TableHead className="pr-5 text-right" />}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {rows.map((item) => (
+              <TableRow key={item.id}>
+                <TableCell className="pl-5 font-mono text-[13px]">
+                  <Link className="text-primary hover:underline" to={`/supplies/${item.id}`}>
+                    {item.code}
+                  </Link>
+                </TableCell>
+                <TableCell className="font-medium">{item.name}</TableCell>
+                <TableCell>{item.unitName ?? <span className="text-subtle">—</span>}</TableCell>
+                <TableCell>{item.notes ?? <span className="text-subtle">—</span>}</TableCell>
+                {canWrite && (
+                  <TableCell className="pr-5 text-right">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      aria-label={t('removeSubstitute')}
+                      onClick={() => setRemoving(item)}
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  </TableCell>
+                )}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
+      <ConfirmDialog
+        open={!!removing}
+        onOpenChange={(open) => !open && setRemoving(null)}
+        title={t('removeSubstitute')}
+        description={t('removeSubstituteConfirm')}
+        confirmLabel={t('delete')}
+        destructive
+        loading={saving}
+        onConfirm={() => void remove()}
+      />
+    </SectionCard>
+  )
+}
 
 export function Component() {
   const { t } = useTranslation('inventory')
@@ -105,6 +286,12 @@ export function Component() {
     queryFn: () => catalogOptions('warehouses', ''),
   })
   const warehouseNames = new Map((warehouses.data ?? []).map((option) => [option.id, option.name]))
+  const units = useQuery({
+    queryKey: ['reference', 'units', ''],
+    queryFn: () => catalogOptions('units', ''),
+  })
+  const unitName = (unitId: string | null) =>
+    units.data?.find((unit) => unit.id === unitId)?.name ?? null
   if (detail.isPending) return <DetailSkeleton label={t('loadingSupply')} />
   if (detail.error) return <ErrorState error={detail.error} onRetry={() => void detail.refetch()} />
   const row = detail.data
@@ -113,6 +300,34 @@ export function Component() {
   const sumLots = (key: 'qtyOnHand' | 'qtyReserved' | 'available') =>
     lots.reduce((acc, lot) => acc.plus(lot[key] ?? '0'), new Big(0)).toString()
   const dash = <span className="text-subtle">—</span>
+  const expiryBadge = (value: string | null) => {
+    const status = expiryLevel(value)
+    if (!status) return null
+    return (
+      <Badge variant={status.level === 'danger' ? 'danger' : 'warning'} dot>
+        {status.level === 'danger' ? t('expiredOn') : t('expiringSoon', { days: status.days })}
+      </Badge>
+    )
+  }
+  const dateValue = (value: string | null) =>
+    value ? (
+      <span className="inline-flex flex-wrap items-center gap-2">
+        {formatDate(value)}
+        {expiryBadge(value)}
+      </span>
+    ) : null
+  const purchaseUnitName = unitName(row.purchaseUnitId)
+  const usageUnitName = unitName(row.unitId)
+  const conversionText =
+    row.conversionFactor && purchaseUnitName && usageUnitName
+      ? t('conversionPreview', {
+          purchaseUnit: purchaseUnitName,
+          factor: row.conversionFactor,
+          unit: usageUnitName,
+        })
+      : undefined
+  const circulationExpiry = expiryLevel(row.circulationValidTo)
+  const bidExpiry = expiryLevel(row.bidValidTo)
   const stockTab = stock.error ? (
     <ErrorState error={stock.error} onRetry={() => void stock.refetch()} />
   ) : (
@@ -345,6 +560,73 @@ export function Component() {
       />
     </div>
   )
+  const profileTab = (
+    <div className="space-y-4">
+      <SectionCard title={t('legalSection')}>
+        <DataList
+          columns={2}
+          items={[
+            { label: t('circulationNumber'), value: row.circulationNumber },
+            { label: t('circulationValidTo'), value: dateValue(row.circulationValidTo) },
+            {
+              label: t('riskClass'),
+              value: row.riskClass ? t(`riskClass${row.riskClass}`) : null,
+            },
+            { label: t('countryOfOrigin'), value: row.countryOfOrigin },
+          ]}
+        />
+      </SectionCard>
+      <SectionCard title={t('insuranceSection')}>
+        <DataList
+          columns={2}
+          items={[
+            { label: t('insuranceCode'), value: row.insuranceCode },
+            { label: t('insuranceName'), value: row.insuranceName },
+            {
+              label: t('insuranceRate'),
+              value: row.insuranceRate ? `${row.insuranceRate}%` : null,
+            },
+            {
+              label: t('insurancePrice'),
+              value: row.insurancePrice ? formatVnd(row.insurancePrice) : null,
+            },
+          ]}
+        />
+      </SectionCard>
+      <SectionCard title={t('bidSection')}>
+        <DataList
+          columns={2}
+          items={[
+            { label: t('bidPackage'), value: row.bidPackage },
+            { label: t('bidDecisionNo'), value: row.bidDecisionNo },
+            { label: t('bidPrice'), value: row.bidPrice ? formatVnd(row.bidPrice) : null },
+            { label: t('bidValidTo'), value: dateValue(row.bidValidTo) },
+          ]}
+        />
+      </SectionCard>
+      <SectionCard title={t('conversionSection')} description={conversionText}>
+        <DataList
+          columns={2}
+          items={[
+            { label: t('purchaseUnit'), value: purchaseUnitName },
+            { label: t('conversionFactor'), value: row.conversionFactor },
+          ]}
+        />
+      </SectionCard>
+      <SectionCard title={t('shelfLifeSection')}>
+        <DataList
+          columns={2}
+          items={[
+            {
+              label: t('minShelfLifeDays'),
+              value: row.minShelfLifeDays == null ? null : `${row.minShelfLifeDays} ${t('days')}`,
+            },
+          ]}
+        />
+      </SectionCard>
+      <SubstitutesSection supplyId={id} canWrite={canWrite} />
+    </div>
+  )
   return (
     <>
       <FormDialog
@@ -411,9 +693,44 @@ export function Component() {
                 { label: t('notes'), value: row.notes, full: true },
               ]}
             />
+            {(circulationExpiry || bidExpiry) && (
+              <div className="mt-4 space-y-2">
+                {circulationExpiry && (
+                  <Alert
+                    variant={circulationExpiry.level === 'danger' ? 'destructive' : 'warning'}
+                    data-tone={circulationExpiry.level}
+                  >
+                    <CircleAlert />
+                    <AlertTitle>{t('circulationValidTo')}</AlertTitle>
+                    <AlertDescription>
+                      {circulationExpiry.level === 'danger'
+                        ? t('expiredOn')
+                        : t('expiringSoon', { days: circulationExpiry.days })}{' '}
+                      · {formatDate(row.circulationValidTo)}
+                    </AlertDescription>
+                  </Alert>
+                )}
+                {bidExpiry && (
+                  <Alert
+                    variant={bidExpiry.level === 'danger' ? 'destructive' : 'warning'}
+                    data-tone={bidExpiry.level}
+                  >
+                    <CircleAlert />
+                    <AlertTitle>{t('bidValidTo')}</AlertTitle>
+                    <AlertDescription>
+                      {bidExpiry.level === 'danger'
+                        ? t('expiredOn')
+                        : t('expiringSoon', { days: bidExpiry.days })}{' '}
+                      · {formatDate(row.bidValidTo)}
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </div>
+            )}
           </>
         }
         tabs={[
+          { value: 'profile', label: t('supplyProfile'), content: profileTab },
           { value: 'stock', label: t('stockByLot'), content: stockTab, count: lots.length },
           { value: 'card', label: t('stockCard'), content: cardTab },
           {

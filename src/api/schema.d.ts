@@ -2372,6 +2372,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/documents/{docType}/{id}/sign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["DocumentSigningController_sign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/documents/{docType}/{id}/signed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DocumentSigningController_signed"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/equipment": {
         parameters: {
             query?: never;
@@ -3409,6 +3441,38 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["PlanningController_clone"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/signing-profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["MySigningProfileController_mine"];
+        put: operations["MySigningProfileController_save"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/signing-profile/session/clear": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["MySigningProfileController_clearSession"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4503,6 +4567,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/signing/certificates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["SigningController_certificates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/signing/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["SigningController_getConfig"];
+        put: operations["SigningController_setConfig"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/stock/adjust": {
         parameters: {
             query?: never;
@@ -5223,6 +5319,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/supplies/{id}/substitutes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["SuppliesController_substitutes"];
+        put?: never;
+        post: operations["SuppliesController_addSubstitute"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/supplies/{id}/substitutes/{substituteId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["SuppliesController_removeSubstitute"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/supplies/export": {
         parameters: {
             query?: never;
@@ -5396,6 +5524,11 @@ export interface components {
             /** Format: date-time */
             replacedAt: string | null;
             type: string;
+        };
+        AddSupplySubstituteDto: {
+            notes?: Record<string, never>;
+            /** Format: uuid */
+            substituteId: string;
         };
         AdjustDto: {
             lotId: string;
@@ -5802,6 +5935,15 @@ export interface components {
             sortOrder: number;
             /** Format: date-time */
             updatedAt: string;
+        };
+        CertificateDto: {
+            displayName: string;
+            keyId: string;
+            provider: string;
+            serial: string;
+            subject: string;
+            validFrom: string;
+            validTo: string;
         };
         ChangePasswordDto: {
             current: string;
@@ -6327,21 +6469,44 @@ export interface components {
             taxCode?: Record<string, never>;
         };
         CreateSupplyDto: {
+            bidDecisionNo?: Record<string, never>;
+            bidPackage?: Record<string, never>;
+            bidPrice?: string;
+            /** Format: date */
+            bidValidTo?: string | null;
+            circulationNumber?: Record<string, never>;
+            /** Format: date */
+            circulationValidTo?: string | null;
             code?: string;
+            /** @description 1 đơn vị mua = ? đơn vị dùng, phải lớn hơn 0 */
+            conversionFactor?: string;
+            countryOfOrigin?: Record<string, never>;
             defaultSupplierId?: Record<string, never>;
             description?: string;
             groupCode?: string;
             groupId?: Record<string, never>;
+            insuranceCode?: Record<string, never>;
+            insuranceName?: Record<string, never>;
+            insurancePrice?: string;
+            /** @description Tỷ lệ BHYT %, 0–100 */
+            insuranceRate?: string;
             isActive?: boolean;
             manufacturerCode?: Record<string, never>;
             manufacturerId?: Record<string, never>;
             maxStock?: string;
+            /** @description Hạn dùng còn lại tối thiểu khi nhập (ngày), 1–3650 */
+            minShelfLifeDays?: number;
             minStock?: string;
             name: string;
             notes?: Record<string, never>;
             openVialDays?: Record<string, never>;
             packaging?: Record<string, never>;
+            purchaseUnitCode?: string;
+            /** Format: uuid */
+            purchaseUnitId?: string | null;
             refPrice?: string;
+            /** @enum {string} */
+            riskClass?: "A" | "B" | "C" | "D";
             sortOrder?: number;
             storageCondition?: Record<string, never>;
             /** @default false */
@@ -8504,6 +8669,32 @@ export interface components {
             clientVersion: number;
             results: components["schemas"]["ResultDto"][];
         };
+        SaveSigningConfigDto: {
+            /** @example https://rmsapi.intrustdss.vn/Api/rms */
+            baseUrl: string;
+            /** @default true */
+            enabled: boolean;
+            password?: string;
+            /** @enum {string} */
+            providerKey?: "intrust";
+            username: string;
+        };
+        SaveSigningProfileDto: {
+            certSerial: string;
+            certSubject: string;
+            certValidFrom: string;
+            certValidTo: string;
+            /** @description keyId của chứng thư đã chọn */
+            credentialId: string;
+            password?: string;
+            pin?: string;
+            /** @enum {string} */
+            providerKey?: "intrust";
+            /** @default false */
+            rememberPin: boolean;
+            /** @example ICA.0108357319 */
+            username: string;
+        };
         SearchHitDto: {
             code: string;
             id: string;
@@ -8536,6 +8727,27 @@ export interface components {
             ip: string | null;
             /** Format: date-time */
             lastUsedAt: string | null;
+        };
+        SignDocumentDto: {
+            /** @description Bỏ trống thì dùng mật khẩu đã lưu */
+            password?: string;
+            /** @description Bỏ trống thì dùng PIN đã lưu */
+            pin?: string;
+            /** @enum {string} */
+            slot: "handler" | "department" | "leader" | "accounting";
+        };
+        SignedFileDto: {
+            attachmentId: string;
+            fileId: string;
+            label: string | null;
+            name: string;
+            /** Format: date-time */
+            signedAt: string;
+            url: string;
+        };
+        SignResultDto: {
+            attachmentId: string;
+            fileId: string;
         };
         SkipTaskDto: {
             reason: string;
@@ -8635,7 +8847,7 @@ export interface components {
             resolvedAt: string | null;
             supplyId: string;
             /** @enum {string} */
-            type: "low_stock" | "expiring" | "expired" | "open_vial_expiring" | "stale";
+            type: "low_stock" | "expiring" | "expired" | "open_vial_expiring" | "stale" | "circulation_expiring";
             warehouseId: string | null;
         };
         StockAlertsPageDto: {
@@ -8843,6 +9055,14 @@ export interface components {
             normQtyPerTest: string | null;
             notes: string | null;
             supplyId: string;
+        };
+        SupplySubstituteResponseDto: {
+            code: string;
+            /** Format: uuid */
+            id: string;
+            name: string;
+            notes: string | null;
+            unitName: string | null;
         };
         SysLoginDto: {
             password: string;
@@ -9416,20 +9636,43 @@ export interface components {
             taxCode?: Record<string, never>;
         };
         UpdateSupplyDto: {
+            bidDecisionNo?: Record<string, never>;
+            bidPackage?: Record<string, never>;
+            bidPrice?: string;
+            /** Format: date */
+            bidValidTo?: string | null;
+            circulationNumber?: Record<string, never>;
+            /** Format: date */
+            circulationValidTo?: string | null;
+            /** @description 1 đơn vị mua = ? đơn vị dùng, phải lớn hơn 0 */
+            conversionFactor?: string;
+            countryOfOrigin?: Record<string, never>;
             defaultSupplierId?: Record<string, never>;
             description?: string;
             groupCode?: string;
             groupId?: Record<string, never>;
+            insuranceCode?: Record<string, never>;
+            insuranceName?: Record<string, never>;
+            insurancePrice?: string;
+            /** @description Tỷ lệ BHYT %, 0–100 */
+            insuranceRate?: string;
             isActive?: boolean;
             manufacturerCode?: Record<string, never>;
             manufacturerId?: Record<string, never>;
             maxStock?: string;
+            /** @description Hạn dùng còn lại tối thiểu khi nhập (ngày), 1–3650 */
+            minShelfLifeDays?: number;
             minStock?: string;
             name?: string;
             notes?: Record<string, never>;
             openVialDays?: Record<string, never>;
             packaging?: Record<string, never>;
+            purchaseUnitCode?: string;
+            /** Format: uuid */
+            purchaseUnitId?: string | null;
             refPrice?: string;
+            /** @enum {string} */
+            riskClass?: "A" | "B" | "C" | "D";
             sortOrder?: number;
             storageCondition?: Record<string, never>;
             /** @default false */
@@ -14987,6 +15230,60 @@ export interface operations {
             };
         };
     };
+    DocumentSigningController_sign: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                docType: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SignDocumentDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SignResultDto"];
+                };
+            };
+        };
+    };
+    DocumentSigningController_signed: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                docType: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SignedFileDto"][];
+                };
+            };
+        };
+    };
     EquipmentController_list: {
         parameters: {
             query?: {
@@ -17387,6 +17684,70 @@ export interface operations {
             };
         };
     };
+    MySigningProfileController_mine: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MySigningProfileController_save: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveSigningProfileDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MySigningProfileController_clearSession: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     MeController_myTasks: {
         parameters: {
             query?: never;
@@ -19729,6 +20090,74 @@ export interface operations {
             };
         };
     };
+    SigningController_certificates: {
+        parameters: {
+            query: {
+                username: string;
+            };
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CertificateDto"][];
+                };
+            };
+        };
+    };
+    SigningController_getConfig: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    SigningController_setConfig: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveSigningConfigDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     StockOperationsController_adjust: {
         parameters: {
             query?: never;
@@ -19767,7 +20196,7 @@ export interface operations {
                 page?: number;
                 resolved?: boolean;
                 supplyId?: string;
-                type?: "low_stock" | "expiring" | "expired" | "open_vial_expiring" | "stale";
+                type?: "low_stock" | "expiring" | "expired" | "open_vial_expiring" | "stale" | "circulation_expiring";
                 warehouseId?: string;
             };
             header?: {
@@ -21256,6 +21685,81 @@ export interface operations {
                         lots?: Record<string, never>[];
                     };
                 };
+            };
+        };
+    };
+    SuppliesController_substitutes: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupplySubstituteResponseDto"][];
+                };
+            };
+        };
+    };
+    SuppliesController_addSubstitute: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddSupplySubstituteDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupplySubstituteResponseDto"][];
+                };
+            };
+        };
+    };
+    SuppliesController_removeSubstitute: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+                substituteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

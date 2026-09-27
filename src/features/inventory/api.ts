@@ -36,6 +36,33 @@ export function updateSupply(id: string, body: Record<string, unknown>) {
     api.PATCH('/v1/supplies/{id}', { params: { path: { id } }, body: apiBody(body) }),
   )
 }
+
+/** Một vật tư thay thế (quan hệ lưu một chiều, đọc hai chiều). */
+export type SupplySubstitute = components['schemas']['SupplySubstituteResponseDto']
+
+export function getSupplySubstitutes(id: string) {
+  return unwrapAs<SupplySubstitute[]>(
+    api.GET('/v1/supplies/{id}/substitutes', { params: { path: { id } } }),
+  )
+}
+export function addSupplySubstitute(
+  id: string,
+  body: { substituteId: string; notes?: string | null },
+) {
+  return unwrapAs<SupplySubstitute[]>(
+    api.POST('/v1/supplies/{id}/substitutes', {
+      params: { path: { id } },
+      body: apiBody(body),
+    }),
+  )
+}
+export function removeSupplySubstitute(id: string, substituteId: string) {
+  return unwrap(
+    api.DELETE('/v1/supplies/{id}/substitutes/{substituteId}', {
+      params: { path: { id, substituteId } },
+    }),
+  )
+}
 export function exportSupplies() {
   return downloadFile('/v1/supplies/export', {}, 'vat-tu.xlsx')
 }
