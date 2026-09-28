@@ -6240,6 +6240,7 @@ export interface components {
             /** Format: date */
             commissionedAt?: string | null;
             countryOfOrigin?: string | null;
+            criticality?: "vital" | "essential" | "desirable" | null;
             decisionNo?: string | null;
             /** Format: uuid */
             departmentId?: string | null;
@@ -6977,6 +6978,7 @@ export interface components {
             counts: components["schemas"]["EquipmentCountsDto"];
             /** Format: date-time */
             createdAt: string;
+            criticality: string | null;
             currentRunHours: string;
             currentTestCount: number;
             decisionNo: string | null;
@@ -7038,6 +7040,7 @@ export interface components {
         EquipmentListItemDto: {
             calibrationOverdue: boolean;
             code: string;
+            criticality: string | null;
             departmentId: string | null;
             departmentName: string | null;
             groupId: string | null;
@@ -9383,6 +9386,7 @@ export interface components {
             /** Format: date */
             commissionedAt?: string | null;
             countryOfOrigin?: string | null;
+            criticality?: "vital" | "essential" | "desirable" | null;
             decisionNo?: string | null;
             /** Format: uuid */
             deptContactUserId?: string | null;
@@ -15336,6 +15340,7 @@ export interface operations {
             query?: {
                 calibrationDueBefore?: string;
                 calibrationOverdue?: boolean;
+                criticality?: "vital" | "essential" | "desirable";
                 departmentId?: string;
                 export?: "xlsx";
                 groupId?: string;

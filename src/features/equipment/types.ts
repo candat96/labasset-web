@@ -23,6 +23,10 @@ export const STATUS_TRANSITIONS: Record<EquipmentStatus, EquipmentStatus[]> = {
 
 export type CreateEquipment = components['schemas']['CreateEquipmentDto']
 export type UpdateEquipment = components['schemas']['UpdateEquipmentDto']
+export type EquipmentCriticality = NonNullable<CreateEquipment['criticality']>
+export const EQUIPMENT_CRITICALITIES: EquipmentCriticality[] = ['vital', 'essential', 'desirable']
+export const isEquipmentCriticality = (value: unknown): value is EquipmentCriticality =>
+  typeof value === 'string' && (EQUIPMENT_CRITICALITIES as string[]).includes(value)
 export type Accessory = components['schemas']['AccessoryResponseDto']
 export type Software = components['schemas']['SoftwareResponseDto']
 export type SoftwareHistory = components['schemas']['SoftwareHistoryResponseDto']
@@ -47,6 +51,7 @@ export interface EquipmentListParams {
   manufacturerId?: string
   staffId?: string
   status?: string
+  criticality?: EquipmentCriticality
   maintenanceDueBefore?: string
   calibrationDueBefore?: string
   calibrationOverdue?: boolean

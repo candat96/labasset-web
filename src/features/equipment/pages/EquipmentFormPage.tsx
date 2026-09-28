@@ -10,7 +10,7 @@ import { SectionCard } from '@/components/page/SectionCard'
 import { FormFooter } from '@/components/page/FormFooter'
 import { ErrorState } from '@/components/page/ErrorState'
 import { Form } from '@/components/ui/form'
-import { TextField, NumberField } from '@/components/form/fields'
+import { TextField, NumberField, SelectField } from '@/components/form/fields'
 import { DateField } from '@/components/form/date-field'
 import { MoneyField } from '@/components/form/money-field'
 import { AsyncSelectField } from '../components/async-select-field'
@@ -40,7 +40,7 @@ import {
 } from '../api'
 import { useEquipment, useInvalidateEquipment } from '../hooks'
 import { equipmentCreateSchema, equipmentSchema, type EquipmentForm } from '../schema'
-import type { CreateEquipment } from '../types'
+import { EQUIPMENT_CRITICALITIES, isEquipmentCriticality, type CreateEquipment } from '../types'
 
 const empty: EquipmentForm = {
   code: '',
@@ -60,6 +60,7 @@ const empty: EquipmentForm = {
   purchaseContractNo: '',
   decisionNo: '',
   circulationNo: '',
+  criticality: '',
   groupId: null,
   departmentId: null,
   roomId: null,
@@ -97,6 +98,7 @@ function fromDetail(data: NonNullable<ReturnType<typeof useEquipment>['data']>):
     purchaseContractNo: data.purchaseContractNo ?? '',
     decisionNo: data.decisionNo ?? '',
     circulationNo: data.circulationNo ?? '',
+    criticality: isEquipmentCriticality(data.criticality) ? data.criticality : '',
     groupId: data.groupId,
     departmentId: data.departmentId,
     roomId: data.roomId,
@@ -141,6 +143,7 @@ function toBody(values: EquipmentForm, includeIdentity = true): CreateEquipment 
     purchaseContractNo: values.purchaseContractNo,
     decisionNo: values.decisionNo,
     circulationNo: values.circulationNo,
+    criticality: values.criticality,
     groupId: values.groupId,
     roomId: values.roomId,
     location: values.location,
@@ -330,6 +333,17 @@ export function Component() {
                 control={form.control}
                 name="circulationNo"
                 label={t('fields.circulationNo')}
+              />
+              <SelectField
+                control={form.control}
+                name="criticality"
+                label={t('fields.criticality')}
+                placeholder={t('criticality.unset')}
+                emptyLabel={t('criticality.unset')}
+                options={EQUIPMENT_CRITICALITIES.map((value) => ({
+                  value,
+                  label: t(`criticality.${value}`),
+                }))}
               />
               <AsyncSelectField
                 control={form.control}

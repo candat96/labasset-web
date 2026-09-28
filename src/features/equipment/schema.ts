@@ -26,6 +26,7 @@ export const equipmentSchema = z.object({
   purchaseContractNo: optionalText,
   decisionNo: optionalText,
   circulationNo: optionalText,
+  criticality: z.union([z.enum(['vital', 'essential', 'desirable']), z.literal('')]).nullable(),
   groupId: optionalId,
   departmentId: optionalId,
   roomId: optionalId,

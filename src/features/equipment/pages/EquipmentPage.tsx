@@ -19,6 +19,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { DatePicker } from '@/components/date-picker'
 import { FilterPreset } from '@/components/filter-bar'
 import { FilterPanel, FilterPanelField } from '@/components/page/FilterPanel'
@@ -26,7 +33,7 @@ import { SectionCard } from '@/components/page/SectionCard'
 import { MultiSelect } from '@/components/multi-select'
 import { StatusBadge } from '@/components/status-badge'
 import { AsyncSelect } from '@/components/form/async-select'
-import { equipmentStatusMap } from '@/lib/status-maps'
+import { equipmentStatusMap, equipmentCriticalityMap } from '@/lib/status-maps'
 import { formatDate, formatDateTime } from '@/lib/format/date'
 import { dayRangeToIso } from '@/lib/format/date-range'
 import { useCan } from '@/app/guards/useCan'
@@ -46,7 +53,13 @@ import { listCatalog } from '@/features/catalogs/api'
 import { catalogOptions, exportEquipment, printQrLabels, userOptions } from '../api'
 import { useEquipmentList } from '../hooks'
 import { shortId, useUserNames } from '../components/lookups'
-import { EQUIPMENT_STATUSES, type Equipment, type EquipmentListParams } from '../types'
+import {
+  EQUIPMENT_CRITICALITIES,
+  EQUIPMENT_STATUSES,
+  type Equipment,
+  type EquipmentCriticality,
+  type EquipmentListParams,
+} from '../types'
 
 /** Chỉ 7 cột API cho phép sort (xem `ListEquipmentDto`). */
 const SORT_KEYS = [
@@ -115,6 +128,7 @@ export function Component() {
       'roomId',
       'groupId',
       'status',
+      'criticality',
       'manufacturerId',
       'staffId',
       'maintenanceDueBefore',
@@ -133,6 +147,7 @@ export function Component() {
     manufacturerId: f.manufacturerId,
     staffId: f.staffId,
     status: f.status,
+    criticality: f.criticality as EquipmentCriticality | undefined,
     maintenanceDueBefore: dayRangeToIso(undefined, f.maintenanceDueBefore).to,
     calibrationDueBefore: dayRangeToIso(undefined, f.calibrationDueBefore).to,
     calibrationOverdue: f.calibrationOverdue === 'true' ? true : undefined,
@@ -261,6 +276,18 @@ export function Component() {
         meta: { label: t('fields.location') },
       },
       {
+        accessorKey: 'criticality',
+        header: t('fields.criticality'),
+        enableSorting: false,
+        meta: { label: t('fields.criticality') },
+        cell: ({ row }) =>
+          row.original.criticality ? (
+            <StatusBadge value={row.original.criticality} map={equipmentCriticalityMap} />
+          ) : (
+            '—'
+          ),
+      },
+      {
         accessorKey: 'staffInChargeUserId',
         header: t('fields.staffInCharge'),
         enableSorting: false,
@@ -340,6 +367,13 @@ export function Component() {
       `${t('filters.status')}: ${selectedStatus
         .map((status) => equipmentStatusMap[status]?.label ?? status)
         .join(', ')}`,
+    )
+  if (f.criticality)
+    addChip(
+      'criticality',
+      `${t('filters.criticality')}: ${
+        equipmentCriticalityMap[f.criticality]?.label ?? f.criticality
+      }`,
     )
   if (f.maintenanceDueBefore)
     addChip(
@@ -572,6 +606,26 @@ export function Component() {
                   }))}
                   placeholder={t('filters.status')}
                 />
+              </FilterPanelField>
+              <FilterPanelField label={t('filters.criticality')}>
+                <Select
+                  value={f.criticality ?? '__all__'}
+                  onValueChange={(value) =>
+                    table.setFilter('criticality', value === '__all__' ? undefined : value)
+                  }
+                >
+                  <SelectTrigger aria-label={t('filters.criticality')} className="w-full">
+                    <SelectValue placeholder={t('filters.criticality')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__all__">{t('filters.all')}</SelectItem>
+                    {EQUIPMENT_CRITICALITIES.map((value) => (
+                      <SelectItem key={value} value={value}>
+                        {equipmentCriticalityMap[value]?.label ?? value}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </FilterPanelField>
               <FilterPanelField label={t('filters.maintenanceBefore')}>
                 <DatePicker

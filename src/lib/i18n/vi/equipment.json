@@ -62,6 +62,7 @@
     "purchaseContractNo": "Số hợp đồng",
     "decisionNo": "Số quyết định",
     "circulationNo": "Số lưu hành",
+    "criticality": "Mức độ trọng yếu",
     "group": "Nhóm",
     "groupEquipment": "Nhóm máy",
     "department": "Khoa",
@@ -98,6 +99,12 @@
     "outWarranty": "Hết hạn",
     "buildingFloor": "Toà / Tầng"
   },
+  "criticality": {
+    "vital": "Trọng yếu",
+    "essential": "Thiết yếu",
+    "desirable": "Thông thường",
+    "unset": "Chưa khai"
+  },
   "sections": {
     "general": "Thông tin chung",
     "specs": "Thông số kỹ thuật",
@@ -120,6 +127,7 @@
     "search": "Tìm máy",
     "searchPlaceholder": "Mã, tên, serial…",
     "department": "Khoa",
+    "criticality": "Mức độ trọng yếu",
     "group": "Nhóm",
     "manufacturer": "Hãng",
     "staff": "Phụ trách VT",

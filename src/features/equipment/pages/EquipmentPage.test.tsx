@@ -215,6 +215,20 @@ it('DEPT_USER không có nút ghi', async () => {
   expect(screen.getByRole('button', { name: 'Xuất Excel' })).toBeVisible()
 })
 
+it('hiện badge và lọc theo mức độ trọng yếu', async () => {
+  const { router } = renderWithProviders(<Component />)
+  await screen.findByRole('link', { name: 'TB-2026-00001' })
+  expect(screen.getByText('Trọng yếu')).toBeVisible()
+  await userEvent.click(screen.getByRole('combobox', { name: 'Mức độ trọng yếu' }))
+  await userEvent.click(await screen.findByRole('option', { name: 'Trọng yếu' }))
+  await waitFor(() => expect(router.state.location.search).toContain('criticality=vital'))
+  await waitFor(() =>
+    expect(urls.some((u) => u.includes('/v1/equipment') && u.includes('criticality=vital'))).toBe(
+      true,
+    ),
+  )
+})
+
 it('mode "Theo phòng": danh sách phòng kèm số máy, bấm phòng → máy theo phòng', async () => {
   server.use(
     http.get('/v1/reports/equipment.byRoom', () =>

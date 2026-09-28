@@ -74,6 +74,7 @@ import { AuditTrail } from '@/components/audit-trail'
 import { useConfirm } from '@/components/confirm-dialog'
 import {
   equipmentStatusMap,
+  equipmentCriticalityMap,
   accessoryConditionMap,
   componentStatusMap,
   transferStatusMap,
@@ -249,13 +250,18 @@ export function Component() {
           </>
         }
         badge={
-          row.status === 'disposed' ? (
-            <s>
+          <>
+            {row.status === 'disposed' ? (
+              <s>
+                <StatusBadge value={row.status} map={equipmentStatusMap} />
+              </s>
+            ) : (
               <StatusBadge value={row.status} map={equipmentStatusMap} />
-            </s>
-          ) : (
-            <StatusBadge value={row.status} map={equipmentStatusMap} />
-          )
+            )}
+            {row.criticality && (
+              <StatusBadge value={row.criticality} map={equipmentCriticalityMap} />
+            )}
+          </>
         }
         actions={
           <ActionMenu
@@ -535,6 +541,12 @@ function Overview({ row }: { row: NonNullable<ReturnType<typeof useEquipment>['d
   const { t } = useTranslation('equipment')
   const warrantyLeft = row.warrantyUntil && new Date(row.warrantyUntil) >= new Date()
   const general: DataListItem[] = [
+    {
+      label: t('fields.criticality'),
+      value: row.criticality ? (
+        <StatusBadge value={row.criticality} map={equipmentCriticalityMap} />
+      ) : null,
+    },
     { label: t('fields.assetCode'), value: row.assetCode },
     { label: t('fields.model'), value: row.model },
     { label: t('fields.serial'), value: row.serial },

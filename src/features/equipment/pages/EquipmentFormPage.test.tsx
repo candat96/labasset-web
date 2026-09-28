@@ -289,3 +289,31 @@ it('nguyên giá phải là chuỗi số nguyên', async () => {
   expect(await screen.findByText('Số không hợp lệ')).toBeVisible()
   expect(patches.length).toBe(0)
 })
+
+it('chọn mức độ trọng yếu và gửi trong body', async () => {
+  const saved: Record<string, unknown>[] = []
+  server.use(
+    http.post('/v1/equipment', async ({ request }) => {
+      const body = (await request.json()) as Record<string, unknown>
+      saved.push(body)
+      return HttpResponse.json(
+        { id: 'e3', code: 'TB-2026-00003', name: body.name },
+        { status: 201 },
+      )
+    }),
+  )
+  renderWithProviders(<Component />, {
+    path: '/equipment/new',
+    route: '/equipment/new',
+    routes: formRoutes,
+  })
+  await userEvent.type(screen.getByLabelText('Tên'), 'Máy trọng yếu')
+  await userEvent.click(screen.getByRole('combobox', { name: 'Khoa' }))
+  await userEvent.click(await screen.findByText('HH — Huyết học'))
+  await pickRoom('Phòng Huyết học')
+  await userEvent.click(screen.getByRole('combobox', { name: 'Mức độ trọng yếu' }))
+  await userEvent.click(await screen.findByRole('option', { name: 'Trọng yếu' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Lưu' }))
+  await waitFor(() => expect(saved.length).toBe(1))
+  expect(saved[0]).toMatchObject({ criticality: 'vital' })
+})

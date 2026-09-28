@@ -489,3 +489,8 @@ it('chi tiết hiện chip và dòng Phòng', async () => {
   expect((await screen.findAllByText('Phòng Huyết học')).length).toBeGreaterThanOrEqual(1)
   expect(screen.getAllByText('Phòng')[0]).toBeVisible()
 })
+
+it('hiện badge mức độ trọng yếu ở đầu trang và tổng quan', async () => {
+  render()
+  expect((await screen.findAllByText('Thiết yếu')).length).toBeGreaterThanOrEqual(1)
+})
