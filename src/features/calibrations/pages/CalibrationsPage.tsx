@@ -46,7 +46,7 @@ import i18n from '@/lib/i18n'
 type Row = components['schemas']['CalibrationResponseDto']
 const schema = z.object({
   equipmentIds: z.array(z.string()).min(1, i18n.t('common:form.required')),
-  type: z.enum(['inspection', 'calibration']),
+  type: z.enum(['inspection', 'calibration', 'electrical_safety']),
   mode: z.enum(['schedule', 'result']),
   scheduledAt: z.string(),
   performedAt: z.string(),
@@ -54,6 +54,9 @@ const schema = z.object({
   certificateNo: z.string(),
   certificateFileId: z.string().nullable(),
   findings: z.string(),
+  earthResistance: z.union([z.literal(''), z.number().min(0)]),
+  leakageCurrent: z.union([z.literal(''), z.number().min(0)]),
+  insulationResistance: z.union([z.literal(''), z.number().min(0)]),
   cost: decimalString({ maxScale: 0, min: '0' }),
   cycleMonths: z.union([z.literal(''), z.number().int().min(1)]),
   agencyId: z.string().nullable(),
@@ -101,6 +104,9 @@ export function Component() {
       certificateNo: '',
       certificateFileId: null,
       findings: '',
+      earthResistance: '',
+      leakageCurrent: '',
+      insulationResistance: '',
       cost: '',
       cycleMonths: '',
       agencyId: null,
@@ -270,6 +276,7 @@ export function Component() {
                   [
                     ['inspection', t('typeInspection')],
                     ['calibration', t('typeCalibration')],
+                    ['electrical_safety', t('typeElectricalSafety')],
                   ],
                 ],
                 [
@@ -332,6 +339,8 @@ export function Component() {
         onSubmit={async (values) => {
           try {
             // Mỗi máy đã chọn → một phiếu kiểm định riêng (cùng thông số).
+            const safety = values.type === 'electrical_safety'
+            const measurement = (value: number | '') => (value === '' ? undefined : value)
             const payload = (equipmentId: string) =>
               apiBody<components['schemas']['CreateCalibrationDto']>({
                 equipmentId,
@@ -341,7 +350,10 @@ export function Component() {
                 result: values.mode === 'result' ? values.result : undefined,
                 certificateNo: values.certificateNo || undefined,
                 certificateFileId: values.certificateFileId ?? undefined,
-                findings: values.findings || undefined,
+                findings: safety ? undefined : values.findings || undefined,
+                earthResistance: safety ? measurement(values.earthResistance) : undefined,
+                leakageCurrent: safety ? measurement(values.leakageCurrent) : undefined,
+                insulationResistance: safety ? measurement(values.insulationResistance) : undefined,
                 cost: values.cost || undefined,
                 cycleMonths: values.cycleMonths === '' ? undefined : values.cycleMonths,
                 agencyId: values.agencyId ?? undefined,
@@ -399,6 +411,7 @@ export function Component() {
           options={[
             { value: 'inspection', label: t('typeInspection') },
             { value: 'calibration', label: t('typeCalibration') },
+            { value: 'electrical_safety', label: t('typeElectricalSafety') },
           ]}
         />
         <SelectField
@@ -441,7 +454,33 @@ export function Component() {
               )}
             />
             <MoneyField control={form.control} name="cost" label={t('cost')} />
-            <TextField control={form.control} name="findings" label={t('findings')} />
+            {form.watch('type') === 'electrical_safety' ? (
+              <>
+                <NumberField
+                  control={form.control}
+                  name="earthResistance"
+                  label={t('earthResistance')}
+                  min={0}
+                  step={0.01}
+                />
+                <NumberField
+                  control={form.control}
+                  name="leakageCurrent"
+                  label={t('leakageCurrent')}
+                  min={0}
+                  step={0.01}
+                />
+                <NumberField
+                  control={form.control}
+                  name="insulationResistance"
+                  label={t('insulationResistance')}
+                  min={0}
+                  step={0.01}
+                />
+              </>
+            ) : (
+              <TextField control={form.control} name="findings" label={t('findings')} />
+            )}
           </>
         )}
         <NumberField control={form.control} name="cycleMonths" label={t('cycleMonths')} min={1} />

@@ -60,11 +60,14 @@ const completeSchema = z.object({
   certificateFileId: z.string().nullable(),
   cost: decimalString({ maxScale: 0, min: '0' }),
   findings: z.string(),
+  earthResistance: z.union([z.literal(''), z.number().min(0)]),
+  leakageCurrent: z.union([z.literal(''), z.number().min(0)]),
+  insulationResistance: z.union([z.literal(''), z.number().min(0)]),
   nextDueAt: z.string(),
 })
 type CompleteForm = z.infer<typeof completeSchema>
 const editSchema = z.object({
-  type: z.enum(['inspection', 'calibration']),
+  type: z.enum(['inspection', 'calibration', 'electrical_safety']),
   scheduledAt: z.string(),
   agencyId: z.string().nullable(),
   performedByUserId: z.string().nullable(),
@@ -73,9 +76,18 @@ const editSchema = z.object({
   certificateFileId: z.string().nullable(),
   cost: decimalString({ maxScale: 0, min: '0' }),
   findings: z.string(),
+  earthResistance: z.union([z.literal(''), z.number().min(0)]),
+  leakageCurrent: z.union([z.literal(''), z.number().min(0)]),
+  insulationResistance: z.union([z.literal(''), z.number().min(0)]),
   nextDueAt: z.string(),
 })
 type EditForm = z.infer<typeof editSchema>
+
+/** Số đo an toàn điện kèm đơn vị, dùng chung cho phần xem chi tiết. */
+function formatMeasurement(measurement?: { value?: number; unit?: string } | null): string | null {
+  if (!measurement || measurement.value === undefined) return null
+  return `${measurement.value} ${measurement.unit ?? ''}`.trim()
+}
 
 export function Component() {
   const { t } = useTranslation('calibrations')
@@ -104,6 +116,9 @@ export function Component() {
       certificateFileId: null,
       cost: '',
       findings: '',
+      earthResistance: '',
+      leakageCurrent: '',
+      insulationResistance: '',
       nextDueAt: '',
     },
   })
@@ -121,6 +136,9 @@ export function Component() {
       certificateFileId: row.certificateFileId,
       cost: row.cost,
       findings: row.findings ?? '',
+      earthResistance: row.electricalSafety?.earthResistance?.value ?? '',
+      leakageCurrent: row.electricalSafety?.leakageCurrent?.value ?? '',
+      insulationResistance: row.electricalSafety?.insulationResistance?.value ?? '',
       nextDueAt: row.nextDueAt ?? '',
     })
   }, [detail.data, editForm])
@@ -241,7 +259,22 @@ export function Component() {
                 { label: t('nextDue'), value: formatDate(row.nextDueAt) || null },
                 { label: t('certificateNo'), value: row.certificateNo },
                 { label: t('cost'), value: formatVnd(row.cost) || null },
-                { label: t('findings'), value: row.findings, full: true },
+                ...(row.type === 'electrical_safety'
+                  ? [
+                      {
+                        label: t('earthResistance'),
+                        value: formatMeasurement(row.electricalSafety?.earthResistance),
+                      },
+                      {
+                        label: t('leakageCurrent'),
+                        value: formatMeasurement(row.electricalSafety?.leakageCurrent),
+                      },
+                      {
+                        label: t('insulationResistance'),
+                        value: formatMeasurement(row.electricalSafety?.insulationResistance),
+                      },
+                    ]
+                  : [{ label: t('findings'), value: row.findings, full: true }]),
                 ...(row.repairTicketId
                   ? [
                       {
@@ -298,6 +331,8 @@ export function Component() {
         form={form}
         onSubmit={async (values) => {
           try {
+            const safety = row.type === 'electrical_safety'
+            const measurement = (value: number | '') => (value === '' ? undefined : value)
             await completeCalibration(
               id,
               apiBody({
@@ -306,7 +341,10 @@ export function Component() {
                 certificateNo: values.certificateNo || undefined,
                 certificateFileId: values.certificateFileId ?? undefined,
                 cost: values.cost || undefined,
-                findings: values.findings || undefined,
+                findings: safety ? undefined : values.findings || undefined,
+                earthResistance: safety ? measurement(values.earthResistance) : undefined,
+                leakageCurrent: safety ? measurement(values.leakageCurrent) : undefined,
+                insulationResistance: safety ? measurement(values.insulationResistance) : undefined,
                 nextDueAt: values.nextDueAt || undefined,
               }),
             )
@@ -341,7 +379,33 @@ export function Component() {
           )}
         />
         <MoneyField control={form.control} name="cost" label={t('cost')} />
-        <TextField control={form.control} name="findings" label={t('findings')} />
+        {row.type === 'electrical_safety' ? (
+          <>
+            <NumberField
+              control={form.control}
+              name="earthResistance"
+              label={t('earthResistance')}
+              min={0}
+              step={0.01}
+            />
+            <NumberField
+              control={form.control}
+              name="leakageCurrent"
+              label={t('leakageCurrent')}
+              min={0}
+              step={0.01}
+            />
+            <NumberField
+              control={form.control}
+              name="insulationResistance"
+              label={t('insulationResistance')}
+              min={0}
+              step={0.01}
+            />
+          </>
+        ) : (
+          <TextField control={form.control} name="findings" label={t('findings')} />
+        )}
         <DateField control={form.control} name="nextDueAt" label={t('nextDue')} />
       </FormDialog>
       <FormDialog
@@ -351,6 +415,8 @@ export function Component() {
         form={editForm}
         onSubmit={async (values) => {
           try {
+            const safety = values.type === 'electrical_safety'
+            const measurement = (value: number | '') => (value === '' ? null : value)
             await updateCalibration(
               id,
               apiBody({
@@ -362,7 +428,10 @@ export function Component() {
                 certificateNo: values.certificateNo || null,
                 certificateFileId: values.certificateFileId,
                 cost: values.cost || undefined,
-                findings: values.findings || null,
+                findings: safety ? undefined : values.findings || null,
+                earthResistance: safety ? measurement(values.earthResistance) : undefined,
+                leakageCurrent: safety ? measurement(values.leakageCurrent) : undefined,
+                insulationResistance: safety ? measurement(values.insulationResistance) : undefined,
                 nextDueAt: values.nextDueAt || undefined,
               }),
             )
@@ -381,6 +450,7 @@ export function Component() {
           options={[
             { value: 'inspection', label: t('typeInspection') },
             { value: 'calibration', label: t('typeCalibration') },
+            { value: 'electrical_safety', label: t('typeElectricalSafety') },
           ]}
         />
         <DatetimeField control={editForm.control} name="scheduledAt" label={t('schedule')} />
@@ -438,7 +508,33 @@ export function Component() {
           )}
         />
         <MoneyField control={editForm.control} name="cost" label={t('cost')} />
-        <TextField control={editForm.control} name="findings" label={t('findings')} />
+        {editForm.watch('type') === 'electrical_safety' ? (
+          <>
+            <NumberField
+              control={editForm.control}
+              name="earthResistance"
+              label={t('earthResistance')}
+              min={0}
+              step={0.01}
+            />
+            <NumberField
+              control={editForm.control}
+              name="leakageCurrent"
+              label={t('leakageCurrent')}
+              min={0}
+              step={0.01}
+            />
+            <NumberField
+              control={editForm.control}
+              name="insulationResistance"
+              label={t('insulationResistance')}
+              min={0}
+              step={0.01}
+            />
+          </>
+        ) : (
+          <TextField control={editForm.control} name="findings" label={t('findings')} />
+        )}
         <DateField control={editForm.control} name="nextDueAt" label={t('nextDue')} />
       </FormDialog>
     </>

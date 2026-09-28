@@ -5826,6 +5826,20 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
             cycleMonths: number;
+            electricalSafety: {
+                earthResistance?: {
+                    unit?: string;
+                    value?: number;
+                } | null;
+                insulationResistance?: {
+                    unit?: string;
+                    value?: number;
+                } | null;
+                leakageCurrent?: {
+                    unit?: string;
+                    value?: number;
+                } | null;
+            } | null;
             equipment: {
                 code?: string;
                 id?: string;
@@ -5851,7 +5865,7 @@ export interface components {
             /** @enum {string} */
             status: "scheduled" | "done" | "cancelled";
             /** @enum {string} */
-            type: "inspection" | "calibration";
+            type: "inspection" | "calibration" | "electrical_safety";
             /** Format: date-time */
             updatedAt: string;
         };
@@ -5871,6 +5885,20 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
             cycleMonths: number;
+            electricalSafety: {
+                earthResistance?: {
+                    unit?: string;
+                    value?: number;
+                } | null;
+                insulationResistance?: {
+                    unit?: string;
+                    value?: number;
+                } | null;
+                leakageCurrent?: {
+                    unit?: string;
+                    value?: number;
+                } | null;
+            } | null;
             equipmentId: string;
             findings: string | null;
             id: string;
@@ -5891,7 +5919,7 @@ export interface components {
             /** @enum {string} */
             status: "scheduled" | "done" | "cancelled";
             /** @enum {string} */
-            type: "inspection" | "calibration";
+            type: "inspection" | "calibration" | "electrical_safety";
             /** Format: date-time */
             updatedAt: string;
         };
@@ -6007,7 +6035,13 @@ export interface components {
             certificateNo?: Record<string, never> | null;
             cost?: string;
             cycleMonths?: number;
+            /** @description Điện trở tiếp đất (Ω); chỉ dùng cho loại electrical_safety */
+            earthResistance?: number | null;
             findings?: Record<string, never> | null;
+            /** @description Điện trở cách ly (MΩ); chỉ dùng cho loại electrical_safety */
+            insulationResistance?: number | null;
+            /** @description Dòng rò (mA); chỉ dùng cho loại electrical_safety */
+            leakageCurrent?: number | null;
             nextDueAt?: string;
             performedAt: string;
             performedByUserId?: Record<string, never> | null;
@@ -6149,8 +6183,14 @@ export interface components {
             certificateNo?: Record<string, never> | null;
             cost?: string;
             cycleMonths?: number;
+            /** @description Điện trở tiếp đất (Ω); chỉ dùng cho loại electrical_safety */
+            earthResistance?: number | null;
             equipmentId: string;
             findings?: Record<string, never> | null;
+            /** @description Điện trở cách ly (MΩ); chỉ dùng cho loại electrical_safety */
+            insulationResistance?: number | null;
+            /** @description Dòng rò (mA); chỉ dùng cho loại electrical_safety */
+            leakageCurrent?: number | null;
             nextDueAt?: string;
             performedAt?: string;
             performedByUserId?: Record<string, never> | null;
@@ -6159,7 +6199,7 @@ export interface components {
             result?: "pass" | "fail" | "conditional";
             scheduledAt?: string;
             /** @enum {string} */
-            type: "inspection" | "calibration";
+            type: "inspection" | "calibration" | "electrical_safety";
         };
         CreateCommentDto: {
             body: string;
@@ -9279,13 +9319,19 @@ export interface components {
             certificateNo?: Record<string, never> | null;
             cost?: string;
             cycleMonths?: number;
+            /** @description Điện trở tiếp đất (Ω); chỉ dùng cho loại electrical_safety */
+            earthResistance?: number | null;
             findings?: Record<string, never> | null;
+            /** @description Điện trở cách ly (MΩ); chỉ dùng cho loại electrical_safety */
+            insulationResistance?: number | null;
+            /** @description Dòng rò (mA); chỉ dùng cho loại electrical_safety */
+            leakageCurrent?: number | null;
             nextDueAt?: string;
             performedByUserId?: Record<string, never> | null;
             performerName?: Record<string, never> | null;
             scheduledAt?: string;
             /** @enum {string} */
-            type?: "inspection" | "calibration";
+            type?: "inspection" | "calibration" | "electrical_safety";
         };
         UpdateComponentDto: {
             /** Format: uuid */
@@ -11055,7 +11101,7 @@ export interface operations {
                 result?: "pass" | "fail" | "conditional";
                 status?: "scheduled" | "done" | "cancelled";
                 to?: string;
-                type?: "inspection" | "calibration";
+                type?: "inspection" | "calibration" | "electrical_safety";
             };
             header?: {
                 /** @description Hospital id (multi-tenant mode) */

@@ -23,6 +23,12 @@ export const equipmentStatusMap: StatusMap = {
   disposed: { label: 'Thanh lý', tone: 'muted' },
 }
 
+export const equipmentCriticalityMap: StatusMap = {
+  vital: { label: 'Trọng yếu', tone: 'danger' },
+  essential: { label: 'Thiết yếu', tone: 'warning' },
+  desirable: { label: 'Thông thường', tone: 'muted' },
+}
+
 export const accessoryConditionMap: StatusMap = {
   good: { label: 'Tốt', tone: 'success' },
   worn: { label: 'Mòn', tone: 'warning' },
@@ -123,6 +129,7 @@ export const calibrationResultMap: StatusMap = {
 export const calibrationTypeMap: StatusMap = {
   inspection: { label: 'Kiểm định', tone: 'info' },
   calibration: { label: 'Hiệu chuẩn', tone: 'info' },
+  electrical_safety: { label: 'An toàn điện', tone: 'warning' },
 }
 
 export const stockDocStatusMap: StatusMap = {

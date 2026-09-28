@@ -76,3 +76,43 @@ it('creates a calibration with a body validated like the API', async () => {
   await userEvent.click(screen.getByRole('button', { name: 'Lưu' }))
   await waitFor(() => expect(saved[0]).toMatchObject({ equipmentId: 'e1', type: 'inspection' }))
 })
+
+it('submits electrical safety measurements with the An toàn điện type', async () => {
+  const saved: unknown[] = []
+  server.use(
+    http.get('/v1/equipment', () =>
+      HttpResponse.json({
+        items: [{ id: 'e1', code: 'TB-1', name: 'Máy XN' }],
+        total: 1,
+        page: 1,
+        limit: 20,
+      }),
+    ),
+    http.post('/v1/calibrations', async ({ request }) => {
+      saved.push(await request.json())
+      return HttpResponse.json({ id: 'c4', code: 'KD-4' }, { status: 201 })
+    }),
+  )
+  renderWithProviders(<Component />, {
+    path: '/calibrations',
+    route: '/calibrations',
+    routes: [{ path: '/calibrations/:id', element: <div>DETAIL</div> }],
+  })
+  await userEvent.click(await screen.findByRole('button', { name: 'Lên lịch / Ghi kết quả' }))
+  await userEvent.type(await screen.findByLabelText('Máy (chọn được nhiều)'), 'TB-1')
+  await userEvent.click(await screen.findByRole('option', { name: /Máy XN/ }))
+  await userEvent.click(screen.getByRole('combobox', { name: 'Loại' }))
+  await userEvent.click(await screen.findByRole('option', { name: 'An toàn điện' }))
+  await userEvent.click(screen.getByRole('combobox', { name: 'Hình thức' }))
+  await userEvent.click(await screen.findByRole('option', { name: 'Ghi kết quả ngay' }))
+  await userEvent.type(screen.getByLabelText('Điện trở tiếp đất (Ω)'), '4')
+  await userEvent.type(screen.getByLabelText('Dòng rò (mA)'), '1')
+  await userEvent.click(screen.getByRole('button', { name: 'Lưu' }))
+  await waitFor(() =>
+    expect(saved[0]).toMatchObject({
+      type: 'electrical_safety',
+      earthResistance: 4,
+      leakageCurrent: 1,
+    }),
+  )
+})
