@@ -426,7 +426,16 @@ export type AcceptRequestDto = { lines?: CreateAcceptLineDto[] }
 /** CreateLineDto/UpdateLineDto: supplyId… swagger mất schema (`Record<string, never>`). */
 type BaseDemandLineBody = Omit<
   S['CreateLineDto'],
-  'supplyId' | 'equipmentId' | 'itemName' | 'spec' | 'unit' | 'reason'
+  | 'supplyId'
+  | 'equipmentId'
+  | 'itemName'
+  | 'spec'
+  | 'unit'
+  | 'reason'
+  | 'techScore'
+  | 'replacesEquipmentId'
+  | 'expectedLifeYears'
+  | 'lifecycleCostEst'
 > & {
   supplyId?: string
   equipmentId?: string
@@ -434,10 +443,28 @@ type BaseDemandLineBody = Omit<
   spec?: string
   unit?: string
   reason?: string
+  /** C4 — chỉ dòng hạng mục thiết bị. */
+  techScore?: number | null
+  replacesEquipmentId?: string | null
+  expectedLifeYears?: number | null
+  lifecycleCostEst?: string | null
 }
 
-export interface DemandLine extends Omit<S['DemandLineResponseDto'], 'suggestion'> {
+export interface DemandLine
+  extends Omit<
+    S['DemandLineResponseDto'],
+    | 'suggestion'
+    | 'techScore'
+    | 'replacesEquipmentId'
+    | 'expectedLifeYears'
+    | 'lifecycleCostEst'
+  > {
   suggestion?: DemandLineSuggestion | null
+  /** C4 — đánh giá công nghệ/kế hoạch thay thế (chỉ dòng thiết bị). */
+  techScore?: string | null
+  replacesEquipmentId?: string | null
+  expectedLifeYears?: number | null
+  lifecycleCostEst?: string | null
 }
 
 export type CreateDemandLineDto = BaseDemandLineBody

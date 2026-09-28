@@ -11,6 +11,7 @@ import {
   Download,
   Link2,
   Plus,
+  Recycle,
   Save,
   Sparkles,
   Trash2,
@@ -57,7 +58,7 @@ import {
 import { demandPeriodStatusMap, demandRequestStatusMap } from '@/lib/status-maps'
 import { useCan } from '@/app/guards/useCan'
 import { ADM, HEADS, STAFF } from '@/routes/roles'
-import { supplyOptions } from '@/api/references'
+import { supplyOptions, equipmentOptions } from '@/api/references'
 import { useAuthStore } from '@/stores/auth.store'
 import * as api from '../api'
 import type { DemandItemType, DemandLine, DemandPeriod, DemandRequest } from '../paths'
@@ -160,6 +161,90 @@ function TypeSelect({
   )
 }
 
+/** Giá trị bốn ô đánh giá công nghệ (chuỗi hiển thị) — C4/IMM-02. */
+interface EquipmentPlanValue {
+  techScore: string
+  replacesEquipmentId: string | null
+  expectedLifeYears: string
+  lifecycleCostEst: string
+}
+
+/** Chuỗi nhập → payload API; ô trống = bỏ khai (null), không đoán giá trị. */
+function equipmentPlanPatch(value: EquipmentPlanValue) {
+  const numberOrNull = (raw: string) => (raw.trim() === '' ? null : Number(raw))
+  return {
+    techScore: numberOrNull(value.techScore),
+    replacesEquipmentId: value.replacesEquipmentId,
+    expectedLifeYears: numberOrNull(value.expectedLifeYears),
+    lifecycleCostEst: value.lifecycleCostEst.trim() === '' ? null : value.lifecycleCostEst.trim(),
+  }
+}
+
+/** Bốn ô chỉ hiện với hạng mục thiết bị: điểm công nghệ, máy bị thay thế, vòng đời, chi phí. */
+function EquipmentPlanFields({
+  prefix,
+  disabled,
+  value,
+  onChange,
+}: {
+  prefix: string
+  disabled?: boolean
+  value: EquipmentPlanValue
+  onChange: (next: Partial<EquipmentPlanValue>) => void
+}) {
+  const { t } = useTranslation('procurement')
+  return (
+    <div className="w-56 space-y-1 rounded-md border border-border bg-card p-2">
+      <p className="text-subtle flex items-center gap-1 text-[11px] font-medium">
+        <Recycle className="size-3" />
+        {t('replacementPlan', { defaultValue: 'Kế hoạch thay thế' })}
+      </p>
+      <Input
+        aria-label={`${prefix} điểm công nghệ`}
+        type="number"
+        min={0}
+        max={10}
+        step={0.01}
+        className="w-full"
+        placeholder={t('techScore', { defaultValue: 'Điểm công nghệ (0–10)' })}
+        value={value.techScore}
+        disabled={disabled}
+        onChange={(e) => onChange({ techScore: e.target.value })}
+      />
+      <AsyncSelect
+        label={t('replacesEquipment', { defaultValue: 'Máy bị thay thế' })}
+        queryKey="equipment"
+        loadOptions={equipmentOptions}
+        value={value.replacesEquipmentId}
+        showLabel={false}
+        clearable
+        disabled={disabled}
+        onChange={(v) => onChange({ replacesEquipmentId: typeof v === 'string' ? v : null })}
+      />
+      <Input
+        aria-label={`${prefix} vòng đời`}
+        type="number"
+        min={1}
+        max={50}
+        className="w-full"
+        placeholder={t('expectedLifeYears', { defaultValue: 'Vòng đời dự kiến (năm)' })}
+        value={value.expectedLifeYears}
+        disabled={disabled}
+        onChange={(e) => onChange({ expectedLifeYears: e.target.value })}
+      />
+      <Input
+        aria-label={`${prefix} chi phí vòng đời`}
+        className="w-full"
+        inputMode="numeric"
+        placeholder={t('lifecycleCostEst', { defaultValue: 'Chi phí vòng đời ước tính' })}
+        value={value.lifecycleCostEst}
+        disabled={disabled}
+        onChange={(e) => onChange({ lifecycleCostEst: e.target.value })}
+      />
+    </div>
+  )
+}
+
 /** Chip "Gợi ý: 1.200 (tiêu hao 12T 1.100 · tồn 150 · còn 41 ngày)" — bấm để áp. */
 function SuggestChip({ line, onClick }: { line: DemandLine; onClick: () => void }) {
   const { t } = useTranslation('procurement')
@@ -213,6 +298,12 @@ function LineRow({
   const [reason, setReason] = useState(line.reason ?? '')
   const [priority, setPriority] = useState(line.priority)
   const [unitPriceEst, setUnitPriceEst] = useState(trimZeroTail(line.unitPriceEst))
+  const [plan, setPlan] = useState<EquipmentPlanValue>({
+    techScore: line.techScore ? trimZeroTail(line.techScore) : '',
+    replacesEquipmentId: line.replacesEquipmentId ?? null,
+    expectedLifeYears: line.expectedLifeYears != null ? String(line.expectedLifeYears) : '',
+    lifecycleCostEst: line.lifecycleCostEst ? trimZeroTail(line.lifecycleCostEst) : '',
+  })
   const zeros = useMemo(() => Array.from({ length: buckets }, () => '0'), [buckets])
   const [qty, setQty] = useState<string[]>(
     line.qtyByBucket.length === buckets ? line.qtyByBucket : zeros,
@@ -316,6 +407,18 @@ function LineRow({
                   onBlur={() => spec !== (line.spec ?? '') && void patch({ spec })}
                 />
               </div>
+            )}
+            {itemType === 'equipment' && (
+              <EquipmentPlanFields
+                prefix={line.itemName || 'dòng'}
+                disabled={!editable}
+                value={plan}
+                onChange={(next) => {
+                  const merged = { ...plan, ...next }
+                  setPlan(merged)
+                  void patch(equipmentPlanPatch(merged))
+                }}
+              />
             )}
           </div>
         ) : (
@@ -469,6 +572,10 @@ interface PendingLine {
   reason: string
   priority: DemandLine['priority']
   qty: string[]
+  techScore: string
+  replacesEquipmentId: string | null
+  expectedLifeYears: string
+  lifecycleCostEst: string
 }
 
 function PendingLineRow({
@@ -525,6 +632,12 @@ function PendingLineRow({
   const tryCreateManual = () => {
     if (pending.itemType === 'supply' || pending.itemType === 'component') return
     if (!pending.itemName.trim() || !pending.spec.trim()) return
+    const plan = equipmentPlanPatch({
+      techScore: pending.techScore,
+      replacesEquipmentId: pending.replacesEquipmentId,
+      expectedLifeYears: pending.expectedLifeYears,
+      lifecycleCostEst: pending.lifecycleCostEst,
+    })
     void create({
       itemType: pending.itemType,
       itemName: pending.itemName.trim(),
@@ -533,6 +646,14 @@ function PendingLineRow({
       unitPriceEst: pending.unitPriceEst || '0',
       ...(pending.reason.trim() ? { reason: pending.reason.trim() } : {}),
       priority: pending.priority,
+      ...(pending.itemType === 'equipment'
+        ? {
+            techScore: plan.techScore ?? undefined,
+            replacesEquipmentId: plan.replacesEquipmentId ?? undefined,
+            expectedLifeYears: plan.expectedLifeYears ?? undefined,
+            lifecycleCostEst: plan.lifecycleCostEst ?? undefined,
+          }
+        : {}),
     })
   }
 
@@ -572,6 +693,18 @@ function PendingLineRow({
                 onBlur={tryCreateManual}
               />
             </div>
+          )}
+          {pending.itemType === 'equipment' && (
+            <EquipmentPlanFields
+              prefix={t('newLine', { defaultValue: 'dòng mới' })}
+              value={{
+                techScore: pending.techScore,
+                replacesEquipmentId: pending.replacesEquipmentId,
+                expectedLifeYears: pending.expectedLifeYears,
+                lifecycleCostEst: pending.lifecycleCostEst,
+              }}
+              onChange={(next) => set(next)}
+            />
           )}
         </div>
       </TableCell>
@@ -837,6 +970,10 @@ export function Component() {
         reason: '',
         priority: 'normal',
         qty: Array.from({ length: buckets }, () => '0'),
+        techScore: '',
+        replacesEquipmentId: null,
+        expectedLifeYears: '',
+        lifecycleCostEst: '',
       },
     ])
   }

@@ -296,3 +296,70 @@ it('VT/ADM: sửa SL duyệt từng dòng → POST accept {lines:[{id, qtyApprov
   const body = accepted[0] as { lines: { id: string; qtyApproved: string }[] }
   expect(body.lines[0]).toMatchObject({ id: 'dl1', qtyApproved: '8' })
 })
+
+const equipmentLine = {
+  ...line,
+  itemType: 'equipment',
+  supplyId: null,
+  itemName: 'Máy X',
+  spec: 'Model 2026',
+  techScore: null,
+  replacesEquipmentId: null,
+  expectedLifeYears: null,
+  lifecycleCostEst: null,
+}
+
+it('dòng thiết bị: hiện bốn ô đánh giá công nghệ, dòng vật tư thì ẩn', async () => {
+  server.use(
+    http.get('/v1/demand/requests/dr1', () =>
+      HttpResponse.json({ ...request, lines: [equipmentLine] }),
+    ),
+  )
+  renderPage()
+  expect(await screen.findByLabelText('Máy X điểm công nghệ')).toBeInTheDocument()
+  expect(screen.getByLabelText('Máy X vòng đời')).toBeInTheDocument()
+  expect(screen.getByLabelText('Máy X chi phí vòng đời')).toBeInTheDocument()
+  expect(screen.getByRole('combobox', { name: 'Máy bị thay thế' })).toBeInTheDocument()
+})
+
+it('dòng vật tư: không hiện ô đánh giá công nghệ', async () => {
+  renderPage()
+  await screen.findByRole('textbox', { name: /Găng tay số lượng/ })
+  expect(screen.queryByLabelText(/điểm công nghệ/)).not.toBeInTheDocument()
+  expect(screen.queryByLabelText(/chi phí vòng đời/)).not.toBeInTheDocument()
+})
+
+it('dòng thiết bị: sửa bốn ô rồi Lưu → PATCH gửi đúng trường', async () => {
+  const patched: unknown[] = []
+  server.use(
+    http.get('/v1/demand/requests/dr1', () =>
+      HttpResponse.json({ ...request, lines: [equipmentLine] }),
+    ),
+    http.get('/v1/equipment', () =>
+      HttpResponse.json({
+        items: [{ id: 'eq9', code: 'TB01', name: 'Máy cũ' }],
+        total: 1,
+        page: 1,
+        limit: 50,
+      }),
+    ),
+    http.patch('/v1/demand/lines/dl1', async ({ request: req }) => {
+      patched.push(await req.json())
+      return HttpResponse.json(equipmentLine)
+    }),
+  )
+  renderPage()
+  await userEvent.type(await screen.findByLabelText('Máy X điểm công nghệ'), '8.5')
+  await userEvent.type(screen.getByLabelText('Máy X vòng đời'), '7')
+  await userEvent.type(screen.getByLabelText('Máy X chi phí vòng đời'), '5000000')
+  await userEvent.click(screen.getByRole('combobox', { name: 'Máy bị thay thế' }))
+  await userEvent.click(await screen.findByRole('option', { name: /Máy cũ/ }))
+  await userEvent.click(screen.getByRole('button', { name: 'Lưu' }))
+  await waitFor(() => expect(patched).toHaveLength(1))
+  expect(patched[0]).toMatchObject({
+    techScore: 8.5,
+    expectedLifeYears: 7,
+    lifecycleCostEst: '5000000',
+    replacesEquipmentId: 'eq9',
+  })
+})
