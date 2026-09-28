@@ -60,6 +60,7 @@ import { useCan } from '@/app/guards/useCan'
 import { ADM, HEADS, STAFF } from '@/routes/roles'
 import { supplyOptions, equipmentOptions } from '@/api/references'
 import { useAuthStore } from '@/stores/auth.store'
+import { trimDecimal } from '@/lib/format/number'
 import * as api from '../api'
 import type { DemandItemType, DemandLine, DemandPeriod, DemandRequest } from '../paths'
 import { useTranslation } from 'react-i18next'
@@ -90,10 +91,8 @@ export function sumQty(cells: string[]): string {
   }
 }
 
-/** Decimal(19,4) "30.0000" → "30" (chỉ để HIỂN THỊ, không đổi dữ liệu gửi lên). */
-export function trimZeroTail(value: string): string {
-  return value.includes('.') ? value.replace(/0+$/, '').replace(/\.$/, '') : value
-}
+/** Giữ tên cũ cho các chỗ đang import; luật cắt số 0 nằm ở `lib/format/number`. */
+export const trimZeroTail = trimDecimal
 
 /** Ô số lượng theo bucket — commit khi blur/Enter, ô trống → 0. */
 function BucketCell({

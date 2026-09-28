@@ -1,4 +1,5 @@
 import { DetailSkeleton } from '@/components/page/DetailSkeleton'
+import { trimDecimal } from '@/lib/format/number'
 import { useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { useForm } from 'react-hook-form'
@@ -183,11 +184,11 @@ export function Component() {
       manufacturerCode: detail.data.manufacturerCode ?? '',
       manufacturerId: detail.data.manufacturerId,
       defaultSupplierId: detail.data.defaultSupplierId,
-      refPrice: detail.data.refPrice ?? '',
+      refPrice: trimDecimal(detail.data.refPrice),
       trackLot: detail.data.trackLot,
       trackExpiry: detail.data.trackExpiry,
-      minStock: detail.data.minStock ?? '',
-      maxStock: detail.data.maxStock ?? '',
+      minStock: trimDecimal(detail.data.minStock),
+      maxStock: trimDecimal(detail.data.maxStock),
       openVialDays: detail.data.openVialDays == null ? '' : String(detail.data.openVialDays),
       storageCondition: detail.data.storageCondition ?? '',
       isActive: detail.data.isActive,
@@ -197,14 +198,14 @@ export function Component() {
       countryOfOrigin: detail.data.countryOfOrigin ?? '',
       insuranceCode: detail.data.insuranceCode ?? '',
       insuranceName: detail.data.insuranceName ?? '',
-      insuranceRate: detail.data.insuranceRate ?? '',
-      insurancePrice: detail.data.insurancePrice ?? '',
+      insuranceRate: trimDecimal(detail.data.insuranceRate),
+      insurancePrice: trimDecimal(detail.data.insurancePrice),
       bidPackage: detail.data.bidPackage ?? '',
       bidDecisionNo: detail.data.bidDecisionNo ?? '',
-      bidPrice: detail.data.bidPrice ?? '',
+      bidPrice: trimDecimal(detail.data.bidPrice),
       bidValidTo: detail.data.bidValidTo ?? '',
       purchaseUnitId: detail.data.purchaseUnitId,
-      conversionFactor: detail.data.conversionFactor ?? '',
+      conversionFactor: trimDecimal(detail.data.conversionFactor),
       minShelfLifeDays:
         detail.data.minShelfLifeDays == null ? '' : String(detail.data.minShelfLifeDays),
       countCycleDays: detail.data.countCycleDays == null ? '' : String(detail.data.countCycleDays),

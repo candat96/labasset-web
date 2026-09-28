@@ -42,7 +42,7 @@ import {
   Trash2,
   TrendingDown,
 } from 'lucide-react'
-import { formatQty } from '@/lib/format/number'
+import { formatQty, trimDecimal } from '@/lib/format/number'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/status-badge'
 import { commonStatusMap, lotStatusMap } from '@/lib/status-maps'
@@ -322,7 +322,7 @@ export function Component() {
     row.conversionFactor && purchaseUnitName && usageUnitName
       ? t('conversionPreview', {
           purchaseUnit: purchaseUnitName,
-          factor: row.conversionFactor,
+          factor: trimDecimal(row.conversionFactor),
           unit: usageUnitName,
         })
       : undefined
@@ -597,7 +597,7 @@ export function Component() {
             { label: t('insuranceName'), value: row.insuranceName },
             {
               label: t('insuranceRate'),
-              value: row.insuranceRate ? `${row.insuranceRate}%` : null,
+              value: row.insuranceRate ? `${trimDecimal(row.insuranceRate)}%` : null,
             },
             {
               label: t('insurancePrice'),
@@ -622,7 +622,10 @@ export function Component() {
           columns={2}
           items={[
             { label: t('purchaseUnit'), value: purchaseUnitName },
-            { label: t('conversionFactor'), value: row.conversionFactor },
+            {
+              label: t('conversionFactor'),
+              value: trimDecimal(row.conversionFactor),
+            },
           ]}
         />
       </SectionCard>

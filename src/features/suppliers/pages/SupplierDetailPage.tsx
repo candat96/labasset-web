@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button'
 import { useConfirm } from '@/components/confirm-dialog'
 import { useCan } from '@/app/guards/useCan'
 import { STAFF } from '@/routes/roles'
+import { trimDecimal } from '@/lib/format/number'
 import { getCatalog } from '@/features/catalogs/api'
 import { commonStatusMap } from '@/lib/status-maps'
 import { formatDate } from '@/lib/format/date'
@@ -66,7 +67,7 @@ function EvaluationCard({
         </div>
         <div className="flex items-center gap-2">
           <span className="bg-primary-soft text-primary rounded-md px-2.5 py-1 text-sm font-semibold tabular-nums">
-            {row.totalScore}
+            {trimDecimal(row.totalScore)}
           </span>
           {canWrite && (
             <>

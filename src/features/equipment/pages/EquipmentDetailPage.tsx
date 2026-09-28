@@ -86,7 +86,7 @@ import {
 } from '@/lib/status-maps'
 import { formatDate, formatDateTime } from '@/lib/format/date'
 import { formatVnd } from '@/lib/format/money'
-import { formatNumber, formatQty } from '@/lib/format/number'
+import { formatNumber, formatQty, trimDecimal } from '@/lib/format/number'
 import { dayRangeToIso } from '@/lib/format/date-range'
 import { useCan } from '@/app/guards/useCan'
 import { ADM, STAFF } from '@/routes/roles'
@@ -1676,8 +1676,9 @@ function SuppliesTab({ id, canWrite }: { id: string; canWrite: boolean }) {
     form.reset({
       rows: list.data.map((row: EquipmentSupplyLink) => ({
         supplyId: row.supplyId,
-        normQtyPerDay: row.normQtyPerDay ?? '',
-        normQtyPerTest: row.normQtyPerTest ?? '',
+        // numeric(12,4) về tới đây là "1.2500"; ô nhập phải hiện "1.25".
+        normQtyPerDay: trimDecimal(row.normQtyPerDay),
+        normQtyPerTest: trimDecimal(row.normQtyPerTest),
         isPrimary: row.isPrimary,
         notes: row.notes ?? '',
       })),
