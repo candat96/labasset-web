@@ -158,7 +158,8 @@
     "config": "Cấu hình",
     "service": "Sửa chữa & bảo dưỡng",
     "history": "Lịch sử",
-    "faults": "Lỗi thường gặp"
+    "faults": "Lỗi thường gặp",
+    "commissioning": "Nghiệm thu"
   },
   "info": {
     "accessories": "Phụ kiện",
@@ -385,6 +386,40 @@
       "component.replaced": "Thay linh kiện",
       "software.updated": "Cập nhật phần mềm",
       "counter.recorded": "Ghi bộ đếm"
+    }
+  },
+  "commissioning": {
+    "title": "Nghiệm thu đưa vào sử dụng",
+    "description": "Năm mốc bàn giao thiết bị; chỉ khi có mốc “Bàn giao đưa vào sử dụng” thiết bị mới chuyển sang Hoạt động.",
+    "loading": "Đang tải nghiệm thu…",
+    "notReleased": "Thiết bị chưa có mốc “Bàn giao đưa vào sử dụng” nên chưa thể chuyển sang trạng thái Hoạt động; hiện đang chờ nghiệm thu.",
+    "released": "Thiết bị đã có mốc bàn giao — đủ điều kiện chuyển sang trạng thái Hoạt động.",
+    "nextStep": "Bước kế tiếp: {{step}}.",
+    "markDone": "Đánh dấu hoàn thành",
+    "dateFor": "Ngày {{step}}",
+    "performer": "Người thực hiện",
+    "result": "Kết quả",
+    "resultPlaceholder": "Chưa đánh giá",
+    "note": "Ghi chú",
+    "document": "Biên bản nghiệm thu",
+    "save": "Lưu nghiệm thu",
+    "saved": "Đã lưu nghiệm thu",
+    "steps": {
+      "received": "Nhận thiết bị",
+      "installed": "Lắp đặt",
+      "testRun": "Chạy thử",
+      "accepted": "Nghiệm thu",
+      "released": "Bàn giao đưa vào sử dụng"
+    },
+    "receivedHint": "Tiếp nhận thiết bị từ nhà cung cấp",
+    "installedHint": "Lắp đặt, đấu nối tại khoa/phòng",
+    "testRunHint": "Chạy thử, kiểm tra thông số",
+    "acceptedHint": "Hội đồng nghiệm thu xác nhận",
+    "releasedHint": "Cho phép đưa thiết bị vào sử dụng",
+    "results": {
+      "pass": "Đạt",
+      "fail": "Không đạt",
+      "conditional": "Đạt có điều kiện"
     }
   },
   "confirm": {

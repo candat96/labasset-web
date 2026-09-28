@@ -1,4 +1,4 @@
-import { api, apiBody, unwrap, unwrapAs } from '@/api/client'
+import { api, apiBody, unwrap, unwrapAs, untypedApi } from '@/api/client'
 import { downloadFile } from '@/api/download'
 import { printFile } from '@/api/print'
 import { apiQuery, pageQuery } from '@/api/paths'
@@ -6,6 +6,8 @@ import type { components, paths } from '@/api/schema'
 import type { ReferenceOption } from '@/components/form/async-select'
 import {
   EQUIPMENT_STATUSES,
+  type Commissioning,
+  type CommissioningInput,
   type CreateEquipment,
   type EquipmentDetail,
   type EquipmentListParams,
@@ -56,6 +58,22 @@ export function changeEquipmentStatus(
   body: components['schemas']['EquipmentStatusDto'],
 ) {
   return unwrap(api.POST('/v1/equipment/{id}/status', { params: { path: { id } }, body }))
+}
+
+/**
+ * C2 (IMM-03) — nghiệm thu đưa vào sử dụng. Endpoint đã có trong OpenAPI nhưng
+ * schema sinh ra còn khai ngày/uuid là `Record<string, never>` nên gọi untyped
+ * và tự khai kiểu ở `types.ts` cho tới khi swagger bổ sung `type: String`.
+ */
+export async function getCommissioning(id: string): Promise<Commissioning | null> {
+  const data = await unwrapAs<Commissioning | null | undefined>(
+    untypedApi.GET(`/v1/equipment/${id}/commissioning`),
+  )
+  return data ?? null
+}
+
+export function putCommissioning(id: string, body: CommissioningInput) {
+  return unwrapAs<Commissioning>(untypedApi.PUT(`/v1/equipment/${id}/commissioning`, { body }))
 }
 
 export function cloneEquipment(id: string, body: components['schemas']['CloneEquipmentDto']) {

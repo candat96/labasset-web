@@ -31,6 +31,7 @@ export const equipmentKeys = {
   repairs: (id: string) => ['equipment', 'detail', id, 'repairs'] as const,
   maintenance: (id: string) => ['equipment', 'detail', id, 'maintenance'] as const,
   calibrations: (id: string) => ['equipment', 'detail', id, 'calibrations'] as const,
+  commissioning: (id: string) => ['equipment', 'detail', id, 'commissioning'] as const,
   transfers: (id: string) => ['equipment', 'detail', id, 'transfers'] as const,
   compare: (a: string, b: string) => ['equipment', 'compare', a, b] as const,
   byQr: (token: string) => ['equipment', 'by-qr', token] as const,

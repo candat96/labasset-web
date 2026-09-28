@@ -49,6 +49,7 @@ beforeEach(() => {
     http.get('/v1/calibrations/equipment/e1/history', () => HttpResponse.json([])),
     http.get('/v1/audit-logs/entity/equipment/e1', () => HttpResponse.json(page([]))),
     http.get('/v1/attachments', () => HttpResponse.json([])),
+    http.get(`${equipmentApi}/commissioning`, () => HttpResponse.json(null)),
   )
 })
 
@@ -493,4 +494,56 @@ it('chi tiết hiện chip và dòng Phòng', async () => {
 it('hiện badge mức độ trọng yếu ở đầu trang và tổng quan', async () => {
   render()
   expect((await screen.findAllByText('Thiết yếu')).length).toBeGreaterThanOrEqual(1)
+})
+
+it('khối nghiệm thu hiện năm mốc và lý do chưa chuyển sang hoạt động', async () => {
+  render('commissioning')
+  const section = within(await screen.findByTestId('section-commissioning'))
+  expect(await section.findByText(/chưa thể chuyển sang trạng thái Hoạt động/)).toBeVisible()
+  expect(section.getByText('Nhận thiết bị')).toBeVisible()
+  expect(section.getByText('Lắp đặt')).toBeVisible()
+  expect(section.getByText('Chạy thử')).toBeVisible()
+  expect(section.getByText('Nghiệm thu')).toBeVisible()
+  expect(section.getByText('Bàn giao đưa vào sử dụng')).toBeVisible()
+})
+
+it('đánh dấu mốc đầu gửi ngày hôm nay kèm người thực hiện', async () => {
+  let body: Record<string, unknown> = {}
+  server.use(
+    http.put(`${equipmentApi}/commissioning`, async ({ request }) => {
+      body = (await request.json()) as Record<string, unknown>
+      return HttpResponse.json({ id: 'cm1', equipmentId: 'e1', ...body })
+    }),
+  )
+  render('commissioning')
+  const buttons = await screen.findAllByRole('button', { name: 'Đánh dấu hoàn thành' })
+  await userEvent.click(buttons[0]!)
+  await waitFor(() => expect(typeof body.receivedAt).toBe('string'))
+  expect(body.receivedBy).toBe('u1')
+})
+
+it('đã có mốc bàn giao thì báo đủ điều kiện hoạt động', async () => {
+  server.use(
+    http.get(`${equipmentApi}/commissioning`, () =>
+      HttpResponse.json({
+        id: 'cm1',
+        equipmentId: 'e1',
+        receivedAt: '2026-01-01',
+        receivedBy: 'u1',
+        installedAt: '2026-01-05',
+        installedBy: 'u1',
+        testRunAt: '2026-01-10',
+        testRunBy: 'u1',
+        acceptedAt: '2026-01-15',
+        acceptedBy: 'u1',
+        releasedAt: '2026-01-20',
+        releasedBy: 'u1',
+        documentFileId: null,
+        result: 'pass',
+        note: null,
+      }),
+    ),
+  )
+  render('commissioning')
+  expect(await screen.findByText(/đủ điều kiện chuyển sang trạng thái Hoạt động/)).toBeVisible()
 })

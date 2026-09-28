@@ -43,6 +43,7 @@ import {
 import { cn } from '@/lib/utils'
 import { enumLabel } from '@/lib/enum-labels'
 import { FaultsTab } from '../components/FaultsTab'
+import { CommissioningTab } from '../components/CommissioningTab'
 import { DeleteIconButton, EditIconButton } from '@/components/icon-action'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -193,6 +194,7 @@ export function Component() {
   const canWrite = useCan(STAFF)
   const isAdm = useCan(ADM)
   const userId = useAuthStore((s) => s.user?.id)
+  const userName = useAuthStore((s) => s.user?.fullName)
   const { confirm, dialog } = useConfirm()
   const invalidate = useInvalidateEquipment(id)
   const userNames = useUserNames(isAdm)
@@ -429,6 +431,22 @@ export function Component() {
                   <CountersTab id={id} canWrite={canWrite} />
                 </div>
               </>
+            ),
+          },
+          {
+            value: 'commissioning',
+            label: t('tabs.commissioning'),
+            content: (
+              <div data-testid="section-commissioning">
+                <CommissioningTab
+                  id={id}
+                  canWrite={canWrite}
+                  canPickPerformer={isAdm}
+                  userNames={userNames}
+                  currentUserId={userId}
+                  currentUserName={userName}
+                />
+              </div>
             ),
           },
           {

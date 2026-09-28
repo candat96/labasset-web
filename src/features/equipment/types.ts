@@ -27,6 +27,35 @@ export type EquipmentCriticality = NonNullable<CreateEquipment['criticality']>
 export const EQUIPMENT_CRITICALITIES: EquipmentCriticality[] = ['vital', 'essential', 'desirable']
 export const isEquipmentCriticality = (value: unknown): value is EquipmentCriticality =>
   typeof value === 'string' && (EQUIPMENT_CRITICALITIES as string[]).includes(value)
+
+/** C2 (IMM-03) — nghiệm thu đưa thiết bị vào sử dụng. */
+export type CommissioningResult = 'pass' | 'fail' | 'conditional'
+export const COMMISSIONING_RESULTS: CommissioningResult[] = ['pass', 'fail', 'conditional']
+
+export interface Commissioning {
+  id: string
+  equipmentId: string
+  receivedAt: string | null
+  receivedBy: string | null
+  installedAt: string | null
+  installedBy: string | null
+  testRunAt: string | null
+  testRunBy: string | null
+  acceptedAt: string | null
+  acceptedBy: string | null
+  releasedAt: string | null
+  releasedBy: string | null
+  documentFileId: string | null
+  result: CommissioningResult | null
+  note: string | null
+  createdAt?: string
+  updatedAt?: string
+}
+
+export type CommissioningInput = Partial<
+  Omit<Commissioning, 'id' | 'equipmentId' | 'createdAt' | 'updatedAt'>
+>
+
 export type Accessory = components['schemas']['AccessoryResponseDto']
 export type Software = components['schemas']['SoftwareResponseDto']
 export type SoftwareHistory = components['schemas']['SoftwareHistoryResponseDto']
