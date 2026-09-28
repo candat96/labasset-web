@@ -2292,6 +2292,22 @@ export interface paths {
         patch: operations["DepartmentsController_update"];
         trace?: never;
     };
+    "/v1/departments/{id}/lots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DepartmentLotsController_departmentLots"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/departments/{id}/rooms": {
         parameters: {
             query?: never;
@@ -2565,6 +2581,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/equipment/{id}/commissioning": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CommissioningController_get"];
+        put: operations["CommissioningController_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/equipment/{id}/components": {
         parameters: {
             query?: never;
@@ -2653,6 +2685,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["TimelineController_events"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/equipment/{id}/lots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["RunwayController_equipmentLots"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4919,6 +4967,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/stock/lots/{id}/recall": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["StockOperationsController_recall"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/stock/lots/{id}/release-recall": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["StockOperationsController_releaseRecall"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/stock/lots/{id}/trace": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["StockController_trace"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/stock/receipts": {
         parameters: {
             query?: never;
@@ -6158,6 +6254,68 @@ export interface components {
             /** @enum {string} */
             status: "draft" | "open" | "counting" | "review" | "closed" | "cancelled";
         };
+        CommissioningDto: {
+            /** Format: date */
+            acceptedAt?: string | null;
+            /** Format: uuid */
+            acceptedBy?: string | null;
+            /** Format: uuid */
+            documentFileId?: string | null;
+            /** Format: date */
+            installedAt?: string | null;
+            /** Format: uuid */
+            installedBy?: string | null;
+            note?: string | null;
+            /** Format: date */
+            receivedAt?: string | null;
+            /** Format: uuid */
+            receivedBy?: string | null;
+            /** Format: date */
+            releasedAt?: string | null;
+            /** Format: uuid */
+            releasedBy?: string | null;
+            /** @enum {string|null} */
+            result?: "pass" | "fail" | "conditional" | null;
+            /** Format: date */
+            testRunAt?: string | null;
+            /** Format: uuid */
+            testRunBy?: string | null;
+        };
+        CommissioningResponseDto: {
+            /** Format: date */
+            acceptedAt: string | null;
+            /** Format: uuid */
+            acceptedBy: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: uuid */
+            documentFileId: string | null;
+            /** Format: uuid */
+            equipmentId: string;
+            /** Format: uuid */
+            id: string;
+            /** Format: date */
+            installedAt: string | null;
+            /** Format: uuid */
+            installedBy: string | null;
+            note: string | null;
+            /** Format: date */
+            receivedAt: string | null;
+            /** Format: uuid */
+            receivedBy: string | null;
+            /** Format: date */
+            releasedAt: string | null;
+            /** Format: uuid */
+            releasedBy: string | null;
+            /** @enum {string|null} */
+            result: "pass" | "fail" | "conditional" | null;
+            /** Format: date */
+            testRunAt: string | null;
+            /** Format: uuid */
+            testRunBy: string | null;
+            /** Format: date-time */
+            updatedAt: string;
+        };
         CompareDto: {
             items: components["schemas"]["CompareItemDto"][];
             summary: {
@@ -6498,10 +6656,14 @@ export interface components {
         CreateLineDto: {
             /** @description Linh kiện/thiết bị gắn máy */
             equipmentId?: Record<string, never>;
+            /** @description C4 — vòng đời dự kiến 1–50 năm, chỉ dòng thiết bị */
+            expectedLifeYears?: number;
             /** @description Tự điền theo vật tư khi bỏ trống; bắt buộc với equipment/service */
             itemName?: Record<string, never>;
             /** @enum {string} */
             itemType: "supply" | "component" | "equipment" | "service";
+            /** @description C4 — chi phí vòng đời ước tính (đồng), chỉ dòng thiết bị */
+            lifecycleCostEst?: string;
             /**
              * @default normal
              * @enum {string}
@@ -6510,11 +6672,15 @@ export interface components {
             /** @description Độ dài = buckets của kỳ */
             qtyByBucket: string[];
             reason?: Record<string, never>;
+            /** @description C4 — id máy bị thay thế, chỉ dòng thiết bị */
+            replacesEquipmentId?: Record<string, never>;
             sortOrder?: number;
             /** @description Bắt buộc với equipment/service */
             spec?: Record<string, never>;
             /** @description Bắt buộc với supply/component */
             supplyId?: Record<string, never>;
+            /** @description C4 — điểm công nghệ 0–10, chỉ dòng thiết bị */
+            techScore?: number;
             unit?: Record<string, never>;
             /** @default 0 */
             unitPriceEst: string;
@@ -6743,6 +6909,8 @@ export interface components {
             trackExpiry: boolean;
             /** @default true */
             trackLot: boolean;
+            /** @default false */
+            trackSerial: boolean;
             unitCode?: string;
             unitId?: Record<string, never>;
         };
@@ -6919,10 +7087,14 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
             equipmentId: string | null;
+            /** @description Vòng đời dự kiến (năm) */
+            expectedLifeYears: number | null;
             id: string;
             itemName: string;
             /** @enum {string} */
             itemType: "supply" | "component" | "equipment" | "service";
+            /** @description Chi phí vòng đời ước tính */
+            lifecycleCostEst: string | null;
             /** @enum {string} */
             priority: "normal" | "high" | "urgent";
             qtyApproved: string | null;
@@ -6930,6 +7102,8 @@ export interface components {
             qtyByBucket: string[];
             qtyRequested: string;
             reason: string | null;
+            /** @description Máy bị thay thế */
+            replacesEquipmentId: string | null;
             requestId: string;
             sortOrder: number;
             spec: string | null;
@@ -6939,6 +7113,8 @@ export interface components {
             } | null;
             supplyCode?: string | null;
             supplyId: string | null;
+            /** @description Điểm công nghệ 0–10 */
+            techScore: string | null;
             unit: string | null;
             unitPriceEst: string;
             /** Format: date-time */
@@ -7626,6 +7802,7 @@ export interface components {
         IssueItemDto: {
             lotId?: Record<string, never>;
             quantity: string;
+            serialNos?: string[];
             supplyId: string;
         };
         IssueLinePickDto: {
@@ -7922,6 +8099,37 @@ export interface components {
         LogoutDto: {
             refreshToken?: string;
         };
+        LotTraceDto: {
+            issuedTo: components["schemas"]["LotTraceIssueDto"][];
+            lot: Record<string, never>;
+            receiptId?: string | null;
+            supplierId?: string | null;
+            supply: Record<string, never>;
+        };
+        LotTraceIssueDto: {
+            /** Format: date-time */
+            at: string;
+            departmentName?: string | null;
+            equipmentCode?: string | null;
+            equipmentName?: string | null;
+            issueCode?: string | null;
+            maintenanceTaskId?: string | null;
+            quantity: string;
+            refId: string;
+            refType: string;
+            repairTicketId?: string | null;
+        };
+        LotUsageDto: {
+            expiresAt?: string | null;
+            /** Format: date-time */
+            lastIssuedAt: string;
+            lotId: string;
+            lotNo: string;
+            quantity: string;
+            status: string;
+            supplyCode: string;
+            supplyName: string;
+        };
         MaintenanceSignatureDto: {
             fileId: string;
             /** @enum {string} */
@@ -7955,6 +8163,10 @@ export interface components {
              */
             locationId: string;
             note?: string;
+        };
+        MySigningProfileDto: {
+            configured: boolean;
+            profile?: components["schemas"]["SigningProfileViewDto"] | null;
         };
         MyTasksResponseDto: {
             alerts: components["schemas"]["AlertTasksDto"];
@@ -8197,6 +8409,10 @@ export interface components {
         ReassignTaskDto: {
             assigneeId: string;
         };
+        RecallLotDto: {
+            /** @example Nhà sản xuất thông báo thu hồi lô */
+            reason: string;
+        };
         ReceiptItemDto: {
             expiresAt?: string;
             /** Format: uuid */
@@ -8204,6 +8420,7 @@ export interface components {
             lotNo?: string;
             purchaseQuantity?: string;
             quantity?: string;
+            serialNos?: string[];
             supplyId: string;
             unitCost: string;
         };
@@ -8990,6 +9207,30 @@ export interface components {
             signedAt: string;
             url: string;
         };
+        SigningConfigViewDto: {
+            baseUrl: string;
+            enabled: boolean;
+            passwordSet: boolean;
+            providerKey: string;
+            username: string;
+        };
+        SigningProfileViewDto: {
+            certSerial: string;
+            certSubject: string;
+            /** Format: date-time */
+            certValidFrom: string;
+            /** Format: date-time */
+            certValidTo: string;
+            credentialId: string;
+            expiringSoon: boolean;
+            passwordSet: boolean;
+            pinSet: boolean;
+            providerKey: string;
+            rememberPin: boolean;
+            sessionExpiresAt?: string | null;
+            userId: string;
+            username: string;
+        };
         SignResultDto: {
             attachmentId: string;
             fileId: string;
@@ -9491,6 +9732,7 @@ export interface components {
         TransferItemDto: {
             lotId: string;
             quantity: string;
+            serialNos?: string[];
         };
         TransferPageDto: {
             items: components["schemas"]["TransferResponseDto"][];
@@ -9734,10 +9976,14 @@ export interface components {
         UpdateLineDto: {
             /** @description Linh kiện/thiết bị gắn máy */
             equipmentId?: Record<string, never>;
+            /** @description C4 — vòng đời dự kiến 1–50 năm, chỉ dòng thiết bị */
+            expectedLifeYears?: number;
             /** @description Tự điền theo vật tư khi bỏ trống; bắt buộc với equipment/service */
             itemName?: Record<string, never>;
             /** @enum {string} */
             itemType?: "supply" | "component" | "equipment" | "service";
+            /** @description C4 — chi phí vòng đời ước tính (đồng), chỉ dòng thiết bị */
+            lifecycleCostEst?: string;
             /**
              * @default normal
              * @enum {string}
@@ -9746,11 +9992,15 @@ export interface components {
             /** @description Độ dài = buckets của kỳ */
             qtyByBucket?: string[];
             reason?: Record<string, never>;
+            /** @description C4 — id máy bị thay thế, chỉ dòng thiết bị */
+            replacesEquipmentId?: Record<string, never>;
             sortOrder?: number;
             /** @description Bắt buộc với equipment/service */
             spec?: Record<string, never>;
             /** @description Bắt buộc với supply/component */
             supplyId?: Record<string, never>;
+            /** @description C4 — điểm công nghệ 0–10, chỉ dòng thiết bị */
+            techScore?: number;
             unit?: Record<string, never>;
             /** @default 0 */
             unitPriceEst: string;
@@ -10011,6 +10261,8 @@ export interface components {
             trackExpiry: boolean;
             /** @default true */
             trackLot: boolean;
+            /** @default false */
+            trackSerial: boolean;
             unitCode?: string;
             unitId?: Record<string, never>;
         };
@@ -15563,6 +15815,30 @@ export interface operations {
             };
         };
     };
+    DepartmentLotsController_departmentLots: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LotUsageDto"][];
+                };
+            };
+        };
+    };
     DepartmentsController_listRooms: {
         parameters: {
             query?: never;
@@ -16198,6 +16474,58 @@ export interface operations {
             };
         };
     };
+    CommissioningController_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommissioningResponseDto"];
+                };
+            };
+        };
+    };
+    CommissioningController_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommissioningDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommissioningResponseDto"];
+                };
+            };
+        };
+    };
     EquipmentPartsController_listcomponents: {
         parameters: {
             query?: never;
@@ -16465,6 +16793,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EventPageDto"];
+                };
+            };
+        };
+    };
+    RunwayController_equipmentLots: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LotUsageDto"][];
                 };
             };
         };
@@ -18318,7 +18670,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["MySigningProfileDto"];
+                };
             };
         };
     };
@@ -18342,7 +18696,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["SigningProfileViewDto"];
+                };
             };
         };
     };
@@ -20749,7 +21105,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["SigningConfigViewDto"];
+                };
             };
         };
     };
@@ -20773,7 +21131,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["SigningConfigViewDto"];
+                };
             };
         };
     };
@@ -21157,6 +21517,7 @@ export interface operations {
         parameters: {
             query: {
                 quantity: string;
+                serialNos?: string[];
                 supplyId: string;
                 warehouseId: string;
             };
@@ -21271,6 +21632,82 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StockLotResponseDto"];
+                };
+            };
+        };
+    };
+    StockOperationsController_recall: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecallLotDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StockLotResponseDto"];
+                };
+            };
+        };
+    };
+    StockOperationsController_releaseRecall: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StockLotResponseDto"];
+                };
+            };
+        };
+    };
+    StockController_trace: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LotTraceDto"];
                 };
             };
         };

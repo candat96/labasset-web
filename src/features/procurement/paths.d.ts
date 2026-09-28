@@ -450,15 +450,10 @@ type BaseDemandLineBody = Omit<
   lifecycleCostEst?: string | null
 }
 
-export interface DemandLine
-  extends Omit<
-    S['DemandLineResponseDto'],
-    | 'suggestion'
-    | 'techScore'
-    | 'replacesEquipmentId'
-    | 'expectedLifeYears'
-    | 'lifecycleCostEst'
-  > {
+export interface DemandLine extends Omit<
+  S['DemandLineResponseDto'],
+  'suggestion' | 'techScore' | 'replacesEquipmentId' | 'expectedLifeYears' | 'lifecycleCostEst'
+> {
   suggestion?: DemandLineSuggestion | null
   /** C4 — đánh giá công nghệ/kế hoạch thay thế (chỉ dòng thiết bị). */
   techScore?: string | null
