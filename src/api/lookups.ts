@@ -2,7 +2,13 @@ import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { api, unwrapAs } from './client'
 import { pageQuery } from './paths'
-import { allDepartments, catalogOptions, roomOptions, userOptions } from './references'
+import {
+  allDepartments,
+  catalogOptions,
+  roomOptions,
+  storageLocationOptions,
+  userOptions,
+} from './references'
 import type { components } from './schema'
 
 /**
@@ -64,6 +70,20 @@ export function useRoomLookup(enabled = true) {
   const query = useQuery({
     queryKey: ['reference', 'rooms', 'lookup'],
     queryFn: () => roomOptions('', undefined, true),
+    enabled,
+    staleTime: 300_000,
+  })
+  return useMemo(
+    () => new Map((query.data ?? []).map((row) => [row.id, { name: row.name, code: row.code }])),
+    [query.data],
+  )
+}
+
+/** id vị trí lưu trữ → `{ name, code }` (mọi kho, đang hoạt động). */
+export function useStorageLocationLookup(enabled = true) {
+  const query = useQuery({
+    queryKey: ['reference', 'storage-locations', 'lookup'],
+    queryFn: () => storageLocationOptions(null, ''),
     enabled,
     staleTime: 300_000,
   })

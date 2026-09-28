@@ -26,6 +26,7 @@ import {
   LayoutDashboard,
   ListChecks,
   ListTodo,
+  MapPin,
   Megaphone,
   Microscope,
   PackageMinus,
@@ -191,6 +192,11 @@ export const MENU: MenuGroup[] = [
     items: [
       { path: '/admin/departments', labelKey: 'menu:items.departments', icon: Building2 },
       { path: '/admin/rooms', labelKey: 'menu:items.rooms', icon: DoorOpen },
+      {
+        path: '/admin/storage-locations',
+        labelKey: 'menu:items.storageLocations',
+        icon: MapPin,
+      },
       { path: '/admin/users', labelKey: 'menu:items.users', icon: Users },
       { path: '/admin/catalogs', labelKey: 'menu:items.catalogs', icon: Tags },
       {

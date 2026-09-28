@@ -27,6 +27,10 @@ const implemented: RouteObject[] = [
   { path: 'admin/signing', lazy: () => import('@/features/signing/pages/SigningConfigPage') },
   { path: 'settings/signing', lazy: () => import('@/features/signing/pages/SigningProfilePage') },
   { path: 'admin/rooms', lazy: () => import('@/features/catalogs/pages/RoomsPage') },
+  {
+    path: 'admin/storage-locations',
+    lazy: () => import('@/features/storage-locations/pages/StorageLocationsPage'),
+  },
   { path: 'admin/settings', lazy: () => import('@/features/settings/pages/SettingsPage') },
   { path: 'admin/numbering', element: <Navigate to="/admin/settings?tab=numbering" replace /> },
   { path: 'admin/backup', lazy: () => import('@/features/settings/pages/BackupPage') },

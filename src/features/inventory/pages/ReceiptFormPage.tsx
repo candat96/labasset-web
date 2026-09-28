@@ -20,7 +20,13 @@ import { Form, FormField, FormItem, FormMessage } from '@/components/ui/form'
 import { AsyncSelect } from '@/components/form/async-select'
 import { applyServerErrors, messageFor } from '@/api/errors'
 import { apiBody } from '@/api/client'
-import { catalogOptions, departmentOptions, supplyOptions } from '@/api/references'
+import {
+  catalogOptions,
+  departmentOptions,
+  resolveStorageLocation,
+  storageLocationOptions,
+  supplyOptions,
+} from '@/api/references'
 import { formatQty } from '@/lib/format/number'
 import { formatDate } from '@/lib/format/date'
 import { formatVnd, moneyAdd, moneyMul } from '@/lib/format/money'
@@ -53,6 +59,7 @@ const schema = z.object({
         purchaseQuantity: decimalString({ maxScale: 3, min: '0' }),
         purchaseUnit: z.boolean(),
         unitCost: decimalString({ maxScale: 0, min: '0' }),
+        locationId: z.string().nullable(),
       }),
     )
     .min(1),
@@ -162,6 +169,7 @@ export function Component() {
           purchaseQuantity: '1',
           purchaseUnit: false,
           unitCost: '0',
+          locationId: null,
         },
       ],
     },
@@ -178,6 +186,7 @@ export function Component() {
       purchaseQuantity: item.purchaseQuantity ?? item.quantity ?? '',
       purchaseUnit: false,
       unitCost: item.unitCost,
+      locationId: (item as { locationId?: string | null }).locationId ?? null,
     }))
     appliedPrice.current = {}
     loaded.forEach((item, index) => {
@@ -296,6 +305,7 @@ export function Component() {
             ? { purchaseQuantity: item.purchaseQuantity }
             : { quantity: item.quantity }),
           unitCost: item.unitCost,
+          locationId: item.locationId ?? undefined,
         })),
       })
       const saved = editing ? await updateReceipt(id, body) : await createReceipt(body)
@@ -446,6 +456,7 @@ export function Component() {
                     purchaseQuantity: '1',
                     purchaseUnit: false,
                     unitCost: '0',
+                    locationId: null,
                   })
                 }
               >
@@ -512,6 +523,25 @@ export function Component() {
                     control={form.control}
                     name={`items.${index}.expiresAt`}
                     label={t('expiry')}
+                  />
+                  <FormField
+                    control={form.control}
+                    name={`items.${index}.locationId`}
+                    render={({ field: f }) => (
+                      <FormItem>
+                        <AsyncSelect
+                          label={t('location')}
+                          queryKey={`storage-locations-${form.watch('warehouseId') || 'none'}`}
+                          loadOptions={(q) => storageLocationOptions(form.watch('warehouseId'), q)}
+                          resolveOption={resolveStorageLocation}
+                          value={f.value}
+                          onChange={(v) => f.onChange(typeof v === 'string' ? v : null)}
+                          disabled={!form.watch('warehouseId')}
+                          clearable
+                        />
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
                   <div className="space-y-2">
                     {canPurchase && (

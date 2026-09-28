@@ -1,4 +1,4 @@
-import { api, apiBody, unwrap, unwrapAs } from '@/api/client'
+import { api, apiBody, unwrap, unwrapAs, untypedApi } from '@/api/client'
 import { downloadFile } from '@/api/download'
 import { apiQuery, pageQuery } from '@/api/paths'
 import type { components, paths } from '@/api/schema'
@@ -94,6 +94,15 @@ export function listLots(params: Record<string, unknown>) {
 }
 export function openLot(id: string) {
   return unwrap(api.POST('/v1/stock/lots/{id}/open', { params: { path: { id } } }))
+}
+/** A1 — chuyển lô sang vị trí khác trong cùng kho (endpoint chưa có trong OpenAPI). */
+export function moveLot(id: string, body: { locationId: string; note?: string }) {
+  return unwrapAs<{ id: string; locationId: string | null }>(
+    untypedApi.POST('/v1/stock/lots/{id}/move', {
+      params: { path: { id } },
+      body,
+    }),
+  )
 }
 export function adjustStock(body: Record<string, unknown>) {
   return unwrap(api.POST('/v1/stock/adjust', { body: apiBody(body) }))

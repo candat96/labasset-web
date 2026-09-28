@@ -108,6 +108,8 @@
   "SUBSTITUTE_NOT_FOUND": "Không tìm thấy liên kết vật tư thay thế",
   "LOT_ALREADY_OPENED": "Lô đã mở nắp",
   "WAREHOUSE_SAME": "Kho nguồn và đích phải khác nhau",
+  "STORAGE_LOCATION_WAREHOUSE_MISMATCH": "Vị trí không thuộc kho của lô/phiếu",
+  "STORAGE_LOCATION_PARENT_WAREHOUSE_MISMATCH": "Vị trí cha phải cùng kho",
   "REQUEST_NOT_FOUND": "Không tìm thấy phiếu yêu cầu",
   "REQUEST_INVALID_TRANSITION": "Không chuyển được trạng thái phiếu yêu cầu",
   "REQUEST_ITEM_NOT_COMPATIBLE": "Vật tư không tương thích với máy",

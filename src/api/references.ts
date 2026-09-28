@@ -1,4 +1,4 @@
-import { api, unwrapAs } from './client'
+import { api, unwrapAs, untypedApi } from './client'
 import { pageQuery } from './paths'
 // TODO(api): Các API danh mục còn thiếu response schema.
 export interface Reference {
@@ -161,6 +161,42 @@ export async function resolveRoom(id: string): Promise<RoomReference | null> {
     return await unwrapAs<RoomReference>(
       api.GET('/v1/catalogs/rooms/{id}', { params: { path: { id } } }),
     )
+  } catch {
+    return null
+  }
+}
+
+/**
+ * A1 — vị trí lưu trữ. Endpoint mới chưa có trong OpenAPI nên gọi qua `untypedApi`.
+ * Không truyền `warehouseId` → trả mọi vị trí đang dùng (dùng cho bảng tra tên kệ/ô).
+ */
+export async function storageLocationOptions(
+  warehouseId: string | null | undefined,
+  q: string,
+): Promise<Reference[]> {
+  const result = await unwrapAs<Reference[] | { items: Reference[] }>(
+    untypedApi.GET('/v1/catalogs/storage-locations', {
+      params: {
+        query: {
+          warehouseId: warehouseId || undefined,
+          q: q || undefined,
+          isActive: true,
+          all: true,
+        },
+      },
+    }),
+  )
+  return Array.isArray(result) ? result : result.items
+}
+
+export async function resolveStorageLocation(id: string): Promise<Reference | null> {
+  try {
+    const row = await unwrapAs<Reference>(
+      untypedApi.GET('/v1/catalogs/storage-locations/{id}', {
+        params: { path: { id } },
+      }),
+    )
+    return { id: row.id, code: row.code, name: row.name }
   } catch {
     return null
   }

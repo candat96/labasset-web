@@ -144,5 +144,21 @@
   "roomInUse": "Phòng đang có máy nên không xoá được — hãy Sửa và tắt \"Đang hoạt động\".",
   "addRoom": "Thêm phòng",
   "roomsHint": "Vị trí vật lý đặt máy: phòng của từng Khoa hoặc phòng dùng chung.",
-  "roomDeleteDesc": "Phòng đang có máy sẽ không xoá được — hãy tắt \"Đang hoạt động\"."
+  "roomDeleteDesc": "Phòng đang có máy sẽ không xoá được — hãy tắt \"Đang hoạt động\".",
+  "storageLocations": {
+    "title": "Vị trí lưu trữ",
+    "hint": "Sơ đồ kệ/ô trong từng kho; lô được gắn vào vị trí để tìm nhanh và kiểm kê theo khu vực.",
+    "add": "Thêm vị trí",
+    "searchLabel": "Tìm vị trí",
+    "created": "Đã tạo vị trí — mã {{code}}",
+    "codePlaceholder": "Để trống sẽ tự sinh (vd KE-001)",
+    "inUse": "Vị trí đang được lô/phiếu kho dùng — hãy ngưng dùng thay vì xoá.",
+    "deleteDesc": "Vị trí đang gắn lô sẽ không xoá được — hãy tắt \"Đang hoạt động\".",
+    "fields": {
+      "warehouseId": "Kho",
+      "zone": "Khu vực",
+      "parentId": "Vị trí cha",
+      "parentNone": "Không có (cấp cao nhất)"
+    }
+  }
 }

@@ -1,8 +1,9 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { toast } from 'sonner'
+import { MapPin } from 'lucide-react'
 import { DataTable, useServerTable } from '@/components/data-table'
 import { FilterPreset } from '@/components/filter-bar'
 import { FilterPanel, FilterPanelField } from '@/components/page/FilterPanel'
@@ -24,8 +25,14 @@ import { formatQty } from '@/lib/format/number'
 import { useCan } from '@/app/guards/useCan'
 import { STAFF } from '@/routes/roles'
 import { messageFor } from '@/api/errors'
-import { catalogOptions, supplyOptions } from '@/api/references'
+import {
+  catalogOptions,
+  resolveStorageLocation,
+  storageLocationOptions,
+  supplyOptions,
+} from '@/api/references'
 import { listLots, openLot } from '../api'
+import { MoveLotDialog, type MoveLotTarget } from '../components/MoveLotDialog'
 import { useTranslation } from 'react-i18next'
 
 type Lot = {
@@ -33,7 +40,11 @@ type Lot = {
   lotNo?: string
   supplyId: string
   supplyName?: string
+  warehouseId?: string | null
   warehouseName?: string
+  locationId?: string | null
+  locationCode?: string | null
+  locationName?: string | null
   expiresAt?: string | null
   qtyOnHand?: string
   status?: string
@@ -45,7 +56,7 @@ export function Component() {
   const canWrite = useCan(STAFF)
   const qc = useQueryClient()
   const table = useServerTable({
-    filterKeys: ['supplyId', 'warehouseId', 'status', 'expiringWithinDays'],
+    filterKeys: ['supplyId', 'warehouseId', 'locationId', 'status', 'expiringWithinDays'],
   })
   const f = table.params.filters
   const params = {
@@ -54,6 +65,7 @@ export function Component() {
     q: table.params.q || undefined,
     supplyId: f.supplyId,
     warehouseId: f.warehouseId,
+    locationId: f.locationId,
     status: f.status,
     expiringWithinDays: f.expiringWithinDays ? Number(f.expiringWithinDays) : undefined,
   }
@@ -62,6 +74,7 @@ export function Component() {
     queryFn: () => listLots(params),
     placeholderData: (p) => p,
   })
+  const [moving, setMoving] = useState<MoveLotTarget | undefined>()
   const columns = useMemo<ColumnDef<Lot>[]>(
     () => [
       {
@@ -79,6 +92,23 @@ export function Component() {
       },
       { accessorKey: 'supplyName', header: t('supply') },
       { accessorKey: 'warehouseName', header: t('warehouse') },
+      {
+        id: 'locationId',
+        header: t('location'),
+        cell: ({ row }) => {
+          const { locationCode, locationName } = row.original
+          if (!locationCode && !locationName) return '—'
+          return (
+            <span className="inline-flex items-center gap-1">
+              <MapPin className="text-muted-foreground size-3 shrink-0" aria-hidden />
+              <span className="font-mono text-xs">{locationCode ?? '—'}</span>
+              {locationName && (
+                <span className="text-muted-foreground text-xs">{locationName}</span>
+              )}
+            </span>
+          )
+        },
+      },
       {
         accessorKey: 'expiresAt',
         header: t('expiry'),
@@ -110,22 +140,39 @@ export function Component() {
         enableHiding: false,
         cell: ({ row }) =>
           canWrite ? (
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={async (event) => {
-                event.stopPropagation()
-                try {
-                  await openLot(row.original.id)
-                  toast.success(t('lotOpened'))
-                  void qc.invalidateQueries({ queryKey: ['stock', 'lots'] })
-                } catch (error) {
-                  toast.error(messageFor(error))
-                }
-              }}
-            >
-              {t('openLot')}
-            </Button>
+            <div className="flex justify-end gap-1">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  setMoving({
+                    id: row.original.id,
+                    lotNo: row.original.lotNo,
+                    warehouseId: row.original.warehouseId ?? null,
+                  })
+                }}
+              >
+                <MapPin aria-hidden />
+                {t('moveLocation')}
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={async (event) => {
+                  event.stopPropagation()
+                  try {
+                    await openLot(row.original.id)
+                    toast.success(t('lotOpened'))
+                    void qc.invalidateQueries({ queryKey: ['stock', 'lots'] })
+                  } catch (error) {
+                    toast.error(messageFor(error))
+                  }
+                }}
+              >
+                {t('openLot')}
+              </Button>
+            </div>
           ) : null,
       },
     ],
@@ -153,6 +200,15 @@ export function Component() {
                   key: 'warehouseId',
                   label: t('warehouse'),
                   onRemove: () => table.setFilter('warehouseId', undefined),
+                },
+              ]
+            : []),
+          ...(f.locationId
+            ? [
+                {
+                  key: 'locationId',
+                  label: t('location'),
+                  onRemove: () => table.setFilter('locationId', undefined),
                 },
               ]
             : []),
@@ -198,6 +254,20 @@ export function Component() {
                 value={f.warehouseId ?? null}
                 onChange={(value) =>
                   table.setFilter('warehouseId', typeof value === 'string' ? value : undefined)
+                }
+                clearable
+                showLabel={false}
+              />
+            </FilterPanelField>
+            <FilterPanelField label={t('location')}>
+              <AsyncSelect
+                label={t('location')}
+                queryKey={`storage-locations-filter-${f.warehouseId ?? 'all'}`}
+                loadOptions={(q) => storageLocationOptions(f.warehouseId, q)}
+                resolveOption={resolveStorageLocation}
+                value={f.locationId ?? null}
+                onChange={(value) =>
+                  table.setFilter('locationId', typeof value === 'string' ? value : undefined)
                 }
                 clearable
                 showLabel={false}
@@ -265,6 +335,13 @@ export function Component() {
           getRowId={(row) => row.id}
         />
       </FilterPanel>
+      <MoveLotDialog
+        lot={moving}
+        open={!!moving}
+        onOpenChange={(open) => {
+          if (!open) setMoving(undefined)
+        }}
+      />
     </>
   )
 }
