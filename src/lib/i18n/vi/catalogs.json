@@ -87,6 +87,7 @@
       "taxCode": "Mã số thuế",
       "maintenanceContractNo": "Số hợp đồng bảo trì",
       "maintenanceContractExpiresAt": "Hợp đồng đến ngày",
+      "leadTimeDays": "Thời gian cung ứng (ngày)",
       "notes": "Ghi chú"
     },
     "manufacturers": {

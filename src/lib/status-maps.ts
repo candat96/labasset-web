@@ -158,6 +158,7 @@ export const alertTypeMap: StatusMap = {
   open_vial_expiring: { label: 'Lọ mở sắp hết', tone: 'warning' },
   stale: { label: 'Tồn lâu', tone: 'muted' },
   circulation_expiring: { label: 'Số lưu hành sắp hết hiệu lực', tone: 'warning' },
+  reorder: { label: 'Đến điểm đặt hàng', tone: 'warning' },
 }
 
 export const requestStatusMap: StatusMap = {

@@ -42,6 +42,7 @@ const supplyRow = (extra: Record<string, unknown> = {}) => ({
   purchaseUnitId: null,
   conversionFactor: null,
   minShelfLifeDays: null,
+  leadTimeDays: null,
   ...extra,
 })
 
@@ -168,4 +169,51 @@ it('hiện và lưu chu kỳ kiểm đếm (ngày) của vật tư', async () =>
   await userEvent.type(field, '45')
   await userEvent.click(screen.getByRole('button', { name: 'Lưu' }))
   await waitFor(() => expect(body?.countCycleDays).toBe(45))
+})
+
+it('hiện và lưu thời gian cung ứng (ngày) của vật tư', async () => {
+  let body: Record<string, unknown> | null = null
+  mockDetailEndpoints(supplyRow({ leadTimeDays: 7 }))
+  server.use(
+    http.patch('/v1/supplies/:id', async ({ request }) => {
+      body = (await request.json()) as Record<string, unknown>
+      return HttpResponse.json(supplyRow({ leadTimeDays: 12 }))
+    }),
+  )
+  renderWithProviders(<SupplyFormPage />, {
+    path: '/supplies/:id',
+    route: '/supplies/s1',
+  })
+  const field = await screen.findByLabelText('Thời gian cung ứng (ngày)')
+  expect(field).toHaveValue(7)
+  await userEvent.clear(field)
+  await userEvent.type(field, '12')
+  await userEvent.click(screen.getByRole('button', { name: 'Lưu' }))
+  await waitFor(() => expect(body?.leadTimeDays).toBe(12))
+})
+
+it('hiện điểm đặt hàng cạnh tồn hiện tại ở tab tồn theo lô', async () => {
+  mockDetailEndpoints(supplyRow())
+  server.use(
+    http.get('/v1/stock/forecast', () =>
+      HttpResponse.json({
+        avg30: '1',
+        avg90: '1',
+        dailyUsage: '1',
+        daysLeft: 20,
+        reorderPoint: '35.000',
+      }),
+    ),
+    http.get('/v1/supplies/:id/substitutes', () => HttpResponse.json([])),
+  )
+  renderWithProviders(<SupplyDetailPage />, {
+    path: '/supplies/:id',
+    route: '/supplies/s1',
+  })
+  await userEvent.click(await screen.findByRole('tab', { name: /Tồn theo lô/ }))
+  expect(await screen.findByText('Điểm đặt hàng')).toBeInTheDocument()
+  expect(await screen.findByText('35')).toBeInTheDocument()
+  expect(
+    await screen.findByText('Nên đặt thêm khi tồn khả dụng xuống tới mức này'),
+  ).toBeInTheDocument()
 })

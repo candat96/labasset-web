@@ -6662,6 +6662,8 @@ export interface components {
             description?: string;
             email?: Record<string, never>;
             isActive?: boolean;
+            /** @description Thời gian cung ứng mặc định (ngày), 1–365 */
+            leadTimeDays?: number;
             /**
              * Format: date
              * @example 2027-12-31
@@ -6717,6 +6719,8 @@ export interface components {
             /** @description Tỷ lệ BHYT %, 0–100 */
             insuranceRate?: string;
             isActive?: boolean;
+            /** @description Thời gian cung ứng của vật tư (ngày), 1–365 */
+            leadTimeDays?: number;
             manufacturerCode?: Record<string, never>;
             manufacturerId?: Record<string, never>;
             maxStock?: string;
@@ -7517,6 +7521,8 @@ export interface components {
             dailyUsage: string;
             daysLeft: number | null;
             onHand: string;
+            /** @description Điểm đặt hàng (thang lượng), null khi thiếu lead time/tiêu thụ */
+            reorderPoint: string | null;
             supplyId: string;
             warehouseId: string | null;
         };
@@ -9086,7 +9092,7 @@ export interface components {
             resolvedAt: string | null;
             supplyId: string;
             /** @enum {string} */
-            type: "low_stock" | "expiring" | "expired" | "open_vial_expiring" | "stale" | "circulation_expiring";
+            type: "low_stock" | "expiring" | "expired" | "open_vial_expiring" | "stale" | "circulation_expiring" | "reorder";
             warehouseId: string | null;
         };
         StockAlertsPageDto: {
@@ -9925,6 +9931,8 @@ export interface components {
             description?: string;
             email?: Record<string, never>;
             isActive?: boolean;
+            /** @description Thời gian cung ứng mặc định (ngày), 1–365 */
+            leadTimeDays?: number;
             /**
              * Format: date
              * @example 2027-12-31
@@ -9979,6 +9987,8 @@ export interface components {
             /** @description Tỷ lệ BHYT %, 0–100 */
             insuranceRate?: string;
             isActive?: boolean;
+            /** @description Thời gian cung ứng của vật tư (ngày), 1–365 */
+            leadTimeDays?: number;
             manufacturerCode?: Record<string, never>;
             manufacturerId?: Record<string, never>;
             maxStock?: string;
@@ -20805,7 +20815,7 @@ export interface operations {
                 page?: number;
                 resolved?: boolean;
                 supplyId?: string;
-                type?: "low_stock" | "expiring" | "expired" | "open_vial_expiring" | "stale" | "circulation_expiring";
+                type?: "low_stock" | "expiring" | "expired" | "open_vial_expiring" | "stale" | "circulation_expiring" | "reorder";
                 warehouseId?: string;
             };
             header?: {

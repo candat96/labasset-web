@@ -332,7 +332,7 @@ export function Component() {
     <ErrorState error={stock.error} onRetry={() => void stock.refetch()} />
   ) : (
     <>
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard
           title={t('onHand')}
           value={formatQty(sumLots('qtyOnHand'))}
@@ -350,6 +350,19 @@ export function Component() {
           value={formatQty(sumLots('available'))}
           icon={<Package />}
           tone="success"
+        />
+        <KpiCard
+          title={t('reorderPoint')}
+          value={
+            forecast.data
+              ? forecast.data.reorderPoint
+                ? formatQty(forecast.data.reorderPoint)
+                : '—'
+              : '—'
+          }
+          description={t('reorderPointHint')}
+          icon={<PackageSearch />}
+          tone="neutral"
         />
       </div>
       <SectionCard title={t('stockByLot')} description={t('lotCount', { n: lots.length })} flush>
@@ -688,6 +701,10 @@ export function Component() {
                 },
                 { label: t('minStock'), value: row.minStock ? formatQty(row.minStock) : null },
                 { label: t('maxStock'), value: row.maxStock ? formatQty(row.maxStock) : null },
+                {
+                  label: t('leadTimeDays'),
+                  value: row.leadTimeDays == null ? null : `${row.leadTimeDays} ${t('days')}`,
+                },
                 { label: t('openVialDays'), value: row.openVialDays },
                 { label: t('storageCondition'), value: row.storageCondition },
                 { label: t('notes'), value: row.notes, full: true },

@@ -95,6 +95,13 @@ const schema = z.object({
         value === '' || (/^\d+$/.test(value) && Number(value) >= 1 && Number(value) <= 365),
       i18n.t('inventory:countCycleInvalid'),
     ),
+  leadTimeDays: z
+    .string()
+    .refine(
+      (value) =>
+        value === '' || (/^\d+$/.test(value) && Number(value) >= 1 && Number(value) <= 365),
+      i18n.t('inventory:leadTimeInvalid'),
+    ),
   notes: z.string(),
 })
 type FormValues = z.infer<typeof schema>
@@ -131,6 +138,7 @@ const empty: FormValues = {
   conversionFactor: '',
   minShelfLifeDays: '',
   countCycleDays: '',
+  leadTimeDays: '',
   notes: '',
 }
 
@@ -200,6 +208,7 @@ export function Component() {
       minShelfLifeDays:
         detail.data.minShelfLifeDays == null ? '' : String(detail.data.minShelfLifeDays),
       countCycleDays: detail.data.countCycleDays == null ? '' : String(detail.data.countCycleDays),
+      leadTimeDays: detail.data.leadTimeDays == null ? '' : String(detail.data.leadTimeDays),
       notes: detail.data.notes ?? '',
     })
   }, [detail.data, form])
@@ -234,6 +243,7 @@ export function Component() {
       conversionFactor: values.conversionFactor || null,
       minShelfLifeDays: values.minShelfLifeDays ? Number(values.minShelfLifeDays) : null,
       countCycleDays: values.countCycleDays ? Number(values.countCycleDays) : null,
+      leadTimeDays: values.leadTimeDays ? Number(values.leadTimeDays) : null,
       notes: values.notes || null,
     }
     try {
@@ -364,6 +374,14 @@ export function Component() {
               />
               <QtyField control={form.control} name="minStock" label={t('minStock')} />
               <QtyField control={form.control} name="maxStock" label={t('maxStock')} />
+              <TextField
+                control={form.control}
+                name="leadTimeDays"
+                label={t('leadTimeDays')}
+                type="number"
+                inputMode="numeric"
+                description={t('leadTimeDaysHint')}
+              />
               <SwitchField control={form.control} name="isActive" label={t('isActive')} />
             </div>
           </SectionCard>

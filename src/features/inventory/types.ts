@@ -37,6 +37,7 @@ export interface Supply {
   conversionFactor: string | null
   minShelfLifeDays: number | null
   countCycleDays: number | null
+  leadTimeDays: number | null
   updatedAt?: string
 }
 
