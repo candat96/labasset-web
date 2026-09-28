@@ -32,7 +32,6 @@ export const catalogConfigs: Record<CatalogSlug, CatalogConfig> = {
       { name: 'taxCode' },
       { name: 'maintenanceContractNo' },
       { name: 'maintenanceContractExpiresAt', type: 'date' },
-      { name: 'rating', type: 'number', min: 1, max: 5 },
       { name: 'notes' },
     ],
   },

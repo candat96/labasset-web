@@ -25,6 +25,7 @@ import reports from './vi/reports.json'
 import assistant from './vi/assistant.json'
 import procurement from './vi/procurement.json'
 import performance from './vi/performance.json'
+import suppliers from './vi/suppliers.json'
 
 export const resources = {
   vi: {
@@ -52,6 +53,7 @@ export const resources = {
     assistant,
     procurement,
     performance,
+    suppliers,
   },
 } as const
 

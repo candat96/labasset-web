@@ -19,6 +19,10 @@ const implemented: RouteObject[] = [
   { path: 'admin/users/:id', lazy: () => import('@/features/users/pages/UserDetailPage') },
   { path: 'admin/catalogs', lazy: () => import('@/features/catalogs/pages/CatalogsIndexPage') },
   { path: 'admin/catalogs/rooms', element: <Navigate to="/admin/rooms" replace /> },
+  {
+    path: 'admin/catalogs/suppliers/:id',
+    lazy: () => import('@/features/suppliers/pages/SupplierDetailPage'),
+  },
   { path: 'admin/catalogs/:name', lazy: () => import('@/features/catalogs/pages/CatalogPage') },
   {
     path: 'admin/doc-templates',

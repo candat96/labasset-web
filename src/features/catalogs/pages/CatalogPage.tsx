@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react'
-import { Navigate, useNavigate, useParams } from 'react-router'
+import { Link, Navigate, useNavigate, useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { toast } from 'sonner'
+import { Star } from 'lucide-react'
 import { DeleteIconButton, EditIconButton } from '@/components/icon-action'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -143,6 +144,22 @@ export function CatalogPage({ slug }: { slug: CatalogSlug }) {
         enableHiding: false,
         cell: ({ row }) => (
           <div className="flex gap-1">
+            {slug === 'suppliers' && (
+              <Button
+                asChild
+                size="icon-sm"
+                variant="ghost"
+                className="text-primary hover:text-primary"
+              >
+                <Link
+                  to={`/admin/catalogs/suppliers/${row.original.id}?tab=evaluations`}
+                  aria-label={t('openEvaluation')}
+                  title={t('openEvaluation')}
+                >
+                  <Star />
+                </Link>
+              </Button>
+            )}
             <EditIconButton
               onClick={() => {
                 setEditing(row.original)

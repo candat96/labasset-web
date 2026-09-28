@@ -2,6 +2,7 @@
   "index": "Danh mục",
   "indexDesc": "Mười một danh mục dùng chung trong viện.",
   "add": "Thêm mới",
+  "openEvaluation": "Đánh giá nhà cung cấp",
   "count": "{{total}} bản ghi",
   "saved": "Đã lưu danh mục",
   "deleted": "Đã xoá danh mục",
@@ -86,7 +87,6 @@
       "taxCode": "Mã số thuế",
       "maintenanceContractNo": "Số hợp đồng bảo trì",
       "maintenanceContractExpiresAt": "Hợp đồng đến ngày",
-      "rating": "Đánh giá (1–5 sao)",
       "notes": "Ghi chú"
     },
     "manufacturers": {
