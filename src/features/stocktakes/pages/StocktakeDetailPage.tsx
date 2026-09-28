@@ -30,6 +30,7 @@ import {
   Warehouse,
 } from 'lucide-react'
 import { formatDateTime } from '@/lib/format/date'
+import { enumLabel, stocktakeScopeLabels } from '@/lib/enum-labels'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -517,7 +518,7 @@ export function Component() {
         meta={
           <>
             <PageMeta icon={<Warehouse />}>
-              {row.scopeType}
+              {enumLabel(stocktakeScopeLabels, row.scopeType)}
               {row.scopeId ? ` · ${row.scopeId.slice(0, 8)}` : ''}
             </PageMeta>
             {row.snapshotAt && (
@@ -877,7 +878,7 @@ export function Component() {
                 { label: t('code'), value: row.code },
                 {
                   label: t('scope'),
-                  value: `${row.scopeType}${row.scopeId ? ` · ${row.scopeId.slice(0, 8)}` : ''}`,
+                  value: `${enumLabel(stocktakeScopeLabels, row.scopeType)}${row.scopeId ? ` · ${row.scopeId.slice(0, 8)}` : ''}`,
                 },
                 {
                   label: t('snapshotAt'),

@@ -242,6 +242,9 @@
   "shelfLifeSection": "Kiểm soát hạn dùng",
   "minShelfLifeDays": "Hạn dùng tối thiểu khi nhập (ngày)",
   "minShelfLifeInvalid": "Số ngày trong khoảng 1 đến 3650",
+  "countCycleDays": "Chu kỳ kiểm đếm (ngày)",
+  "countCycleDaysHint": "Số ngày giữa hai lần kiểm đếm; để trống nếu không kiểm đếm luân phiên",
+  "countCycleInvalid": "Chu kỳ kiểm đếm trong khoảng 1 đến 365 ngày",
   "notesSection": "Ghi chú",
   "substitutesSection": "Vật tư thay thế",
   "substitute": "Vật tư thay thế",
@@ -262,5 +265,8 @@
   "quantityByPurchaseUnit": "Số lượng theo đơn vị mua",
   "conversionLine": "{{qty}} {{purchaseUnit}} = {{converted}} {{usageUnit}}",
   "circulationExpiredInForm": "Vật tư {{code}} đã hết hiệu lực số lưu hành từ {{date}}",
-  "viewReceipt": "Xem phiếu nhập"
+  "viewReceipt": "Xem phiếu nhập",
+  "location": "Vị trí",
+  "moveLocation": "Chuyển vị trí",
+  "lotMoved": "Đã chuyển vị trí lô"
 }

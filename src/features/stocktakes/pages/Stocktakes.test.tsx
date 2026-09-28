@@ -98,6 +98,30 @@ it('lists stocktakes', async () => {
   )
 })
 
+it('đánh dấu phiên luân phiên bằng badge "Luân phiên"', async () => {
+  server.use(
+    http.get('/v1/stocktakes', () =>
+      HttpResponse.json({
+        items: [
+          {
+            id: 'k9',
+            code: 'KK-9',
+            name: 'Luân phiên kho A',
+            type: 'supply',
+            scopeType: 'cycle',
+            status: 'draft',
+          },
+        ],
+        total: 1,
+        page: 1,
+        limit: 20,
+      }),
+    ),
+  )
+  renderWithProviders(<StocktakesPage />)
+  expect(await screen.findByText('Luân phiên')).toBeInTheDocument()
+})
+
 it('creates a stocktake with a body validated like the API', async () => {
   const saved: unknown[] = []
   server.use(

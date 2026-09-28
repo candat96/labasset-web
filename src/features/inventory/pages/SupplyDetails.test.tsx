@@ -148,3 +148,24 @@ it('thêm rồi xoá vật tư thay thế', async () => {
   await userEvent.click(await screen.findByRole('button', { name: 'Xoá' }))
   await waitFor(() => expect(deleted).toBe('s2'))
 })
+
+it('hiện và lưu chu kỳ kiểm đếm (ngày) của vật tư', async () => {
+  let body: Record<string, unknown> | null = null
+  mockDetailEndpoints(supplyRow({ countCycleDays: 30 }))
+  server.use(
+    http.patch('/v1/supplies/:id', async ({ request }) => {
+      body = (await request.json()) as Record<string, unknown>
+      return HttpResponse.json(supplyRow({ countCycleDays: 45 }))
+    }),
+  )
+  renderWithProviders(<SupplyFormPage />, {
+    path: '/supplies/:id',
+    route: '/supplies/s1',
+  })
+  const field = await screen.findByLabelText('Chu kỳ kiểm đếm (ngày)')
+  expect(field).toHaveValue(30)
+  await userEvent.clear(field)
+  await userEvent.type(field, '45')
+  await userEvent.click(screen.getByRole('button', { name: 'Lưu' }))
+  await waitFor(() => expect(body?.countCycleDays).toBe(45))
+})

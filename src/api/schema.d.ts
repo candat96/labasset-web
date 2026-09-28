@@ -1412,6 +1412,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/catalogs/storage-locations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["StorageLocationsController_list"];
+        put?: never;
+        post: operations["StorageLocationsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/catalogs/storage-locations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["StorageLocationsController_get"];
+        put?: never;
+        post?: never;
+        delete: operations["StorageLocationsController_remove"];
+        options?: never;
+        head?: never;
+        patch: operations["StorageLocationsController_update"];
+        trace?: never;
+    };
+    "/v1/catalogs/storage-locations/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["StorageLocationsController_exportFile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/catalogs/storage-locations/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["StorageLocationsController_importFile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/catalogs/storage-locations/template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["StorageLocationsController_templateFile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/catalogs/suppliers": {
         parameters: {
             query?: never;
@@ -4807,6 +4887,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/stock/lots/{id}/move": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["StockOperationsController_move"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/stock/lots/{id}/open": {
         parameters: {
             query?: never;
@@ -5237,6 +5333,54 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/v1/suppliers/{id}/evaluation-facts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["SupplierEvaluationsController_facts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/suppliers/{id}/evaluations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["SupplierEvaluationsController_list"];
+        put?: never;
+        post: operations["SupplierEvaluationsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/suppliers/{id}/evaluations/{evaluationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["SupplierEvaluationsController_remove"];
+        options?: never;
+        head?: never;
+        patch: operations["SupplierEvaluationsController_update"];
         trace?: never;
     };
     "/v1/supplies": {
@@ -6240,6 +6384,7 @@ export interface components {
             /** Format: date */
             commissionedAt?: string | null;
             countryOfOrigin?: string | null;
+            /** @enum {string|null} */
             criticality?: "vital" | "essential" | "desirable" | null;
             decisionNo?: string | null;
             /** Format: uuid */
@@ -6478,15 +6623,36 @@ export interface components {
             sortOrder?: number;
         };
         CreateStocktakeDto: {
+            /** @description Danh sách vật tư của phiên luân phiên (chỉ dùng cho scopeType=cycle) */
+            cycleSupplyIds?: string[];
             name: string;
             notes?: Record<string, never>;
             /** Format: date-time */
             plannedAt?: Record<string, never>;
             scopeId?: Record<string, never>;
             /** @enum {string} */
-            scopeType: "department" | "warehouse" | "all";
+            scopeType: "department" | "warehouse" | "all" | "cycle";
             /** @enum {string} */
             type: "equipment" | "supply";
+        };
+        CreateStorageLocationDto: {
+            code?: string;
+            description?: string;
+            isActive?: boolean;
+            name: string;
+            /**
+             * Format: uuid
+             * @description Vị trí cha (cây 2 cấp: kệ → ô)
+             */
+            parentId?: Record<string, never>;
+            sortOrder?: number;
+            /**
+             * Format: uuid
+             * @description Kho chứa vị trí này
+             */
+            warehouseId: string;
+            /** @description Khu vực trong kho (kệ, dãy…) */
+            zone?: Record<string, never>;
         };
         CreateSupplierDto: {
             address?: Record<string, never>;
@@ -6509,6 +6675,23 @@ export interface components {
             sortOrder?: number;
             taxCode?: Record<string, never>;
         };
+        CreateSupplierEvaluationDto: {
+            deliveryScore: number;
+            documentScore: number;
+            note?: Record<string, never> | null;
+            /**
+             * Format: date
+             * @example 2026-01-01
+             */
+            periodFrom: string;
+            /**
+             * Format: date
+             * @example 2026-03-31
+             */
+            periodTo: string;
+            qualityScore: number;
+            supportScore: number;
+        };
         CreateSupplyDto: {
             bidDecisionNo?: Record<string, never>;
             bidPackage?: Record<string, never>;
@@ -6521,6 +6704,8 @@ export interface components {
             code?: string;
             /** @description 1 đơn vị mua = ? đơn vị dùng, phải lớn hơn 0 */
             conversionFactor?: string;
+            /** @description Chu kỳ kiểm đếm luân phiên (ngày), 1–365 */
+            countCycleDays?: number;
             countryOfOrigin?: Record<string, never>;
             defaultSupplierId?: Record<string, never>;
             description?: string;
@@ -7757,6 +7942,14 @@ export interface components {
         MoveCalendarDto: {
             scheduledAt: string;
         };
+        MoveLotDto: {
+            /**
+             * Format: uuid
+             * @description Vị trí đích trong cùng kho
+             */
+            locationId: string;
+            note?: string;
+        };
         MyTasksResponseDto: {
             alerts: components["schemas"]["AlertTasksDto"];
             demand: components["schemas"]["DemandTasksDto"];
@@ -8000,6 +8193,8 @@ export interface components {
         };
         ReceiptItemDto: {
             expiresAt?: string;
+            /** Format: uuid */
+            locationId?: Record<string, never>;
             lotNo?: string;
             purchaseQuantity?: string;
             quantity?: string;
@@ -8923,6 +9118,7 @@ export interface components {
             /** Format: date */
             expiresAt: string | null;
             id: string;
+            locationId: string | null;
             lotNo: string;
             /** Format: date-time */
             openExpiresAt: string | null;
@@ -9002,6 +9198,7 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
             createdBy: string | null;
+            cycleSupplyIds: string[] | null;
             id: string;
             name: string;
             notes: string | null;
@@ -9009,7 +9206,7 @@ export interface components {
             plannedAt: string | null;
             scopeId: string | null;
             /** @enum {string} */
-            scopeType: "department" | "warehouse" | "all";
+            scopeType: "department" | "warehouse" | "all" | "cycle";
             /** Format: date-time */
             snapshotAt: string | null;
             /** @enum {string} */
@@ -9033,6 +9230,7 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
             createdBy: string | null;
+            cycleSupplyIds: string[] | null;
             id: string;
             name: string;
             notes: string | null;
@@ -9040,7 +9238,7 @@ export interface components {
             plannedAt: string | null;
             scopeId: string | null;
             /** @enum {string} */
-            scopeType: "department" | "warehouse" | "all";
+            scopeType: "department" | "warehouse" | "all" | "cycle";
             /** Format: date-time */
             snapshotAt: string | null;
             /** @enum {string} */
@@ -9091,6 +9289,41 @@ export interface components {
             suggestion?: {
                 [key: string]: unknown;
             } | null;
+        };
+        SupplierEvaluationFactsDto: {
+            /** Format: date */
+            from?: Record<string, never> | null;
+            /** @description Số phiếu nhập có QC không đạt */
+            qcFailedCount: number;
+            /** @description Số lô đang bị cách ly */
+            quarantineLotCount: number;
+            /** @description Số phiếu nhập trong kỳ */
+            receiptCount: number;
+            /** @description Số phiếu xuất trả nhà cung cấp */
+            returnToSupplierCount: number;
+            /** @description Số lô nhập có hạn dùng dưới mức tối thiểu */
+            shortShelfLifeLotCount: number;
+            /** Format: date */
+            to?: Record<string, never> | null;
+        };
+        SupplierEvaluationResponseDto: {
+            deliveryScore: number;
+            documentScore: number;
+            /** Format: date-time */
+            evaluatedAt: string;
+            /** Format: uuid */
+            evaluatedBy: Record<string, never> | null;
+            id: string;
+            note: string | null;
+            /** Format: date */
+            periodFrom: string;
+            /** Format: date */
+            periodTo: string;
+            qualityScore: number;
+            /** Format: uuid */
+            supplierId: string;
+            supportScore: number;
+            totalScore: number;
         };
         SupplyResponseDto: {
             equipmentId: string;
@@ -9386,6 +9619,7 @@ export interface components {
             /** Format: date */
             commissionedAt?: string | null;
             countryOfOrigin?: string | null;
+            /** @enum {string|null} */
             criticality?: "vital" | "essential" | "desirable" | null;
             decisionNo?: string | null;
             /** Format: uuid */
@@ -9666,6 +9900,24 @@ export interface components {
             /** Format: date-time */
             plannedAt?: Record<string, never>;
         };
+        UpdateStorageLocationDto: {
+            description?: string;
+            isActive?: boolean;
+            name?: string;
+            /**
+             * Format: uuid
+             * @description Vị trí cha (cây 2 cấp: kệ → ô)
+             */
+            parentId?: Record<string, never>;
+            sortOrder?: number;
+            /**
+             * Format: uuid
+             * @description Kho chứa vị trí này
+             */
+            warehouseId?: string;
+            /** @description Khu vực trong kho (kệ, dãy…) */
+            zone?: Record<string, never>;
+        };
         UpdateSupplierDto: {
             address?: Record<string, never>;
             contactName?: Record<string, never>;
@@ -9686,6 +9938,23 @@ export interface components {
             sortOrder?: number;
             taxCode?: Record<string, never>;
         };
+        UpdateSupplierEvaluationDto: {
+            deliveryScore?: number;
+            documentScore?: number;
+            note?: Record<string, never> | null;
+            /**
+             * Format: date
+             * @example 2026-01-01
+             */
+            periodFrom?: string;
+            /**
+             * Format: date
+             * @example 2026-03-31
+             */
+            periodTo?: string;
+            qualityScore?: number;
+            supportScore?: number;
+        };
         UpdateSupplyDto: {
             bidDecisionNo?: Record<string, never>;
             bidPackage?: Record<string, never>;
@@ -9697,6 +9966,8 @@ export interface components {
             circulationValidTo?: string | null;
             /** @description 1 đơn vị mua = ? đơn vị dùng, phải lớn hơn 0 */
             conversionFactor?: string;
+            /** @description Chu kỳ kiểm đếm luân phiên (ngày), 1–365 */
+            countCycleDays?: number;
             countryOfOrigin?: Record<string, never>;
             defaultSupplierId?: Record<string, never>;
             description?: string;
@@ -11294,6 +11565,8 @@ export interface operations {
                 page?: number;
                 /** @description Search on code, name */
                 q?: string;
+                /** @description Lọc theo kho (danh mục vị trí lưu trữ) */
+                warehouseId?: string;
             };
             header?: {
                 /** @description Hospital id (multi-tenant mode) */
@@ -11438,6 +11711,8 @@ export interface operations {
                 page?: number;
                 /** @description Search on code, name */
                 q?: string;
+                /** @description Lọc theo kho (danh mục vị trí lưu trữ) */
+                warehouseId?: string;
             };
             header?: {
                 /** @description Hospital id (multi-tenant mode) */
@@ -11523,6 +11798,8 @@ export interface operations {
                 page?: number;
                 /** @description Search on code, name */
                 q?: string;
+                /** @description Lọc theo kho (danh mục vị trí lưu trữ) */
+                warehouseId?: string;
             };
             header?: {
                 /** @description Hospital id (multi-tenant mode) */
@@ -11667,6 +11944,8 @@ export interface operations {
                 page?: number;
                 /** @description Search on code, name */
                 q?: string;
+                /** @description Lọc theo kho (danh mục vị trí lưu trữ) */
+                warehouseId?: string;
             };
             header?: {
                 /** @description Hospital id (multi-tenant mode) */
@@ -11752,6 +12031,8 @@ export interface operations {
                 page?: number;
                 /** @description Search on code, name */
                 q?: string;
+                /** @description Lọc theo kho (danh mục vị trí lưu trữ) */
+                warehouseId?: string;
             };
             header?: {
                 /** @description Hospital id (multi-tenant mode) */
@@ -11896,6 +12177,8 @@ export interface operations {
                 page?: number;
                 /** @description Search on code, name */
                 q?: string;
+                /** @description Lọc theo kho (danh mục vị trí lưu trữ) */
+                warehouseId?: string;
             };
             header?: {
                 /** @description Hospital id (multi-tenant mode) */
@@ -11981,6 +12264,8 @@ export interface operations {
                 page?: number;
                 /** @description Search on code, name */
                 q?: string;
+                /** @description Lọc theo kho (danh mục vị trí lưu trữ) */
+                warehouseId?: string;
             };
             header?: {
                 /** @description Hospital id (multi-tenant mode) */
@@ -12125,6 +12410,8 @@ export interface operations {
                 page?: number;
                 /** @description Search on code, name */
                 q?: string;
+                /** @description Lọc theo kho (danh mục vị trí lưu trữ) */
+                warehouseId?: string;
             };
             header?: {
                 /** @description Hospital id (multi-tenant mode) */
@@ -12210,6 +12497,8 @@ export interface operations {
                 page?: number;
                 /** @description Search on code, name */
                 q?: string;
+                /** @description Lọc theo kho (danh mục vị trí lưu trữ) */
+                warehouseId?: string;
             };
             header?: {
                 /** @description Hospital id (multi-tenant mode) */
@@ -12354,6 +12643,8 @@ export interface operations {
                 page?: number;
                 /** @description Search on code, name */
                 q?: string;
+                /** @description Lọc theo kho (danh mục vị trí lưu trữ) */
+                warehouseId?: string;
             };
             header?: {
                 /** @description Hospital id (multi-tenant mode) */
@@ -12439,6 +12730,8 @@ export interface operations {
                 page?: number;
                 /** @description Search on code, name */
                 q?: string;
+                /** @description Lọc theo kho (danh mục vị trí lưu trữ) */
+                warehouseId?: string;
             };
             header?: {
                 /** @description Hospital id (multi-tenant mode) */
@@ -12583,6 +12876,8 @@ export interface operations {
                 page?: number;
                 /** @description Search on code, name */
                 q?: string;
+                /** @description Lọc theo kho (danh mục vị trí lưu trữ) */
+                warehouseId?: string;
             };
             header?: {
                 /** @description Hospital id (multi-tenant mode) */
@@ -12668,6 +12963,8 @@ export interface operations {
                 page?: number;
                 /** @description Search on code, name */
                 q?: string;
+                /** @description Lọc theo kho (danh mục vị trí lưu trữ) */
+                warehouseId?: string;
             };
             header?: {
                 /** @description Hospital id (multi-tenant mode) */
@@ -12812,6 +13109,8 @@ export interface operations {
                 page?: number;
                 /** @description Search on code, name */
                 q?: string;
+                /** @description Lọc theo kho (danh mục vị trí lưu trữ) */
+                warehouseId?: string;
             };
             header?: {
                 /** @description Hospital id (multi-tenant mode) */
@@ -12897,6 +13196,8 @@ export interface operations {
                 page?: number;
                 /** @description Search on code, name */
                 q?: string;
+                /** @description Lọc theo kho (danh mục vị trí lưu trữ) */
+                warehouseId?: string;
             };
             header?: {
                 /** @description Hospital id (multi-tenant mode) */
@@ -13041,6 +13342,8 @@ export interface operations {
                 page?: number;
                 /** @description Search on code, name */
                 q?: string;
+                /** @description Lọc theo kho (danh mục vị trí lưu trữ) */
+                warehouseId?: string;
             };
             header?: {
                 /** @description Hospital id (multi-tenant mode) */
@@ -13112,6 +13415,239 @@ export interface operations {
             };
         };
     };
+    StorageLocationsController_list: {
+        parameters: {
+            query?: {
+                /** @description Return all rows (no pagination) */
+                all?: boolean;
+                /** @description Lọc theo khoa/đơn vị (danh mục phòng) */
+                departmentId?: string;
+                /** @description Khi lọc theo departmentId, kèm phòng dùng chung (mặc định true) */
+                includeShared?: boolean;
+                isActive?: boolean;
+                limit?: number;
+                page?: number;
+                /** @description Search on code, name */
+                q?: string;
+                /** @description Lọc theo kho (danh mục vị trí lưu trữ) */
+                warehouseId?: string;
+            };
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogPageDto"];
+                };
+            };
+        };
+    };
+    StorageLocationsController_create: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateStorageLocationDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogResponseDto"];
+                };
+            };
+        };
+    };
+    StorageLocationsController_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogResponseDto"];
+                };
+            };
+        };
+    };
+    StorageLocationsController_remove: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Referenced elsewhere: deactivated instead */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogDeactivatedDto"];
+                };
+            };
+            /** @description Hard-deleted (not referenced) */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    StorageLocationsController_update: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateStorageLocationDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogResponseDto"];
+                };
+            };
+        };
+    };
+    StorageLocationsController_exportFile: {
+        parameters: {
+            query?: {
+                /** @description Return all rows (no pagination) */
+                all?: boolean;
+                /** @description Lọc theo khoa/đơn vị (danh mục phòng) */
+                departmentId?: string;
+                /** @description Khi lọc theo departmentId, kèm phòng dùng chung (mặc định true) */
+                includeShared?: boolean;
+                isActive?: boolean;
+                limit?: number;
+                page?: number;
+                /** @description Search on code, name */
+                q?: string;
+                /** @description Lọc theo kho (danh mục vị trí lưu trữ) */
+                warehouseId?: string;
+            };
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
+            };
+        };
+    };
+    StorageLocationsController_importFile: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogImportResultDto"];
+                };
+            };
+        };
+    };
+    StorageLocationsController_templateFile: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
+            };
+        };
+    };
     SuppliersController_list: {
         parameters: {
             query?: {
@@ -13126,6 +13662,8 @@ export interface operations {
                 page?: number;
                 /** @description Search on code, name */
                 q?: string;
+                /** @description Lọc theo kho (danh mục vị trí lưu trữ) */
+                warehouseId?: string;
             };
             header?: {
                 /** @description Hospital id (multi-tenant mode) */
@@ -13270,6 +13808,8 @@ export interface operations {
                 page?: number;
                 /** @description Search on code, name */
                 q?: string;
+                /** @description Lọc theo kho (danh mục vị trí lưu trữ) */
+                warehouseId?: string;
             };
             header?: {
                 /** @description Hospital id (multi-tenant mode) */
@@ -13355,6 +13895,8 @@ export interface operations {
                 page?: number;
                 /** @description Search on code, name */
                 q?: string;
+                /** @description Lọc theo kho (danh mục vị trí lưu trữ) */
+                warehouseId?: string;
             };
             header?: {
                 /** @description Hospital id (multi-tenant mode) */
@@ -13499,6 +14041,8 @@ export interface operations {
                 page?: number;
                 /** @description Search on code, name */
                 q?: string;
+                /** @description Lọc theo kho (danh mục vị trí lưu trữ) */
+                warehouseId?: string;
             };
             header?: {
                 /** @description Hospital id (multi-tenant mode) */
@@ -13584,6 +14128,8 @@ export interface operations {
                 page?: number;
                 /** @description Search on code, name */
                 q?: string;
+                /** @description Lọc theo kho (danh mục vị trí lưu trữ) */
+                warehouseId?: string;
             };
             header?: {
                 /** @description Hospital id (multi-tenant mode) */
@@ -13728,6 +14274,8 @@ export interface operations {
                 page?: number;
                 /** @description Search on code, name */
                 q?: string;
+                /** @description Lọc theo kho (danh mục vị trí lưu trữ) */
+                warehouseId?: string;
             };
             header?: {
                 /** @description Hospital id (multi-tenant mode) */
@@ -13813,6 +14361,8 @@ export interface operations {
                 page?: number;
                 /** @description Search on code, name */
                 q?: string;
+                /** @description Lọc theo kho (danh mục vị trí lưu trữ) */
+                warehouseId?: string;
             };
             header?: {
                 /** @description Hospital id (multi-tenant mode) */
@@ -13957,6 +14507,8 @@ export interface operations {
                 page?: number;
                 /** @description Search on code, name */
                 q?: string;
+                /** @description Lọc theo kho (danh mục vị trí lưu trữ) */
+                warehouseId?: string;
             };
             header?: {
                 /** @description Hospital id (multi-tenant mode) */
@@ -14869,6 +15421,8 @@ export interface operations {
                 /** @description Search on code, name */
                 q?: string;
                 sort?: "code" | "name" | "createdAt";
+                /** @description Lọc theo kho (danh mục vị trí lưu trữ) */
+                warehouseId?: string;
             };
             header?: {
                 /** @description Hospital id (multi-tenant mode) */
@@ -15064,6 +15618,8 @@ export interface operations {
                 page?: number;
                 /** @description Search on code, name */
                 q?: string;
+                /** @description Lọc theo kho (danh mục vị trí lưu trữ) */
+                warehouseId?: string;
             };
             header?: {
                 /** @description Hospital id (multi-tenant mode) */
@@ -19125,6 +19681,7 @@ export interface operations {
                 format?: "json" | "xlsx" | "pdf";
                 from?: string;
                 groupBy?: "equipment" | "department" | "month";
+                groupId?: string;
                 limit?: number;
                 page?: number;
                 sessionId?: string;
@@ -20305,6 +20862,8 @@ export interface operations {
                 from?: string;
                 groupId?: string;
                 limit?: number;
+                /** @description Lọc lô theo vị trí */
+                locationId?: string;
                 page?: number;
                 q?: string;
                 status?: string;
@@ -20626,6 +21185,8 @@ export interface operations {
                 from?: string;
                 groupId?: string;
                 limit?: number;
+                /** @description Lọc lô theo vị trí */
+                locationId?: string;
                 page?: number;
                 q?: string;
                 status?: string;
@@ -20648,6 +21209,34 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StockLotsPageDto"];
+                };
+            };
+        };
+    };
+    StockOperationsController_move: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MoveLotDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StockLotResponseDto"];
                 };
             };
         };
@@ -20977,6 +21566,8 @@ export interface operations {
                 from?: string;
                 groupId?: string;
                 limit?: number;
+                /** @description Lọc lô theo vị trí */
+                locationId?: string;
                 page?: number;
                 q?: string;
                 status?: string;
@@ -21301,6 +21892,8 @@ export interface operations {
                 assignee?: string;
                 diffOnly?: boolean;
                 limit?: number;
+                /** @description Lọc dòng theo vị trí lô */
+                locationId?: string;
                 page?: number;
                 status?: "counted" | "uncounted";
             };
@@ -21498,6 +22091,137 @@ export interface operations {
             };
         };
     };
+    SupplierEvaluationsController_facts: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+            };
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupplierEvaluationFactsDto"];
+                };
+            };
+        };
+    };
+    SupplierEvaluationsController_list: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupplierEvaluationResponseDto"][];
+                };
+            };
+        };
+    };
+    SupplierEvaluationsController_create: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateSupplierEvaluationDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupplierEvaluationResponseDto"];
+                };
+            };
+        };
+    };
+    SupplierEvaluationsController_remove: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                evaluationId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    SupplierEvaluationsController_update: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                evaluationId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateSupplierEvaluationDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupplierEvaluationResponseDto"];
+                };
+            };
+        };
+    };
     SuppliesController_list: {
         parameters: {
             query?: {
@@ -21512,6 +22236,8 @@ export interface operations {
                 page?: number;
                 /** @description Search on code, name */
                 q?: string;
+                /** @description Lọc theo kho (danh mục vị trí lưu trữ) */
+                warehouseId?: string;
             };
             header?: {
                 /** @description Hospital id (multi-tenant mode) */
@@ -21653,6 +22379,8 @@ export interface operations {
                 from?: string;
                 groupId?: string;
                 limit?: number;
+                /** @description Lọc lô theo vị trí */
+                locationId?: string;
                 page?: number;
                 q?: string;
                 status?: string;
@@ -21829,6 +22557,8 @@ export interface operations {
                 page?: number;
                 /** @description Search on code, name */
                 q?: string;
+                /** @description Lọc theo kho (danh mục vị trí lưu trữ) */
+                warehouseId?: string;
             };
             header?: {
                 /** @description Hospital id (multi-tenant mode) */

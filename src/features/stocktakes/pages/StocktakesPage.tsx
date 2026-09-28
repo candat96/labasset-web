@@ -9,6 +9,7 @@ import { DataTable, useServerTable } from '@/components/data-table'
 import { FilterBar, FilterField } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page/PageHeader'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { StatusBadge } from '@/components/status-badge'
 import { stocktakeStatusMap } from '@/lib/status-maps'
@@ -102,7 +103,12 @@ export function Component() {
       {
         accessorKey: 'scopeType',
         header: t('scope'),
-        cell: ({ row }) => enumLabel(stocktakeScopeLabels, row.original.scopeType),
+        cell: ({ row }) =>
+          row.original.scopeType === 'cycle' ? (
+            <Badge variant="info">{t('scopeCycle')}</Badge>
+          ) : (
+            enumLabel(stocktakeScopeLabels, row.original.scopeType)
+          ),
       },
       { accessorKey: 'createdBy', header: t('createdBy') },
       {

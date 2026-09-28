@@ -39,6 +39,7 @@ export const stocktakeScopeLabels: EnumLabels = {
   all: 'Toàn viện',
   department: 'Theo khoa',
   warehouse: 'Theo kho',
+  cycle: 'Luân phiên',
 }
 
 export const alertTypeLabels: EnumLabels = {

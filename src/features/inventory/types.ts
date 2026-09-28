@@ -36,6 +36,7 @@ export interface Supply {
   purchaseUnitId: string | null
   conversionFactor: string | null
   minShelfLifeDays: number | null
+  countCycleDays: number | null
   updatedAt?: string
 }
 

@@ -88,6 +88,13 @@ const schema = z.object({
         value === '' || (/^\d+$/.test(value) && Number(value) >= 1 && Number(value) <= 3650),
       i18n.t('inventory:minShelfLifeInvalid'),
     ),
+  countCycleDays: z
+    .string()
+    .refine(
+      (value) =>
+        value === '' || (/^\d+$/.test(value) && Number(value) >= 1 && Number(value) <= 365),
+      i18n.t('inventory:countCycleInvalid'),
+    ),
   notes: z.string(),
 })
 type FormValues = z.infer<typeof schema>
@@ -123,6 +130,7 @@ const empty: FormValues = {
   purchaseUnitId: null,
   conversionFactor: '',
   minShelfLifeDays: '',
+  countCycleDays: '',
   notes: '',
 }
 
@@ -191,6 +199,7 @@ export function Component() {
       conversionFactor: detail.data.conversionFactor ?? '',
       minShelfLifeDays:
         detail.data.minShelfLifeDays == null ? '' : String(detail.data.minShelfLifeDays),
+      countCycleDays: detail.data.countCycleDays == null ? '' : String(detail.data.countCycleDays),
       notes: detail.data.notes ?? '',
     })
   }, [detail.data, form])
@@ -224,6 +233,7 @@ export function Component() {
       purchaseUnitId: values.purchaseUnitId,
       conversionFactor: values.conversionFactor || null,
       minShelfLifeDays: values.minShelfLifeDays ? Number(values.minShelfLifeDays) : null,
+      countCycleDays: values.countCycleDays ? Number(values.countCycleDays) : null,
       notes: values.notes || null,
     }
     try {
@@ -469,6 +479,14 @@ export function Component() {
                 name="minShelfLifeDays"
                 label={t('minShelfLifeDays')}
                 type="number"
+              />
+              <TextField
+                control={form.control}
+                name="countCycleDays"
+                label={t('countCycleDays')}
+                type="number"
+                inputMode="numeric"
+                description={t('countCycleDaysHint')}
               />
             </div>
           </SectionCard>

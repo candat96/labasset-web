@@ -13,6 +13,7 @@
   "typeSupply": "Vật tư",
   "typeEquipment": "Thiết bị",
   "scopeAll": "Toàn viện",
+  "scopeCycle": "Luân phiên",
   "scanRequired": "Nhập mã hoặc QR",
   "countQtyInvalid": "Số đếm không hợp lệ",
   "countsSent": "Đã gửi số đếm",
