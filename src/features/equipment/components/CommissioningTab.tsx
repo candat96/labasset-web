@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { SectionCard } from '@/components/page/SectionCard'
 import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
 import { DatePicker } from '@/components/date-picker'
 import { FileField } from '@/components/form/file-field'
 import { AsyncSelect } from '@/components/form/async-select'
@@ -245,9 +246,8 @@ export function CommissioningTab({
           <label className="text-sm font-medium" htmlFor="commissioning-note">
             {t('commissioning.note')}
           </label>
-          <textarea
+          <Textarea
             id="commissioning-note"
-            className="border-border bg-card min-h-11 w-full rounded-md border px-3 py-2 text-sm"
             value={note}
             disabled={!canWrite}
             onChange={(event) => setNote(event.target.value)}
