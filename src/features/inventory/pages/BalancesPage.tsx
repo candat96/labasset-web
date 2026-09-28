@@ -10,10 +10,11 @@ import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import { AsyncSelect } from '@/components/form/async-select'
 import { formatVnd } from '@/lib/format/money'
-import { formatQty } from '@/lib/format/number'
+import { formatNumber, formatQty } from '@/lib/format/number'
 import { KpiCard } from '@/components/kpi-card'
 import { catalogOptions } from '@/api/references'
-import { AlertTriangle, Boxes, Coins, Warehouse } from 'lucide-react'
+import { runReport, type ReportRunResult } from '@/features/reports/api'
+import { AlertTriangle, Boxes, Coins, RefreshCcw, Target, Warehouse } from 'lucide-react'
 import { listBalances, stockValue } from '../api'
 import type { Balance } from '../types'
 import { useTranslation } from 'react-i18next'
@@ -51,6 +52,37 @@ export function Component() {
     () => new Map((warehouses.data ?? []).map((w) => [w.id, w.name])),
     [warehouses.data],
   )
+  // Hai chỉ số báo cáo kỳ hiện tại (mặc định là 30 ngày gần nhất của API).
+  const turnoverKpi = useQuery({
+    queryKey: ['stock', 'kpi', 'turnover'],
+    queryFn: async () =>
+      (await runReport('stock.turnover', {}, 'json', 1, 1000)) as ReportRunResult,
+    staleTime: 300_000,
+  })
+  const accuracyKpi = useQuery({
+    queryKey: ['stock', 'kpi', 'count-accuracy'],
+    queryFn: async () =>
+      (await runReport('stock.count-accuracy', {}, 'json', 1, 1000)) as ReportRunResult,
+    staleTime: 300_000,
+  })
+  const turnoverValue = useMemo(() => {
+    let outValue = 0
+    let avgValue = 0
+    for (const row of turnoverKpi.data?.rows ?? []) {
+      outValue += Number(row.outValue ?? 0)
+      avgValue += Number(row.avgValue ?? 0)
+    }
+    return avgValue > 0 ? formatNumber(outValue / avgValue, 2) : '—'
+  }, [turnoverKpi.data])
+  const accuracyValue = useMemo(() => {
+    let totalLines = 0
+    let matchedLines = 0
+    for (const row of accuracyKpi.data?.rows ?? []) {
+      totalLines += Number(row.totalLines ?? 0)
+      matchedLines += Number(row.matchedLines ?? 0)
+    }
+    return totalLines > 0 ? `${formatNumber((matchedLines / totalLines) * 100, 1)}%` : '—'
+  }, [accuracyKpi.data])
   const columns = useMemo<ColumnDef<Balance>[]>(
     () => [
       {
@@ -92,7 +124,7 @@ export function Component() {
   return (
     <>
       <PageHeader title={t('balancesTitle')} description={t('balancesHint')} />
-      <div className="mb-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mb-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <KpiCard
           title={t('stockValue')}
           value={formatVnd(totalValue) || '—'}
@@ -117,6 +149,28 @@ export function Component() {
           icon={<Warehouse />}
           tone="neutral"
         />
+        <Link to="/reports?key=stock.turnover" className="block" aria-label={t('turnover')}>
+          <KpiCard
+            title={t('turnover')}
+            value={turnoverValue}
+            description={t('currentPeriod')}
+            icon={<RefreshCcw />}
+            tone="info"
+          />
+        </Link>
+        <Link
+          to="/reports?key=stock.count-accuracy"
+          className="block"
+          aria-label={t('countAccuracy')}
+        >
+          <KpiCard
+            title={t('countAccuracy')}
+            value={accuracyValue}
+            description={t('currentPeriod')}
+            icon={<Target />}
+            tone="success"
+          />
+        </Link>
       </div>
       <FilterPanel
         storageKey="stock-balances"
