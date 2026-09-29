@@ -5,6 +5,7 @@ import { useFieldArray, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
+import { Plus, Trash2 } from 'lucide-react'
 import { PageHeader } from '@/components/page/PageHeader'
 import { SectionCard } from '@/components/page/SectionCard'
 import { Button } from '@/components/ui/button'
@@ -23,6 +24,7 @@ import { STAFF } from '@/routes/roles'
 import { decimalString } from '@/lib/validation/decimal'
 import { createRequest, getRequest, submitRequest, updateRequest } from '../api'
 import { useTranslation } from 'react-i18next'
+import { cn } from '@/lib/utils'
 import type { components } from '@/api/schema'
 
 const schema = z
@@ -77,7 +79,7 @@ export function Component() {
       priority: 'normal',
       reason: '',
       neededBy: '',
-      items: [{ supplyId: '', qtyRequested: '1', note: '' }],
+      items: [{ supplyId: '', qtyRequested: '0', note: '' }],
     },
   })
   const items = useFieldArray({ control: form.control, name: 'items' })
@@ -141,7 +143,12 @@ export function Component() {
       <Form {...form}>
         <form className="space-y-5" noValidate>
           <SectionCard title={t('info')}>
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div
+              className={cn(
+                'grid gap-4 md:grid-cols-2',
+                canPickDept ? 'xl:grid-cols-4' : 'xl:grid-cols-3',
+              )}
+            >
               <div className="col-span-full grid grid-cols-2 gap-3 md:max-w-md">
                 <Button
                   type="button"
@@ -164,8 +171,10 @@ export function Component() {
                   name="departmentId"
                   render={({ field }) => (
                     <FormItem>
+                      <FormLabel required>{t('department')}</FormLabel>
                       <AsyncSelect
-                        label="Khoa"
+                        label={t('department')}
+                        showLabel={false}
                         queryKey="departments"
                         loadOptions={departmentOptions}
                         value={field.value}
@@ -182,8 +191,10 @@ export function Component() {
                 name="equipmentId"
                 render={({ field }) => (
                   <FormItem>
+                    <FormLabel required={type === 'repair'}>{t('equipment')}</FormLabel>
                     <AsyncSelect
                       label={t('equipment')}
+                      showLabel={false}
                       queryKey="equipment"
                       loadOptions={equipmentOptions}
                       value={field.value}
@@ -197,18 +208,20 @@ export function Component() {
               <SelectField
                 control={form.control}
                 name="priority"
-                label={t('priority')}
+                label={t('level')}
+                required
                 options={[
                   { value: 'normal', label: t('normal') },
                   { value: 'urgent', label: t('urgent') },
                 ]}
               />
+              <DateField control={form.control} name="neededBy" label={t('deadline')} />
               <FormField
                 control={form.control}
                 name="reason"
                 render={({ field }) => (
                   <FormItem className="col-span-full">
-                    <FormLabel>{t('reason')}</FormLabel>
+                    <FormLabel required={type === 'repair'}>{t('reason')}</FormLabel>
                     <FormControl>
                       <Textarea {...field} />
                     </FormControl>
@@ -216,7 +229,6 @@ export function Component() {
                   </FormItem>
                 )}
               />
-              <DateField control={form.control} name="neededBy" label={t('neededBy')} />
             </div>
           </SectionCard>
           {type === 'supply' && (
@@ -226,10 +238,10 @@ export function Component() {
               actions={
                 <Button
                   type="button"
-                  variant="outline"
                   size="sm"
-                  onClick={() => items.append({ supplyId: '', qtyRequested: '1', note: '' })}
+                  onClick={() => items.append({ supplyId: '', qtyRequested: '0', note: '' })}
                 >
+                  <Plus className="size-4" />
                   {t('addLine')}
                 </Button>
               }
@@ -245,8 +257,10 @@ export function Component() {
                     name={`items.${index}.supplyId`}
                     render={({ field: f }) => (
                       <FormItem>
+                        <FormLabel required>{t('supply')}</FormLabel>
                         <AsyncSelect
                           label={t('supply')}
+                          showLabel={false}
                           queryKey="supplies"
                           loadOptions={supplyOptions}
                           value={f.value || null}
@@ -260,6 +274,8 @@ export function Component() {
                     control={form.control}
                     name={`items.${index}.qtyRequested`}
                     label={t('quantity')}
+                    placeholder={t('qtyPlaceholder')}
+                    required
                   />
                   <TextField
                     control={form.control}
@@ -270,10 +286,11 @@ export function Component() {
                     <Button
                       type="button"
                       variant="ghost"
-                      size="sm"
+                      size="icon"
+                      aria-label={`${t('removeLine')} ${index + 1}`}
                       onClick={() => items.remove(index)}
                     >
-                      {t('removeLine')}
+                      <Trash2 className="size-4" />
                     </Button>
                   </div>
                 </div>

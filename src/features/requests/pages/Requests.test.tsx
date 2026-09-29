@@ -76,14 +76,43 @@ it('creates a draft request', async () => {
   })
   await userEvent.type(screen.getByLabelText('Vật tư'), 'Huyết')
   await userEvent.click(await screen.findByRole('option', { name: /Huyết thanh/ }))
+  const qty = screen.getByLabelText(/Số lượng/)
+  await userEvent.clear(qty)
+  await userEvent.type(qty, '2')
   await userEvent.click(screen.getByRole('button', { name: 'Lưu nháp' }))
   await waitFor(() =>
     expect(saved[0]).toMatchObject({
       type: 'supply',
       priority: 'normal',
-      items: [{ supplyId: 's1', qtyRequested: '1' }],
+      items: [{ supplyId: 's1', qtyRequested: '2' }],
     }),
   )
+})
+
+it('form tạo phiếu: nhãn mới, số lượng mặc định 0, thêm/xoá dòng', async () => {
+  renderWithProviders(<RequestFormPage />, {
+    path: '/requests/new',
+    route: '/requests/new',
+  })
+
+  // Bốn nhãn mới của yêu cầu: Khoa / Máy / Mức độ / Hạn cần trước.
+  expect(await screen.findByText(/^Khoa/, { selector: 'label' })).toBeInTheDocument()
+  expect(screen.getByText(/^Máy/, { selector: 'label' })).toBeInTheDocument()
+  expect(screen.getByText(/^Mức độ/, { selector: 'label' })).toBeInTheDocument()
+  expect(screen.getByText(/^Hạn cần trước/, { selector: 'label' })).toBeInTheDocument()
+
+  // Chưa chọn vật tư → số lượng mặc định 0 kèm gợi ý "Nhập".
+  const qty = screen.getByLabelText(/Số lượng/) as HTMLInputElement
+  expect(qty).toHaveValue('0')
+  expect(qty).toHaveAttribute('placeholder', 'Nhập')
+
+  // Bấm "Thêm dòng" → có thêm một dòng.
+  await userEvent.click(screen.getByRole('button', { name: /Thêm dòng/ }))
+  expect(screen.getAllByLabelText(/Số lượng/)).toHaveLength(2)
+
+  // Bấm icon thùng rác → mất dòng tương ứng.
+  await userEvent.click(screen.getByRole('button', { name: 'Xoá dòng 2' }))
+  expect(screen.getAllByLabelText(/Số lượng/)).toHaveLength(1)
 })
 
 it('edits a draft request and validates the PATCH body', async () => {
@@ -111,7 +140,7 @@ it('edits a draft request and validates the PATCH body', async () => {
     route: '/requests/q1/edit',
     routes: [{ path: '/requests/:id', element: <div>DETAIL</div> }],
   })
-  await userEvent.click(await screen.findByLabelText('Ưu tiên'))
+  await userEvent.click(await screen.findByLabelText(/Mức độ/))
   await userEvent.click(await screen.findByRole('option', { name: 'Khẩn' }))
   await userEvent.click(screen.getByRole('button', { name: 'Lưu nháp' }))
   await waitFor(() => expect(patched).toHaveLength(1))

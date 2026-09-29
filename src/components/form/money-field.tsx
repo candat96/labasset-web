@@ -5,6 +5,9 @@ export interface DecimalFieldProps<T extends FieldValues> {
   name: FieldPath<T>
   label: string
   disabled?: boolean
+  /** Dấu sao đỏ + nhãn đọc màn hình; kế thừa từ TextField. */
+  required?: boolean
+  placeholder?: string
 }
 export function MoneyField<T extends FieldValues>(props: DecimalFieldProps<T>) {
   return (
