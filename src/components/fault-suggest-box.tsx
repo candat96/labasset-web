@@ -16,11 +16,14 @@ export function FaultSuggestBox({
   q,
   value,
   onSelect,
+  direction = 'column',
 }: {
   equipmentId?: string
   errorCode?: string
   q?: string
   value?: string | null
+  /** `row` xếp các thẻ gợi ý thành hàng ngang cho popup hẹp chiều dọc. */
+  direction?: 'column' | 'row'
   /** Trả về cả bản ghi lỗi để nơi gọi tự điền vào form, không chỉ mã. */
   onSelect: (fault: SuggestedFault) => void
 }) {
@@ -58,11 +61,14 @@ export function FaultSuggestBox({
   if (items.length === 0)
     return <p className="text-muted-foreground text-sm">Không có gợi ý lỗi.</p>
   return (
-    <ul className="space-y-2" aria-label="Gợi ý lỗi">
+    <ul
+      className={cn(direction === 'row' ? 'flex flex-wrap gap-2' : 'space-y-2')}
+      aria-label="Gợi ý lỗi"
+    >
       {items.map((row) => {
         const selected = value === row.fault.id
         return (
-          <li key={row.fault.id}>
+          <li key={row.fault.id} className={cn(direction === 'row' && 'min-w-[220px] flex-1')}>
             <button
               type="button"
               className={cn(

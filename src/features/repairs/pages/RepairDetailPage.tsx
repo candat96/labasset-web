@@ -57,7 +57,6 @@ import { AttachmentsPanel } from '@/components/attachments-panel'
 import { Timeline } from '@/components/timeline'
 import { AuditTrail } from '@/components/audit-trail'
 import { useConfirm } from '@/components/confirm-dialog'
-import { FaultSuggestBox } from '@/components/fault-suggest-box'
 import {
   assignmentResponseMap,
   costCategoryMap,
@@ -76,8 +75,10 @@ import { attachFile, uploadFile } from '@/api/files'
 import { getFileUrl } from '@/api/files'
 import { useAuthStore } from '@/stores/auth.store'
 import { assistantPath } from '@/lib/ai-link'
+import { getCatalog } from '@/features/catalogs/api'
 import * as api from '../api'
 import { AssignDialog } from '../components/AssignDialog'
+import { DiagnosisDialog } from '../components/DiagnosisDialog'
 import { listRepairsForEquipment } from '@/features/equipment/api'
 import {
   useDepartmentNames,
@@ -99,7 +100,6 @@ import {
   completeSchema,
   costSchema,
   declineSchema,
-  diagnosisSchema,
   editRepairSchema,
   logSchema,
   partSchema,
@@ -110,7 +110,6 @@ import {
   type CompleteForm,
   type CostForm,
   type DeclineForm,
-  type DiagnosisForm,
   type EditRepairForm,
   type LogForm,
   type PartForm,
@@ -1275,108 +1274,6 @@ function CostsTab({
   )
 }
 
-function DiagnosisDialog({
-  id,
-  equipmentId,
-  errorCode,
-  description,
-  defaultFaultId,
-  onClose,
-  onDone,
-}: {
-  id: string
-  equipmentId: string
-  errorCode: string | null
-  description: string
-  defaultFaultId: string | null
-  onClose: () => void
-  onDone: () => void
-}) {
-  const { t } = useTranslation('repairs')
-  const form = useForm<DiagnosisForm>({
-    resolver: zodResolver(diagnosisSchema),
-    defaultValues: {
-      diagnosis: '',
-      faultId: defaultFaultId,
-      faultGroupId: null,
-      resolutionType: null,
-    },
-  })
-  return (
-    <FormDialog
-      open
-      onOpenChange={(v) => !v && onClose()}
-      title={t('detail.diagnosis.title')}
-      width="lg"
-      form={form}
-      onSubmit={async (values) => {
-        try {
-          await api.patchDiagnosis(id, {
-            diagnosis: values.diagnosis,
-            faultId: values.faultId,
-            faultGroupId: values.faultGroupId,
-            resolutionType: values.resolutionType,
-          })
-          toast.success(t('detail.diagnosis.saved'))
-          onDone()
-          onClose()
-        } catch (error) {
-          if (!applyServerErrors(form, error)) toast.error(messageFor(error))
-        }
-      }}
-    >
-      <FormField
-        control={form.control}
-        name="diagnosis"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>{t('detail.diagnosis.label')}</FormLabel>
-            <FormControl>
-              <Textarea {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FaultSuggestBox
-        equipmentId={equipmentId}
-        errorCode={errorCode ?? undefined}
-        q={description}
-        value={form.watch('faultId')}
-        onSelect={(fault) => form.setValue('faultId', fault.id)}
-      />
-      <FormField
-        control={form.control}
-        name="faultGroupId"
-        render={({ field }) => (
-          <FormItem>
-            <AsyncSelect
-              label={t('detail.diagnosis.faultGroup')}
-              queryKey="fault-groups"
-              loadOptions={(q) => catalogOptions('fault-groups', q)}
-              resolveOption={(id) => resolveCatalogItem('fault-groups', id)}
-              value={field.value}
-              onChange={field.onChange}
-              clearable
-            />
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <SelectField
-        control={form.control}
-        name="resolutionType"
-        label={t('detail.diagnosis.resolutionType')}
-        emptyLabel={t('detail.diagnosis.empty')}
-        options={RESOLUTION_TYPES.map((item) => ({
-          value: item,
-          label: t(`detail.resolution.${item}`),
-        }))}
-      />
-    </FormDialog>
-  )
-}
-
 function StatusDialog({
   id,
   status,
@@ -1992,6 +1889,7 @@ function PartDialog({
               <FormItem>
                 <AsyncSelect
                   label={t('detail.parts.supply')}
+                  required
                   queryKey="supplies"
                   loadOptions={supplyOptions}
                   value={field.value}
@@ -2016,13 +1914,21 @@ function PartDialog({
           )}
         </>
       )}
-      {source !== 'stock' && (
-        <TextField control={form.control} name="name" label={t('detail.parts.name')} />
-      )}
-      <QtyField control={form.control} name="quantity" label={t('detail.parts.quantity')} />
-      {source !== 'stock' && (
-        <MoneyField control={form.control} name="unitCost" label={t('detail.parts.unitCost')} />
-      )}
+      {/* Vật tư và số lượng đi cùng một hàng: đọc một dòng là biết lấy gì, bao nhiêu. */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        {source !== 'stock' && (
+          <TextField control={form.control} name="name" label={t('detail.parts.name')} required />
+        )}
+        <QtyField
+          control={form.control}
+          name="quantity"
+          label={t('detail.parts.quantity')}
+          required
+        />
+        {source !== 'stock' && (
+          <MoneyField control={form.control} name="unitCost" label={t('detail.parts.unitCost')} />
+        )}
+      </div>
       {source === 'purchased' && (
         <FormField
           control={form.control}
@@ -2055,7 +1961,19 @@ function PartDialog({
           <MoneyField control={form.control} name="cost" label={t('detail.parts.cost')} />
         </>
       )}
-      <TextField control={form.control} name="note" label={t('detail.parts.note')} />
+      <FormField
+        control={form.control}
+        name="note"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>{t('detail.parts.note')}</FormLabel>
+            <FormControl>
+              <Textarea {...field} rows={3} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
     </FormDialog>
   )
 }
@@ -2120,11 +2038,27 @@ function VendorDialog({
           <FormItem>
             <AsyncSelect
               label={t('detail.vendors.supplierFull')}
+              required
               queryKey="suppliers"
               loadOptions={(q) => catalogOptions('suppliers', q)}
               resolveOption={(id) => resolveCatalogItem('suppliers', id)}
               value={field.value || null}
-              onChange={(v) => field.onChange(typeof v === 'string' ? v : '')}
+              onChange={(v) => {
+                const next = typeof v === 'string' ? v : ''
+                field.onChange(next)
+                // Điền sẵn người liên hệ trong danh mục, KHÔNG khoá ô: kỹ thuật viên
+                // đến làm thường không phải người liên hệ ghi trong hồ sơ, khoá cứng
+                // sẽ bắt họ đi sửa danh mục mỗi lần thuê ngoài.
+                if (!next) return
+                void getCatalog('suppliers', next).then((supplier) => {
+                  const row = asRecord(supplier)
+                  if (!row) return
+                  if (!form.getValues('engineerName') && typeof row.contactName === 'string')
+                    form.setValue('engineerName', row.contactName)
+                  if (!form.getValues('engineerPhone') && typeof row.contactPhone === 'string')
+                    form.setValue('engineerPhone', row.contactPhone)
+                })
+              }}
             />
             <FormMessage />
           </FormItem>

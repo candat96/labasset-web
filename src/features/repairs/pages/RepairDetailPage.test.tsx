@@ -212,7 +212,7 @@ it('lưu chẩn đoán kèm lỗi gợi ý', async () => {
   renderWithProviders(<Component />, { path: '/repairs/:id', route: '/repairs/r1' })
   await userEvent.click(await screen.findByRole('button', { name: 'Chẩn đoán' }))
   const dialog = await screen.findByRole('dialog')
-  await userEvent.type(within(dialog).getByLabelText('Chẩn đoán'), 'Kim bị cong')
+  await userEvent.type(within(dialog).getByLabelText(/^Chẩn đoán/), 'Kim bị cong')
   await userEvent.click(await screen.findByRole('button', { name: /Kẹt kim/ }))
   await userEvent.click(within(dialog).getByRole('button', { name: 'Lưu' }))
   await waitFor(() => expect(saved[0]).toMatchObject({ diagnosis: 'Kim bị cong', faultId: 'f2' }))
