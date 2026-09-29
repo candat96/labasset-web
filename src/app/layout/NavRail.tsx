@@ -17,7 +17,7 @@ import {
   Wrench,
   type LucideIcon,
 } from 'lucide-react'
-import { MENU, type MenuGroup } from '@/routes/menu'
+import { MENU, type MenuGroup, findMenuItem } from '@/routes/menu'
 import { hasRole, useAuthStore } from '@/stores/auth.store'
 import { cn } from '@/lib/utils'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -70,6 +70,8 @@ export function NavRail() {
   const { t } = useTranslation('menu')
   const groups = useVisibleGroups()
   const active = useActiveGroup()
+  const { pathname } = useLocation()
+  const current = findMenuItem(pathname)
   const [pinned, setPinned] = useState(
     () => (typeof localStorage !== 'undefined' && localStorage.getItem(PIN_KEY) === '1') || false,
   )
@@ -172,24 +174,32 @@ export function NavRail() {
               <p className="text-subtle px-4 pb-1 text-[12px] font-semibold tracking-wide uppercase">
                 {t(group.labelKey.replace('menu:', ''))}
               </p>
-              {group.items.map((item) => (
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  end={item.path === '/'}
-                  className={({ isActive }) =>
-                    cn(
+              {group.items.map((item) => {
+                // Không dùng `isActive` của NavLink: nó khớp theo tiền tố, nên đứng ở
+                // /repairs/stats thì /repairs cũng sáng. `findMenuItem` chọn mục có
+                // tiền tố DÀI NHẤT, nhờ vậy /equipment/123 vẫn sáng mục Thiết bị mà
+                // /equipment/compare thì chỉ sáng mục So sánh.
+                const itemActive = current?.item.path === item.path
+                return (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    // `end` để NavLink không tự gắn aria-current theo tiền tố; dấu
+                    // "đang xem" do `itemActive` quyết định.
+                    end
+                    aria-current={itemActive ? 'page' : undefined}
+                    className={cn(
                       'mx-2 flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13.5px]',
-                      isActive
+                      itemActive
                         ? 'bg-primary-soft text-secondary-foreground font-medium'
                         : 'text-foreground/80 hover:bg-muted',
-                    )
-                  }
-                >
-                  {item.icon && <item.icon className="size-4 shrink-0" aria-hidden />}
-                  <span className="truncate">{t(item.labelKey.replace('menu:', ''))}</span>
-                </NavLink>
-              ))}
+                    )}
+                  >
+                    {item.icon && <item.icon className="size-4 shrink-0" aria-hidden />}
+                    <span className="truncate">{t(item.labelKey.replace('menu:', ''))}</span>
+                  </NavLink>
+                )
+              })}
             </div>
           ))}
         </div>

@@ -85,10 +85,16 @@ function FormItem({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
+/**
+ * Nhãn ô nhập. `required` thêm dấu sao đỏ kèm nhãn đọc màn hình "bắt buộc" —
+ * dấu sao một mình là thông tin chỉ người nhìn thấy mới nhận được.
+ */
 function FormLabel({
   className,
+  required,
+  children,
   ...props
-}: React.ComponentProps<typeof LabelPrimitive.Root>) {
+}: React.ComponentProps<typeof LabelPrimitive.Root> & { required?: boolean }) {
   const { error, formItemId } = useFormField()
 
   return (
@@ -98,7 +104,15 @@ function FormLabel({
       className={cn("data-[error=true]:text-destructive", className)}
       htmlFor={formItemId}
       {...props}
-    />
+    >
+      {children}
+      {required && (
+        <span className="text-destructive ml-0.5" aria-hidden>
+          *
+        </span>
+      )}
+      {required && <span className="sr-only"> (bắt buộc)</span>}
+    </Label>
   )
 }
 

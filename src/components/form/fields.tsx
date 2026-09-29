@@ -17,6 +17,8 @@ interface BaseProps<T extends FieldValues> {
   label: string
   description?: string
   disabled?: boolean
+  /** Hiện dấu sao đỏ ở nhãn; không thay ràng buộc, việc đó vẫn ở zod. */
+  required?: boolean
 }
 
 export function TextField<T extends FieldValues>({
@@ -25,6 +27,7 @@ export function TextField<T extends FieldValues>({
   label,
   description,
   disabled,
+  required,
   type = 'text',
   placeholder,
   autoComplete,
@@ -46,7 +49,7 @@ export function TextField<T extends FieldValues>({
       name={name}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>{label}</FormLabel>
+          <FormLabel required={required}>{label}</FormLabel>
           <FormControl>
             <Input
               {...field}
@@ -75,6 +78,7 @@ export function NumberField<T extends FieldValues>({
   label,
   description,
   disabled,
+  required,
   min,
   step,
   placeholder,
@@ -85,7 +89,7 @@ export function NumberField<T extends FieldValues>({
       name={name}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>{label}</FormLabel>
+          <FormLabel required={required}>{label}</FormLabel>
           <FormControl>
             <Input
               type="number"
@@ -119,6 +123,7 @@ export function SelectField<T extends FieldValues>({
   label,
   description,
   disabled,
+  required,
   options,
   placeholder,
   /** Giá trị đại diện cho "không chọn" (Radix Select không nhận chuỗi rỗng). */
@@ -136,7 +141,7 @@ export function SelectField<T extends FieldValues>({
       name={name}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>{label}</FormLabel>
+          <FormLabel required={required}>{label}</FormLabel>
           <Select
             disabled={disabled}
             value={
@@ -181,6 +186,7 @@ export function SwitchField<T extends FieldValues>({
       name={name}
       render={({ field }) => (
         <FormItem className="flex items-center justify-between rounded-md border px-3 py-2">
+          {/* Công tắc luôn có giá trị bật hoặc tắt nên không có khái niệm bắt buộc. */}
           <FormLabel>{label}</FormLabel>
           <FormControl>
             <Switch checked={!!field.value} onCheckedChange={field.onChange} disabled={disabled} />
