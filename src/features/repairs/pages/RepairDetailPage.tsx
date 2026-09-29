@@ -71,17 +71,13 @@ import { formatQty } from '@/lib/format/number'
 import { useCan } from '@/app/guards/useCan'
 import { ADM } from '@/routes/roles'
 import { applyServerErrors, messageFor } from '@/api/errors'
-import {
-  catalogOptions,
-  resolveCatalogItem,
-  staffUserOptions,
-  supplyOptions,
-} from '@/api/references'
+import { catalogOptions, resolveCatalogItem, supplyOptions } from '@/api/references'
 import { attachFile, uploadFile } from '@/api/files'
 import { getFileUrl } from '@/api/files'
 import { useAuthStore } from '@/stores/auth.store'
 import { assistantPath } from '@/lib/ai-link'
 import * as api from '../api'
+import { AssignDialog } from '../components/AssignDialog'
 import { listRepairsForEquipment } from '@/features/equipment/api'
 import {
   useDepartmentNames,
@@ -100,7 +96,6 @@ import {
 } from '../actions'
 import {
   acceptanceSchema,
-  assignSchema,
   completeSchema,
   costSchema,
   declineSchema,
@@ -112,7 +107,6 @@ import {
   statusSchema,
   vendorSchema,
   type AcceptanceForm,
-  type AssignForm,
   type CompleteForm,
   type CostForm,
   type DeclineForm,
@@ -1278,101 +1272,6 @@ function CostsTab({
         )}
       </SectionCard>
     </>
-  )
-}
-
-function AssignDialog({
-  id,
-  equipmentId,
-  onClose,
-  onDone,
-}: {
-  id: string
-  equipmentId: string
-  onClose: () => void
-  onDone: () => void
-}) {
-  const { t } = useTranslation('repairs')
-  const form = useForm<AssignForm>({
-    resolver: zodResolver(assignSchema),
-    defaultValues: { primaryUserId: '', assistantIds: [], dueAt: '' },
-  })
-  const suggest = useQuery({
-    queryKey: ['repairs', 'assign-suggest', equipmentId],
-    queryFn: () => api.suggestAssignees(equipmentId),
-  })
-  return (
-    <FormDialog
-      open
-      onOpenChange={(v) => !v && onClose()}
-      title={t('detail.assign.title')}
-      form={form}
-      onSubmit={async (values) => {
-        try {
-          await api.assignRepair(id, {
-            primaryUserId: values.primaryUserId,
-            assistantIds: values.assistantIds,
-            dueAt: values.dueAt || undefined,
-          })
-          toast.success(t('detail.assign.saved'))
-          onDone()
-          onClose()
-        } catch (error) {
-          if (!applyServerErrors(form, error)) toast.error(messageFor(error))
-        }
-      }}
-    >
-      {suggest.data && suggest.data.length > 0 && (
-        <ul className="mb-2 space-y-1 text-sm">
-          {suggest.data.map((row) => (
-            <li key={row.id}>
-              <button
-                type="button"
-                className="text-primary"
-                onClick={() => form.setValue('primaryUserId', row.id)}
-              >
-                {row.fullName} ({row.openTickets} {t('stats.openTickets').toLowerCase()})
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-      <FormField
-        control={form.control}
-        name="primaryUserId"
-        render={({ field }) => (
-          <FormItem>
-            <AsyncSelect
-              label={t('detail.assign.primary')}
-              queryKey="staff-users"
-              loadOptions={staffUserOptions}
-              value={field.value || null}
-              onChange={(v) => field.onChange(typeof v === 'string' ? v : '')}
-            />
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="assistantIds"
-        render={({ field }) => (
-          <FormItem>
-            <AsyncSelect
-              label={t('detail.assign.assistant')}
-              queryKey="staff-assist"
-              loadOptions={staffUserOptions}
-              multiple
-              value={field.value}
-              onChange={(v) => field.onChange(Array.isArray(v) ? v : [])}
-              clearable
-            />
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <DatetimeField control={form.control} name="dueAt" label={t('detail.assign.dueAt')} />
-    </FormDialog>
   )
 }
 

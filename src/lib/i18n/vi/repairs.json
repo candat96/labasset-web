@@ -165,7 +165,8 @@
       "primary": "Người xử lý chính",
       "assistant": "Người phụ",
       "dueAt": "Hạn (tuỳ chọn)",
-      "saved": "Đã phân công"
+      "saved": "Đã phân công",
+      "openTickets": "{{count}} phiếu đang xử lý"
     },
     "respond": {
       "accept": "Nhận việc",

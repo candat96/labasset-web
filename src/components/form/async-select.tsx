@@ -35,6 +35,8 @@ export interface AsyncSelectProps {
   placeholder?: string
   showLabel?: boolean
   className?: string
+  /** Hiện dấu sao đỏ ở nhãn, cùng quy ước với `FormLabel`. */
+  required?: boolean
 }
 
 const optionLabel = (option: ReferenceOption) =>
@@ -54,6 +56,7 @@ export function AsyncSelect({
   placeholder,
   showLabel,
   className,
+  required,
 }: AsyncSelectProps) {
   const id = useId()
   const inFilterField = useInFilterField()
@@ -94,7 +97,17 @@ export function AsyncSelect({
 
   return (
     <div className={cn('space-y-1.5', className)}>
-      {visibleLabel && <Label htmlFor={id}>{label}</Label>}
+      {visibleLabel && (
+        <Label htmlFor={id}>
+          {label}
+          {required && (
+            <span className="text-destructive ml-0.5" aria-hidden>
+              *
+            </span>
+          )}
+          {required && <span className="sr-only"> (bắt buộc)</span>}
+        </Label>
+      )}
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
