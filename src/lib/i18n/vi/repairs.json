@@ -265,7 +265,10 @@
     "dueAt": "Hạn",
     "createdAt": "Tạo lúc",
     "cost": "Chi phí",
-    "warningLabel": "Cảnh báo chi phí"
+    "warningLabel": "Cảnh báo chi phí",
+    "actions": "Thao tác",
+    "view": "Xem chi tiết",
+    "print": "In biên bản"
   },
   "filters": {
     "q": "Tìm phiếu",

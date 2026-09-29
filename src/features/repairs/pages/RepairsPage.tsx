@@ -2,13 +2,15 @@ import { useMemo } from 'react'
 import { Link, useNavigate } from 'react-router'
 import type { ColumnDef } from '@tanstack/react-table'
 import { useTranslation } from 'react-i18next'
-import { AlertTriangle, PowerOff } from 'lucide-react'
+import { toast } from 'sonner'
+import { AlertTriangle, Eye, PowerOff, Printer } from 'lucide-react'
 import { DataTable, useServerTable } from '@/components/data-table'
 import { PageHeader } from '@/components/page/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { DatePicker } from '@/components/date-picker'
-import { FilterBar, FilterField, FilterPreset } from '@/components/filter-bar'
+import { FilterPreset } from '@/components/filter-bar'
+import { FilterPanel, FilterPanelField } from '@/components/page/FilterPanel'
 import { MultiSelect } from '@/components/multi-select'
 import { StatusBadge } from '@/components/status-badge'
 import { AsyncSelect } from '@/components/form/async-select'
@@ -23,9 +25,11 @@ import { faultSeverityMap, repairStatusMap } from '@/lib/status-maps'
 import { formatDateTime } from '@/lib/format/date'
 import { formatVnd } from '@/lib/format/money'
 import { dayRangeToIso } from '@/lib/format/date-range'
+import { messageFor } from '@/api/errors'
 import { departmentOptions, equipmentOptions, staffUserOptions } from '@/api/references'
 import { useCan } from '@/app/guards/useCan'
 import { ADM } from '@/routes/roles'
+import { printRepairReport } from '../api'
 import { useDepartmentNames, useRepairs } from '../hooks'
 import {
   REPAIR_SEVERITIES,
@@ -37,6 +41,11 @@ import {
 
 const PRESETS = ['all', 'mine', 'new', 'overdue'] as const
 type Preset = (typeof PRESETS)[number]
+
+/** In biên bản nhanh từ danh sách — lỗi hiện toast, không chặn bảng. */
+function printReport(id: string) {
+  void printRepairReport(id).catch((error) => toast.error(messageFor(error)))
+}
 
 export function Component() {
   const { t } = useTranslation('repairs')
@@ -190,10 +199,95 @@ export function Component() {
           </span>
         ),
       },
+      {
+        // Thao tác nhanh trên từng dòng: xem chi tiết (mở phiếu) và in biên bản.
+        id: 'actions',
+        header: t('columns.actions'),
+        enableHiding: false,
+        enableSorting: false,
+        meta: { label: t('columns.actions'), className: 'w-[92px] whitespace-nowrap' },
+        cell: ({ row }) => (
+          <div className="flex items-center gap-0.5">
+            <Button variant="ghost" size="icon-sm" aria-label={t('columns.view')} asChild>
+              <Link to={`/repairs/${row.original.id}`} onClick={(event) => event.stopPropagation()}>
+                <Eye aria-hidden />
+              </Link>
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label={t('columns.print')}
+              onClick={(event) => {
+                event.stopPropagation()
+                printReport(row.original.id)
+              }}
+            >
+              <Printer aria-hidden />
+            </Button>
+          </div>
+        ),
+      },
     ],
     [t, departmentName],
   )
   const selectedStatuses = (f.status ?? '').split(',').filter(Boolean)
+
+  // Bộ lọc đang áp → chip gỡ được khi panel thu (§UX quyết định 4).
+  const activeFilters: Array<{ key: string; label: string; onRemove: () => void }> = []
+  if (selectedStatuses.length)
+    activeFilters.push({
+      key: 'status',
+      label: `${t('filters.status')}: ${selectedStatuses
+        .map((status) => repairStatusMap[status]?.label ?? status)
+        .join(', ')}`,
+      onRemove: () => table.setFilter('status', undefined),
+    })
+  if (f.severity)
+    activeFilters.push({
+      key: 'severity',
+      label: `${t('filters.severity')}: ${faultSeverityMap[f.severity]?.label ?? f.severity}`,
+      onRemove: () => table.setFilter('severity', undefined),
+    })
+  if (f.assigneeId)
+    activeFilters.push({
+      key: 'assigneeId',
+      label:
+        f.assigneeId === 'me'
+          ? `${t('filters.assignee')}: ${t('filters.me')}`
+          : t('filters.assignee'),
+      onRemove: () => table.setFilter('assigneeId', undefined),
+    })
+  if (f.departmentId)
+    activeFilters.push({
+      key: 'departmentId',
+      label: `${t('filters.department')}: ${departmentName(f.departmentId)}`,
+      onRemove: () => table.setFilter('departmentId', undefined),
+    })
+  if (f.equipmentId)
+    activeFilters.push({
+      key: 'equipmentId',
+      label: t('filters.equipment'),
+      onRemove: () => table.setFilter('equipmentId', undefined),
+    })
+  if (f.overdue === 'true')
+    activeFilters.push({
+      key: 'overdue',
+      label: t('filters.overdue'),
+      onRemove: () => table.setFilter('overdue', undefined),
+    })
+  if (f.from)
+    activeFilters.push({
+      key: 'from',
+      label: `${t('filters.from')}: ${f.from}`,
+      onRemove: () => table.setFilter('from', undefined),
+    })
+  if (f.to)
+    activeFilters.push({
+      key: 'to',
+      label: `${t('filters.to')}: ${f.to}`,
+      onRemove: () => table.setFilter('to', undefined),
+    })
+
   return (
     <>
       <PageHeader
@@ -205,37 +299,29 @@ export function Component() {
           </Button>
         }
       />
-      <DataTable
-        tableId="repairs"
-        columns={columns}
-        data={list.data?.items}
-        total={list.data?.total ?? 0}
-        params={table.params}
-        onPageChange={table.setPage}
-        onLimitChange={table.setLimit}
-        isLoading={list.isPending}
-        error={list.error}
-        onRetry={() => void list.refetch()}
-        getRowId={(row) => row.id}
-        onRowClick={(row) => navigate(`/repairs/${row.id}`)}
-        toolbarLeft={
-          <FilterBar
-            presets={PRESETS.map((item) => (
+      <FilterPanel
+        storageKey="repairs"
+        activeFilters={activeFilters}
+        onReset={table.params.q || Object.keys(f).length ? table.reset : undefined}
+        toolbar={
+          <>
+            <Input
+              className="w-72 max-w-full"
+              aria-label={t('filters.q')}
+              placeholder={t('filters.qPlaceholder')}
+              value={table.inputQ}
+              onChange={(event) => table.setQ(event.target.value)}
+            />
+            {PRESETS.map((item) => (
               <FilterPreset key={item} active={preset === item} onClick={() => setPreset(item)}>
                 {t(`presets.${item}`)}
               </FilterPreset>
             ))}
-            onClear={table.params.q || Object.keys(f).length ? table.reset : undefined}
-          >
-            <FilterField label={t('filters.q')}>
-              <Input
-                aria-label={t('filters.q')}
-                placeholder={t('filters.qPlaceholder')}
-                value={table.inputQ}
-                onChange={(event) => table.setQ(event.target.value)}
-              />
-            </FilterField>
-            <FilterField label={t('filters.status')}>
+          </>
+        }
+        fields={
+          <>
+            <FilterPanelField label={t('filters.status')}>
               <MultiSelect
                 value={selectedStatuses}
                 onChange={(next) =>
@@ -247,8 +333,8 @@ export function Component() {
                 }))}
                 placeholder={t('filters.status')}
               />
-            </FilterField>
-            <FilterField label={t('filters.severity')}>
+            </FilterPanelField>
+            <FilterPanelField label={t('filters.severity')}>
               <Select
                 value={f.severity ?? '__all__'}
                 onValueChange={(value) =>
@@ -267,9 +353,9 @@ export function Component() {
                   ))}
                 </SelectContent>
               </Select>
-            </FilterField>
+            </FilterPanelField>
             {canListUsers && (
-              <FilterField label={t('filters.assignee')}>
+              <FilterPanelField label={t('filters.assignee')}>
                 <AsyncSelect
                   label={t('filters.assignee')}
                   queryKey="staff-users"
@@ -281,9 +367,9 @@ export function Component() {
                   clearable
                   showLabel={false}
                 />
-              </FilterField>
+              </FilterPanelField>
             )}
-            <FilterField label={t('filters.department')}>
+            <FilterPanelField label={t('filters.department')}>
               <AsyncSelect
                 label={t('filters.department')}
                 queryKey="departments"
@@ -295,8 +381,8 @@ export function Component() {
                 clearable
                 showLabel={false}
               />
-            </FilterField>
-            <FilterField label={t('filters.equipment')}>
+            </FilterPanelField>
+            <FilterPanelField label={t('filters.equipment')}>
               <AsyncSelect
                 label={t('filters.equipment')}
                 queryKey="equipment"
@@ -308,24 +394,39 @@ export function Component() {
                 clearable
                 showLabel={false}
               />
-            </FilterField>
-            <FilterField label={t('filters.from')}>
+            </FilterPanelField>
+            <FilterPanelField label={t('filters.from')}>
               <DatePicker
                 ariaLabel={t('filters.from')}
                 value={f.from ?? ''}
                 onChange={(value) => table.setFilter('from', value)}
               />
-            </FilterField>
-            <FilterField label={t('filters.to')}>
+            </FilterPanelField>
+            <FilterPanelField label={t('filters.to')}>
               <DatePicker
                 ariaLabel={t('filters.to')}
                 value={f.to ?? ''}
                 onChange={(value) => table.setFilter('to', value)}
               />
-            </FilterField>
-          </FilterBar>
+            </FilterPanelField>
+          </>
         }
-      />
+      >
+        <DataTable
+          tableId="repairs"
+          columns={columns}
+          data={list.data?.items}
+          total={list.data?.total ?? 0}
+          params={table.params}
+          onPageChange={table.setPage}
+          onLimitChange={table.setLimit}
+          isLoading={list.isPending}
+          error={list.error}
+          onRetry={() => void list.refetch()}
+          getRowId={(row) => row.id}
+          onRowClick={(row) => navigate(`/repairs/${row.id}`)}
+        />
+      </FilterPanel>
     </>
   )
 }

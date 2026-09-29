@@ -49,12 +49,16 @@ const row = {
 }
 
 beforeEach(() => {
+  // Panel lọc mặc định thu khi màn < 1600 (jsdom rộng 1024) → mở sẵn cho test dùng Select.
+  localStorage.setItem('filter-panel:repairs', '1')
   useAuthStore.getState().setSession(fakeSession())
   server.use(
     http.get('/v1/repairs', () =>
       HttpResponse.json({ items: [row], total: 1, page: 1, limit: 20 }),
     ),
-    http.get('/v1/departments', () => HttpResponse.json({ items: [] })),
+    http.get('/v1/departments', () =>
+      HttpResponse.json([{ id: 'd1', code: 'HH', name: 'Huyết học' }]),
+    ),
     http.get('/v1/users', () => HttpResponse.json({ items: [] })),
     http.get('/v1/equipment', () => HttpResponse.json({ items: [] })),
   )
@@ -130,4 +134,32 @@ it('gửi from/to dạng ISO theo ngày local', async () => {
     expect(url?.searchParams.get('from')).toBe(range.from)
     expect(url?.searchParams.get('to')).toBe(range.to)
   })
+})
+
+it('bố cục kiểu hồ sơ thiết bị: bộ lọc ở panel trái vẫn lọc đúng', async () => {
+  const urls: string[] = []
+  server.use(
+    http.get('/v1/repairs', ({ request }) => {
+      urls.push(request.url)
+      return HttpResponse.json({ items: [row], total: 1, page: 1, limit: 20 })
+    }),
+  )
+  const { router } = renderWithProviders(<Component />)
+  await screen.findByRole('link', { name: 'SC-202609-0001' })
+  // Bộ lọc nằm trong panel trái, không còn thanh lọc trên đầu bảng.
+  expect(screen.getByTestId('filter-panel')).toBeInTheDocument()
+  await userEvent.click(screen.getByRole('combobox', { name: 'Khoa' }))
+  await userEvent.click(await screen.findByRole('option', { name: /Huyết học/ }))
+  await waitFor(() => expect(router.state.location.search).toContain('departmentId=d1'))
+  await waitFor(() =>
+    expect(urls.some((u) => new URL(u).searchParams.get('departmentId') === 'd1')).toBe(true),
+  )
+})
+
+it('nút thao tác trên dòng mở đúng phiếu', async () => {
+  const { router } = renderWithProviders(<Component />)
+  await screen.findByRole('link', { name: 'SC-202609-0001' })
+  expect(screen.getByRole('button', { name: 'In biên bản' })).toBeVisible()
+  await userEvent.click(screen.getByRole('link', { name: 'Xem chi tiết' }))
+  await waitFor(() => expect(router.state.location.pathname).toBe('/repairs/r1'))
 })
