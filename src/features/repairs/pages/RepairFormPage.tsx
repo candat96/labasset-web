@@ -16,7 +16,7 @@ import { TextField, SelectField, SwitchField } from '@/components/form/fields'
 import { FormControl, FormLabel } from '@/components/ui/form'
 import { Textarea } from '@/components/ui/textarea'
 import { AsyncSelect } from '@/components/form/async-select'
-import { FaultSuggestBox } from '@/components/fault-suggest-box'
+import { FaultSuggestBox, type SuggestedFault } from '@/components/fault-suggest-box'
 import { applyServerErrors, messageFor } from '@/api/errors'
 import { departmentOptions, equipmentOptions } from '@/api/references'
 import { useCan } from '@/app/guards/useCan'
@@ -57,6 +57,13 @@ export function Component() {
     sla && typeof sla === 'object' && sla !== null
       ? Number((sla as Record<string, unknown>)[severity])
       : undefined
+  /** Bấm một gợi ý lỗi thì điền sẵn dữ liệu lỗi vào form; người dùng vẫn sửa lại được. */
+  const applyFault = (fault: SuggestedFault) => {
+    form.setValue('faultId', fault.id, { shouldDirty: true })
+    form.setValue('description', fault.title, { shouldDirty: true, shouldValidate: true })
+    form.setValue('errorCode', fault.errorCode ?? '', { shouldDirty: true })
+    form.setValue('severity', fault.severity, { shouldDirty: true })
+  }
   const submit = async (values: RepairCreateForm) => {
     try {
       if (!createdId.current) {
@@ -118,8 +125,10 @@ export function Component() {
                     name="equipmentId"
                     render={({ field }) => (
                       <FormItem>
+                        <FormLabel required>{t('form.equipment')}</FormLabel>
                         <AsyncSelect
                           label={t('form.equipment')}
+                          showLabel={false}
                           queryKey="equipment"
                           loadOptions={equipmentOptions}
                           value={field.value || null}
@@ -136,7 +145,7 @@ export function Component() {
                     name="description"
                     render={({ field }) => (
                       <FormItem className="col-span-full">
-                        <FormLabel>{t('form.description')}</FormLabel>
+                        <FormLabel required>{t('form.description')}</FormLabel>
                         <FormControl>
                           <Textarea {...field} />
                         </FormControl>
@@ -149,6 +158,7 @@ export function Component() {
                     control={form.control}
                     name="severity"
                     label={t('form.severity')}
+                    required
                     options={REPAIR_SEVERITIES.map((item) => ({
                       value: item,
                       label: faultSeverityMap[item]?.label ?? item,
@@ -203,13 +213,16 @@ export function Component() {
         <SectionCard
           title={t('form.suggestions')}
           className="lg:sticky lg:top-[72px] lg:self-start"
+          // Chiều cao cố định: danh sách gợi ý đổi số dòng giữa các lần tra nhưng khung
+          // không co giãn theo, tránh giật bố cục.
+          bodyClassName="h-[23.5rem] overflow-y-auto overscroll-contain"
         >
           <FaultSuggestBox
             equipmentId={equipmentId || undefined}
             errorCode={errorCode || undefined}
             q={description || undefined}
             value={form.watch('faultId')}
-            onSelect={(id) => form.setValue('faultId', id)}
+            onSelect={applyFault}
           />
         </SectionCard>
       </div>

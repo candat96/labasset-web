@@ -51,7 +51,7 @@ it('validates description and creates a ticket', async () => {
   expect((await screen.findAllByText('Bắt buộc')).length).toBeGreaterThan(0)
   await userEvent.type(screen.getByLabelText('Máy'), 'TB')
   await userEvent.click(await screen.findByRole('option', { name: /TB-1/ }))
-  await userEvent.type(screen.getByLabelText('Mô tả'), 'Máy kẹt kim')
+  await userEvent.type(screen.getByLabelText(/Mô tả/), 'Máy kẹt kim')
   expect(screen.getByText('SLA: 24 giờ')).toBeVisible()
   await userEvent.click(screen.getByRole('button', { name: 'Tạo phiếu' }))
   await waitFor(() =>
@@ -94,7 +94,7 @@ it('retries failed report photos on the same ticket without creating a duplicate
   renderWithProviders(<Component />)
   await userEvent.type(screen.getByLabelText('Máy'), 'TB')
   await userEvent.click(await screen.findByRole('option', { name: /TB-1/ }))
-  await userEvent.type(screen.getByLabelText('Mô tả'), 'Máy kẹt kim')
+  await userEvent.type(screen.getByLabelText(/Mô tả/), 'Máy kẹt kim')
   await userEvent.upload(
     screen.getByLabelText('Ảnh tình trạng khi báo hỏng'),
     // File của jsdom không dùng được làm body của fetch.
@@ -117,4 +117,96 @@ it('retries failed report photos on the same ticket without creating a duplicate
   await waitFor(() =>
     expect(useNavigate()).toHaveBeenCalledWith('/repairs/r-photo', expect.anything()),
   )
+})
+
+/** Một dòng kết quả `/v1/faults/suggest` đủ trường để dựng khối gợi ý. */
+function suggestion(overrides: Partial<Record<string, unknown>> = {}) {
+  return {
+    matchedBy: 'errorCode',
+    score: 10,
+    occurrences: { onEquipment: 2, sameModel: 5 },
+    fault: {
+      id: 'f1',
+      title: 'Không hút mẫu',
+      errorCode: 'E-01',
+      severity: 'high',
+      scope: 'model',
+      status: 'published',
+      model: 'XN-1000',
+      helpfulCount: 1,
+      viewCount: 3,
+      version: 1,
+      updatedAt: '2026-09-19T00:00:00Z',
+      steps: [],
+      ...overrides,
+    },
+  }
+}
+
+/** Promise mở khoá thủ công để giữ một request đang bay. */
+function deferred() {
+  let resolve!: () => void
+  const promise = new Promise<void>((r) => {
+    resolve = r
+  })
+  return { promise, resolve }
+}
+
+it('chỉ đánh dấu bắt buộc ở trường thật sự bắt buộc', () => {
+  renderWithProviders(<Component />)
+  expect(screen.getByText('Máy', { selector: 'label' })).toHaveTextContent('(bắt buộc)')
+  expect(screen.getByText('Mô tả', { selector: 'label' })).toHaveTextContent('(bắt buộc)')
+  expect(screen.getByText('Mức khẩn', { selector: 'label' })).toHaveTextContent('(bắt buộc)')
+  // Mã lỗi và khoa báo hỏng là tuỳ chọn, không được gắn sao.
+  expect(screen.getByText('Mã lỗi', { selector: 'label' })).not.toHaveTextContent('bắt buộc')
+  expect(screen.getByText('Khoa báo hỏng', { selector: 'label' })).not.toHaveTextContent('bắt buộc')
+})
+
+it('bấm gợi ý lỗi thì điền sẵn mô tả, mã lỗi và mức độ', async () => {
+  server.use(
+    http.get('/v1/faults/suggest', () =>
+      HttpResponse.json([
+        suggestion({ id: 'f9', title: 'Kim kẹt', errorCode: 'E-99', severity: 'low' }),
+      ]),
+    ),
+  )
+  renderWithProviders(<Component />)
+  await userEvent.type(screen.getByLabelText('Máy'), 'TB')
+  await userEvent.click(await screen.findByRole('option', { name: /TB-1/ }, { timeout: 5000 }))
+  await userEvent.click(await screen.findByRole('button', { name: /Kim kẹt/ }, { timeout: 5000 }))
+
+  expect(screen.getByLabelText(/Mô tả/)).toHaveValue('Kim kẹt')
+  expect(screen.getByLabelText('Mã lỗi')).toHaveValue('E-99')
+  expect(screen.getByLabelText(/Mức khẩn/)).toHaveTextContent('Thấp')
+})
+
+it('giữ gợi ý cũ trong lúc tra từ khoá mới, không để danh sách rỗng giữa chừng', async () => {
+  const slow = deferred()
+  let suggestCalls = 0
+  server.use(
+    http.get('/v1/faults/suggest', async ({ request }) => {
+      const q = new URL(request.url).searchParams.get('q')
+      if (!q) return HttpResponse.json([suggestion()])
+      suggestCalls++
+      await slow.promise
+      return HttpResponse.json([
+        suggestion({ id: 'f2', title: 'Kim kẹt', errorCode: 'E-02', severity: 'low' }),
+      ])
+    }),
+  )
+  renderWithProviders(<Component />)
+  await userEvent.type(screen.getByLabelText('Máy'), 'TB')
+  await userEvent.click(await screen.findByRole('option', { name: /TB-1/ }, { timeout: 5000 }))
+  expect(
+    await screen.findByRole('button', { name: /Không hút mẫu/ }, { timeout: 5000 }),
+  ).toBeVisible()
+
+  await userEvent.type(screen.getByLabelText(/Mô tả/), 'kẹt')
+  await waitFor(() => expect(suggestCalls).toBe(1), { timeout: 5000 })
+  // Request mới còn đang bay: gợi ý cũ vẫn nguyên, không rỗng và không nhấp nháy.
+  expect(screen.getByRole('button', { name: /Không hút mẫu/ })).toBeVisible()
+  expect(screen.queryByText('Không có gợi ý lỗi.')).not.toBeInTheDocument()
+
+  slow.resolve()
+  expect(await screen.findByRole('button', { name: /Kim kẹt/ }, { timeout: 5000 })).toBeVisible()
 })
