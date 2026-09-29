@@ -1,10 +1,14 @@
-import { useQuery } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { suggestFaults } from '@/api/faults'
 import { messageFor } from '@/api/errors'
 import { StatusBadge } from '@/components/status-badge'
 import { faultSeverityMap } from '@/lib/status-maps'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+
+/** Bản ghi lỗi trong một dòng gợi ý. */
+export type SuggestedFault = Awaited<ReturnType<typeof suggestFaults>>[number]['fault']
 
 export function FaultSuggestBox({
   equipmentId,
@@ -17,13 +21,25 @@ export function FaultSuggestBox({
   errorCode?: string
   q?: string
   value?: string | null
-  onSelect: (faultId: string) => void
+  /** Trả về cả bản ghi lỗi để nơi gọi tự điền vào form, không chỉ mã. */
+  onSelect: (fault: SuggestedFault) => void
 }) {
   const enabled = !!equipmentId
+  // Gõ tới đâu tra tới đó làm khối gợi ý nhấp nháy theo từng phím. Chờ người dùng
+  // ngừng gõ rồi mới tra.
+  const [debouncedQ, setDebouncedQ] = useState(q)
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQ(q), 300)
+    return () => clearTimeout(timer)
+  }, [q])
+
   const query = useQuery({
-    queryKey: ['faults', 'suggest', equipmentId, errorCode, q],
-    queryFn: () => suggestFaults({ equipmentId: equipmentId!, errorCode, q }),
+    queryKey: ['faults', 'suggest', equipmentId, errorCode, debouncedQ],
+    queryFn: () => suggestFaults({ equipmentId: equipmentId!, errorCode, q: debouncedQ }),
     enabled,
+    // Giữ kết quả cũ trong lúc tra kết quả mới: không có nó thì mỗi lần đổi từ khoá
+    // danh sách rỗng đi một nhịp rồi hiện lại — đó chính là cái nhấp nháy.
+    placeholderData: keepPreviousData,
   })
   if (!enabled) {
     return <p className="text-muted-foreground text-sm">Chọn máy để xem gợi ý lỗi.</p>
@@ -53,7 +69,7 @@ export function FaultSuggestBox({
                 'w-full rounded-md border p-3 text-left',
                 selected ? 'border-primary bg-primary/5' : 'hover:bg-muted/50',
               )}
-              onClick={() => onSelect(row.fault.id)}
+              onClick={() => onSelect(row.fault)}
             >
               <div className="flex flex-wrap items-center gap-2">
                 <span className="font-medium">{row.fault.title}</span>

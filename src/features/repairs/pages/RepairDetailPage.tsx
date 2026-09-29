@@ -1444,7 +1444,7 @@ function DiagnosisDialog({
         errorCode={errorCode ?? undefined}
         q={description}
         value={form.watch('faultId')}
-        onSelect={(faultId) => form.setValue('faultId', faultId)}
+        onSelect={(fault) => form.setValue('faultId', fault.id)}
       />
       <FormField
         control={form.control}
