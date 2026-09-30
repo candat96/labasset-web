@@ -5,6 +5,7 @@ import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import interactionPlugin from '@fullcalendar/interaction'
+import viLocale from '@fullcalendar/core/locales/vi'
 import type { DatesSetArg, EventClickArg, EventDropArg, EventInput } from '@fullcalendar/core'
 import { toast } from 'sonner'
 import { PageHeader } from '@/components/page/PageHeader'
@@ -14,6 +15,7 @@ import { messageFor } from '@/api/errors'
 import { listCalendar, moveCalendar } from '../api'
 import type { CalendarItem } from '../types'
 import { useTranslation } from 'react-i18next'
+import './calendar.css'
 
 const hrefFor = (item: Pick<CalendarItem, 'type' | 'id'>) =>
   item.type === 'maintenance'
@@ -23,9 +25,19 @@ const hrefFor = (item: Pick<CalendarItem, 'type' | 'id'>) =>
       : `/repairs/${item.id}`
 
 const EVENT_CLASS: Record<string, string[]> = {
-  maintenance: ['!border-primary', '!bg-primary', '!text-primary-foreground'],
-  calibration: ['!border-warning', '!bg-warning', '!text-warning-foreground'],
-  repair: ['!border-destructive', '!bg-destructive', '!text-destructive-foreground'],
+  maintenance: ['fc-event-type-maintenance'],
+  calibration: ['fc-event-type-calibration'],
+  repair: ['fc-event-type-repair'],
+}
+
+/** Giờ cụ thể của phiếu dạng `HH:mm`; trả null khi công việc chỉ có ngày (nửa đêm). */
+export function eventTimeLabel(start: string): string | null {
+  const date = new Date(start)
+  if (Number.isNaN(date.getTime())) return null
+  const hours = date.getHours()
+  const minutes = date.getMinutes()
+  if (hours === 0 && minutes === 0) return null
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`
 }
 
 export function Component() {
@@ -52,16 +64,23 @@ export function Component() {
   })
   const toggle = (type: string, on: boolean) =>
     setTypes((curr) => (on ? [...new Set([...curr, type])] : curr.filter((item) => item !== type)))
-  const events: EventInput[] = (list.data?.items ?? []).map((item) => ({
-    id: `${item.type}:${item.id}`,
-    title: item.title,
-    start: item.start,
-    editable: item.movable,
-    classNames: EVENT_CLASS[item.type] ?? [],
-    extendedProps: { item },
-  }))
-  const onDatesSet = (info: DatesSetArg) =>
-    setRange({ from: info.start.toISOString(), to: info.end.toISOString() })
+  const events: EventInput[] = (list.data?.items ?? []).map((item) => {
+    const time = eventTimeLabel(item.start)
+    return {
+      id: `${item.type}:${item.id}`,
+      title: time ? `${time} · ${item.title}` : item.title,
+      start: item.start,
+      editable: item.movable,
+      classNames: EVENT_CLASS[item.type] ?? [],
+      extendedProps: { item },
+    }
+  })
+  const onDatesSet = (info: DatesSetArg) => {
+    const from = info.start.toISOString()
+    const to = info.end.toISOString()
+    // Giữ nguyên tham chiếu khi khoảng ngày không đổi để tránh vòng lặp render.
+    setRange((curr) => (curr.from === from && curr.to === to ? curr : { from, to }))
+  }
   const onEventClick = (info: EventClickArg) => {
     const item = info.event.extendedProps.item as CalendarItem
     navigate(hrefFor(item))
@@ -104,7 +123,7 @@ export function Component() {
         </label>
       </div>
       {list.error && <ErrorState error={list.error} onRetry={() => void list.refetch()} />}
-      <div className="rounded-md border bg-card p-3">
+      <div className="calendar-shell rounded-md border bg-card p-3">
         <FullCalendar
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
           initialView="dayGridMonth"
@@ -113,7 +132,17 @@ export function Component() {
             center: 'title',
             right: 'dayGridMonth,timeGridWeek',
           }}
+          locales={[viLocale]}
           locale="vi"
+          buttonText={{
+            today: t('calendarToday'),
+            month: t('calendarMonth'),
+            week: t('calendarWeek'),
+          }}
+          dayMaxEvents={3}
+          moreLinkText={(n) => t('calendarMore', { n })}
+          eventDisplay="block"
+          displayEventTime={false}
           height="auto"
           events={events}
           editable
