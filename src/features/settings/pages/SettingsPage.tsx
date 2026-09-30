@@ -11,8 +11,8 @@ import { PageHeader } from '@/components/page/PageHeader'
 import { SectionCard } from '@/components/page/SectionCard'
 import {
   Bell,
-  Bot,
   Boxes,
+  Bot,
   Braces,
   Building2,
   DatabaseZap,
@@ -217,6 +217,15 @@ function previewText(result: { example?: string } | string) {
 }
 
 const TABS = ['hospital', 'workflow', 'stock', 'alerts', 'numbering', 'kpi', 'ai', 'other'] as const
+
+/**
+ * Khoá API của nhà cung cấp AI do bên vận hành đặt chung cho mọi viện, nên ô nhập
+ * khoá được ẩn khỏi màn cài đặt: bày ra chỉ khiến người dùng tưởng mình phải tự
+ * khai, rồi dán nhầm khoá vào một viện và AI viện đó chết riêng.
+ *
+ * Đổi thành `true` là hiện lại, không phải dựng lại gì.
+ */
+const SHOW_API_KEY_FIELDS = false
 
 export function Component() {
   const { t } = useTranslation('settings')
@@ -1048,7 +1057,11 @@ export function Component() {
                             ))}
                           </datalist>
                         </div>
-                        <div className="space-y-2">
+                        <div
+                          className="space-y-2"
+                          hidden={!SHOW_API_KEY_FIELDS}
+                          aria-hidden={!SHOW_API_KEY_FIELDS}
+                        >
                           <Label htmlFor="ai-chat-key">
                             {chatKeySet && !clearChatKey ? t('ai.apiKeySet') : t('ai.apiKeyUnset')}
                           </Label>
@@ -1251,7 +1264,11 @@ export function Component() {
                             </div>
                           </>
                         )}
-                        <div className="space-y-2">
+                        <div
+                          className="space-y-2"
+                          hidden={!SHOW_API_KEY_FIELDS}
+                          aria-hidden={!SHOW_API_KEY_FIELDS}
+                        >
                           <Label htmlFor="ai-embedding-key">
                             {embeddingKeySet && !clearEmbeddingKey
                               ? t('ai.embeddingApiKeySet')

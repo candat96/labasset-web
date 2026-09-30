@@ -178,11 +178,12 @@ it('renders the AI provider form with chat and embedding blocks', async () => {
   expect(screen.getByLabelText('Nhà cung cấp')).toHaveTextContent('OpenAI')
   expect(screen.getByLabelText('Base URL')).toHaveValue('https://api.openai.com/v1')
   expect(screen.getByLabelText('Mô hình')).toHaveValue('gpt-4o-mini')
-  expect(screen.getByLabelText('API key (đã đặt)')).toBeVisible()
+  // Ô nhập khoá bị ẩn: khoá do bên vận hành đặt chung, viện không tự khai.
+  expect(screen.getByLabelText('API key (đã đặt)')).not.toBeVisible()
   expect(screen.getByLabelText('Giao thức embedding')).toHaveTextContent('OpenAI-compatible')
   expect(screen.getByLabelText('Base URL embedding')).toHaveValue('https://api.openai.com/v1')
   expect(screen.getByLabelText('Mô hình embedding')).toHaveValue('text-embedding-3-small')
-  expect(screen.getByLabelText('API key embedding (chưa đặt)')).toBeVisible()
+  expect(screen.getByLabelText('API key embedding (chưa đặt)')).not.toBeVisible()
   expect(screen.queryByText(/API D2 chưa có/)).toBeNull()
 })
 
@@ -288,19 +289,11 @@ it('PUT sends changed ai.* keys per the provider contract and skips empty keys',
   })
 })
 
-it('clears a saved API key only when the user asks', async () => {
-  const saved: unknown[] = []
-  server.use(
-    http.put('/v1/settings', async ({ request }) => {
-      saved.push(await request.json())
-      return new HttpResponse(null, { status: 204 })
-    }),
-  )
+it('không cho viện tự sửa hay xoá khoá API — khoá do bên vận hành đặt chung', async () => {
   await openAiTab()
-  await userEvent.click(screen.getByRole('button', { name: 'Xoá key' }))
-  expect(screen.getByText('Key đã lưu sẽ bị xoá khi bấm Lưu')).toBeVisible()
-  await userEvent.click(screen.getByRole('button', { name: 'Lưu thay đổi' }))
-  await waitFor(() => expect(saved[0]).toEqual({ 'ai.chat.apiKey': '' }))
+  // Ô nhập và nút xoá vẫn nằm trong cây để bật lại dễ, nhưng người dùng không thấy.
+  expect(screen.getByLabelText('API key (đã đặt)')).not.toBeVisible()
+  expect(screen.getByRole('button', { name: 'Xoá key', hidden: true })).not.toBeVisible()
 })
 
 it('test connection shows latency and model on success', async () => {
