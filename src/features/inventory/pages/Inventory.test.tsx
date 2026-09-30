@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { server } from '@/test/msw/server'
@@ -84,14 +84,42 @@ it('imports supplies with multipart body validated by msw', async () => {
     }),
   )
   renderWithProviders(<SuppliesPage />)
+  await userEvent.click(await screen.findByRole('button', { name: 'Nhập Excel' }))
+  const dialog = within(screen.getByRole('dialog'))
   await userEvent.upload(
-    screen.getByLabelText('Nhập Excel'),
+    dialog.getByLabelText('Tệp Excel'),
     new File(['xlsx'], 'vat-tu.xlsx', {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     }),
   )
+  await userEvent.click(dialog.getByRole('button', { name: 'Nhập' }))
   await waitFor(() => expect(imported).toBe(true))
-  expect(await screen.findByText('Đã tạo 1, cập nhật 0 vật tư')).toBeInTheDocument()
+  expect(await dialog.findByText('Đã nhập 1 dòng.')).toBeVisible()
+})
+
+it('hiện đủ dòng đã nhập lẫn dòng lỗi khi vật tư nhập một phần', async () => {
+  server.use(
+    http.post('/v1/supplies/import', () =>
+      HttpResponse.json({
+        created: 2,
+        updated: 0,
+        errors: [{ row: 3, field: 'unitCode', message: 'Đơn vị không tồn tại' }],
+      }),
+    ),
+  )
+  renderWithProviders(<SuppliesPage />)
+  await userEvent.click(await screen.findByRole('button', { name: 'Nhập Excel' }))
+  const dialog = within(screen.getByRole('dialog'))
+  await userEvent.upload(
+    dialog.getByLabelText('Tệp Excel'),
+    new File(['xlsx'], 'vat-tu.xlsx', {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    }),
+  )
+  await userEvent.click(dialog.getByRole('button', { name: 'Nhập' }))
+  expect(await dialog.findByText('Đã nhập 2 dòng, 1 dòng lỗi.')).toBeVisible()
+  expect(dialog.getByText('Đơn vị không tồn tại')).toBeVisible()
+  expect(dialog.getByText(/Dòng lỗi KHÔNG được nhập/)).toBeVisible()
 })
 
 it('validates supply name', async () => {

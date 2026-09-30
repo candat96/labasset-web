@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { server } from '@/test/msw/server'
@@ -36,4 +36,28 @@ it('uploads and shows row errors', async () => {
   await userEvent.click(screen.getByRole('button', { name: 'Nhập' }))
   expect(await screen.findByText('Loại không hợp lệ')).toBeInTheDocument()
   expect(screen.getByText('4')).toBeInTheDocument()
+})
+
+it('hiện đủ số dòng đã nhập lẫn dòng lỗi khi nhập một phần', async () => {
+  server.use(
+    http.post('/v1/departments/import', () =>
+      HttpResponse.json({
+        created: 10,
+        updated: 2,
+        errors: [{ row: 7, field: 'departmentCode', message: 'Khoa không tồn tại' }],
+      }),
+    ),
+  )
+  renderWithProviders(<ImportDialog open onOpenChange={() => {}} />)
+  await userEvent.upload(
+    screen.getByLabelText('Tệp Excel'),
+    new File(['x'], 'khoa.xlsx', { type: XLSX }),
+  )
+  await userEvent.click(screen.getByRole('button', { name: 'Nhập' }))
+  const dialog = within(screen.getByRole('dialog'))
+  // Vừa có dòng vào vừa có dòng lỗi: phải hiện đủ CẢ HAI con số.
+  expect(await dialog.findByText('Đã nhập 12 dòng, 1 dòng lỗi.')).toBeVisible()
+  expect(dialog.getByText('Tạo mới 10, cập nhật 2.')).toBeVisible()
+  expect(dialog.getByText('Khoa không tồn tại')).toBeVisible()
+  expect(dialog.getByText(/Dòng lỗi KHÔNG được nhập/)).toBeVisible()
 })

@@ -462,6 +462,17 @@
   },
   "countItems": "{{n}} mục",
   "formHint": "Nhập thông tin chung, thông số kỹ thuật; các trường có * là bắt buộc.",
+  "import": {
+    "title": "Nhập thiết bị từ Excel",
+    "desc": "Tải tệp mẫu (đúng cột như khi Xuất Excel), điền dữ liệu rồi chọn tệp .xlsx (tối đa 5 MB) để nhập.",
+    "button": "Nhập Excel",
+    "template": "Tải tệp mẫu",
+    "file": "Tệp Excel",
+    "submit": "Nhập",
+    "importing": "Đang nhập…",
+    "wrongType": "Chỉ nhận tệp .xlsx",
+    "tooLarge": "Tệp vượt quá 5 MB"
+  },
   "listHint": "Toàn bộ trang thiết bị theo khoa, trạng thái và nhóm máy.",
   "views": {
     "equipment": "Danh sách máy",

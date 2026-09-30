@@ -58,11 +58,7 @@
     "tooLarge": "Tệp vượt quá 5 MB",
     "wrongType": "Chỉ nhận tệp .xlsx",
     "submit": "Nhập",
-    "result": "Tạo mới {{created}}, cập nhật {{updated}}.",
-    "errors": "Lỗi ({{count}}) — chưa ghi dữ liệu nào",
-    "row": "Dòng",
-    "field": "Trường",
-    "message": "Nội dung"
+    "importing": "Đang nhập…"
   },
   "info": "Thông tin",
   "audit": "Nhật ký",

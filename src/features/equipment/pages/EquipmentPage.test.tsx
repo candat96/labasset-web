@@ -255,3 +255,49 @@ it('mode "Theo phòng": danh sách phòng kèm số máy, bấm phòng → máy 
   )
   expect(await screen.findByRole('link', { name: 'TB-2026-00001' })).toBeVisible()
 })
+
+it('nhập Excel thiết bị: hiện đủ dòng đã vào lẫn dòng lỗi', async () => {
+  const XLSX = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  let multipart = false
+  server.use(
+    http.post('/v1/equipment/import', ({ request }) => {
+      multipart = (request.headers.get('content-type') ?? '').includes('multipart/form-data')
+      return HttpResponse.json({
+        created: 2,
+        updated: 1,
+        errors: [{ row: 5, field: 'departmentCode', message: 'Khoa không tồn tại' }],
+      })
+    }),
+  )
+  renderWithProviders(<Component />)
+  await screen.findByRole('link', { name: 'TB-2026-00001' })
+  await userEvent.click(screen.getByRole('button', { name: 'Nhập Excel' }))
+  const dialog = within(screen.getByRole('dialog'))
+  await userEvent.upload(
+    dialog.getByLabelText('Tệp Excel'),
+    new File(['x'], 'thiet-bi.xlsx', { type: XLSX }),
+  )
+  await userEvent.click(dialog.getByRole('button', { name: 'Nhập' }))
+  // Vừa có dòng vào vừa có dòng lỗi: phải hiện đủ CẢ HAI con số.
+  expect(await dialog.findByText('Đã nhập 3 dòng, 1 dòng lỗi.')).toBeVisible()
+  expect(dialog.getByText('Tạo mới 2, cập nhật 1.')).toBeVisible()
+  expect(dialog.getByText('Khoa không tồn tại')).toBeVisible()
+  expect(dialog.getByText(/Dòng lỗi KHÔNG được nhập/)).toBeVisible()
+  expect(multipart).toBe(true)
+})
+
+it('tải tệp mẫu nhập thiết bị', async () => {
+  let called = ''
+  server.use(
+    http.get('/v1/equipment/template', ({ request }) => {
+      called = request.url
+      return new HttpResponse('xlsx')
+    }),
+  )
+  vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:mau')
+  vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+  renderWithProviders(<Component />)
+  await screen.findByRole('link', { name: 'TB-2026-00001' })
+  await userEvent.click(screen.getByRole('button', { name: 'Tải tệp mẫu' }))
+  await waitFor(() => expect(called).toContain('/v1/equipment/template'))
+})

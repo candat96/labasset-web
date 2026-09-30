@@ -1,28 +1,8 @@
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { toast } from 'sonner'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { messageFor } from '@/api/errors'
+import { ExcelImportDialog } from '@/components/excel-import-dialog'
 import { downloadCatalogTemplate, importCatalog } from '../api'
-import type { CatalogSlug, ImportResult } from '../types'
+import type { CatalogSlug } from '../types'
 
 export function CatalogImportDialog({
   slug,
@@ -35,93 +15,27 @@ export function CatalogImportDialog({
 }) {
   const { t } = useTranslation('catalogs')
   const { t: tc } = useTranslation()
-  const [file, setFile] = useState<File | null>(null)
-  const [result, setResult] = useState<ImportResult | null>(null)
   const queryClient = useQueryClient()
   const mutation = useMutation({
     mutationFn: (value: File) => importCatalog(slug, value),
-    onSuccess: (value) => {
-      setResult(value)
-      void queryClient.invalidateQueries({ queryKey: ['catalogs', slug] })
-    },
-    onError: (error) => toast.error(messageFor(error)),
   })
   return (
-    <Dialog
+    <ExcelImportDialog
       open={open}
-      onOpenChange={(value) => {
-        onOpenChange(value)
-        if (!value) {
-          setFile(null)
-          setResult(null)
-        }
-      }}
-    >
-      <DialogContent className="sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>{t('import.title')}</DialogTitle>
-          <DialogDescription>{t('import.step1')}</DialogDescription>
-        </DialogHeader>
-        <Button variant="outline" onClick={() => void downloadCatalogTemplate(slug)}>
-          {t('import.template')}
-        </Button>
-        <p className="text-muted-foreground text-xs">{t('import.codeNote')}</p>
-        <Input
-          aria-label={t('import.file')}
-          type="file"
-          accept=".xlsx"
-          onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-        />
-        {result && (
-          <div>
-            <p>
-              {t('import.result', {
-                created: result.created,
-                updated: result.updated,
-                errors: result.errors.length,
-              })}
-            </p>
-            {result.createdCodes && result.createdCodes.length > 0 && (
-              <p className="text-success-fg text-sm">
-                {t('import.generatedCodes', { codes: result.createdCodes.join(', ') })}
-              </p>
-            )}
-            {result.errors.length > 0 && (
-              <div className="border-divider max-h-64 overflow-auto rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{t('import.row')}</TableHead>
-                      <TableHead>{t('import.field')}</TableHead>
-                      <TableHead>{t('import.error')}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {result.errors.map((error, index) => (
-                      <TableRow key={`${error.row}-${index}`}>
-                        <TableCell>{error.row}</TableCell>
-                        <TableCell>{error.field ?? '—'}</TableCell>
-                        <TableCell>{error.message}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </div>
-        )}
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            {tc('actions.close')}
-          </Button>
-          <Button
-            disabled={!file || mutation.isPending}
-            onClick={() => file && mutation.mutate(file)}
-          >
-            {tc('actions.import')}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      onOpenChange={onOpenChange}
+      className="sm:max-w-2xl"
+      title={t('import.title')}
+      description={t('import.step1')}
+      notice={<p className="text-muted-foreground text-xs">{t('import.codeNote')}</p>}
+      templateLabel={t('import.template')}
+      onDownloadTemplate={() => downloadCatalogTemplate(slug)}
+      fileLabel={t('import.file')}
+      submitLabel={tc('actions.import')}
+      importingLabel={t('import.importing')}
+      wrongTypeMessage={t('import.wrongType')}
+      tooLargeMessage={t('import.tooLarge')}
+      onImport={(file) => mutation.mutateAsync(file)}
+      onImported={() => void queryClient.invalidateQueries({ queryKey: ['catalogs', slug] })}
+    />
   )
 }

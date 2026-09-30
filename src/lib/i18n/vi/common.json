@@ -72,5 +72,15 @@
     "invalid": "Giá trị không hợp lệ",
     "none": "— Không —"
   },
+  "importResult": {
+    "summary": "Đã nhập {{imported}} dòng, {{errors}} dòng lỗi.",
+    "summaryClean": "Đã nhập {{imported}} dòng.",
+    "breakdown": "Tạo mới {{created}}, cập nhật {{updated}}.",
+    "generatedCodes": "Mã đã sinh: {{codes}}",
+    "errorsNotImported": "Dòng lỗi KHÔNG được nhập; các dòng còn lại đã vào hệ thống. Sửa những dòng dưới đây rồi nhập lại tệp đã sửa — không nhập lại toàn bộ để tránh trùng.",
+    "row": "Dòng",
+    "field": "Cột",
+    "message": "Lý do"
+  },
   "all": "Tất cả"
 }

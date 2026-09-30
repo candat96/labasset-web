@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
@@ -23,22 +23,16 @@ import { useCan } from '@/app/guards/useCan'
 import { STAFF } from '@/routes/roles'
 import { messageFor } from '@/api/errors'
 import { catalogOptions } from '@/api/references'
-import {
-  asSupplyPage,
-  downloadSupplyTemplate,
-  exportSupplies,
-  importSupplies,
-  listSupplies,
-} from '../api'
+import { asSupplyPage, exportSupplies, listSupplies } from '../api'
 import type { Supply } from '../types'
+import { SupplyImportDialog } from '../components/SupplyImportDialog'
 import { useTranslation } from 'react-i18next'
 
 export function Component() {
   const { t } = useTranslation('inventory')
 
   const canWrite = useCan(STAFF)
-  const [importing, setImporting] = useState(false)
-  const fileRef = useRef<HTMLInputElement>(null)
+  const [importOpen, setImportOpen] = useState(false)
   const navigate = useNavigate()
   const table = useServerTable({
     filterKeys: ['groupId', 'manufacturerId', 'isActive', 'trackLot'],
@@ -145,42 +139,8 @@ export function Component() {
           <div className="flex gap-2">
             {canWrite && (
               <>
-                <input
-                  ref={fileRef}
-                  className="hidden"
-                  type="file"
-                  accept=".xlsx"
-                  aria-label={t('importExcel')}
-                  onChange={async (event) => {
-                    const file = event.target.files?.[0]
-                    event.target.value = ''
-                    if (!file) return
-                    setImporting(true)
-                    try {
-                      const result = await importSupplies(file)
-                      toast.success(
-                        t('importResult', { created: result.created, updated: result.updated }),
-                      )
-                      void list.refetch()
-                    } catch (error) {
-                      toast.error(messageFor(error))
-                    } finally {
-                      setImporting(false)
-                    }
-                  }}
-                />
-                <Button
-                  variant="outline"
-                  onClick={() => downloadSupplyTemplate().catch((e) => toast.error(messageFor(e)))}
-                >
-                  {t('downloadTemplate')}
-                </Button>
-                <Button
-                  variant="outline"
-                  disabled={importing}
-                  onClick={() => fileRef.current?.click()}
-                >
-                  {importing ? t('importing') : t('importExcel')}
+                <Button variant="outline" onClick={() => setImportOpen(true)}>
+                  {t('importExcel')}
                 </Button>
               </>
             )}
@@ -291,6 +251,11 @@ export function Component() {
           onRowClick={(row) => navigate(`/supplies/${row.id}`)}
         />
       </FilterPanel>
+      <SupplyImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        onImported={() => void list.refetch()}
+      />
     </>
   )
 }

@@ -66,7 +66,9 @@ export function useImportDepartments() {
   return useMutation({
     mutationFn: dApi.importDepartments,
     onSuccess: (r) => {
-      if (r.errors.length === 0) void invalidate()
+      // Nhập từng phần: chỉ cần có dòng được ghi là phải làm mới danh sách,
+      // kể cả khi vẫn còn dòng lỗi.
+      if (r.created + r.updated > 0) void invalidate()
     },
   })
 }

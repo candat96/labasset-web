@@ -130,7 +130,8 @@ it('imports Excel and displays errors by row', async () => {
   await userEvent.click(dialog.getByRole('button', { name: 'Nhập Excel' }))
   expect(await dialog.findByText('Mã trùng')).toBeVisible()
   expect(dialog.getByText('4')).toBeVisible()
-  expect(dialog.getByText(/Tạo mới: 1/)).toBeVisible()
+  expect(dialog.getByText('Đã nhập 3 dòng, 1 dòng lỗi.')).toBeVisible()
+  expect(dialog.getByText('Tạo mới 1, cập nhật 2.')).toBeVisible()
   expect(dialog.getByText('Mã đã sinh: DVT-001')).toBeVisible()
 })
 

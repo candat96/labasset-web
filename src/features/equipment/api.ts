@@ -2,6 +2,7 @@ import { api, apiBody, unwrap, unwrapAs, untypedApi } from '@/api/client'
 import { downloadFile } from '@/api/download'
 import { printFile } from '@/api/print'
 import { apiQuery, pageQuery } from '@/api/paths'
+import type { ImportResultData } from '@/api/import-result'
 import type { components, paths } from '@/api/schema'
 import type { ReferenceOption } from '@/components/form/async-select'
 import {
@@ -86,6 +87,19 @@ export function rotateQr(id: string) {
 
 export function exportEquipment(params: EquipmentListParams) {
   return downloadFile('/v1/equipment', { ...params, export: 'xlsx' }, 'thiet-bi.xlsx')
+}
+
+// TODO(api): POST /v1/equipment/import + GET /v1/equipment/template chưa có trong
+// OpenAPI (worker API đang bổ sung) — khai tay qua untypedApi/downloadFile theo mẫu
+// "API còn thiếu" trong README; khi có swagger thì thay bằng client `api` có kiểu.
+export function importEquipment(file: File) {
+  const data = new FormData()
+  data.append('file', file)
+  return unwrapAs<ImportResultData>(untypedApi.POST('/v1/equipment/import', { body: data }))
+}
+
+export function downloadEquipmentTemplate() {
+  return downloadFile('/v1/equipment/template', {}, 'thiet-bi-mau.xlsx')
 }
 
 export function printQrLabels(ids: string[]) {

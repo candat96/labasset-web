@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { toast } from 'sonner'
+import { Download, Upload } from 'lucide-react'
 import { DataTable, useServerTable } from '@/components/data-table'
 import { PageHeader } from '@/components/page/PageHeader'
 import { EmptyState } from '@/components/page/EmptyState'
@@ -50,7 +51,14 @@ import { messageFor } from '@/api/errors'
 import { roomEquipmentCounts } from '@/api/room-counts'
 import { useDepartmentLookup, useCatalogLookup, useRoomLookup } from '@/api/lookups'
 import { listCatalog } from '@/features/catalogs/api'
-import { catalogOptions, exportEquipment, printQrLabels, userOptions } from '../api'
+import {
+  catalogOptions,
+  downloadEquipmentTemplate,
+  exportEquipment,
+  printQrLabels,
+  userOptions,
+} from '../api'
+import { EquipmentImportDialog } from '../components/EquipmentImportDialog'
 import { useEquipmentList } from '../hooks'
 import { shortId, useUserNames } from '../components/lookups'
 import {
@@ -93,6 +101,7 @@ export function Component() {
   const canWrite = useCan(STAFF)
   const staffNames = useUserNames(isAdm)
   const navigate = useNavigate()
+  const [importOpen, setImportOpen] = useState(false)
   const [searchParams, setSearchParams] = useSearchParams()
   // Mode "Theo phòng": danh sách phòng kèm tổng số máy → bấm phòng ra danh sách máy.
   const roomMode = searchParams.get('view') === 'rooms'
@@ -396,6 +405,22 @@ export function Component() {
         description={t('listHint')}
         actions={
           <>
+            {canWrite && (
+              <>
+                <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}>
+                  <Upload aria-hidden /> {t('import.button')}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    downloadEquipmentTemplate().catch((error) => toast.error(messageFor(error)))
+                  }
+                >
+                  <Download aria-hidden /> {t('import.template')}
+                </Button>
+              </>
+            )}
             <Button
               variant="outline"
               size="sm"
@@ -714,6 +739,11 @@ export function Component() {
           />
         </FilterPanel>
       )}
+      <EquipmentImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        onImported={() => void list.refetch()}
+      />
     </>
   )
 }

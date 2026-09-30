@@ -131,14 +131,22 @@ async function untypedRequest(
     if (value !== undefined && value !== null && value !== '')
       url.searchParams.set(key, String(value))
   }
+  // FormData (multipart nhập Excel) gửi nguyên body, KHÔNG tự đặt Content-Type
+  // để trình duyệt tự thêm boundary.
+  const isForm = typeof FormData !== 'undefined' && init?.body instanceof FormData
   const send = () =>
     fetch(url.pathname + url.search, {
       method,
       headers: {
         ...authHeaders(url.toString()),
-        ...(init?.body === undefined ? {} : { 'Content-Type': 'application/json' }),
+        ...(init?.body === undefined || isForm ? {} : { 'Content-Type': 'application/json' }),
       },
-      body: init?.body === undefined ? undefined : JSON.stringify(init.body),
+      body:
+        init?.body === undefined
+          ? undefined
+          : isForm
+            ? (init.body as FormData)
+            : JSON.stringify(init.body),
     })
   let response = await send()
   if (
@@ -158,7 +166,10 @@ async function untypedRequest(
   return response.ok ? { data, response } : { error: data, response }
 }
 
-/** Endpoint chưa có trong OpenAPI (reports/AI); giữ auth/refresh giống client typed. */
+/**
+ * Endpoint chưa có trong OpenAPI (reports/AI/nhập thiết bị); giữ auth/refresh giống
+ * client typed. `body` là `FormData` sẽ được gửi multipart, còn lại là JSON.
+ */
 export const untypedApi = {
   GET: (path: string, init?: UntypedInit) => untypedRequest('GET', path, init),
   POST: (path: string, init?: UntypedInit) => untypedRequest('POST', path, init),

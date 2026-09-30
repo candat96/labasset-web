@@ -57,11 +57,9 @@
     "codeNote": "Cột Mã có thể để trống — hệ thống tự sinh.",
     "template": "Tải tệp mẫu",
     "file": "Tệp Excel",
-    "result": "Tạo mới: {{created}} · Cập nhật: {{updated}} · Lỗi: {{errors}}",
-    "generatedCodes": "Mã đã sinh: {{codes}}",
-    "row": "Dòng",
-    "field": "Trường",
-    "error": "Lỗi"
+    "importing": "Đang nhập…",
+    "wrongType": "Chỉ nhận tệp .xlsx",
+    "tooLarge": "Tệp vượt quá 5 MB"
   },
   "titles": {
     "suppliers": "Nhà cung cấp",
