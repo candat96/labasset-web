@@ -103,6 +103,9 @@ it('debounces API references, selects multiple values and clears', async () => {
   )
 })
 it('preserves decimal strings and emits ISO date/time values', async () => {
+  // Lịch mở ở tháng hiện tại, nên test chọn một ngày cố định sẽ chết khi sang
+  // tháng khác. Ghim thời gian hệ thống để bài kiểm không phụ thuộc hôm nay.
+  vi.setSystemTime(new Date('2026-09-19T08:00:00'))
   let output: unknown
   function Example() {
     const form = useForm({ defaultValues: { money: '', qty: '', date: '', datetime: '' } })

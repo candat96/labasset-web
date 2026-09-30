@@ -59,7 +59,9 @@ it('lists audit logs and sends server-supported filters', async () => {
   await userEvent.click(screen.getByRole('combobox', { name: 'Loại đối tượng' }))
   await userEvent.click(await screen.findByRole('option', { name: 'Người dùng' }))
   await userEvent.click(screen.getByLabelText('Từ ngày'))
-  await userEvent.click(screen.getByRole('button', { name: /ngày 1 tháng 09 năm 2026/i }))
+  // Chọn ngày 1 của CHÍNH tháng lịch đang mở: ghim một ngày cụ thể thì bài kiểm
+  // sẽ chết vào tháng sau.
+  await userEvent.click(screen.getAllByRole('button', { name: /ngày 1 tháng/i })[0]!)
   await waitFor(() =>
     expect(urls.some((url) => url.includes('entityType=users') && url.includes('from='))).toBe(
       true,

@@ -74,7 +74,25 @@ export function Component() {
       {
         id: 'target',
         header: t('target'),
-        cell: ({ row }) => (row.original.equipmentId ? t('equipment') : t('group')),
+        // Chỉ ghi "Máy" thì không biết máy nào; hiện thẳng mã và tên đối tượng.
+        cell: ({ row }) => {
+          const { equipmentId, equipmentCode, equipmentName, groupName } = row.original
+          if (equipmentId)
+            return (
+              <span className="flex flex-col">
+                <span>{equipmentName ?? t('equipment')}</span>
+                {equipmentCode && (
+                  <span className="text-muted-foreground text-xs">{equipmentCode}</span>
+                )}
+              </span>
+            )
+          return (
+            <span className="flex flex-col">
+              <span>{groupName ?? t('group')}</span>
+              <span className="text-muted-foreground text-xs">{t('group')}</span>
+            </span>
+          )
+        },
       },
       {
         id: 'cycle',

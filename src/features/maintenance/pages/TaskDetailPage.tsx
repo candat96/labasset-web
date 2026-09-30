@@ -424,6 +424,7 @@ export function Component() {
                         onChange={(e) => patch(item.key, { note: e.target.value })}
                       />
                       <FileField
+                        className="mt-3"
                         label={t('attachmentPhoto')}
                         value={result.photoFileId ?? null}
                         onChange={(photoFileId) =>

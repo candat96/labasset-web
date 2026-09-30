@@ -7,7 +7,10 @@ import { buttonVariants } from '@/components/ui/button'
 export function Calendar({ className, classNames, ...props }: React.ComponentProps<typeof DayPicker>) {
   return <DayPicker className={cn('p-3', className)} classNames={{
     months: 'flex flex-col gap-4 sm:flex-row', month: 'space-y-4', month_caption: 'relative flex h-7 items-center justify-center',
-    caption_label: 'text-sm font-medium', nav: 'absolute inset-x-0 top-3 flex items-center justify-between px-3',
+    caption_label: 'text-sm font-medium',
+    // `z-10`: thanh điều hướng nằm tuyệt đối, còn khối tiêu đề tháng đứng sau nó
+    // trong DOM nên vẽ đè lên và nuốt cú bấm hai nút chuyển tháng.
+    nav: 'absolute inset-x-0 top-3 z-10 flex items-center justify-between px-3',
     button_previous: cn(buttonVariants({ variant: 'outline', size: 'icon-sm' }), 'size-7'),
     button_next: cn(buttonVariants({ variant: 'outline', size: 'icon-sm' }), 'size-7'), month_grid: 'w-full border-collapse space-y-1',
     weekdays: 'flex', weekday: 'text-muted-foreground w-9 rounded-md text-[0.8rem] font-normal', week: 'mt-2 flex w-full',
@@ -15,5 +18,8 @@ export function Calendar({ className, classNames, ...props }: React.ComponentPro
     selected: 'bg-primary text-primary-foreground rounded-md', today: 'bg-accent text-accent-foreground rounded-md',
     outside: 'text-muted-foreground opacity-50', disabled: 'text-muted-foreground opacity-50', hidden: 'invisible',
     range_middle: 'aria-selected:bg-accent aria-selected:text-accent-foreground', ...classNames,
+  }} labels={{
+    labelPrevious: () => 'Tháng trước',
+    labelNext: () => 'Tháng sau',
   }} components={{ Chevron: ({ orientation }) => orientation === 'left' ? <ChevronLeft className="size-4" /> : <ChevronRight className="size-4" /> }} {...props} />
 }

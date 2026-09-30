@@ -8,6 +8,7 @@ import {
   Upload,
   Video,
 } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
@@ -45,6 +46,7 @@ export function FileField({
   disabled,
   capture,
   compact = false,
+  className,
 }: {
   label: string
   value: string | null
@@ -53,6 +55,8 @@ export function FileField({
   disabled?: boolean
   capture?: 'environment' | 'user'
   compact?: boolean
+  /** Lớp bố cục của nơi dùng, thường là khoảng cách với ô phía trên. */
+  className?: string
 }) {
   const id = useId()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -60,7 +64,7 @@ export function FileField({
   const [error, setError] = useState('')
   const [picked, setPicked] = useState<PickedFile | null>(null)
   return (
-    <div className="space-y-2">
+    <div className={cn('space-y-2', className)}>
       {compact ? (
         <Button
           type="button"
