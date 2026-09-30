@@ -15,6 +15,7 @@ import { SwitchField } from '@/components/form/fields'
 import { QtyField } from '@/components/form/qty-field'
 import { FormField, FormItem, FormMessage } from '@/components/ui/form'
 import { AsyncSelect } from '@/components/form/async-select'
+import { formatQty } from '@/lib/format/number'
 import { useCan } from '@/app/guards/useCan'
 import { ADM } from '@/routes/roles'
 import { applyServerErrors, messageFor } from '@/api/errors'
@@ -80,7 +81,13 @@ export function Component() {
           </span>
         ),
       },
-      { accessorKey: 'monthlyQty', header: t('monthlyQty') },
+      {
+        accessorKey: 'monthlyQty',
+        header: t('monthlyQty'),
+        // numeric(14,3) về tới đây là "300.000"; in thô ra người đọc hiểu thành
+        // ba trăm nghìn thay vì ba trăm.
+        cell: ({ row }) => formatQty(row.original.monthlyQty),
+      },
       {
         accessorKey: 'isActive',
         header: t('status'),

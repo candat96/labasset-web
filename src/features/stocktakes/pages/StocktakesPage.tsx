@@ -110,7 +110,11 @@ export function Component() {
             enumLabel(stocktakeScopeLabels, row.original.scopeType)
           ),
       },
-      { accessorKey: 'createdBy', header: t('createdBy') },
+      {
+        id: 'createdBy',
+        header: t('createdBy'),
+        cell: ({ row }) => row.original.createdByName ?? '—',
+      },
       {
         accessorKey: 'status',
         header: t('status'),

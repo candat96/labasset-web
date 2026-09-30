@@ -6417,6 +6417,8 @@ export interface components {
             itemCount: number;
             departmentName: string | null;
             requesterName: string | null;
+            equipmentCode: string | null;
+            equipmentName: string | null;
             comments: components["schemas"]["RequestCommentResponseDto"][];
             issues: {
                 id?: string;
@@ -6490,6 +6492,8 @@ export interface components {
             itemCount: number;
             departmentName: string | null;
             requesterName: string | null;
+            equipmentCode: string | null;
+            equipmentName: string | null;
         };
         RequestPageDto: {
             items: components["schemas"]["RequestResponseDto"][];
@@ -8819,7 +8823,9 @@ export interface components {
             /** @enum {string} */
             status: "draft" | "open" | "counting" | "review" | "closed" | "cancelled";
             createdBy: string | null;
+            createdByName: string | null;
             closedBy: string | null;
+            closedByName: string | null;
             /** Format: date-time */
             closedAt: string | null;
             /** Format: date-time */
@@ -8851,7 +8857,9 @@ export interface components {
             /** @enum {string} */
             status: "draft" | "open" | "counting" | "review" | "closed" | "cancelled";
             createdBy: string | null;
+            createdByName: string | null;
             closedBy: string | null;
+            closedByName: string | null;
             /** Format: date-time */
             closedAt: string | null;
             /** Format: date-time */

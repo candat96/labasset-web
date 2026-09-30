@@ -167,7 +167,9 @@ export function AsyncSelect({
           </Button>
         </PopoverTrigger>
         <PopoverContent
-          className="w-[max(var(--radix-popover-trigger-width),26rem)] max-w-[min(92vw,40rem)] p-0"
+          // Giới hạn theo khoảng trống còn lại của màn hình: không có nó thì danh
+          // sách dài tràn xuống dưới mép và người dùng không cuộn tới được.
+          className="max-h-[var(--radix-popover-content-available-height)] w-[max(var(--radix-popover-trigger-width),26rem)] max-w-[min(92vw,40rem)] overflow-hidden p-0"
           align="start"
         >
           <Command shouldFilter={false}>

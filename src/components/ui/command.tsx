@@ -95,7 +95,8 @@ function CommandList({
     <CommandPrimitive.List
       data-slot="command-list"
       className={cn(
-        "max-h-[300px] scroll-py-1 overflow-x-hidden overflow-y-auto",
+        // Cuộn trong khoảng trống thật của màn hình, không cố định 300px.
+        "max-h-[min(300px,var(--radix-popover-content-available-height,300px))] scroll-py-1 overflow-x-hidden overflow-y-auto",
         className
       )}
       {...props}

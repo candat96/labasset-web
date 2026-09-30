@@ -121,7 +121,12 @@ export function Component() {
         header: t('type'),
         cell: ({ row }) => enumLabel(requestTypeLabels, row.original.type),
       },
-      { accessorKey: 'equipmentId', header: t('equipment') },
+      {
+        id: 'equipment',
+        header: t('equipment'),
+        // Trước đây in thẳng uuid ra cột máy.
+        cell: ({ row }) => row.original.equipmentName ?? row.original.equipmentCode ?? '—',
+      },
       { accessorKey: 'departmentName', header: 'Khoa/Phòng ban' },
       { accessorKey: 'requesterName', header: t('requester') },
       {
