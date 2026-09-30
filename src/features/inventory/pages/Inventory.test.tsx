@@ -419,3 +419,112 @@ it('chọn trạng thái trong panel lọc gọi API với tham số mới', asy
   await waitFor(() => expect(url).toContain('status=draft'))
   localStorage.removeItem('filter-panel:stock-receipts')
 })
+
+/** Vật tư tối thiểu để test danh sách dựng được. */
+const listSupply = (extra: Record<string, unknown> = {}) => ({
+  id: 's1',
+  code: 'HC-01',
+  name: 'Huyết thanh',
+  groupId: null,
+  unitId: null,
+  packaging: null,
+  manufacturerId: null,
+  trackLot: false,
+  trackExpiry: false,
+  trackSerial: false,
+  minStock: '0',
+  maxStock: '0',
+  refPrice: null,
+  isActive: true,
+  circulationNumber: null,
+  circulationValidTo: null,
+  riskClass: null,
+  ...extra,
+})
+
+function mockSupplyList(items: Record<string, unknown>[]) {
+  server.use(
+    http.get('/v1/supplies', () =>
+      HttpResponse.json({ items, total: items.length, page: 1, limit: 20 }),
+    ),
+  )
+}
+
+it('hiện cột hồ sơ mới và cắt đuôi số 0 của numeric', async () => {
+  mockSupplyList([
+    listSupply({
+      groupId: 'g1',
+      unitId: 'u1',
+      packaging: 'Hộp 10 lọ',
+      minStock: '10.0000',
+      maxStock: '100.5000',
+      circulationNumber: '2500001/ĐKLH',
+      circulationValidTo: '2099-01-01',
+      riskClass: 'C',
+    }),
+  ])
+  server.use(
+    http.get('/v1/catalogs/supply-groups', () =>
+      HttpResponse.json([{ id: 'g1', code: 'VTTH', name: 'Vật tư tiêu hao' }]),
+    ),
+    http.get('/v1/catalogs/units', () =>
+      HttpResponse.json([{ id: 'u1', code: 'HOP', name: 'Hộp' }]),
+    ),
+  )
+  renderWithProviders(<SuppliesPage />)
+  expect(await screen.findByRole('link', { name: 'HC-01' })).toBeInTheDocument()
+  const row = screen.getByRole('row', { name: /HC-01/ })
+  expect(within(row).getByText('Vật tư tiêu hao')).toBeVisible()
+  expect(within(row).getByText('Hộp')).toBeVisible()
+  expect(within(row).getByText('Hộp 10 lọ')).toBeVisible()
+  expect(within(row).getByText('Loại C')).toBeVisible()
+  expect(within(row).getByText('2500001/ĐKLH')).toBeVisible()
+  // numeric(14,3): "10.0000" → "10"; "100.5000" → "100,5".
+  expect(within(row).getByText('10')).toBeVisible()
+  expect(within(row).getByText('100,5')).toBeVisible()
+})
+
+it('tô đỏ số lưu hành đã hết hạn và vàng khi còn ≤ 60 ngày', async () => {
+  const soon = new Date(Date.now() + 30 * 86_400_000).toISOString().slice(0, 10)
+  mockSupplyList([
+    listSupply({
+      id: 's1',
+      code: 'HS-01',
+      name: 'Quá hạn',
+      circulationNumber: 'SO-1',
+      circulationValidTo: '2020-01-01',
+    }),
+    listSupply({
+      id: 's2',
+      code: 'HS-02',
+      name: 'Sắp hạn',
+      circulationNumber: 'SO-2',
+      circulationValidTo: soon,
+    }),
+  ])
+  renderWithProviders(<SuppliesPage />)
+  expect(await screen.findByRole('link', { name: 'HS-01' })).toBeInTheDocument()
+  const danger = screen.getByText('Đã hết hiệu lực').closest('[data-slot="badge"]')
+  expect(danger).toHaveAttribute('data-variant', 'danger')
+  expect(danger).toHaveAttribute('data-tone', 'danger')
+  const warning = screen.getByText(/Còn \d+ ngày/).closest('[data-slot="badge"]')
+  expect(warning).toHaveAttribute('data-variant', 'warning')
+  expect(warning).toHaveAttribute('data-tone', 'warning')
+})
+
+it('cột hãng ẩn mặc định, bật được qua nút Cột', async () => {
+  mockSupplyList([listSupply({ manufacturerId: 'm1' })])
+  server.use(
+    http.get('/v1/catalogs/manufacturers', () =>
+      HttpResponse.json([{ id: 'm1', code: 'MH', name: 'Hãng A' }]),
+    ),
+  )
+  renderWithProviders(<SuppliesPage />)
+  await screen.findByRole('link', { name: 'HC-01' })
+  expect(screen.queryByRole('columnheader', { name: 'Hãng sản xuất' })).not.toBeInTheDocument()
+  await userEvent.click(screen.getByRole('button', { name: 'Cột' }))
+  await userEvent.click(await screen.findByRole('menuitemcheckbox', { name: 'Hãng sản xuất' }))
+  await userEvent.keyboard('{Escape}')
+  expect(await screen.findByRole('columnheader', { name: 'Hãng sản xuất' })).toBeInTheDocument()
+  expect(screen.getByText('Hãng A')).toBeVisible()
+})

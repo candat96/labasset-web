@@ -14,6 +14,7 @@ export interface Supply {
   refPrice: string | null
   trackLot: boolean
   trackExpiry: boolean
+  trackSerial: boolean
   minStock: string | null
   maxStock: string | null
   openVialDays: number | null

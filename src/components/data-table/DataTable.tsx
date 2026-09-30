@@ -50,16 +50,21 @@ export interface DataTableProps<T> {
   selectedCount?: number
   getRowId?: (row: T) => string
   onRowClick?: (row: T) => void
+  /**
+   * Trạng thái ẩn/hiện mặc định cho cột chưa có lựa chọn trong localStorage.
+   * Lựa chọn đã lưu của người dùng luôn thắng giá trị mặc định này.
+   */
+  initialVisibility?: VisibilityState
 }
 
 const storageKey = (id: string) => `labasset.table.${id}`
 
-function readVisibility(id: string): VisibilityState {
+function readVisibility(id: string): VisibilityState | null {
   try {
     const raw = localStorage.getItem(storageKey(id))
-    return raw ? (JSON.parse(raw) as VisibilityState) : {}
+    return raw ? (JSON.parse(raw) as VisibilityState) : null
   } catch {
-    return {}
+    return null
   }
 }
 
@@ -101,10 +106,11 @@ export function DataTable<T>({
   selectedCount,
   getRowId,
   onRowClick,
+  initialVisibility,
 }: DataTableProps<T>) {
   const { t } = useTranslation()
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(() =>
-    withoutLocked(readVisibility(tableId), columns),
+    withoutLocked({ ...initialVisibility, ...(readVisibility(tableId) ?? {}) }, columns),
   )
   useEffect(() => {
     try {

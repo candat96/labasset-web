@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import Big from 'big.js'
-import { differenceInCalendarDays, isValid, parseISO } from 'date-fns'
 import { Link, useParams } from 'react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
@@ -68,6 +67,7 @@ import {
   removeSupplySubstitute,
   type SupplySubstitute,
 } from '../api'
+import { expiryLevel } from '../expiry'
 import { useTranslation } from 'react-i18next'
 import i18n from '@/lib/i18n'
 
@@ -89,17 +89,6 @@ const adjustSchema = z.object({
   reason: z.string().trim().min(1, i18n.t('common:form.required')).max(2000),
 })
 type AdjustValues = z.infer<typeof adjustSchema>
-
-/** Mức cảnh báo hiệu lực: đã qua → đỏ, còn ≤ 60 ngày → vàng. */
-function expiryLevel(value?: string | null): { level: 'danger' | 'warning'; days: number } | null {
-  if (!value) return null
-  const date = parseISO(value)
-  if (!isValid(date)) return null
-  const days = differenceInCalendarDays(date, new Date())
-  if (days < 0) return { level: 'danger', days }
-  if (days <= 60) return { level: 'warning', days }
-  return null
-}
 
 /**
  * Khối vật tư thay thế: danh sách (đọc hai chiều từ API), thêm bằng autocomplete

@@ -101,6 +101,8 @@
   "unit": "ĐVT",
   "trackLotField": "Theo dõi lô",
   "trackExpiry": "Theo dõi hạn",
+  "tracking": "Theo dõi lô/hạn/sê-ri",
+  "serial": "Sê-ri",
   "isActive": "Đang dùng",
   "maxStock": "Tồn max",
   "notes": "Ghi chú",
