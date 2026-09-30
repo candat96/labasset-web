@@ -9,6 +9,7 @@ import { ADM } from '@/routes/roles'
 import { auditActionLabel } from '@/lib/audit-actions'
 import { shortId } from '@/lib/format/id'
 import { fieldChanges } from '@/lib/audit-fields'
+import { collectReferenceIndex, useAuditReferenceLookup } from '@/lib/audit-references'
 
 type TrailEvent = TimelineEvent & { noop?: boolean }
 
@@ -61,13 +62,24 @@ export function AuditTrail({ entityType, entityId }: { entityType: string; entit
     enabled: canListUsers,
   })
   const names = new Map((users.data ?? []).map((user) => [user.id, user.fullName || user.username]))
+  const items = trail.data?.items ?? []
+  // Bảng tra UUID → tên: danh mục gọi một lượt/loại, quan hệ có sẵn trong bản ghi,
+  // và tên người từ `/v1/users` khi có quyền.
+  const referenceLabels = useAuditReferenceLookup(items, entityType)
+  const lookup = new Map<string, string>(referenceLabels)
+  for (const [id, label] of collectReferenceIndex(
+    items.flatMap((item) => [item.before, item.after]),
+  ))
+    lookup.set(id, label)
+  for (const [id, label] of names) lookup.set(id, label)
+  const resolve = (id: string) => lookup.get(id)
   if (trail.isPending) return <p role="status">Đang tải lịch sử…</p>
   if (trail.error) return <ErrorState error={trail.error} onRetry={() => void trail.refetch()} />
   return (
     <Timeline
       events={collapseNoops(
-        (trail.data?.items ?? []).map((item) => {
-          const changes = fieldChanges(item.before, item.after)
+        items.map((item) => {
+          const changes = fieldChanges(item.before, item.after, resolve)
           const shown = changes.slice(0, 6)
           const base = auditActionLabel(item.action)
           const title =
