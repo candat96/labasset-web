@@ -280,5 +280,7 @@
   "viewReceipt": "Xem phiếu nhập",
   "location": "Vị trí",
   "moveLocation": "Chuyển vị trí",
-  "lotMoved": "Đã chuyển vị trí lô"
+  "lotMoved": "Đã chuyển vị trí lô",
+  "viewLots": "Xem lô",
+  "lotNo": "Số lô"
 }

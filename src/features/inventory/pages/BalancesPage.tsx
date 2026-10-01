@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
@@ -14,13 +14,23 @@ import { formatNumber, formatQty } from '@/lib/format/number'
 import { KpiCard } from '@/components/kpi-card'
 import { catalogOptions } from '@/api/references'
 import { runReport, type ReportRunResult } from '@/features/reports/api'
-import { AlertTriangle, Boxes, Coins, RefreshCcw, Target, Warehouse } from 'lucide-react'
+import { AlertTriangle, Boxes, Coins, Layers, RefreshCcw, Target, Warehouse } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { LotsOfBalanceDialog } from '../components/LotsOfBalanceDialog'
 import { listBalances, stockValue } from '../api'
 import type { Balance } from '../types'
 import { useTranslation } from 'react-i18next'
 
+type LotsTarget = {
+  supplyId: string
+  supplyName: string
+  warehouseId: string
+  warehouseName: string
+}
+
 export function Component() {
   const { t } = useTranslation('inventory')
+  const [lotsOf, setLotsOf] = useState<LotsTarget | null>(null)
 
   const table = useServerTable({ filterKeys: ['warehouseId', 'groupId', 'belowMin'] })
   const f = table.params.filters
@@ -113,6 +123,30 @@ export function Component() {
         accessorKey: 'value',
         header: t('value'),
         cell: ({ getValue }) => formatVnd(String(getValue() ?? '')),
+      },
+      {
+        id: 'lots',
+        header: '',
+        // Một dòng tồn kho gộp nhiều lô hạn dùng khác nhau; mở ngay tại chỗ thay vì
+        // bắt người dùng sang màn Lô rồi tự lọc lại theo vật tư và kho.
+        cell: ({ row }) => (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() =>
+              setLotsOf({
+                supplyId: row.original.supplyId,
+                supplyName: row.original.name,
+                warehouseId: row.original.warehouseId,
+                warehouseName:
+                  warehouseNames.get(row.original.warehouseId) ?? row.original.warehouseId,
+              })
+            }
+          >
+            <Layers aria-hidden /> {t('viewLots')}
+          </Button>
+        ),
       },
     ],
     [t, warehouseNames],
@@ -255,6 +289,15 @@ export function Component() {
           onRetry={() => void list.refetch()}
         />
       </FilterPanel>
+      {lotsOf && (
+        <LotsOfBalanceDialog
+          supplyId={lotsOf.supplyId}
+          supplyName={lotsOf.supplyName}
+          warehouseId={lotsOf.warehouseId}
+          warehouseName={lotsOf.warehouseName}
+          onClose={() => setLotsOf(null)}
+        />
+      )}
     </>
   )
 }
