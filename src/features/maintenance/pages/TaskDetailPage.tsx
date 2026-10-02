@@ -8,6 +8,7 @@ import { ActionMenu } from '@/components/page/ActionMenu'
 import { DataList } from '@/components/page/DataList'
 import { DetailSkeleton } from '@/components/page/DetailSkeleton'
 import { EmptyState } from '@/components/page/EmptyState'
+import { TaskCosts } from '../components/TaskCosts'
 import { Timeline } from '@/components/timeline'
 import { ErrorState } from '@/components/page/ErrorState'
 import {
@@ -602,6 +603,11 @@ export function Component() {
                 </SectionCard>
               </>
             ),
+          },
+          {
+            value: 'costs',
+            label: t('costs'),
+            content: <TaskCosts taskId={id} canWrite={isStaff} />,
           },
           {
             value: 'docs',

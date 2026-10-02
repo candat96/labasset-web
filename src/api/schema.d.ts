@@ -3079,6 +3079,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/maintenance/tasks/{id}/checklist": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["MaintenanceTasksController_checklist"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/maintenance/tasks/{id}/save-as-template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["MaintenanceTasksController_saveAsTemplate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/maintenance/tasks/{id}/costs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["MaintenanceTasksController_costs"];
+        put?: never;
+        post: operations["MaintenanceTasksController_addCost"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/maintenance/tasks/{id}/costs/{costId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["MaintenanceTasksController_removeCost"];
+        options?: never;
+        head?: never;
+        patch: operations["MaintenanceTasksController_updateCost"];
+        trace?: never;
+    };
     "/v1/maintenance/tasks/{id}/finish": {
         parameters: {
             query?: never;
@@ -8436,6 +8500,7 @@ export interface components {
             equipmentName: string | null;
             groupId: string | null;
             groupName: string | null;
+            equipmentIds?: string[] | null;
             templateId: string;
             cycleMonths: number | null;
             cycleDays: number | null;
@@ -8453,6 +8518,7 @@ export interface components {
             updatedAt: string;
         };
         PlanDto: {
+            equipmentIds?: string[] | null;
             name: string;
             equipmentId?: Record<string, never> | null;
             groupId?: Record<string, never> | null;
@@ -8469,6 +8535,7 @@ export interface components {
             isActive?: boolean;
         };
         UpdatePlanDto: {
+            equipmentIds?: string[] | null;
             name?: string;
             equipmentId?: Record<string, never> | null;
             groupId?: Record<string, never> | null;
@@ -8603,6 +8670,51 @@ export interface components {
         SaveResultsDto: {
             clientVersion: number;
             results: components["schemas"]["ResultDto"][];
+        };
+        SaveChecklistDto: {
+            items: components["schemas"]["ChecklistItemDto"][];
+        };
+        SaveAsTemplateDto: {
+            name: string;
+            groupId?: string | null;
+            model?: string | null;
+        };
+        MaintenanceCostResponseDto: {
+            /** @enum {string} */
+            category: "parts" | "labor" | "service" | "transport" | "other";
+            description: string;
+            amount: string;
+            supplierId?: string | null;
+            invoiceNo?: string | null;
+            /** Format: date */
+            invoiceDate?: string | null;
+            invoiceFileId?: string | null;
+            id: string;
+            taskId: string;
+            /** Format: date-time */
+            paidAt?: string | null;
+        };
+        MaintenanceCostDto: {
+            /** @enum {string} */
+            category: "parts" | "labor" | "service" | "transport" | "other";
+            description: string;
+            amount: string;
+            supplierId?: string | null;
+            invoiceNo?: string | null;
+            /** Format: date */
+            invoiceDate?: string | null;
+            invoiceFileId?: string | null;
+        };
+        UpdateMaintenanceCostDto: {
+            /** @enum {string} */
+            category?: "parts" | "labor" | "service" | "transport" | "other";
+            description?: string;
+            amount?: string;
+            supplierId?: string | null;
+            invoiceNo?: string | null;
+            /** Format: date */
+            invoiceDate?: string | null;
+            invoiceFileId?: string | null;
         };
         FinishTaskDto: {
             overallPass?: boolean;
@@ -17133,6 +17245,166 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TaskDetailDto"];
+                };
+            };
+        };
+    };
+    MaintenanceTasksController_checklist: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveChecklistDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskDetailDto"];
+                };
+            };
+        };
+    };
+    MaintenanceTasksController_saveAsTemplate: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveAsTemplateDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TemplateResponseDto"];
+                };
+            };
+        };
+    };
+    MaintenanceTasksController_costs: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MaintenanceCostResponseDto"][];
+                };
+            };
+        };
+    };
+    MaintenanceTasksController_addCost: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MaintenanceCostDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MaintenanceCostResponseDto"];
+                };
+            };
+        };
+    };
+    MaintenanceTasksController_removeCost: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+                costId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MaintenanceTasksController_updateCost: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+                costId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateMaintenanceCostDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MaintenanceCostResponseDto"];
                 };
             };
         };

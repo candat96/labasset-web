@@ -46,6 +46,7 @@ export function Component() {
       target: 'group',
       equipmentId: null,
       groupId: null,
+      equipmentIds: null,
       templateId: '',
       cycleKind: 'months',
       cycleValue: 6,
@@ -77,6 +78,14 @@ export function Component() {
         // Chỉ ghi "Máy" thì không biết máy nào; hiện thẳng mã và tên đối tượng.
         cell: ({ row }) => {
           const { equipmentId, equipmentCode, equipmentName, groupName } = row.original
+          const batch = row.original.equipmentIds
+          if (batch?.length)
+            return (
+              <span className="flex flex-col">
+                <span>{t('batchCount', { count: batch.length })}</span>
+                <span className="text-muted-foreground text-xs">{t('batch')}</span>
+              </span>
+            )
           if (equipmentId)
             return (
               <span className="flex flex-col">
@@ -165,6 +174,7 @@ export function Component() {
                 endDate: values.endDate || null,
                 equipmentId: values.target === 'equipment' ? values.equipmentId : null,
                 groupId: values.target === 'group' ? values.groupId : null,
+                equipmentIds: values.target === 'batch' ? values.equipmentIds : null,
                 cycleMonths: values.cycleKind === 'months' ? values.cycleValue : null,
                 cycleDays: values.cycleKind === 'days' ? values.cycleValue : null,
                 // `GET /v1/users` chỉ ADM đọc được → role khác không chọn người mặc định.
@@ -192,9 +202,29 @@ export function Component() {
           options={[
             { value: 'equipment', label: t('equipment') },
             { value: 'group', label: t('group') },
+            { value: 'batch', label: t('batch') },
           ]}
         />
-        {target === 'equipment' ? (
+        {target === 'batch' ? (
+          <FormField
+            control={form.control}
+            name="equipmentIds"
+            render={({ field }) => (
+              <FormItem>
+                <AsyncSelect
+                  label={t('batchEquipments')}
+                  queryKey="equipment-batch"
+                  loadOptions={equipmentOptions}
+                  multiple
+                  clearable
+                  value={field.value ?? []}
+                  onChange={(v) => field.onChange(Array.isArray(v) ? v : [])}
+                />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        ) : target === 'equipment' ? (
           <FormField
             control={form.control}
             name="equipmentId"

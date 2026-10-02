@@ -28,9 +28,11 @@ export type TemplateForm = z.infer<typeof templateSchema>
 export const planSchema = z
   .object({
     name: z.string().trim().min(1, i18n.t('common:form.required')),
-    target: z.enum(['equipment', 'group']),
+    target: z.enum(['equipment', 'group', 'batch']),
     equipmentId: z.string().nullable(),
     groupId: z.string().nullable(),
+    /** Lô máy: vài máy chọn tay, dùng khi chúng không cùng một nhóm. */
+    equipmentIds: z.array(z.string()).nullable(),
     templateId: z.string().min(1, i18n.t('common:form.required')),
     cycleKind: z.enum(['months', 'days']),
     cycleValue: z.number().int().min(1),
@@ -51,6 +53,13 @@ export const planSchema = z
       })
     if (value.target === 'group' && !value.groupId)
       ctx.addIssue({ code: 'custom', path: ['groupId'], message: i18n.t('common:form.required') })
+    // Lô máy rỗng thì API sẽ từ chối; chặn ngay ở form cho người dùng biết sớm.
+    if (value.target === 'batch' && !value.equipmentIds?.length)
+      ctx.addIssue({
+        code: 'custom',
+        path: ['equipmentIds'],
+        message: i18n.t('common:form.required'),
+      })
   })
 export type PlanForm = z.infer<typeof planSchema>
 

@@ -157,5 +157,25 @@
   "templatesHint": "Mẫu checklist dùng cho công việc bảo dưỡng.",
   "plansHint": "Kế hoạch bảo dưỡng định kỳ theo máy hoặc nhóm máy; sinh công việc theo năm.",
   "tasksHint": "Công việc bảo dưỡng định kỳ và đột xuất; theo dõi hạn và kết quả checklist.",
-  "location": "Vị trí"
+  "location": "Vị trí",
+  "batch": "Lô máy",
+  "batchEquipments": "Các máy trong lô",
+  "batchCount": "{{count}} máy",
+  "costs": "Chi phí",
+  "addCost": "Thêm chi phí",
+  "noCosts": "Chưa ghi chi phí nào",
+  "costCategory": "Loại",
+  "costDescription": "Nội dung",
+  "invoiceNo": "Số hoá đơn",
+  "amount": "Số tiền",
+  "totalCost": "Tổng chi phí",
+  "removeCost": "Xoá khoản chi phí",
+  "costSaved": "Đã ghi chi phí",
+  "costCategories": {
+    "parts": "Vật tư, linh kiện",
+    "labor": "Nhân công",
+    "service": "Thuê ngoài",
+    "transport": "Đi lại, vận chuyển",
+    "other": "Khác"
+  }
 }

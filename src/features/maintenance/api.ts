@@ -1,4 +1,4 @@
-import { api, unwrap, unwrapAs, untypedApi } from '@/api/client'
+import { api, unwrap, unwrapAs } from '@/api/client'
 import { printFile } from '@/api/print'
 import { pageQuery } from '@/api/paths'
 import type { components } from '@/api/schema'
@@ -64,16 +64,10 @@ export function saveResults(id: string, body: components['schemas']['SaveResults
   return unwrap(api.PUT('/v1/maintenance/tasks/{id}/results', { params: { path: { id } }, body }))
 }
 
-/**
- * Sửa danh sách mục kiểm tra của CHÍNH công việc (không đụng mẫu gốc).
- *
- * TODO(api): hai endpoint dưới do coordinator mới thêm, chưa có trong `schema.d.ts`
- * → gọi qua `untypedApi` (xem README mục "API còn thiếu"); khi sinh lại schema thì chuyển
- * sang client `api` có kiểu.
- */
+/** Sửa danh sách mục kiểm tra của CHÍNH công việc (không đụng mẫu gốc). */
 export function saveChecklist(id: string, items: ChecklistItem[]) {
   return unwrapAs<TaskDetail>(
-    untypedApi.PUT('/v1/maintenance/tasks/{id}/checklist', {
+    api.PUT('/v1/maintenance/tasks/{id}/checklist', {
       params: { path: { id } },
       body: { items },
     }),
@@ -86,7 +80,7 @@ export function saveAsTemplate(
   body: { name: string; groupId?: string | null; model?: string | null },
 ) {
   return unwrapAs<Template>(
-    untypedApi.POST('/v1/maintenance/tasks/{id}/save-as-template', {
+    api.POST('/v1/maintenance/tasks/{id}/save-as-template', {
       params: { path: { id } },
       body,
     }),
@@ -134,6 +128,26 @@ export function moveCalendar(type: string, id: string, scheduledAt: string) {
     api.PATCH('/v1/calendar/{type}/{id}/move', {
       params: { path: { type, id } },
       body: { scheduledAt },
+    }),
+  )
+}
+
+/** Chi phí của một công việc bảo dưỡng (công, vật tư, thuê ngoài, đi lại…). */
+export function listTaskCosts(id: string) {
+  return unwrap(api.GET('/v1/maintenance/tasks/{id}/costs', { params: { path: { id } } }))
+}
+export function addTaskCost(id: string, body: components['schemas']['MaintenanceCostDto']) {
+  return unwrap(
+    api.POST('/v1/maintenance/tasks/{id}/costs', {
+      params: { path: { id } },
+      body,
+    }),
+  )
+}
+export function removeTaskCost(id: string, costId: string) {
+  return unwrap(
+    api.DELETE('/v1/maintenance/tasks/{id}/costs/{costId}', {
+      params: { path: { id, costId } },
     }),
   )
 }
