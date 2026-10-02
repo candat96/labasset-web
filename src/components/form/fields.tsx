@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import type { Control, FieldPath, FieldValues } from 'react-hook-form'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import {
   Select,
@@ -62,6 +63,40 @@ export function TextField<T extends FieldValues>({
               autoComplete={autoComplete}
               autoFocus={autoFocus}
               inputMode={inputMode}
+              disabled={disabled}
+            />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  )
+}
+
+/** Ô nhập nhiều dòng: ghi chú, kết quả đánh giá, diễn giải. */
+export function TextAreaField<T extends FieldValues>({
+  control,
+  name,
+  label,
+  description,
+  disabled,
+  required,
+  rows = 3,
+  placeholder,
+}: BaseProps<T> & { rows?: number; placeholder?: string }) {
+  return (
+    <FormField
+      control={control}
+      name={name}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel required={required}>{label}</FormLabel>
+          <FormControl>
+            <Textarea
+              {...field}
+              value={field.value ?? ''}
+              rows={rows}
+              placeholder={placeholder ?? description}
               disabled={disabled}
             />
           </FormControl>

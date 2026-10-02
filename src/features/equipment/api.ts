@@ -73,6 +73,36 @@ export async function getCommissioning(id: string): Promise<Commissioning | null
   return data ?? null
 }
 
+/** Hồ sơ thanh lý của một thiết bị, mới nhất trước. */
+export function listDisposals(id: string) {
+  return unwrap(api.GET('/v1/equipment/{id}/disposals', { params: { path: { id } } }))
+}
+
+export function createDisposal(id: string, body: components['schemas']['DisposalDto']) {
+  return unwrap(api.POST('/v1/equipment/{id}/disposals', { params: { path: { id } }, body }))
+}
+
+export function updateDisposal(
+  id: string,
+  disposalId: string,
+  body: components['schemas']['UpdateDisposalDto'],
+) {
+  return unwrap(
+    api.PATCH('/v1/equipment/{id}/disposals/{disposalId}', {
+      params: { path: { id, disposalId } },
+      body,
+    }),
+  )
+}
+
+export function deleteDisposal(id: string, disposalId: string) {
+  return unwrap(
+    api.DELETE('/v1/equipment/{id}/disposals/{disposalId}', {
+      params: { path: { id, disposalId } },
+    }),
+  )
+}
+
 export function putCommissioning(id: string, body: CommissioningInput) {
   return unwrapAs<Commissioning>(untypedApi.PUT(`/v1/equipment/${id}/commissioning`, { body }))
 }

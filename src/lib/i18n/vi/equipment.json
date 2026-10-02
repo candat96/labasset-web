@@ -36,7 +36,8 @@
     "reject": "Từ chối",
     "cancel": "Huỷ",
     "selectTwo": "Chọn đúng hai máy.",
-    "compareAgain": "Chọn lại máy"
+    "compareAgain": "Chọn lại máy",
+    "printPassport": "In lý lịch máy"
   },
   "fields": {
     "code": "Mã",
@@ -97,7 +98,16 @@
     "envGas": "Khí",
     "inWarranty": "Còn hạn",
     "outWarranty": "Hết hạn",
-    "buildingFloor": "Toà / Tầng"
+    "buildingFloor": "Toà / Tầng",
+    "riskClass": "Phân loại rủi ro",
+    "inspectionRequired": "Bắt buộc kiểm định",
+    "inspectionRequiredHint": "Thuộc danh mục phải kiểm định an toàn và tính năng kỹ thuật (Thông tư 05/2022/TT-BYT)",
+    "usefulLifeYears": "Thời gian sử dụng (năm)",
+    "usefulLifeYearsHint": "Theo chế độ quản lý tài sản công; dùng để tính hạn đề nghị thanh lý",
+    "accumulatedDepreciation": "Hao mòn luỹ kế",
+    "usefulLifeEndAt": "Hết thời gian sử dụng",
+    "residualValue": "Giá trị còn lại",
+    "years": "năm"
   },
   "criticality": {
     "vital": "Trọng yếu",
@@ -494,5 +504,49 @@
     "label": "Thao tác hàng loạt",
     "selected": "Đã chọn {{count}} máy",
     "clear": "Bỏ chọn"
+  },
+  "riskClass": {
+    "unset": "Chưa phân loại",
+    "A": "Loại A",
+    "B": "Loại B",
+    "C": "Loại C",
+    "D": "Loại D"
+  },
+  "disposal": {
+    "title": "Hồ sơ thanh lý",
+    "hint": "Quyết định, hội đồng và hình thức xử lý tài sản khi thanh lý thiết bị",
+    "add": "Lập hồ sơ thanh lý",
+    "empty": "Chưa có hồ sơ thanh lý",
+    "created": "Đã lập hồ sơ thanh lý",
+    "closed": "Đã hoàn tất thanh lý",
+    "finish": "Hoàn tất",
+    "reason": "Lý do",
+    "method": "Hình thức xử lý",
+    "councilNo": "Hội đồng số",
+    "assessedAt": "Ngày đánh giá",
+    "assessment": "Kết quả đánh giá",
+    "decisionNo": "Quyết định số",
+    "decisionDate": "Ngày quyết định",
+    "recoveredAmount": "Số tiền thu về",
+    "completedAt": "Ngày hoàn tất",
+    "note": "Ghi chú",
+    "status": {
+      "draft": "Đang lập",
+      "approved": "Đã có quyết định",
+      "done": "Đã thanh lý"
+    },
+    "reasons": {
+      "expired_life": "Hết thời gian sử dụng",
+      "beyond_repair": "Hỏng không sửa được",
+      "uneconomical": "Sửa không hiệu quả",
+      "no_longer_needed": "Không còn nhu cầu",
+      "other": "Lý do khác"
+    },
+    "methods": {
+      "sell": "Bán thanh lý",
+      "destroy": "Tiêu huỷ",
+      "transfer": "Điều chuyển",
+      "other": "Hình thức khác"
+    }
   }
 }

@@ -1845,6 +1845,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/equipment/{id}/disposals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DisposalController_list"];
+        put?: never;
+        post: operations["DisposalController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/equipment/{id}/disposals/{disposalId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["DisposalController_remove"];
+        options?: never;
+        head?: never;
+        patch: operations["DisposalController_update"];
+        trace?: never;
+    };
     "/v1/equipment/transfers": {
         parameters: {
             query?: never;
@@ -2897,6 +2929,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["DocTemplateController_preview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/equipment/{id}/passport.pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["EquipmentPassportController_passportPdf"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -7247,6 +7295,9 @@ export interface components {
             purchaseContractNo: string | null;
             decisionNo: string | null;
             circulationNo: string | null;
+            /** @enum {string|null} */
+            riskClass: "A" | "B" | "C" | "D" | null;
+            inspectionRequired: boolean;
             criticality: string | null;
             location: string | null;
             manufactureYear: number | null;
@@ -7254,6 +7305,10 @@ export interface components {
             commissionedAt: string | null;
             warrantyUntil: string | null;
             originalValue: string | null;
+            usefulLifeYears: number | null;
+            usefulLifeEndAt: string | null;
+            accumulatedDepreciation: string;
+            residualValue: string | null;
             manufacturerId: string | null;
             supplierId: string | null;
             fundingSourceId: string | null;
@@ -7388,6 +7443,73 @@ export interface components {
             result?: "pass" | "fail" | "conditional" | null;
             note?: string | null;
         };
+        DisposalResponseDto: {
+            /** @enum {string} */
+            reason: "expired_life" | "beyond_repair" | "uneconomical" | "no_longer_needed" | "other";
+            /** @enum {string|null} */
+            method?: "sell" | "destroy" | "transfer" | "other" | null;
+            /** @enum {string} */
+            status?: "draft" | "approved" | "done";
+            councilNo?: string | null;
+            /** Format: date */
+            assessedAt?: string | null;
+            assessment?: string | null;
+            decisionNo?: string | null;
+            /** Format: date */
+            decisionDate?: string | null;
+            /** @description VND integer, up to 18 digits; string preserves precision */
+            recoveredAmount?: string;
+            /** Format: date */
+            completedAt?: string | null;
+            note?: string | null;
+            id: string;
+            equipmentId: string;
+            createdBy: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        DisposalDto: {
+            /** @enum {string} */
+            reason: "expired_life" | "beyond_repair" | "uneconomical" | "no_longer_needed" | "other";
+            /** @enum {string|null} */
+            method?: "sell" | "destroy" | "transfer" | "other" | null;
+            /** @enum {string} */
+            status?: "draft" | "approved" | "done";
+            councilNo?: string | null;
+            /** Format: date */
+            assessedAt?: string | null;
+            assessment?: string | null;
+            decisionNo?: string | null;
+            /** Format: date */
+            decisionDate?: string | null;
+            /** @description VND integer, up to 18 digits; string preserves precision */
+            recoveredAmount?: string;
+            /** Format: date */
+            completedAt?: string | null;
+            note?: string | null;
+        };
+        UpdateDisposalDto: {
+            /** @enum {string} */
+            reason?: "expired_life" | "beyond_repair" | "uneconomical" | "no_longer_needed" | "other";
+            /** @enum {string|null} */
+            method?: "sell" | "destroy" | "transfer" | "other" | null;
+            /** @enum {string} */
+            status?: "draft" | "approved" | "done";
+            councilNo?: string | null;
+            /** Format: date */
+            assessedAt?: string | null;
+            assessment?: string | null;
+            decisionNo?: string | null;
+            /** Format: date */
+            decisionDate?: string | null;
+            /** @description VND integer, up to 18 digits; string preserves precision */
+            recoveredAmount?: string;
+            /** Format: date */
+            completedAt?: string | null;
+            note?: string | null;
+        };
         TransferAttachmentDto: {
             id: string;
             kind: string;
@@ -7506,6 +7628,9 @@ export interface components {
             decisionNo?: string | null;
             circulationNo?: string | null;
             /** @enum {string|null} */
+            riskClass?: "A" | "B" | "C" | "D" | null;
+            inspectionRequired?: boolean;
+            /** @enum {string|null} */
             criticality?: "vital" | "essential" | "desirable" | null;
             location?: string | null;
             notes?: string | null;
@@ -7534,6 +7659,9 @@ export interface components {
             manufactureYear?: number | null;
             /** @description VND integer, up to 18 digits; string preserves precision */
             originalValue?: string | null;
+            usefulLifeYears?: number | null;
+            /** @description VND integer, up to 18 digits; string preserves precision */
+            accumulatedDepreciation?: string;
             testTypes?: string[];
             throughputPerHour?: number | null;
             specs?: components["schemas"]["SpecsDto"];
@@ -7557,6 +7685,9 @@ export interface components {
             purchaseContractNo?: string | null;
             decisionNo?: string | null;
             circulationNo?: string | null;
+            /** @enum {string|null} */
+            riskClass?: "A" | "B" | "C" | "D" | null;
+            inspectionRequired?: boolean;
             /** @enum {string|null} */
             criticality?: "vital" | "essential" | "desirable" | null;
             location?: string | null;
@@ -7584,6 +7715,9 @@ export interface components {
             manufactureYear?: number | null;
             /** @description VND integer, up to 18 digits; string preserves precision */
             originalValue?: string | null;
+            usefulLifeYears?: number | null;
+            /** @description VND integer, up to 18 digits; string preserves precision */
+            accumulatedDepreciation?: string;
             testTypes?: string[];
             throughputPerHour?: number | null;
             specs?: components["schemas"]["SpecsDto"];
@@ -14264,6 +14398,110 @@ export interface operations {
             };
         };
     };
+    DisposalController_list: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DisposalResponseDto"][];
+                };
+            };
+        };
+    };
+    DisposalController_create: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DisposalDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DisposalResponseDto"];
+                };
+            };
+        };
+    };
+    DisposalController_remove: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+                disposalId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DisposalController_update: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
+                disposalId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateDisposalDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DisposalResponseDto"];
+                };
+            };
+        };
+    };
     TimelineController_pending: {
         parameters: {
             query?: {
@@ -14531,6 +14769,7 @@ export interface operations {
                 maintenanceDueBefore?: string;
                 calibrationDueBefore?: string;
                 calibrationOverdue?: boolean;
+                usefulLifeExpired?: boolean;
                 sort?: "code" | "name" | "status" | "departmentId" | "room" | "commissionedAt" | "updatedAt";
                 order?: "asc" | "desc";
                 export?: "xlsx";
@@ -16776,6 +17015,30 @@ export interface operations {
             };
             path: {
                 docType: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+        };
+    };
+    EquipmentPassportController_passportPdf: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Hospital id (multi-tenant mode) */
+                "x-tenant-id"?: unknown;
+            };
+            path: {
+                id: string;
             };
             cookie?: never;
         };

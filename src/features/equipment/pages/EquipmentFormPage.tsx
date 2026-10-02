@@ -10,7 +10,7 @@ import { SectionCard } from '@/components/page/SectionCard'
 import { FormFooter } from '@/components/page/FormFooter'
 import { ErrorState } from '@/components/page/ErrorState'
 import { Form } from '@/components/ui/form'
-import { TextField, NumberField, SelectField } from '@/components/form/fields'
+import { TextField, NumberField, SelectField, SwitchField } from '@/components/form/fields'
 import { DateField } from '@/components/form/date-field'
 import { MoneyField } from '@/components/form/money-field'
 import { AsyncSelectField } from '../components/async-select-field'
@@ -60,6 +60,10 @@ const empty: EquipmentForm = {
   purchaseContractNo: '',
   decisionNo: '',
   circulationNo: '',
+  riskClass: '',
+  inspectionRequired: false,
+  usefulLifeYears: '',
+  accumulatedDepreciation: '',
   criticality: '',
   groupId: null,
   departmentId: null,
@@ -98,6 +102,10 @@ function fromDetail(data: NonNullable<ReturnType<typeof useEquipment>['data']>):
     purchaseContractNo: data.purchaseContractNo ?? '',
     decisionNo: data.decisionNo ?? '',
     circulationNo: data.circulationNo ?? '',
+    riskClass: data.riskClass ?? '',
+    inspectionRequired: data.inspectionRequired ?? false,
+    usefulLifeYears: data.usefulLifeYears ?? '',
+    accumulatedDepreciation: data.accumulatedDepreciation ?? '',
     criticality: isEquipmentCriticality(data.criticality) ? data.criticality : '',
     groupId: data.groupId,
     departmentId: data.departmentId,
@@ -143,6 +151,10 @@ function toBody(values: EquipmentForm, includeIdentity = true): CreateEquipment 
     purchaseContractNo: values.purchaseContractNo,
     decisionNo: values.decisionNo,
     circulationNo: values.circulationNo,
+    riskClass: values.riskClass || null,
+    inspectionRequired: values.inspectionRequired,
+    usefulLifeYears: values.usefulLifeYears === '' ? null : values.usefulLifeYears,
+    accumulatedDepreciation: values.accumulatedDepreciation,
     criticality: values.criticality,
     groupId: values.groupId,
     roomId: values.roomId,
@@ -333,6 +345,34 @@ export function Component() {
                 control={form.control}
                 name="circulationNo"
                 label={t('fields.circulationNo')}
+              />
+              <SelectField
+                control={form.control}
+                name="riskClass"
+                label={t('fields.riskClass')}
+                placeholder={t('riskClass.unset')}
+                emptyLabel={t('riskClass.unset')}
+                options={(['A', 'B', 'C', 'D'] as const).map((value) => ({
+                  value,
+                  label: t(`riskClass.${value}`),
+                }))}
+              />
+              <SwitchField
+                control={form.control}
+                name="inspectionRequired"
+                label={t('fields.inspectionRequired')}
+                description={t('fields.inspectionRequiredHint')}
+              />
+              <NumberField
+                control={form.control}
+                name="usefulLifeYears"
+                label={t('fields.usefulLifeYears')}
+                description={t('fields.usefulLifeYearsHint')}
+              />
+              <MoneyField
+                control={form.control}
+                name="accumulatedDepreciation"
+                label={t('fields.accumulatedDepreciation')}
               />
               <SelectField
                 control={form.control}

@@ -43,6 +43,7 @@ import {
 import { cn } from '@/lib/utils'
 import { enumLabel } from '@/lib/enum-labels'
 import { FaultsTab } from '../components/FaultsTab'
+import { DisposalCard } from '../components/DisposalCard'
 import { CommissioningTab } from '../components/CommissioningTab'
 import { DeleteIconButton, EditIconButton } from '@/components/icon-action'
 import { Button } from '@/components/ui/button'
@@ -91,6 +92,7 @@ import { dayRangeToIso } from '@/lib/format/date-range'
 import { useCan } from '@/app/guards/useCan'
 import { ADM, STAFF } from '@/routes/roles'
 import { applyServerErrors, isApiError, messageFor } from '@/api/errors'
+import { printFile } from '@/api/print'
 import {
   departmentOptions,
   resolveCatalogItem,
@@ -294,6 +296,15 @@ export function Component() {
                 onClick: () => setCloneOpen(true),
               },
               {
+                key: 'passport',
+                label: t('actions.printPassport'),
+                icon: <Printer />,
+                onClick: () =>
+                  void printFile(`/v1/equipment/${id}/passport.pdf`).catch((error: unknown) =>
+                    toast.error(messageFor(error)),
+                  ),
+              },
+              {
                 key: 'ai',
                 label: t('actions.askAi'),
                 icon: <Sparkles />,
@@ -429,6 +440,9 @@ export function Component() {
                 <Overview row={row} />
                 <div data-testid="section-counters">
                   <CountersTab id={id} canWrite={canWrite} />
+                </div>
+                <div data-testid="section-disposal">
+                  <DisposalCard id={id} canWrite={canWrite} />
                 </div>
               </>
             ),
@@ -595,6 +609,26 @@ function Overview({ row }: { row: NonNullable<ReturnType<typeof useEquipment>['d
     { label: t('fields.purchaseContractNo'), value: row.purchaseContractNo },
     { label: t('fields.decisionNo'), value: row.decisionNo },
     { label: t('fields.circulationNo'), value: row.circulationNo },
+    {
+      label: t('fields.riskClass'),
+      value: row.riskClass ? t(`riskClass.${row.riskClass}`) : null,
+    },
+    {
+      label: t('fields.inspectionRequired'),
+      value: row.inspectionRequired ? t('common:yes') : null,
+    },
+    {
+      label: t('fields.usefulLifeYears'),
+      value: row.usefulLifeYears
+        ? `${row.usefulLifeYears} ${t('fields.years')}${
+            row.usefulLifeEndAt ? ` · ${formatDate(row.usefulLifeEndAt)}` : ''
+          }`
+        : null,
+    },
+    {
+      label: t('fields.residualValue'),
+      value: row.residualValue == null ? null : formatVnd(row.residualValue),
+    },
   ]
   const operation: DataListItem[] = [
     { label: t('fields.department'), value: row.department?.name },
