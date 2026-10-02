@@ -36,6 +36,7 @@ import { FormDialog } from '@/components/form/FormDialog'
 import { DateField } from '@/components/form/date-field'
 import { DatetimeField } from '@/components/form/datetime-field'
 import { FileField } from '@/components/form/file-field'
+import { FileLink } from '@/components/file-link'
 import { MoneyField } from '@/components/form/money-field'
 import { NumberField, SelectField, TextField } from '@/components/form/fields'
 import { AsyncSelect } from '@/components/form/async-select'
@@ -259,6 +260,12 @@ export function Component() {
                 { label: t('nextDue'), value: formatDate(row.nextDueAt) || null },
                 { label: t('certificateNo'), value: row.certificateNo },
                 { label: t('cost'), value: formatVnd(row.cost) || null },
+                {
+                  label: t('certificate'),
+                  value: row.certificateFileId ? (
+                    <FileLink fileId={row.certificateFileId} label={t('viewCertificate')} />
+                  ) : null,
+                },
                 ...(row.type === 'electrical_safety'
                   ? [
                       {

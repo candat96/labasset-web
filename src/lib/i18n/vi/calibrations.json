@@ -56,5 +56,6 @@
   "savedMany": "Đã tạo {{n}} phiếu, {{f}} lỗi",
   "savedManyOk": "Đã tạo {{n}} phiếu kiểm định",
   "equipmentMulti": "Máy (chọn được nhiều)",
-  "equipmentMultiPlaceholder": "Chọn một hoặc nhiều máy — mỗi máy một phiếu"
+  "equipmentMultiPlaceholder": "Chọn một hoặc nhiều máy — mỗi máy một phiếu",
+  "viewCertificate": "Xem giấy chứng nhận"
 }

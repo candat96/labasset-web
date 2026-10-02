@@ -72,7 +72,7 @@ import { ADM } from '@/routes/roles'
 import { applyServerErrors, messageFor } from '@/api/errors'
 import { catalogOptions, resolveCatalogItem, supplyOptions } from '@/api/references'
 import { attachFile, uploadFile } from '@/api/files'
-import { getFileUrl } from '@/api/files'
+import { FileLink } from '@/components/file-link'
 import { useAuthStore } from '@/stores/auth.store'
 import { assistantPath } from '@/lib/ai-link'
 import { getCatalog } from '@/features/catalogs/api'
@@ -1120,23 +1120,6 @@ function VendorsTab({
         ))}
       </ul>
     </SectionCard>
-  )
-}
-
-/** Link xem file đã tải (hoá đơn, báo giá…). */
-function FileLink({ fileId, label }: { fileId: string | null; label: string }) {
-  const url = useQuery({
-    queryKey: ['file-url', fileId, false],
-    queryFn: () => getFileUrl(fileId!, false),
-    enabled: !!fileId,
-    staleTime: 600_000,
-  })
-  if (!fileId) return <span>—</span>
-  if (!url.data) return <span className="text-muted-foreground">…</span>
-  return (
-    <a className="text-primary" href={url.data.url} target="_blank" rel="noreferrer">
-      {label}
-    </a>
   )
 }
 
