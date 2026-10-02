@@ -1,8 +1,8 @@
-import { api, unwrap, unwrapAs } from '@/api/client'
+import { api, unwrap, unwrapAs, untypedApi } from '@/api/client'
 import { printFile } from '@/api/print'
 import { pageQuery } from '@/api/paths'
 import type { components } from '@/api/schema'
-import type { TaskListParams } from './types'
+import type { ChecklistItem, TaskDetail, TaskListParams, Template } from './types'
 
 export function listTemplates() {
   return unwrap(api.GET('/v1/maintenance/templates'))
@@ -62,6 +62,35 @@ export function startTask(id: string) {
 }
 export function saveResults(id: string, body: components['schemas']['SaveResultsDto']) {
   return unwrap(api.PUT('/v1/maintenance/tasks/{id}/results', { params: { path: { id } }, body }))
+}
+
+/**
+ * Sửa danh sách mục kiểm tra của CHÍNH công việc (không đụng mẫu gốc).
+ *
+ * TODO(api): hai endpoint dưới do coordinator mới thêm, chưa có trong `schema.d.ts`
+ * → gọi qua `untypedApi` (xem README mục "API còn thiếu"); khi sinh lại schema thì chuyển
+ * sang client `api` có kiểu.
+ */
+export function saveChecklist(id: string, items: ChecklistItem[]) {
+  return unwrapAs<TaskDetail>(
+    untypedApi.PUT('/v1/maintenance/tasks/{id}/checklist', {
+      params: { path: { id } },
+      body: { items },
+    }),
+  )
+}
+
+/** Lưu các mục của công việc thành mẫu MỚI (không kèm kết quả). */
+export function saveAsTemplate(
+  id: string,
+  body: { name: string; groupId?: string | null; model?: string | null },
+) {
+  return unwrapAs<Template>(
+    untypedApi.POST('/v1/maintenance/tasks/{id}/save-as-template', {
+      params: { path: { id } },
+      body,
+    }),
+  )
 }
 export function finishTask(id: string, body: components['schemas']['FinishTaskDto']) {
   return unwrap(api.POST('/v1/maintenance/tasks/{id}/finish', { params: { path: { id } }, body }))

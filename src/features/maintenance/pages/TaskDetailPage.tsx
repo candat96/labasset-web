@@ -14,21 +14,21 @@ import {
   Ban,
   CalendarClock,
   CalendarDays,
-  Check,
   CheckCircle2,
   ClipboardList,
   ListChecks,
   Microscope,
   PenLine,
+  Plus,
   Printer,
   Save,
   UserPlus,
-  X,
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Label } from '@/components/ui/label'
 import { StatusBadge } from '@/components/status-badge'
 import { AttachmentsPanel } from '@/components/attachments-panel'
 import { AuditTrail } from '@/components/audit-trail'
@@ -53,7 +53,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { FileField } from '@/components/form/file-field'
 import { AsyncSelect } from '@/components/form/async-select'
 import { SignaturePad } from '@/components/signature-pad'
 import { DocumentSigningCard } from '@/features/signing/components/SignedDocumentsPanel'
@@ -63,6 +62,15 @@ import { uploadFile } from '@/api/files'
 import * as api from '../api'
 import { useInvalidateTasks, useTask } from '../hooks'
 import type { ResultRow } from '../types'
+import { ChecklistItemCard } from '../components/ChecklistItemCard'
+import {
+  nextItemUid,
+  slugifyItemKey,
+  toChecklistItems,
+  toEditableItems,
+  uniqueItemKey,
+  type EditableChecklistItem,
+} from '../checklist'
 import { useTranslation } from 'react-i18next'
 
 export function Component() {
@@ -76,6 +84,11 @@ export function Component() {
   const userId = useAuthStore((s) => s.user?.id)
   const { confirm, dialog } = useConfirm()
   const [results, setResults] = useState<Record<string, ResultRow>>({})
+  const [checklist, setChecklist] = useState<EditableChecklistItem[]>([])
+  const dirtyChecklist = useRef(false)
+  const checklistRef = useRef<EditableChecklistItem[]>([])
+  const [saveTemplateChecked, setSaveTemplateChecked] = useState(false)
+  const [templateName, setTemplateName] = useState('')
   const [finishOpen, setFinishOpen] = useState(false)
   const [overallPass, setOverallPass] = useState<'pass' | 'fail'>('pass')
   const [finishNotes, setFinishNotes] = useState('')
@@ -102,13 +115,138 @@ export function Component() {
     }
     resultsRef.current = next
     setResults(next)
+    if (!dirtyChecklist.current) {
+      const items = toEditableItems(detail.data.templateItems)
+      checklistRef.current = items
+      setChecklist(items)
+    }
     setSuppliesUsed(detail.data.suppliesUsed)
     clientVersion.current = detail.data.clientVersion
     seededVersion.current = detail.data.clientVersion
   }, [detail.data])
+
+  const setChecklistItems = useCallback(
+    (update: (items: EditableChecklistItem[]) => EditableChecklistItem[]) => {
+      dirtyChecklist.current = true
+      setChecklist((current) => {
+        const next = update(current)
+        checklistRef.current = next
+        return next
+      })
+    },
+    [],
+  )
+
+  const patchItem = useCallback(
+    (uid: string, patch: Partial<EditableChecklistItem>) => {
+      setChecklistItems((items) =>
+        items.map((item) => {
+          if (item.uid !== uid) return item
+          const merged = { ...item, ...patch }
+          // Mục mới chưa có kết quả: sinh lại mã theo nhãn, bảo đảm không trùng.
+          if (merged.fresh) {
+            const used = new Set(items.filter((row) => row.uid !== uid).map((row) => row.key))
+            merged.key = uniqueItemKey(slugifyItemKey(merged.label), used)
+          }
+          return merged
+        }),
+      )
+    },
+    [setChecklistItems],
+  )
+
+  const addItem = useCallback(() => {
+    setChecklistItems((items) => [
+      ...items,
+      {
+        uid: nextItemUid(),
+        key: uniqueItemKey('', new Set(items.map((row) => row.key))),
+        label: '',
+        type: 'check',
+        unit: '',
+        min: '',
+        max: '',
+        optional: false,
+        fresh: true,
+      },
+    ])
+  }, [setChecklistItems])
+
+  const removeItem = useCallback(
+    (uid: string) => {
+      const removed = checklistRef.current.find((item) => item.uid === uid)
+      setChecklistItems((items) => items.filter((item) => item.uid !== uid))
+      if (removed) {
+        dirty.current = true
+        setResults((curr) => {
+          const next = { ...curr }
+          delete next[removed.key]
+          resultsRef.current = next
+          return next
+        })
+      }
+    },
+    [setChecklistItems],
+  )
+
+  const patchResult = useCallback((key: string, over: Partial<ResultRow>) => {
+    dirty.current = true
+    setResults((curr) => {
+      const next = { ...curr, [key]: { ...curr[key], key, ...over } }
+      resultsRef.current = next
+      return next
+    })
+  }, [])
+
+  /**
+   * Lưu các mục kiểm tra của chính công việc rồi xoá kết quả của mục mới đổi mã
+   * (kết quả cũ gắn với mã cũ nên phải bỏ trước khi gửi `/results`).
+   */
+  const saveChecklistItems = useCallback(async () => {
+    const items = toChecklistItems(checklistRef.current)
+    if (!items) {
+      toast.error(t('itemLabelRequired'))
+      return false
+    }
+    let nextResults = resultsRef.current
+    try {
+      await api.saveChecklist(id, items)
+      const keys = new Set(items.map((item) => item.key))
+      const pruned = Object.fromEntries(
+        Object.entries(resultsRef.current).filter(([key]) => keys.has(key)),
+      )
+      if (Object.keys(pruned).length !== Object.keys(resultsRef.current).length) {
+        dirty.current = true
+        resultsRef.current = pruned
+        setResults(pruned)
+      }
+      nextResults = pruned
+      const refreshed = await detail.refetch()
+      if (refreshed.data) {
+        const seeded: Record<string, ResultRow> = {}
+        for (const item of refreshed.data.templateItems) {
+          const found = refreshed.data.results.find((row) => row.key === item.key)
+          seeded[item.key] = found ?? { key: item.key }
+        }
+        for (const [key, row] of Object.entries(nextResults))
+          if (seeded[key]) seeded[key] = { ...seeded[key], ...row, key }
+        resultsRef.current = seeded
+        setResults(seeded)
+        seededVersion.current = refreshed.data.clientVersion
+        clientVersion.current = refreshed.data.clientVersion
+      }
+      dirtyChecklist.current = false
+      return true
+    } catch (error) {
+      toast.error(messageFor(error))
+      return false
+    }
+  }, [id, detail, t])
+
   const refetchTask = detail.refetch
   const save = useCallback(async () => {
     try {
+      if (dirtyChecklist.current && !(await saveChecklistItems())) return false
       const saved = await api.saveResults(id, {
         results: Object.values(resultsRef.current),
         clientVersion: clientVersion.current + 1,
@@ -127,7 +265,7 @@ export function Component() {
       } else toast.error(messageFor(error))
       return false
     }
-  }, [id, invalidate, refetchTask, t])
+  }, [id, invalidate, refetchTask, t, saveChecklistItems])
   useEffect(() => {
     if (!detail.data || detail.data.status !== 'in_progress') return
     const timer = setInterval(() => {
@@ -141,15 +279,9 @@ export function Component() {
   const row = detail.data
   const assignee = isStaff || row.assigneeId === userId
   const canStart = ['scheduled', 'overdue'].includes(row.status) && assignee
+  const canEditChecklist = isStaff && ['scheduled', 'overdue', 'in_progress'].includes(row.status)
   const canSave = row.status === 'in_progress' && assignee
-  const patch = (key: string, over: Partial<ResultRow>) => {
-    dirty.current = true
-    setResults((curr) => {
-      const next = { ...curr, [key]: { ...curr[key], key, ...over } }
-      resultsRef.current = next
-      return next
-    })
-  }
+  const canEnterResults = canSave && !dirtyChecklist.current
   return (
     <>
       {dialog}
@@ -205,18 +337,30 @@ export function Component() {
                   })()
                 },
               },
-              canSave && {
-                key: 'finish',
-                label: t('finish'),
-                variant: 'primary' as const,
-                icon: <CheckCircle2 />,
-                onClick: () => setFinishOpen(true),
+              canEditChecklist && {
+                key: 'addItem',
+                label: t('addItemLine'),
+                icon: <Plus />,
+                onClick: addItem,
+              },
+              canEditChecklist && {
+                key: 'saveChecklist',
+                label: t('saveChecklist'),
+                icon: <Save />,
+                onClick: () => void saveChecklistItems(),
               },
               canSave && {
                 key: 'save',
                 label: t('saveResults'),
                 icon: <Save />,
                 onClick: () => void save(),
+              },
+              canSave && {
+                key: 'finish',
+                label: t('finish'),
+                variant: 'primary' as const,
+                icon: <CheckCircle2 />,
+                onClick: () => setFinishOpen(true),
               },
               ['in_progress', 'done'].includes(row.status) && {
                 key: 'sign',
@@ -333,107 +477,49 @@ export function Component() {
                     photosOnly
                   />
                 </SectionCard>
-                {row.templateItems.length === 0 && (
-                  <SectionCard>
-                    <EmptyState icon={ListChecks} title={t('noChecklist')} />
-                  </SectionCard>
-                )}
-                {row.templateItems.map((item) => {
-                  const result = results[item.key] ?? { key: item.key }
-                  const measure =
-                    typeof result.value === 'number' ? result.value : Number(result.value)
-                  const inRange =
-                    item.type === 'measure' &&
-                    Number.isFinite(measure) &&
-                    (item.min == null || measure >= item.min) &&
-                    (item.max == null || measure <= item.max)
-                  return (
-                    <div
-                      key={item.key}
-                      className={cn(
-                        'border-divider rounded-md border p-4 transition-colors',
-                        missingKeys.has(item.key) && 'border-destructive bg-destructive-bg/40',
-                        result.pass === true && 'border-success/40 bg-success-bg/30',
-                        result.pass === false && 'border-destructive/40 bg-destructive-bg/30',
-                      )}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <p className="text-[14px] leading-5 font-semibold">
-                          {item.label}
-                          {item.optional ? '' : <span className="text-destructive"> *</span>}
-                        </p>
-                        {result.pass === true && (
-                          <Check className="text-success size-4 shrink-0" aria-hidden />
-                        )}
-                        {result.pass === false && (
-                          <X className="text-destructive size-4 shrink-0" aria-hidden />
-                        )}
-                      </div>
-                      {item.type === 'check' && (
-                        <div className="mt-2 flex gap-3">
-                          <Button
-                            size="sm"
-                            variant={result.pass === true ? 'default' : 'outline'}
-                            onClick={() => patch(item.key, { pass: true, value: true })}
-                          >
-                            {t('pass')}
+                <SectionCard
+                  title={t('items')}
+                  description={t('itemsEditableHint')}
+                  actions={
+                    canEditChecklist && (
+                      <Button type="button" variant="outline" size="sm" onClick={addItem}>
+                        <Plus aria-hidden />
+                        {t('addItemLine')}
+                      </Button>
+                    )
+                  }
+                  bodyClassName="space-y-3"
+                >
+                  {checklist.length === 0 && (
+                    <EmptyState
+                      icon={ListChecks}
+                      title={t('noChecklist')}
+                      description={t('noChecklistHint')}
+                      action={
+                        canEditChecklist && (
+                          <Button type="button" onClick={addItem}>
+                            <Plus aria-hidden />
+                            {t('addFirstItem')}
                           </Button>
-                          <Button
-                            size="sm"
-                            variant={result.pass === false ? 'default' : 'outline'}
-                            onClick={() => patch(item.key, { pass: false, value: false })}
-                          >
-                            {t('fail')}
-                          </Button>
-                        </div>
-                      )}
-                      {item.type === 'measure' && (
-                        <div className="mt-2">
-                          <Input
-                            aria-label={item.label}
-                            type="number"
-                            placeholder={`${item.unit}${item.min != null || item.max != null ? ` (${item.min ?? '—'}–${item.max ?? '—'})` : ''}`}
-                            value={result.value == null ? '' : String(result.value)}
-                            onChange={(e) => {
-                              const value = e.target.value === '' ? null : Number(e.target.value)
-                              const pass =
-                                value == null
-                                  ? undefined
-                                  : (item.min == null || value >= item.min) &&
-                                    (item.max == null || value <= item.max)
-                              patch(item.key, { value, pass })
-                            }}
-                          />
-                          {inRange && <span className="sr-only">{t('inRange')}</span>}
-                        </div>
-                      )}
-                      {item.type === 'text' && (
-                        <Textarea
-                          className="mt-2"
-                          aria-label={item.label}
-                          value={typeof result.value === 'string' ? result.value : ''}
-                          onChange={(e) =>
-                            patch(item.key, { value: e.target.value, pass: !!e.target.value })
-                          }
-                        />
-                      )}
-                      <Input
-                        className="mt-2"
-                        placeholder={t('notes')}
-                        value={result.note ?? ''}
-                        onChange={(e) => patch(item.key, { note: e.target.value })}
-                      />
-                      <FileField
-                        className="mt-3"
-                        label={t('attachmentPhoto')}
-                        value={result.photoFileId ?? null}
-                        onChange={(photoFileId) =>
-                          patch(item.key, { photoFileId: photoFileId ?? undefined })
-                        }
-                      />
-                    </div>
-                  )
-                })}
+                        )
+                      }
+                    />
+                  )}
+                  {checklist.map((item, index) => (
+                    <ChecklistItemCard
+                      key={item.uid}
+                      item={item}
+                      index={index}
+                      result={results[item.key] ?? { key: item.key }}
+                      missing={missingKeys.has(item.key)}
+                      canEdit={canEditChecklist}
+                      canEnterResults={canEnterResults}
+                      onPatchItem={(patch) => patchItem(item.uid, patch)}
+                      onRemove={() => removeItem(item.uid)}
+                      onPatchResult={(patch) => patchResult(item.key, patch)}
+                    />
+                  ))}
+                </SectionCard>
                 <SectionCard
                   title={t('suppliesUsed')}
                   actions={
@@ -553,7 +639,13 @@ export function Component() {
           },
         ]}
       />
-      <Dialog open={finishOpen} onOpenChange={setFinishOpen}>
+      <Dialog
+        open={finishOpen}
+        onOpenChange={(open) => {
+          setFinishOpen(open)
+          if (!open) setSaveTemplateChecked(false)
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t('finish')}</DialogTitle>
@@ -575,12 +667,42 @@ export function Component() {
             value={finishNotes}
             onChange={(event) => setFinishNotes(event.target.value)}
           />
+          <div className="flex items-start gap-2">
+            <Checkbox
+              id="save-checklist-template"
+              className="mt-0.5"
+              checked={saveTemplateChecked}
+              onCheckedChange={(checked) => {
+                const next = checked === true
+                setSaveTemplateChecked(next)
+                if (next) setTemplateName((current) => current || `${row.code} — mẫu`)
+              }}
+            />
+            <div className="space-y-1">
+              <Label htmlFor="save-checklist-template" className="cursor-pointer">
+                {t('saveAsTemplateCheckbox')}
+              </Label>
+              <p className="text-muted-foreground text-[12.5px] leading-5">
+                {t('saveAsTemplateHint')}
+              </p>
+            </div>
+          </div>
+          {saveTemplateChecked && (
+            <Input
+              aria-label={t('templateName')}
+              placeholder={t('templateName')}
+              value={templateName}
+              onChange={(event) => setTemplateName(event.target.value)}
+            />
+          )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setFinishOpen(false)}>
               {t('cancel')}
             </Button>
             <Button
+              disabled={saveTemplateChecked && !templateName.trim()}
               onClick={async () => {
+                if (dirtyChecklist.current && !(await saveChecklistItems())) return
                 if (dirty.current && !(await save())) return
                 try {
                   await api.finishTask(id, {
@@ -588,8 +710,18 @@ export function Component() {
                     notes: finishNotes || undefined,
                     suppliesUsed: suppliesUsed.filter((item) => item.supplyId && item.quantity > 0),
                   })
+                  if (saveTemplateChecked && templateName.trim()) {
+                    try {
+                      await api.saveAsTemplate(id, { name: templateName.trim() })
+                      toast.success(t('templateSaved'))
+                      void invalidate()
+                    } catch (error) {
+                      toast.error(messageFor(error))
+                    }
+                  }
                   setMissingKeys(new Set())
                   setFinishOpen(false)
+                  setSaveTemplateChecked(false)
                   toast.success(t('taskFinished'))
                   void invalidate()
                 } catch (error) {
