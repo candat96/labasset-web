@@ -562,5 +562,17 @@
   "inspectionRule": {
     "deadline": "Phải hoàn thành kiểm định trước {{date}}",
     "beforeUse": "Phải kiểm định trước khi đưa vào sử dụng"
+  },
+  "dashboard": {
+    "title": "Bảng điều hành thiết bị",
+    "subtitle": "Bốn chỉ số vận hành thiết bị trong kỳ — bấm thẻ để mở báo cáo đầy đủ.",
+    "period": "Kỳ",
+    "department": "Khoa",
+    "currentPeriod": "Kỳ hiện tại",
+    "openReport": "Mở báo cáo đầy đủ",
+    "availability": "Tỷ lệ sẵn sàng",
+    "maintenanceCompliance": "Bảo trì đúng hạn",
+    "repeatFailures": "Lỗi lặp lại",
+    "calibrationCompliance": "Tuân thủ kiểm định"
   }
 }

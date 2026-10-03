@@ -64,6 +64,10 @@ const implemented: RouteObject[] = [
   { path: 'equipment/transfers', lazy: () => import('@/features/equipment/pages/TransfersPage') },
   { path: 'equipment/qr-labels', lazy: () => import('@/features/equipment/pages/QrLabelsPage') },
   {
+    path: 'equipment/dashboard',
+    lazy: () => import('@/features/equipment/pages/EquipmentDashboardPage'),
+  },
+  {
     path: 'equipment/by-qr/:token',
     lazy: () => import('@/features/equipment/pages/ByQrPage'),
   },

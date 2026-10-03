@@ -94,6 +94,12 @@ export const MENU: MenuGroup[] = [
     items: [
       { path: '/equipment', labelKey: 'menu:items.equipment', icon: Microscope },
       {
+        path: '/equipment/dashboard',
+        labelKey: 'menu:items.equipmentDashboard',
+        icon: Gauge,
+        roles: HEADS,
+      },
+      {
         path: '/equipment/transfers',
         labelKey: 'menu:items.transfers',
         icon: ArrowLeftRight,
