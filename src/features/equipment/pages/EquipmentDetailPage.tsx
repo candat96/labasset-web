@@ -596,6 +596,7 @@ function Overview({ row }: { row: NonNullable<ReturnType<typeof useEquipment>['d
     { label: t('fields.fundingSource'), value: row.fundingSource?.name },
     { label: t('fields.originalValue'), value: formatVnd(row.originalValue) || null },
     { label: t('fields.receivedAt'), value: formatDate(row.receivedAt) || null },
+    { label: t('fields.purchasedAt'), value: formatDate(row.purchasedAt) || null },
     { label: t('fields.commissionedAt'), value: formatDate(row.commissionedAt) || null },
     {
       label: t('fields.warranty'),
@@ -616,6 +617,15 @@ function Overview({ row }: { row: NonNullable<ReturnType<typeof useEquipment>['d
     {
       label: t('fields.inspectionRequired'),
       value: row.inspectionRequired ? t('common:yes') : null,
+    },
+    {
+      label: t('fields.inspectionRoadmap'),
+      value:
+        row.inspectionRule === 'deadline' && row.inspectionDeadline
+          ? t('inspectionRule.deadline', { date: formatDate(row.inspectionDeadline) })
+          : row.inspectionRule === 'before_use'
+            ? t('inspectionRule.beforeUse')
+            : null,
     },
     {
       label: t('fields.usefulLifeYears'),

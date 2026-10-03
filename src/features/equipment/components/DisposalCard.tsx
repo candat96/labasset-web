@@ -28,10 +28,13 @@ const REASONS = [
   'other',
 ] as const
 const METHODS = ['sell', 'destroy', 'transfer', 'other'] as const
+const SALE_METHODS = ['auction', 'listed_price', 'designated'] as const
 
 const schema = z.object({
   reason: z.enum(REASONS),
   method: z.union([z.enum(METHODS), z.literal('')]),
+  saleMethod: z.union([z.enum(SALE_METHODS), z.literal('')]),
+  decisionAuthority: z.string(),
   councilNo: z.string(),
   assessedAt: z.string(),
   assessment: z.string(),
@@ -48,6 +51,8 @@ type Disposal = {
   status: 'draft' | 'approved' | 'done'
   reason: string
   method?: string | null
+  saleMethod?: string | null
+  decisionAuthority?: string | null
   councilNo?: string | null
   assessedAt?: string | null
   assessment?: string | null
@@ -76,6 +81,8 @@ export function DisposalCard({ id, canWrite }: { id: string; canWrite: boolean }
     defaultValues: {
       reason: 'expired_life',
       method: '',
+      saleMethod: '',
+      decisionAuthority: '',
       councilNo: '',
       assessedAt: '',
       assessment: '',
@@ -149,9 +156,17 @@ export function DisposalCard({ id, canWrite }: { id: string; canWrite: boolean }
                     label: t('disposal.method'),
                     value: row.method ? t(`disposal.methods.${row.method}`) : null,
                   },
+                  {
+                    label: t('disposal.saleMethod'),
+                    value: row.saleMethod ? t(`disposal.saleMethods.${row.saleMethod}`) : null,
+                  },
                   { label: t('disposal.councilNo'), value: row.councilNo },
                   { label: t('disposal.assessedAt'), value: formatDate(row.assessedAt) || null },
                   { label: t('disposal.decisionNo'), value: row.decisionNo },
+                  {
+                    label: t('disposal.decisionAuthority'),
+                    value: row.decisionAuthority,
+                  },
                   {
                     label: t('disposal.decisionDate'),
                     value: formatDate(row.decisionDate) || null,
@@ -182,6 +197,8 @@ export function DisposalCard({ id, canWrite }: { id: string; canWrite: boolean }
               await createDisposal(id, {
                 reason: values.reason,
                 method: values.method || null,
+                saleMethod: values.saleMethod || null,
+                decisionAuthority: values.decisionAuthority || null,
                 councilNo: values.councilNo || null,
                 assessedAt: values.assessedAt || null,
                 assessment: values.assessment || null,
@@ -219,9 +236,23 @@ export function DisposalCard({ id, canWrite }: { id: string; canWrite: boolean }
               label: t(`disposal.methods.${value}`),
             }))}
           />
+          <SelectField
+            control={form.control}
+            name="saleMethod"
+            label={t('disposal.saleMethod')}
+            options={SALE_METHODS.map((value) => ({
+              value,
+              label: t(`disposal.saleMethods.${value}`),
+            }))}
+          />
           <TextField control={form.control} name="councilNo" label={t('disposal.councilNo')} />
           <DateField control={form.control} name="assessedAt" label={t('disposal.assessedAt')} />
           <TextField control={form.control} name="decisionNo" label={t('disposal.decisionNo')} />
+          <TextField
+            control={form.control}
+            name="decisionAuthority"
+            label={t('disposal.decisionAuthority')}
+          />
           <DateField
             control={form.control}
             name="decisionDate"

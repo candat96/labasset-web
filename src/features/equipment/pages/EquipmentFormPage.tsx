@@ -52,6 +52,7 @@ const empty: EquipmentForm = {
   supplierId: null,
   countryOfOrigin: '',
   manufactureYear: '',
+  purchasedAt: '',
   receivedAt: '',
   commissionedAt: '',
   fundingSourceId: null,
@@ -94,6 +95,7 @@ function fromDetail(data: NonNullable<ReturnType<typeof useEquipment>['data']>):
     supplierId: data.supplierId,
     countryOfOrigin: data.countryOfOrigin ?? '',
     manufactureYear: data.manufactureYear ?? '',
+    purchasedAt: data.purchasedAt ?? '',
     receivedAt: data.receivedAt ?? '',
     commissionedAt: data.commissionedAt ?? '',
     fundingSourceId: data.fundingSourceId,
@@ -143,6 +145,7 @@ function toBody(values: EquipmentForm, includeIdentity = true): CreateEquipment 
     supplierId: values.supplierId,
     countryOfOrigin: values.countryOfOrigin,
     manufactureYear: values.manufactureYear === '' ? null : values.manufactureYear,
+    purchasedAt: values.purchasedAt,
     receivedAt: values.receivedAt,
     commissionedAt: values.commissionedAt,
     fundingSourceId: values.fundingSourceId,
@@ -309,6 +312,11 @@ export function Component() {
                 name="manufactureYear"
                 label={t('fields.manufactureYear')}
                 min={1900}
+              />
+              <DateField
+                control={form.control}
+                name="purchasedAt"
+                label={t('fields.purchasedAt')}
               />
               <DateField control={form.control} name="receivedAt" label={t('fields.receivedAt')} />
               <DateField

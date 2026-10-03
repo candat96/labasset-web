@@ -107,7 +107,10 @@
     "accumulatedDepreciation": "Hao mòn luỹ kế",
     "usefulLifeEndAt": "Hết thời gian sử dụng",
     "residualValue": "Giá trị còn lại",
-    "years": "năm"
+    "years": "năm",
+    "purchasedAt": "Ngày mua sắm",
+    "purchasedAtHint": "Mốc tính lộ trình kiểm định theo Thông tư 24/2026/TT-BYT",
+    "inspectionRoadmap": "Lộ trình kiểm định"
   },
   "criticality": {
     "vital": "Trọng yếu",
@@ -547,6 +550,17 @@
       "destroy": "Tiêu huỷ",
       "transfer": "Điều chuyển",
       "other": "Hình thức khác"
+    },
+    "saleMethod": "Phương thức bán",
+    "decisionAuthority": "Cơ quan ra quyết định",
+    "saleMethods": {
+      "auction": "Đấu giá",
+      "listed_price": "Niêm yết giá",
+      "designated": "Chỉ định"
     }
+  },
+  "inspectionRule": {
+    "deadline": "Phải hoàn thành kiểm định trước {{date}}",
+    "beforeUse": "Phải kiểm định trước khi đưa vào sử dụng"
   }
 }

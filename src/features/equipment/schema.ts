@@ -18,6 +18,7 @@ export const equipmentSchema = z.object({
   supplierId: optionalId,
   countryOfOrigin: optionalText,
   manufactureYear: z.union([z.literal(''), z.number().int().min(1900).max(2100)]),
+  purchasedAt: optionalText,
   receivedAt: optionalText,
   commissionedAt: optionalText,
   fundingSourceId: optionalId,

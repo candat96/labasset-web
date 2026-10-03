@@ -7301,6 +7301,8 @@ export interface components {
             criticality: string | null;
             location: string | null;
             manufactureYear: number | null;
+            /** Format: date */
+            purchasedAt: string | null;
             receivedAt: string | null;
             commissionedAt: string | null;
             warrantyUntil: string | null;
@@ -7309,6 +7311,10 @@ export interface components {
             usefulLifeEndAt: string | null;
             accumulatedDepreciation: string;
             residualValue: string | null;
+            /** @enum {string} */
+            inspectionRule: "not_required" | "deadline" | "before_use";
+            /** Format: date */
+            inspectionDeadline: string | null;
             manufacturerId: string | null;
             supplierId: string | null;
             fundingSourceId: string | null;
@@ -7450,6 +7456,9 @@ export interface components {
             method?: "sell" | "destroy" | "transfer" | "other" | null;
             /** @enum {string} */
             status?: "draft" | "approved" | "done";
+            /** @enum {string|null} */
+            saleMethod?: "auction" | "listed_price" | "designated" | null;
+            decisionAuthority?: string | null;
             councilNo?: string | null;
             /** Format: date */
             assessedAt?: string | null;
@@ -7477,6 +7486,9 @@ export interface components {
             method?: "sell" | "destroy" | "transfer" | "other" | null;
             /** @enum {string} */
             status?: "draft" | "approved" | "done";
+            /** @enum {string|null} */
+            saleMethod?: "auction" | "listed_price" | "designated" | null;
+            decisionAuthority?: string | null;
             councilNo?: string | null;
             /** Format: date */
             assessedAt?: string | null;
@@ -7497,6 +7509,9 @@ export interface components {
             method?: "sell" | "destroy" | "transfer" | "other" | null;
             /** @enum {string} */
             status?: "draft" | "approved" | "done";
+            /** @enum {string|null} */
+            saleMethod?: "auction" | "listed_price" | "designated" | null;
+            decisionAuthority?: string | null;
             councilNo?: string | null;
             /** Format: date */
             assessedAt?: string | null;
@@ -7651,6 +7666,8 @@ export interface components {
             /** Format: uuid */
             staffInChargeUserId?: string | null;
             /** Format: date */
+            purchasedAt?: string | null;
+            /** Format: date */
             receivedAt?: string | null;
             /** Format: date */
             commissionedAt?: string | null;
@@ -7706,6 +7723,8 @@ export interface components {
             deptContactUserId?: string | null;
             /** Format: uuid */
             staffInChargeUserId?: string | null;
+            /** Format: date */
+            purchasedAt?: string | null;
             /** Format: date */
             receivedAt?: string | null;
             /** Format: date */
@@ -14465,7 +14484,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            200: {
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };
