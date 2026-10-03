@@ -36,11 +36,18 @@ const schema = z
     reason: z.string(),
     neededBy: z.string(),
     items: z.array(
-      z.object({
-        supplyId: z.string(),
-        qtyRequested: decimalString({ maxScale: 3, min: '0.001' }),
-        note: z.string(),
-      }),
+      z
+        .object({
+          supplyId: z.string(),
+          // Cho phép 0 ở dòng chưa chọn vật tư; ràng buộc > 0 kiểm ở superRefine dưới.
+          qtyRequested: decimalString({ maxScale: 3, min: '0' }),
+          note: z.string(),
+        })
+        .superRefine((item, ctx) => {
+          if (item.supplyId && !(Number(item.qtyRequested) > 0)) {
+            ctx.addIssue({ code: 'custom', path: ['qtyRequested'], message: 'Bắt buộc' })
+          }
+        }),
     ),
   })
   .superRefine((value, ctx) => {

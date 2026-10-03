@@ -89,6 +89,55 @@ it('creates a draft request', async () => {
   )
 })
 
+it('dòng chưa chọn vật tư (số lượng 0) không chặn lưu phiếu', async () => {
+  const saved: unknown[] = []
+  server.use(
+    http.post('/v1/requests', async ({ request }) => {
+      saved.push(await request.json())
+      return HttpResponse.json({ id: 'q3', code: 'PYC-3' }, { status: 201 })
+    }),
+  )
+  renderWithProviders(<RequestFormPage />, {
+    path: '/requests/new',
+    route: '/requests/new',
+    routes: [{ path: '/requests/:id', element: <div>DETAIL</div> }],
+  })
+  await userEvent.type(screen.getByLabelText('Vật tư'), 'Huyết')
+  await userEvent.click(await screen.findByRole('option', { name: /Huyết thanh/ }))
+  const qty = screen.getByLabelText(/Số lượng/)
+  await userEvent.clear(qty)
+  await userEvent.type(qty, '2')
+  // Thêm một dòng để trống (chưa chọn vật tư, số lượng mặc định 0) rồi lưu.
+  await userEvent.click(screen.getByRole('button', { name: /Thêm dòng/ }))
+  await userEvent.click(screen.getByRole('button', { name: 'Lưu nháp' }))
+  await waitFor(() => expect(saved).toHaveLength(1))
+  expect(saved[0]).toMatchObject({
+    type: 'supply',
+    items: [{ supplyId: 's1', qtyRequested: '2' }],
+  })
+})
+
+it('dòng đã chọn vật tư nhưng số lượng 0 thì chặn lưu', async () => {
+  const saved: unknown[] = []
+  server.use(
+    http.post('/v1/requests', async ({ request }) => {
+      saved.push(await request.json())
+      return HttpResponse.json({ id: 'q4', code: 'PYC-4' }, { status: 201 })
+    }),
+  )
+  renderWithProviders(<RequestFormPage />, {
+    path: '/requests/new',
+    route: '/requests/new',
+    routes: [{ path: '/requests/:id', element: <div>DETAIL</div> }],
+  })
+  await userEvent.type(screen.getByLabelText('Vật tư'), 'Huyết')
+  await userEvent.click(await screen.findByRole('option', { name: /Huyết thanh/ }))
+  // Giữ nguyên số lượng mặc định 0 rồi lưu → không gửi, hiện lỗi bắt buộc.
+  await userEvent.click(screen.getByRole('button', { name: 'Lưu nháp' }))
+  expect(await screen.findAllByText('Bắt buộc')).not.toHaveLength(0)
+  expect(saved).toHaveLength(0)
+})
+
 it('form tạo phiếu: nhãn mới, số lượng mặc định 0, thêm/xoá dòng', async () => {
   renderWithProviders(<RequestFormPage />, {
     path: '/requests/new',
