@@ -16425,6 +16425,7 @@ export interface operations {
                 departmentId?: string;
                 equipmentId?: string;
                 overdue?: boolean;
+                pendingResponse?: boolean;
                 from?: string;
                 to?: string;
                 q?: string;
@@ -17405,6 +17406,9 @@ export interface operations {
                 status?: string;
                 from?: string;
                 to?: string;
+                dueFrom?: string;
+                dueTo?: string;
+                overdue?: boolean;
             };
             header?: {
                 /** @description Hospital id (multi-tenant mode) */

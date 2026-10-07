@@ -44,7 +44,17 @@ export function Component() {
   const canWrite = useCan(STAFF)
   const navigate = useNavigate()
   const table = useServerTable({
-    filterKeys: ['status', 'type', 'assigneeId', 'equipmentId', 'from', 'to', 'planId', 'due'],
+    filterKeys: [
+      'status',
+      'type',
+      'assigneeId',
+      'equipmentId',
+      'from',
+      'to',
+      'planId',
+      'due',
+      'overdue',
+    ],
   })
   const canListUsers = useCan(ADM)
   const myId = useAuthStore((s) => s.user?.id)
@@ -69,6 +79,9 @@ export function Component() {
     equipmentId: f.equipmentId,
     ...dueRange,
     planId: f.planId,
+    // `overdue=true` là điều kiện kép (trạng thái `overdue` HOẶC còn mở mà đã
+    // qua hạn) — đúng cái thẻ "Bảo dưỡng quá hạn" đếm.
+    overdue: f.overdue === 'true' ? true : undefined,
   }
   const list = useTasks(params)
   const templates = useTemplates()
@@ -194,12 +207,9 @@ export function Component() {
                   {t('mine')}
                 </FilterPreset>
                 <FilterPreset
-                  active={f.status?.split(',').includes('overdue')}
+                  active={f.overdue === 'true'}
                   onClick={() =>
-                    table.setFilter(
-                      'status',
-                      f.status?.split(',').includes('overdue') ? undefined : 'overdue',
-                    )
+                    table.setFilter('overdue', f.overdue === 'true' ? undefined : 'true')
                   }
                 >
                   {t('overdue')}

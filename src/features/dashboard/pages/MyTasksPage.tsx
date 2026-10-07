@@ -40,7 +40,7 @@ const LINKS: Record<string, string> = {
   repairsPendingResponse: '/repairs?pendingResponse=true',
   repairsOverdue: '/repairs?overdue=true',
   maintenanceDue7d: '/maintenance/tasks?status=scheduled,in_progress&due=7d',
-  maintenanceOverdue: '/maintenance/tasks?status=overdue',
+  maintenanceOverdue: '/maintenance/tasks?overdue=true',
   requestsPendingApproval: '/requests?pendingFor=me',
   requestsPendingIssue: '/requests?status=approved',
   requestsPendingReceive: '/requests?status=issued',

@@ -56,7 +56,7 @@ const ROWS: {
   {
     key: 'maintenanceOverdue',
     label: 'Bảo dưỡng quá hạn',
-    to: '/maintenance/tasks?status=overdue',
+    to: '/maintenance/tasks?overdue=true',
     icon: CalendarClock,
     tone: 'warning',
     pick: (t) => t.maintenance?.overdue ?? 0,
