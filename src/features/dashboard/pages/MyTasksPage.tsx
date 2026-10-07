@@ -27,12 +27,20 @@ import { useTranslation } from 'react-i18next'
 
 type MyTasks = components['schemas']['MyTasksResponseDto']
 
+// Mỗi liên kết phải mở ra ĐÚNG tập hợp mà con số bên cạnh đã đếm. API đếm
+// "quá hạn" và "đến hạn" theo phạm vi khoa chứ không theo người được giao, nên
+// các liên kết đó không được kèm assigneeId — trước đây kèm nên bấm vào thấy
+// danh sách ít hơn hẳn con số.
+// Tập trạng thái "còn mở" của API (OPEN_REPAIR_STATUSES) — có cả trạng thái
+// "mới", nếu thiếu thì danh sách ra ít dòng hơn con số đã đếm.
+const OPEN_REPAIR_STATUSES = 'new,accepted,in_progress,awaiting_parts,awaiting_vendor'
+
 const LINKS: Record<string, string> = {
-  repairsAssigned: '/repairs?assigneeId=me',
-  repairsPendingResponse: '/repairs?assigneeId=me',
-  repairsOverdue: '/repairs?assigneeId=me&overdue=true',
-  maintenanceDue7d: '/maintenance/tasks?assigneeId=me',
-  maintenanceOverdue: '/maintenance/tasks?assigneeId=me&status=overdue',
+  repairsAssigned: `/repairs?assigneeId=me&status=${OPEN_REPAIR_STATUSES}`,
+  repairsPendingResponse: '/repairs?pendingResponse=true',
+  repairsOverdue: '/repairs?overdue=true',
+  maintenanceDue7d: '/maintenance/tasks?status=scheduled,in_progress&due=7d',
+  maintenanceOverdue: '/maintenance/tasks?status=overdue',
   requestsPendingApproval: '/requests?pendingFor=me',
   requestsPendingIssue: '/requests?status=approved',
   requestsPendingReceive: '/requests?status=issued',
@@ -41,7 +49,7 @@ const LINKS: Record<string, string> = {
   demandToApprove: '/procurement/demand',
   demandToAccept: '/procurement/demand',
   alertsRepairsNew: '/repairs?status=new',
-  alertsCalibrationOverdue: '/calibrations?overdue=true',
+  alertsCalibrationOverdue: '/equipment?calibrationOverdue=true',
   alertsStock: '/stock/alerts?resolved=false',
 }
 

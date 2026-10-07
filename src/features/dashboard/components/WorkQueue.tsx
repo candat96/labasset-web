@@ -17,7 +17,10 @@ import { formatRelative } from '@/lib/format/date'
 
 type MyTasks = components['schemas']['MyTasksResponseDto']
 
-/** Việc cần làm hôm nay — mỗi dòng mở thẳng danh sách đã lọc (§UX quyết định 3). */
+/// Việc cần làm hôm nay — mỗi dòng mở thẳng danh sách đã lọc (§UX quyết định 3).
+///
+/// Bộ lọc trong liên kết phải trùng điều kiện mà API dùng để đếm: "quá hạn" và
+/// "đến hạn" đếm theo phạm vi khoa, không theo người được giao.
 const ROWS: {
   key: string
   label: string
@@ -29,7 +32,7 @@ const ROWS: {
   {
     key: 'repairsOverdue',
     label: 'Sửa chữa quá hạn',
-    to: '/repairs?assigneeId=me&overdue=true',
+    to: '/repairs?overdue=true',
     icon: AlertTriangle,
     tone: 'danger',
     pick: (t) => t.repairs?.overdue ?? 0,
@@ -37,7 +40,7 @@ const ROWS: {
   {
     key: 'repairsAssigned',
     label: 'Sửa chữa được giao',
-    to: '/repairs?assigneeId=me',
+    to: '/repairs?assigneeId=me&status=new,accepted,in_progress,awaiting_parts,awaiting_vendor',
     icon: Wrench,
     tone: 'info',
     pick: (t) => t.repairs?.assigned ?? 0,
@@ -45,7 +48,7 @@ const ROWS: {
   {
     key: 'maintenanceDue',
     label: 'Bảo dưỡng đến hạn',
-    to: '/maintenance/tasks?assigneeId=me',
+    to: '/maintenance/tasks?status=scheduled,in_progress&due=7d',
     icon: CalendarClock,
     tone: 'success',
     pick: (t) => t.maintenance?.due7d ?? 0,
@@ -53,7 +56,7 @@ const ROWS: {
   {
     key: 'maintenanceOverdue',
     label: 'Bảo dưỡng quá hạn',
-    to: '/maintenance/tasks?assigneeId=me&status=overdue',
+    to: '/maintenance/tasks?status=overdue',
     icon: CalendarClock,
     tone: 'warning',
     pick: (t) => t.maintenance?.overdue ?? 0,

@@ -60,6 +60,7 @@ export function Component() {
       'departmentId',
       'equipmentId',
       'overdue',
+      'pendingResponse',
       'from',
       'to',
       'preset',
@@ -78,6 +79,7 @@ export function Component() {
     departmentId: f.departmentId,
     equipmentId: f.equipmentId,
     overdue: f.overdue === 'true' ? true : undefined,
+    pendingResponse: f.pendingResponse === 'true' ? true : undefined,
     from: range.from,
     to: range.to,
   }

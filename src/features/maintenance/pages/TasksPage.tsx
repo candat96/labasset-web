@@ -44,11 +44,22 @@ export function Component() {
   const canWrite = useCan(STAFF)
   const navigate = useNavigate()
   const table = useServerTable({
-    filterKeys: ['status', 'type', 'assigneeId', 'equipmentId', 'from', 'to', 'planId'],
+    filterKeys: ['status', 'type', 'assigneeId', 'equipmentId', 'from', 'to', 'planId', 'due'],
   })
   const canListUsers = useCan(ADM)
   const myId = useAuthStore((s) => s.user?.id)
   const f = table.params.filters
+  // `due=7d` là lối tắt từ thẻ "Bảo dưỡng đến hạn" ở Tổng quan: khoảng ngày
+  // phải tính lúc mở màn, không thể nhúng sẵn vào liên kết vì liên kết là hằng.
+  // Lọc theo `dueFrom`/`dueTo` (cột hạn) cho khớp đúng điều kiện mà thẻ đếm;
+  // `from`/`to` của thanh lọc là theo ngày lên lịch, hai cột khác nhau.
+  const dueRange =
+    f.due === '7d'
+      ? {
+          dueFrom: new Date().toISOString(),
+          dueTo: new Date(Date.now() + 7 * 86_400_000).toISOString(),
+        }
+      : dayRangeToIso(f.from, f.to)
   const params = {
     page: table.params.page,
     limit: table.params.limit,
@@ -56,7 +67,7 @@ export function Component() {
     type: f.type as Task['type'] | undefined,
     assigneeId: f.assigneeId,
     equipmentId: f.equipmentId,
-    ...dayRangeToIso(f.from, f.to),
+    ...dueRange,
     planId: f.planId,
   }
   const list = useTasks(params)

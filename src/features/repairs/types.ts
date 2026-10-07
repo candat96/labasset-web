@@ -47,6 +47,8 @@ export interface RepairListParams {
   departmentId?: string
   equipmentId?: string
   overdue?: boolean
+  /** Chỉ phiếu đang chờ chính người dùng phản hồi phân công. */
+  pendingResponse?: boolean
   from?: string
   to?: string
 }
