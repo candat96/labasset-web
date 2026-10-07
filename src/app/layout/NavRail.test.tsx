@@ -48,3 +48,20 @@ it('màn chi tiết vẫn sáng mục cha vì không có mục menu nào khớp 
   const equipment = screen.getByRole('link', { name: /^thiết bị$/i })
   expect(equipment).toHaveAttribute('aria-current', 'page')
 })
+
+it('thu gọn thì bảng nhãn chỉ hiện nhóm đang chọn, ghim thì hiện mọi nhóm', async () => {
+  renderWithProviders(<NavRail />, { route: '/repairs' })
+  await userEvent.hover(await screen.findByTestId('nav-rail'))
+
+  // Chỉ xét bảng nhãn: biểu tượng nhóm trên rail cũng mang tên nhóm.
+  const flyout = () => screen.getByTestId('rail-flyout')
+  const labels = () =>
+    [...flyout().querySelectorAll('a')].map((a) => a.textContent?.trim().toLowerCase())
+
+  // Thu gọn: chỉ thấy tính năng của nhóm Sửa chữa.
+  expect(labels()).toContain('phiếu sửa chữa')
+  expect(labels()).not.toContain('hồ sơ thiết bị')
+
+  await userEvent.click(screen.getByTestId('rail-pin'))
+  expect(labels()).toContain('hồ sơ thiết bị')
+})

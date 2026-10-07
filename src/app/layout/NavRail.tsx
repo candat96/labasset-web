@@ -10,7 +10,8 @@ import {
   FileText,
   LayoutDashboard,
   Microscope,
-  PanelLeft,
+  PanelLeftClose,
+  PanelLeftOpen,
   PieChart,
   ShoppingCart,
   Trophy,
@@ -76,8 +77,15 @@ export function NavRail() {
     () => (typeof localStorage !== 'undefined' && localStorage.getItem(PIN_KEY) === '1') || false,
   )
   const [hovered, setHovered] = useState(false)
+  // Nhóm đang rê chuột ở chế độ thu gọn — bảng nhãn khi đó chỉ hiện nhóm này.
+  const [hoveredGroup, setHoveredGroup] = useState<string | undefined>(undefined)
   const closeTimer = useRef<number | undefined>(undefined)
   const open = pinned || hovered
+  // Mở rộng (ghim): liệt kê mọi nhóm. Thu gọn: chỉ nhóm đang chọn hoặc đang rê —
+  // theo yêu cầu "chọn module nào chỉ hiển thị tính năng của module đó".
+  const shown = pinned
+    ? groups
+    : groups.filter((group) => group.key === (hoveredGroup ?? active?.key))
 
   useEffect(() => () => window.clearTimeout(closeTimer.current), [])
   useEffect(() => {
@@ -101,7 +109,10 @@ export function NavRail() {
     setHovered(true)
   }
   const leave = () => {
-    closeTimer.current = window.setTimeout(() => setHovered(false), 200)
+    closeTimer.current = window.setTimeout(() => {
+      setHovered(false)
+      setHoveredGroup(undefined)
+    }, 200)
   }
 
   return (
@@ -127,6 +138,8 @@ export function NavRail() {
                 <NavLink
                   to={first.path}
                   data-testid="rail-group"
+                  onMouseEnter={() => setHoveredGroup(group.key)}
+                  onFocus={() => setHoveredGroup(group.key)}
                   aria-current={isActive ? 'page' : undefined}
                   className={cn(
                     'relative flex size-10 items-center justify-center rounded-md transition-colors',
@@ -147,14 +160,15 @@ export function NavRail() {
           type="button"
           onClick={() => setPinned((v) => !v)}
           aria-pressed={pinned}
-          aria-label={pinned ? 'Thu gọn menu' : 'Ghim menu mở rộng'}
+          aria-label={pinned ? 'Thu gọn menu' : 'Mở rộng menu'}
           data-testid="rail-pin"
           className="text-muted-foreground hover:bg-muted mt-auto flex size-10 items-center justify-center rounded-md"
         >
-          <PanelLeft
-            className={cn('size-5 transition-transform', pinned && 'rotate-180')}
-            aria-hidden
-          />
+          {pinned ? (
+            <PanelLeftClose className="size-5" aria-hidden />
+          ) : (
+            <PanelLeftOpen className="size-5" aria-hidden />
+          )}
         </button>
       </nav>
 
@@ -169,7 +183,7 @@ export function NavRail() {
         aria-hidden={!open}
       >
         <div className="w-60 py-3">
-          {groups.map((group) => (
+          {shown.map((group) => (
             <div key={group.key} className="mb-2">
               <p className="text-subtle px-4 pb-1 text-[12px] font-semibold tracking-wide uppercase">
                 {t(group.labelKey.replace('menu:', ''))}

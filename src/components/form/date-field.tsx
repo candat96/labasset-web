@@ -7,12 +7,15 @@ export function DateField<T extends FieldValues>({
   name,
   label,
   disabled,
+  required,
   placeholder,
 }: {
   control: Control<T>
   name: FieldPath<T>
   label: string
   disabled?: boolean
+  /** Dấu sao đỏ ở nhãn; ràng buộc vẫn do zod quyết định. */
+  required?: boolean
   placeholder?: string
 }) {
   return (
@@ -21,7 +24,7 @@ export function DateField<T extends FieldValues>({
       name={name}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>{label}</FormLabel>
+          <FormLabel required={required}>{label}</FormLabel>
           <FormControl>
             <DatePicker
               value={typeof field.value === 'string' ? field.value : undefined}

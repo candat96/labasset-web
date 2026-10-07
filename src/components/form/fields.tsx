@@ -22,6 +22,19 @@ interface BaseProps<T extends FieldValues> {
   required?: boolean
 }
 
+/**
+ * Gợi ý mặc định cho ô nhập khi form không truyền `placeholder` riêng: lấy mô
+ * tả nếu có, nếu không thì sinh từ nhãn. Yêu cầu "thêm placeholder vào tất cả
+ * các ô input, select" (bảng lỗi 2026-10-07) — làm ở đây thì mọi form có ngay
+ * mà không phải sửa từng chỗ.
+ */
+function hintFor(label: string, description: string | undefined, verb: 'Nhập' | 'Chọn') {
+  if (description) return description
+  const first = label.charAt(0)
+  const rest = label.slice(1)
+  return `${verb} ${first.toLocaleLowerCase('vi-VN')}${rest}`
+}
+
 export function TextField<T extends FieldValues>({
   control,
   name,
@@ -59,7 +72,7 @@ export function TextField<T extends FieldValues>({
                 field.onChange(transform ? transform(e.target.value) : e.target.value)
               }
               type={type}
-              placeholder={placeholder ?? description}
+              placeholder={placeholder ?? hintFor(label, description, 'Nhập')}
               autoComplete={autoComplete}
               autoFocus={autoFocus}
               inputMode={inputMode}
@@ -96,7 +109,7 @@ export function TextAreaField<T extends FieldValues>({
               {...field}
               value={field.value ?? ''}
               rows={rows}
-              placeholder={placeholder ?? description}
+              placeholder={placeholder ?? hintFor(label, description, 'Nhập')}
               disabled={disabled}
             />
           </FormControl>
@@ -131,7 +144,7 @@ export function NumberField<T extends FieldValues>({
               inputMode="numeric"
               min={min}
               step={step}
-              placeholder={placeholder ?? description}
+              placeholder={placeholder ?? hintFor(label, description, 'Nhập')}
               disabled={disabled}
               name={field.name}
               ref={field.ref}
@@ -190,7 +203,7 @@ export function SelectField<T extends FieldValues>({
           >
             <FormControl>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder={placeholder ?? description} />
+                <SelectValue placeholder={placeholder ?? hintFor(label, description, 'Chọn')} />
               </SelectTrigger>
             </FormControl>
             <SelectContent>
