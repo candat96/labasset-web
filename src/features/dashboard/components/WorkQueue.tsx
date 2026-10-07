@@ -40,7 +40,7 @@ const ROWS: {
   {
     key: 'repairsAssigned',
     label: 'Sửa chữa được giao',
-    to: '/repairs?assigneeId=me&status=new,accepted,in_progress,awaiting_parts,awaiting_vendor',
+    to: '/repairs?assignedTo=me&status=new,accepted,in_progress,awaiting_parts,awaiting_vendor',
     icon: Wrench,
     tone: 'info',
     pick: (t) => t.repairs?.assigned ?? 0,

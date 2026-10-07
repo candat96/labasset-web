@@ -36,7 +36,7 @@ type MyTasks = components['schemas']['MyTasksResponseDto']
 const OPEN_REPAIR_STATUSES = 'new,accepted,in_progress,awaiting_parts,awaiting_vendor'
 
 const LINKS: Record<string, string> = {
-  repairsAssigned: `/repairs?assigneeId=me&status=${OPEN_REPAIR_STATUSES}`,
+  repairsAssigned: `/repairs?assignedTo=me&status=${OPEN_REPAIR_STATUSES}`,
   repairsPendingResponse: '/repairs?pendingResponse=true',
   repairsOverdue: '/repairs?overdue=true',
   maintenanceDue7d: '/maintenance/tasks?status=scheduled,in_progress&due=7d',

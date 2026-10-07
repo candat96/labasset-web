@@ -57,6 +57,7 @@ export function Component() {
       'status',
       'severity',
       'assigneeId',
+      'assignedTo',
       'departmentId',
       'equipmentId',
       'overdue',
@@ -76,6 +77,7 @@ export function Component() {
     status: f.status,
     severity: f.severity as RepairSeverity | undefined,
     assigneeId: f.assigneeId,
+    assignedTo: f.assignedTo,
     departmentId: f.departmentId,
     equipmentId: f.equipmentId,
     overdue: f.overdue === 'true' ? true : undefined,
@@ -85,18 +87,18 @@ export function Component() {
   }
   const list = useRepairs(params)
   const setPreset = (id: Preset) => {
-    if (id === 'all')
-      table.setFilters({
-        preset: undefined,
-        assigneeId: undefined,
-        status: undefined,
-        overdue: undefined,
-      })
-    else if (id === 'mine')
-      table.setFilters({ preset: id, assigneeId: 'me', status: undefined, overdue: undefined })
-    else if (id === 'new')
-      table.setFilters({ preset: id, status: 'new', assigneeId: undefined, overdue: undefined })
-    else table.setFilters({ preset: id, overdue: 'true', status: undefined, assigneeId: undefined })
+    const clear = {
+      preset: undefined,
+      assigneeId: undefined,
+      assignedTo: undefined,
+      status: undefined,
+      overdue: undefined,
+    }
+    if (id === 'all') table.setFilters(clear)
+    // "Của tôi" tính cả vai phụ, giống thẻ "Sửa chữa được giao" ở Tổng quan.
+    else if (id === 'mine') table.setFilters({ ...clear, preset: id, assignedTo: 'me' })
+    else if (id === 'new') table.setFilters({ ...clear, preset: id, status: 'new' })
+    else table.setFilters({ ...clear, preset: id, overdue: 'true' })
   }
   const columns = useMemo<ColumnDef<Repair>[]>(
     () => [
@@ -249,6 +251,15 @@ export function Component() {
       key: 'severity',
       label: `${t('filters.severity')}: ${faultSeverityMap[f.severity]?.label ?? f.severity}`,
       onRemove: () => table.setFilter('severity', undefined),
+    })
+  if (f.assignedTo)
+    activeFilters.push({
+      key: 'assignedTo',
+      label:
+        f.assignedTo === 'me'
+          ? `${t('filters.assignee')}: ${t('filters.me')}`
+          : t('filters.assignee'),
+      onRemove: () => table.setFilter('assignedTo', undefined),
     })
   if (f.assigneeId)
     activeFilters.push({

@@ -44,6 +44,8 @@ export interface RepairListParams {
   status?: string
   severity?: RepairSeverity
   assigneeId?: string
+  /** Có tên trong phiếu: người chính hoặc người được phân công chưa từ chối. */
+  assignedTo?: string
   departmentId?: string
   equipmentId?: string
   overdue?: boolean

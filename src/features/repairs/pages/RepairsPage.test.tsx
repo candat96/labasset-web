@@ -96,7 +96,9 @@ it('applies the mine preset', async () => {
   renderWithProviders(<Component />)
   await screen.findByText('SC-202609-0001')
   await userEvent.click(screen.getByRole('button', { name: 'Của tôi' }))
-  await waitFor(() => expect(urls.some((u) => u.includes('assigneeId=me'))).toBe(true))
+  // "Của tôi" lọc theo `assignedTo` (người chính HOẶC được phân công) để khớp
+  // thẻ "Sửa chữa được giao" ở Tổng quan.
+  await waitFor(() => expect(urls.some((u) => u.includes('assignedTo=me'))).toBe(true))
 })
 
 it('gửi nhiều trạng thái dạng a,b', async () => {

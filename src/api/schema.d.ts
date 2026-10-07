@@ -16422,6 +16422,7 @@ export interface operations {
                 status?: string;
                 severity?: "low" | "medium" | "high" | "critical";
                 assigneeId?: string;
+                assignedTo?: string;
                 departmentId?: string;
                 equipmentId?: string;
                 overdue?: boolean;
