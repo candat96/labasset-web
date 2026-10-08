@@ -238,7 +238,8 @@ it('lists attachment groups, opens image lightbox, uploads and removes with conf
   expect(screen.getByRole('dialog')).toBeVisible()
   await userEvent.keyboard('{Escape}')
   await userEvent.upload(
-    screen.getByLabelText('Chọn ảnh'),
+    // Nhãn ô chọn tệp là chính tên loại tài liệu (mục #20 bảng lỗi 2026-10-07).
+    screen.getByLabelText('Ảnh'),
     new NativeFile(['image'], 'a.png', { type: 'image/png' }) as unknown as File,
   )
   await waitFor(() =>
@@ -264,7 +265,7 @@ it('hides attachment mutations for department readers', async () => {
     />,
   )
   expect(await screen.findByText('Ảnh')).toBeVisible()
-  expect(screen.queryByLabelText('Chọn ảnh')).not.toBeInTheDocument()
+  expect(screen.queryByLabelText('Ảnh')).not.toBeInTheDocument()
 })
 it('dismisses announcements persistently by id', async () => {
   server.use(

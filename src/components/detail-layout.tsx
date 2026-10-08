@@ -85,8 +85,10 @@ export function DetailLayout({
               </TabsTrigger>
             ))}
           </TabsList>
+          {/* Các thẻ trong một tab cách nhau rõ: 4 đơn vị làm chúng dính vào nhau
+              khi thẻ nào cũng có viền trắng (bảng lỗi 2026-10-07, mục #17). */}
           {tabs.map((t) => (
-            <TabsContent key={t.value} value={t.value} className="space-y-4">
+            <TabsContent key={t.value} value={t.value} className="space-y-5">
               {t.content}
             </TabsContent>
           ))}

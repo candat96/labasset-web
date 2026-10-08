@@ -5,6 +5,7 @@ export type EquipmentDetail = components['schemas']['EquipmentDetailDto']
 export type EquipmentPage = components['schemas']['EquipmentPageDto']
 export type EquipmentStatus = NonNullable<components['schemas']['EquipmentStatusDto']['status']>
 export const EQUIPMENT_STATUSES: EquipmentStatus[] = [
+  'draft',
   'active',
   'broken',
   'awaiting_parts',
@@ -13,6 +14,7 @@ export const EQUIPMENT_STATUSES: EquipmentStatus[] = [
   'disposed',
 ]
 export const STATUS_TRANSITIONS: Record<EquipmentStatus, EquipmentStatus[]> = {
+  draft: ['active', 'retired'],
   active: ['broken', 'awaiting_parts', 'suspended', 'retired'],
   broken: ['active', 'awaiting_parts', 'retired'],
   awaiting_parts: ['active', 'broken', 'retired'],

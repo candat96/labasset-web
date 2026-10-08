@@ -244,11 +244,13 @@ export function AttachmentsPanel({
                 />
               ))}
           </ul>
-          <div className="flex flex-wrap items-start gap-2 pt-1">
+          {/* Nhãn là chính tên loại tài liệu, không thêm chữ "Thêm" — tiêu đề
+              khối đã nói đang ở loại nào. Ảnh cũng dùng khung vuông chọn tệp
+              như các loại khác (bảng lỗi 2026-10-07, mục #20). */}
+          <div className="grid items-start gap-2 pt-1 sm:grid-cols-2">
             {canWrite && kinds.some((k) => k.value === kind.value) && (
               <FileField
-                label={kind.value === 'photo' ? 'Chọn ảnh' : `Thêm ${kind.label}`}
-                compact={kind.value === 'photo'}
+                label={kind.label}
                 accept={kind.value === 'photo' ? 'image/*' : undefined}
                 value={pending?.kind === kind.value ? pending.fileId : null}
                 disabled={attach.isPending}
@@ -264,7 +266,6 @@ export function AttachmentsPanel({
             {canWrite && kind.value === 'photo' && (
               <FileField
                 label="Chụp ảnh tình trạng"
-                compact
                 accept="image/*"
                 capture="environment"
                 value={null}

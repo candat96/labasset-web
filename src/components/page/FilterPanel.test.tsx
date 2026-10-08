@@ -27,7 +27,7 @@ describe('FilterPanel (§UX quyết định 4)', () => {
     )
     expect(screen.queryByTestId('filter-panel')).not.toBeInTheDocument()
     expect(screen.getByTestId('filter-panel-active-chips')).toBeInTheDocument()
-    await userEvent.click(screen.getByRole('button', { name: 'Khoa: Nội' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Bỏ lọc: Khoa: Nội' }))
     expect(chips[0]!.onRemove).toHaveBeenCalled()
   })
 
@@ -43,7 +43,7 @@ describe('FilterPanel (§UX quyết định 4)', () => {
     expect(localStorage.getItem('filter-panel:equipment')).toBe('1')
   })
 
-  it('panel mở thì không lặp chip lọc, và có nút Cài đặt lại / Áp dụng', () => {
+  it('panel mở vẫn hiện chip lọc gỡ được, và có nút Cài đặt lại / Áp dụng', () => {
     localStorage.setItem('filter-panel:equipment', '1')
     const onReset = vi.fn()
     const onApply = vi.fn()
@@ -58,7 +58,9 @@ describe('FilterPanel (§UX quyết định 4)', () => {
         <div>bảng</div>
       </FilterPanel>,
     )
-    expect(screen.queryByTestId('filter-panel-active-chips')).not.toBeInTheDocument()
+    // Panel mở thì giá trị nằm rải trong các ô; chip là chỗ gỡ nhanh từng điều
+    // kiện nên phải còn (bảng lỗi 2026-10-07, mục #25).
+    expect(screen.getByTestId('filter-panel-active-chips')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Cài đặt lại' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Áp dụng' })).toBeInTheDocument()
   })

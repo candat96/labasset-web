@@ -143,6 +143,7 @@ export function CommissioningTab({
 
   const nextStep = STEPS.find((step) => !row?.[step.dateKey])
   const released = Boolean(row?.releasedAt)
+  const doneCount = STEPS.filter((step) => row?.[step.dateKey]).length
 
   return (
     <SectionCard title={t('commissioning.title')} description={t('commissioning.description')}>
@@ -169,6 +170,32 @@ export function CommissioningTab({
           )}
         </div>
       </div>
+
+      {/* Thanh tiến trình: đọc một cái biết đã qua mấy trong năm mốc (bảng lỗi
+          2026-10-07, mục #18). */}
+      {!query.isPending && (
+        <div className="mt-4" data-testid="commissioning-progress">
+          <div className="text-muted-foreground mb-1.5 flex items-center justify-between text-[13px]">
+            <span>{t('commissioning.progress', { defaultValue: 'Tiến trình nghiệm thu' })}</span>
+            <span className="tabular-nums">
+              {doneCount}/{STEPS.length}
+            </span>
+          </div>
+          <div
+            className="bg-muted h-2 overflow-hidden rounded-full"
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={STEPS.length}
+            aria-valuenow={doneCount}
+            aria-label={t('commissioning.progress', { defaultValue: 'Tiến trình nghiệm thu' })}
+          >
+            <div
+              className={cn('h-full rounded-full', released ? 'bg-success' : 'bg-primary')}
+              style={{ width: `${(doneCount / STEPS.length) * 100}%` }}
+            />
+          </div>
+        </div>
+      )}
 
       {query.isPending ? (
         <p className="text-muted-foreground mt-4 text-sm" role="status">
@@ -213,8 +240,10 @@ export function CommissioningTab({
         </ol>
       )}
 
-      <div className="border-divider mt-5 grid gap-4 border-t pt-4 md:grid-cols-2">
-        <div className="space-y-1.5">
+      {/* Kết quả và ghi chú nằm hai dòng riêng: ghi chú là câu dài, đứng cạnh
+          ô chọn thì bị bóp còn một nửa (bảng lỗi 2026-10-07, mục #18). */}
+      <div className="border-divider mt-5 grid gap-4 border-t pt-4">
+        <div className="space-y-1.5 md:max-w-sm">
           <label className="text-sm font-medium" htmlFor="commissioning-result">
             {t('commissioning.result')}
           </label>
@@ -248,12 +277,15 @@ export function CommissioningTab({
           </label>
           <Textarea
             id="commissioning-note"
+            placeholder={t('commissioning.notePlaceholder', {
+              defaultValue: 'Ghi chú về quá trình nghiệm thu, điều kiện kèm theo…',
+            })}
             value={note}
             disabled={!canWrite}
             onChange={(event) => setNote(event.target.value)}
           />
         </div>
-        <div className="md:col-span-2">
+        <div>
           <FileField
             label={t('commissioning.document')}
             value={documentFileId}
@@ -262,7 +294,7 @@ export function CommissioningTab({
           />
         </div>
         {canWrite && (
-          <div className="md:col-span-2">
+          <div>
             <Button
               type="button"
               disabled={save.isPending}

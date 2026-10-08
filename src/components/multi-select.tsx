@@ -46,13 +46,29 @@ export function MultiSelect({
                   className="bg-muted flex min-w-0 items-center gap-1 rounded px-1.5 py-0.5 text-xs"
                 >
                   <span className="truncate">{option.label}</span>
-                  <X
-                    className="size-3 shrink-0"
+                  {/*
+                   * Bỏ chọn phải là một nút thật và tự bật lại `pointer-events`:
+                   * `Button` của shadcn đặt `[&_svg]:pointer-events-none`, nên
+                   * icon X trần không bao giờ nhận được cú bấm — bấm X "không
+                   * có hiện tượng gì" (bảng lỗi 2026-10-07, mục #25).
+                   */}
+                  <span
+                    role="button"
+                    tabIndex={-1}
+                    aria-label={`Bỏ chọn ${option.label}`}
+                    className="hover:text-destructive pointer-events-auto shrink-0 [&_svg]:pointer-events-auto"
+                    onPointerDown={(event) => {
+                      event.preventDefault()
+                      event.stopPropagation()
+                    }}
                     onClick={(event) => {
+                      event.preventDefault()
                       event.stopPropagation()
                       onChange(value.filter((item) => item !== option.value))
                     }}
-                  />
+                  >
+                    <X className="size-3 shrink-0" aria-hidden />
+                  </span>
                 </span>
               ))
             ) : (

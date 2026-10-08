@@ -7743,7 +7743,7 @@ export interface components {
         };
         EquipmentStatusDto: {
             /** @enum {string} */
-            status: "active" | "broken" | "awaiting_parts" | "suspended" | "retired" | "disposed";
+            status: "draft" | "active" | "broken" | "awaiting_parts" | "suspended" | "retired" | "disposed";
             reason: string;
         };
         NetworkDto: {
@@ -14778,7 +14778,7 @@ export interface operations {
                 page?: number;
                 limit?: number;
                 q?: string;
-                status?: ("active" | "broken" | "awaiting_parts" | "suspended" | "retired" | "disposed")[];
+                status?: ("draft" | "active" | "broken" | "awaiting_parts" | "suspended" | "retired" | "disposed")[];
                 criticality?: "vital" | "essential" | "desirable";
                 departmentId?: string;
                 roomId?: string;

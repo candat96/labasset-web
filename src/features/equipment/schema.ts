@@ -132,7 +132,15 @@ export const counterSchema = z.object({
 export type CounterForm = z.infer<typeof counterSchema>
 
 export const statusChangeSchema = z.object({
-  status: z.enum(['active', 'broken', 'awaiting_parts', 'suspended', 'retired', 'disposed']),
+  status: z.enum([
+    'draft',
+    'active',
+    'broken',
+    'awaiting_parts',
+    'suspended',
+    'retired',
+    'disposed',
+  ]),
   reason: z.string().trim().min(1, 'Bắt buộc').max(2000),
 })
 export type StatusChangeForm = z.infer<typeof statusChangeSchema>

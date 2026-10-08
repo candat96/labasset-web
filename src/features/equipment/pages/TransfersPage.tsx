@@ -4,9 +4,11 @@ import { useTranslation } from 'react-i18next'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { toast } from 'sonner'
+import { ArrowLeft, Check, Eye, X } from 'lucide-react'
 import { DataTable, useServerTable } from '@/components/data-table'
 import { FilterBar, FilterField } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page/PageHeader'
+import { RowActions } from '@/components/page/RowActions'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -69,6 +71,28 @@ export function Component() {
   const departmentName = (id: string | null) =>
     id ? (departmentNames.get(id) ?? shortId(id)) : '—'
   const userName = (id: string | null) => (id ? (userNames.get(id) ?? shortId(id)) : '—')
+  const approve = async (transfer: Transfer) => {
+    try {
+      await approveTransfer(transfer.equipmentId, transfer.id)
+      toast.success(t('transfers.approved'))
+      invalidate(transfer)
+      setRow(null)
+    } catch (e) {
+      toast.error(messageFor(e))
+    }
+  }
+  const reject = async (transfer: Transfer) => {
+    const reason = await confirm({ title: t('transfers.rejectTitle'), requireReason: true })
+    if (reason === false) return
+    try {
+      await rejectTransfer(transfer.equipmentId, transfer.id, reason)
+      toast.success(t('transfers.rejected'))
+      invalidate(transfer)
+      setRow(null)
+    } catch (e) {
+      toast.error(messageFor(e))
+    }
+  }
   const columns: ColumnDef<Transfer>[] = [
     {
       id: 'equipmentId',
@@ -112,6 +136,42 @@ export function Component() {
       accessorKey: 'createdAt',
       header: t('transfers.createdAt'),
       cell: ({ getValue }) => formatDateTime(getValue<string>()),
+    },
+    {
+      // Duyệt / từ chối ngay trên dòng: trước đây phải mở popup chi tiết mới
+      // thấy hai nút này (bảng lỗi 2026-10-07, mục #25 nhóm điều chuyển).
+      id: 'actions',
+      header: t('transfers.actions', { defaultValue: 'Thao tác' }),
+      enableHiding: false,
+      enableSorting: false,
+      meta: { label: t('transfers.actions', { defaultValue: 'Thao tác' }), align: 'right' },
+      cell: ({ row: r }) => (
+        <RowActions
+          items={[
+            isAdm &&
+              r.original.status === 'pending' && {
+                key: 'approve',
+                label: t('actions.approve'),
+                icon: <Check aria-hidden />,
+                onClick: () => void approve(r.original),
+              },
+            isAdm &&
+              r.original.status === 'pending' && {
+                key: 'reject',
+                label: t('actions.reject'),
+                icon: <X aria-hidden />,
+                variant: 'destructive' as const,
+                onClick: () => void reject(r.original),
+              },
+            {
+              key: 'detail',
+              label: t('transfers.detail', { defaultValue: 'Chi tiết' }),
+              icon: <Eye aria-hidden />,
+              onClick: () => setRow(r.original),
+            },
+          ]}
+        />
+      ),
     },
   ]
   const rows = (list.data?.items ?? []).filter(
@@ -183,8 +243,24 @@ export function Component() {
       />
       <Sheet open={!!row} onOpenChange={(open) => !open && setRow(null)}>
         <SheetContent className="overflow-y-auto">
+          {/* Tiêu đề 18px/600 kèm nút quay lại, giống các popup khác (bảng lỗi
+              2026-10-07, mục #26). */}
           <SheetHeader>
-            <SheetTitle>{t('transfers.title')}</SheetTitle>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="-ml-2 size-8 shrink-0"
+                aria-label="Quay lại"
+                onClick={() => setRow(null)}
+              >
+                <ArrowLeft aria-hidden />
+              </Button>
+              <SheetTitle className="text-[18px] leading-7 font-semibold">
+                {t('transfers.detail', { defaultValue: 'Chi tiết điều chuyển' })}
+              </SheetTitle>
+            </div>
           </SheetHeader>
           {row && (
             <div className="space-y-3 p-4 text-sm">
@@ -237,38 +313,8 @@ export function Component() {
               </dl>
               {isAdm && row.status === 'pending' && (
                 <div className="flex gap-2">
-                  <Button
-                    onClick={async () => {
-                      try {
-                        await approveTransfer(row.equipmentId, row.id)
-                        toast.success(t('transfers.approved'))
-                        invalidate(row)
-                        setRow(null)
-                      } catch (e) {
-                        toast.error(messageFor(e))
-                      }
-                    }}
-                  >
-                    {t('actions.approve')}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={async () => {
-                      const reason = await confirm({
-                        title: t('transfers.rejectTitle'),
-                        requireReason: true,
-                      })
-                      if (reason === false) return
-                      try {
-                        await rejectTransfer(row.equipmentId, row.id, reason)
-                        toast.success(t('transfers.rejected'))
-                        invalidate(row)
-                        setRow(null)
-                      } catch (e) {
-                        toast.error(messageFor(e))
-                      }
-                    }}
-                  >
+                  <Button onClick={() => void approve(row)}>{t('actions.approve')}</Button>
+                  <Button variant="outline" onClick={() => void reject(row)}>
                     {t('actions.reject')}
                   </Button>
                 </div>

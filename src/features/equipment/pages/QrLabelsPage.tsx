@@ -3,16 +3,18 @@ import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import type { ColumnDef } from '@tanstack/react-table'
 import { toast } from 'sonner'
+import { Download, Eye, Printer } from 'lucide-react'
 import { DataTable, useServerTable } from '@/components/data-table'
 import { FilterBar, FilterField } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page/PageHeader'
+import { RowActions } from '@/components/page/RowActions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { StatusBadge } from '@/components/status-badge'
 import { equipmentStatusMap } from '@/lib/status-maps'
 import { messageFor } from '@/api/errors'
-import { printQrLabels } from '../api'
+import { downloadQrPng, printQrLabels } from '../api'
 import { useEquipmentList } from '../hooks'
 import type { Equipment } from '../types'
 
@@ -70,6 +72,48 @@ export function Component() {
         accessorKey: 'status',
         header: t('fields.status'),
         cell: ({ row }) => <StatusBadge value={row.original.status} map={equipmentStatusMap} />,
+      },
+      {
+        // In / tải / xem ngay trên từng dòng: trước đây chỉ in được theo lô đã
+        // tick chọn (bảng lỗi 2026-10-07, mục #27 nhóm tem QR).
+        id: 'actions',
+        header: t('fields.actions', { defaultValue: 'Thao tác' }),
+        enableHiding: false,
+        enableSorting: false,
+        meta: { label: t('fields.actions', { defaultValue: 'Thao tác' }), align: 'right' },
+        cell: ({ row }) => (
+          <RowActions
+            items={[
+              {
+                key: 'print',
+                label: t('actions.print'),
+                icon: <Printer aria-hidden />,
+                onClick: () => {
+                  void printQrLabels([row.original.id]).catch((error: unknown) =>
+                    toast.error(messageFor(error)),
+                  )
+                },
+              },
+              {
+                key: 'download',
+                label: t('actions.qrPng'),
+                icon: <Download aria-hidden />,
+                onClick: () => {
+                  void downloadQrPng(row.original.id).catch((error: unknown) =>
+                    toast.error(messageFor(error)),
+                  )
+                },
+              },
+              {
+                key: 'detail',
+                label: t('actions.open', { defaultValue: 'Xem chi tiết' }),
+                icon: <Eye aria-hidden />,
+                to: `/equipment/${row.original.id}`,
+              },
+            ]}
+            max={3}
+          />
+        ),
       },
     ],
     [selected, t],

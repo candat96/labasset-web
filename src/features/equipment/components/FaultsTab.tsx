@@ -1,6 +1,7 @@
 import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
+import { Plus } from 'lucide-react'
 import { unwrapAs, untypedApi } from '@/api/client'
 import { messageFor } from '@/api/errors'
 import { Button } from '@/components/ui/button'
@@ -64,9 +65,12 @@ export function FaultsTab({
           <Link className="text-primary text-sm font-medium hover:text-primary/80" to="/faults">
             {t('faultsTab.library', { defaultValue: 'Thư viện lỗi' })}
           </Link>
+          {/* Nút nền primary: đây là việc chính của tab, không phải nút phụ
+              (bảng lỗi 2026-10-07, mục #18 và #21). */}
           {canWrite && (
-            <Button asChild size="sm" variant="outline">
+            <Button asChild size="sm">
               <Link to={`/faults/new?${addParams.toString()}`}>
+                <Plus aria-hidden />
                 {t('faultsTab.add', { defaultValue: 'Thêm lỗi' })}
               </Link>
             </Button>

@@ -9,7 +9,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { StatusBadge } from '@/components/status-badge'
 import { AsyncSelect } from '@/components/form/async-select'
-import { FilterBar, FilterField } from '@/components/filter-bar'
+import { Archive, Eye, Pencil } from 'lucide-react'
+import { FilterPanel, FilterPanelField } from '@/components/page/FilterPanel'
+import { RowActions } from '@/components/page/RowActions'
+import { ConfirmDialog } from '@/components/page/ConfirmDialog'
 import {
   Select,
   SelectContent,
@@ -23,7 +26,7 @@ import { useCan } from '@/app/guards/useCan'
 import { ADM, STAFF } from '@/routes/roles'
 import { catalogOptions, resolveCatalogItem } from '@/api/references'
 import { listFaultSuggestions } from '../api'
-import { faultKeys, useFaults } from '../hooks'
+import { faultKeys, useArchiveFault, useFaults } from '../hooks'
 import {
   FAULT_SEVERITIES,
   FAULT_STATUSES,
@@ -87,6 +90,26 @@ export function Component() {
     sort: sort === 'relevance' || sort === 'viewCount' || sort === 'updatedAt' ? sort : undefined,
   }
   const list = useFaults(params)
+  const archive = useArchiveFault()
+  const [toArchive, setToArchive] = useState<Fault | null>(null)
+
+  // Chip bộ lọc đang áp, gỡ được từng cái.
+  const activeFilters: Array<{ key: string; label: string; onRemove: () => void }> = []
+  const addChip = (key: string, label: string) =>
+    activeFilters.push({ key, label, onRemove: () => table.setFilter(key, undefined) })
+  if (f.errorCode) addChip('errorCode', `${t('filters.errorCode')}: ${f.errorCode}`)
+  if (f.model) addChip('model', `${t('filters.model')}: ${f.model}`)
+  if (f.manufacturerId) addChip('manufacturerId', t('filters.manufacturer'))
+  if (f.groupId) addChip('groupId', t('filters.group'))
+  if (f.severity)
+    addChip(
+      'severity',
+      `${t('filters.severity')}: ${faultSeverityMap[f.severity]?.label ?? f.severity}`,
+    )
+  if (f.status)
+    addChip('status', `${t('filters.status')}: ${faultStatusMap[f.status]?.label ?? f.status}`)
+  if (f.sort) addChip('sort', `${t('filters.sort')}: ${f.sort}`)
+
   const pending = useQuery({
     queryKey: [...faultKeys.suggestions, 'pending-count'],
     queryFn: () => listFaultSuggestions({ status: 'pending', page: 1, limit: 1 }),
@@ -142,8 +165,46 @@ export function Component() {
         header: t('columns.updatedAt'),
         cell: ({ getValue }) => formatDateTime(getValue<string>()),
       },
+      {
+        // Sửa / xoá ngay trên dòng (bảng lỗi 2026-10-07, mục #28).
+        id: 'actions',
+        header: t('columns.actions', { defaultValue: 'Thao tác' }),
+        enableHiding: false,
+        enableSorting: false,
+        meta: { label: t('columns.actions', { defaultValue: 'Thao tác' }), align: 'right' },
+        cell: ({ row }) => (
+          <RowActions
+            items={[
+              {
+                key: 'open',
+                label: t('actions.open', { defaultValue: 'Xem chi tiết' }),
+                icon: <Eye aria-hidden />,
+                to: `/faults/${row.original.id}`,
+              },
+              canWrite && {
+                key: 'edit',
+                label: t('common:actions.edit'),
+                icon: <Pencil aria-hidden />,
+                to: `/faults/${row.original.id}/edit`,
+              },
+              // API không xoá hẳn bản ghi lỗi (nó là tri thức đã dùng để chẩn
+              // đoán) — thao tác tương ứng là lưu trữ.
+              isAdm &&
+                row.original.status !== 'archived' && {
+                  key: 'archive',
+                  label: t('actions.archive', { defaultValue: 'Lưu trữ' }),
+                  icon: <Archive aria-hidden />,
+                  variant: 'destructive' as const,
+                  separator: true,
+                  onClick: () => setToArchive(row.original),
+                },
+            ]}
+            max={2}
+          />
+        ),
+      },
     ],
-    [t],
+    [t, canWrite, isAdm],
   )
   return (
     <>
@@ -172,46 +233,38 @@ export function Component() {
           </div>
         }
       />
-      <DataTable
-        tableId="faults"
-        columns={columns}
-        data={list.data?.items}
-        total={list.data?.total ?? 0}
-        params={table.params}
-        onPageChange={table.setPage}
-        onLimitChange={table.setLimit}
-        isLoading={list.isPending}
-        error={list.error}
-        onRetry={() => void list.refetch()}
-        getRowId={(row) => row.id}
-        onRowClick={(row) => navigate(`/faults/${row.id}`)}
-        toolbarLeft={
-          <FilterBar onClear={table.params.q || Object.keys(f).length ? table.reset : undefined}>
-            <FilterField label={t('filters.q')}>
-              <Input
-                aria-label={t('filters.q')}
-                placeholder={t('filters.qPlaceholder')}
-                value={table.inputQ}
-                onChange={(event) => table.setQ(event.target.value)}
-              />
-            </FilterField>
-            <FilterField label={t('filters.errorCode')}>
+      <FilterPanel
+        storageKey="faults"
+        activeFilters={activeFilters}
+        onReset={table.params.q || Object.keys(f).length ? table.reset : undefined}
+        toolbar={
+          <Input
+            className="w-72 max-w-full"
+            aria-label={t('filters.q')}
+            placeholder={t('filters.qPlaceholder')}
+            value={table.inputQ}
+            onChange={(event) => table.setQ(event.target.value)}
+          />
+        }
+        fields={
+          <>
+            <FilterPanelField label={t('filters.errorCode')}>
               <DebouncedFilterInput
                 label={t('filters.errorCode')}
                 placeholder={t('filters.errorCode')}
                 value={f.errorCode}
                 onCommit={(value) => table.setFilter('errorCode', value)}
               />
-            </FilterField>
-            <FilterField label={t('filters.model')}>
+            </FilterPanelField>
+            <FilterPanelField label={t('filters.model')}>
               <DebouncedFilterInput
                 label={t('filters.model')}
                 placeholder={t('filters.model')}
                 value={f.model}
                 onCommit={(value) => table.setFilter('model', value)}
               />
-            </FilterField>
-            <FilterField label={t('filters.manufacturer')}>
+            </FilterPanelField>
+            <FilterPanelField label={t('filters.manufacturer')}>
               <AsyncSelect
                 label={t('filters.manufacturer')}
                 queryKey="manufacturers"
@@ -224,8 +277,8 @@ export function Component() {
                 clearable
                 showLabel={false}
               />
-            </FilterField>
-            <FilterField label={t('filters.group')}>
+            </FilterPanelField>
+            <FilterPanelField label={t('filters.group')}>
               <AsyncSelect
                 label={t('filters.group')}
                 queryKey="equipment-groups"
@@ -238,15 +291,15 @@ export function Component() {
                 clearable
                 showLabel={false}
               />
-            </FilterField>
-            <FilterField label={t('filters.severity')}>
+            </FilterPanelField>
+            <FilterPanelField label={t('filters.severity')}>
               <Select
                 value={f.severity ?? '__all__'}
                 onValueChange={(value) =>
                   table.setFilter('severity', value === '__all__' ? undefined : value)
                 }
               >
-                <SelectTrigger aria-label={t('filters.severity')} className="w-40">
+                <SelectTrigger aria-label={t('filters.severity')} className="w-full">
                   <SelectValue placeholder={t('filters.severity')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -258,15 +311,15 @@ export function Component() {
                   ))}
                 </SelectContent>
               </Select>
-            </FilterField>
-            <FilterField label={t('filters.status')}>
+            </FilterPanelField>
+            <FilterPanelField label={t('filters.status')}>
               <Select
                 value={f.status ?? '__all__'}
                 onValueChange={(value) =>
                   table.setFilter('status', value === '__all__' ? undefined : value)
                 }
               >
-                <SelectTrigger aria-label={t('filters.status')} className="w-40">
+                <SelectTrigger aria-label={t('filters.status')} className="w-full">
                   <SelectValue placeholder={t('filters.status')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -278,15 +331,15 @@ export function Component() {
                   ))}
                 </SelectContent>
               </Select>
-            </FilterField>
-            <FilterField label={t('filters.sort')}>
+            </FilterPanelField>
+            <FilterPanelField label={t('filters.sort')}>
               <Select
                 value={sort ?? '__default__'}
                 onValueChange={(value) =>
                   table.setFilter('sort', value === '__default__' ? undefined : value)
                 }
               >
-                <SelectTrigger aria-label={t('filters.sort')} className="w-40">
+                <SelectTrigger aria-label={t('filters.sort')} className="w-full">
                   <SelectValue placeholder={t('filters.sort')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -296,9 +349,35 @@ export function Component() {
                   <SelectItem value="updatedAt">{t('filters.sortUpdatedAt')}</SelectItem>
                 </SelectContent>
               </Select>
-            </FilterField>
-          </FilterBar>
+            </FilterPanelField>
+          </>
         }
+      >
+        <DataTable
+          tableId="faults"
+          columns={columns}
+          data={list.data?.items}
+          total={list.data?.total ?? 0}
+          params={table.params}
+          onPageChange={table.setPage}
+          onLimitChange={table.setLimit}
+          isLoading={list.isPending}
+          error={list.error}
+          onRetry={() => void list.refetch()}
+          getRowId={(row) => row.id}
+          onRowClick={(row) => navigate(`/faults/${row.id}`)}
+        />
+      </FilterPanel>
+      <ConfirmDialog
+        open={!!toArchive}
+        onOpenChange={(open) => !open && setToArchive(null)}
+        title={t('archiveTitle', { defaultValue: 'Lưu trữ lỗi này?' })}
+        description={toArchive?.title}
+        destructive
+        loading={archive.isPending}
+        onConfirm={() => {
+          if (toArchive) archive.mutate(toArchive.id, { onSuccess: () => setToArchive(null) })
+        }}
       />
     </>
   )

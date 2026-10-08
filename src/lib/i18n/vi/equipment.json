@@ -1,11 +1,11 @@
 {
   "title": "Hồ sơ thiết bị",
-  "create": "Thêm máy",
-  "editTitle": "Sửa máy",
-  "loading": "Đang tải máy…",
+  "create": "Thêm thiết bị",
+  "editTitle": "Sửa thiết bị",
+  "loading": "Đang tải thiết bị…",
   "empty": "Chưa có thiết bị nào",
-  "notFound": "Không tìm thấy máy",
-  "searching": "Đang tìm máy…",
+  "notFound": "Không tìm thấy thiết bị",
+  "searching": "Đang tìm thiết bị…",
   "actions": {
     "changeStatus": "Đổi trạng thái",
     "transfer": "Điều chuyển",

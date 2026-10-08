@@ -123,16 +123,25 @@ export function FilterPanel({
           {toolbar}
         </div>
 
-        {!open && chips.length > 0 && (
+        {/*
+         * Chip bộ lọc đang áp hiện ở MỌI trạng thái của panel, không chỉ khi
+         * panel thu: panel mở thì giá trị nằm rải trong các ô, người dùng vẫn
+         * cần một chỗ gỡ nhanh từng điều kiện (bảng lỗi 2026-10-07, mục #25).
+         */}
+        {chips.length > 0 && (
           <div
             className="bg-card shadow-card flex flex-wrap items-center gap-1.5 rounded-md px-4 py-2.5"
             data-testid="filter-panel-active-chips"
           >
             {chips.map((filter) => (
               <Badge key={filter.key} variant="outline" asChild>
-                <button type="button" onClick={filter.onRemove}>
+                <button
+                  type="button"
+                  aria-label={`Bỏ lọc: ${filter.label}`}
+                  onClick={filter.onRemove}
+                >
                   {filter.label}
-                  <X className="size-3" />
+                  <X className="size-3" aria-hidden />
                 </button>
               </Badge>
             ))}

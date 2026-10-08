@@ -1,11 +1,4 @@
 import { Link } from 'react-router'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { NOTIFICATION_TYPES } from '../types'
 import { notificationLink } from '@/lib/notification-link'
 import { useMemo } from 'react'
@@ -18,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { DataTable, useServerTable } from '@/components/data-table'
 import { FilterBar, FilterField } from '@/components/filter-bar'
+import { SearchableSelect } from '@/components/searchable-select'
 import { PageHeader } from '@/components/page/PageHeader'
 import { StatusBadge } from '@/components/page/StatusBadge'
 import { formatDateTime } from '@/lib/format/date'
@@ -134,28 +128,19 @@ export function Component() {
         toolbarLeft={
           <FilterBar>
             <FilterField label={t('filterType')}>
-              <Select
-                value={table.params.filters.type ?? 'all'}
-                onValueChange={(value) =>
-                  table.setFilter('type', value === 'all' ? undefined : value)
-                }
-              >
-                <SelectTrigger
-                  id="notification-type"
-                  className="w-full"
-                  aria-label={t('filterType')}
-                >
-                  <SelectValue placeholder={t('allTypes')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t('allTypes')}</SelectItem>
-                  {Object.entries(NOTIFICATION_TYPES).map(([type, label]) => (
-                    <SelectItem key={type} value={type}>
-                      {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {/* Danh sách loại thông báo dài vài chục dòng nên có ô tìm ngay
+                  trong menu (bảng lỗi 2026-10-07, mục #4). */}
+              <SearchableSelect
+                id="notification-type"
+                ariaLabel={t('filterType')}
+                placeholder={t('allTypes')}
+                value={table.params.filters.type ?? null}
+                onChange={(value) => table.setFilter('type', value)}
+                options={Object.entries(NOTIFICATION_TYPES).map(([type, label]) => ({
+                  value: type,
+                  label,
+                }))}
+              />
             </FilterField>
             <FilterField label={t('onlyUnread')}>
               <div className="flex h-9 items-center">

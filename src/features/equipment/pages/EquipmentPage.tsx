@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { toast } from 'sonner'
-import { Download, Upload } from 'lucide-react'
+import { Download, Eye, Pencil, Trash2, Upload } from 'lucide-react'
 import { DataTable, useServerTable } from '@/components/data-table'
 import { PageHeader } from '@/components/page/PageHeader'
 import { EmptyState } from '@/components/page/EmptyState'
@@ -31,6 +31,8 @@ import { DatePicker } from '@/components/date-picker'
 import { FilterPreset } from '@/components/filter-bar'
 import { FilterPanel, FilterPanelField } from '@/components/page/FilterPanel'
 import { SectionCard } from '@/components/page/SectionCard'
+import { RowActions } from '@/components/page/RowActions'
+import { ConfirmDialog } from '@/components/page/ConfirmDialog'
 import { MultiSelect } from '@/components/multi-select'
 import { StatusBadge } from '@/components/status-badge'
 import { AsyncSelect } from '@/components/form/async-select'
@@ -59,7 +61,7 @@ import {
   userOptions,
 } from '../api'
 import { EquipmentImportDialog } from '../components/EquipmentImportDialog'
-import { useEquipmentList } from '../hooks'
+import { useDeleteEquipment, useEquipmentList } from '../hooks'
 import { shortId, useUserNames } from '../components/lookups'
 import {
   EQUIPMENT_CRITICALITIES,
@@ -164,6 +166,10 @@ export function Component() {
     order: table.params.order,
   }
   const list = useEquipmentList(params)
+  const remove = useDeleteEquipment()
+  // Xoá thiết bị: trước đây chỉ làm được ở trang chi tiết nên người dùng hỏi
+  // "làm sao để xoá 1 thiết bị" (bảng lỗi 2026-10-07, mục #24).
+  const [toDelete, setToDelete] = useState<Equipment | null>(null)
   const [selected, setSelected] = useState<string[]>([])
   const toggle = (id: string, on: boolean) =>
     setSelected((current) => (on ? [...current, id] : current.filter((item) => item !== id)))
@@ -340,8 +346,42 @@ export function Component() {
         meta: { label: t('fields.updatedAt'), className: 'tabular-nums' },
         cell: ({ getValue }) => formatDateTime(getValue<string>()),
       },
+      {
+        id: 'actions',
+        header: t('fields.actions', { defaultValue: 'Thao tác' }),
+        enableHiding: false,
+        enableSorting: false,
+        meta: { label: t('fields.actions', { defaultValue: 'Thao tác' }), align: 'right' },
+        cell: ({ row }) => (
+          <RowActions
+            items={[
+              {
+                key: 'open',
+                label: t('actions.open', { defaultValue: 'Xem chi tiết' }),
+                icon: <Eye aria-hidden />,
+                to: `/equipment/${row.original.id}`,
+              },
+              canWrite && {
+                key: 'edit',
+                label: t('actions.edit', { defaultValue: 'Sửa' }),
+                icon: <Pencil aria-hidden />,
+                to: `/equipment/${row.original.id}/edit`,
+              },
+              isAdm && {
+                key: 'delete',
+                label: t('actions.delete', { defaultValue: 'Xoá' }),
+                icon: <Trash2 aria-hidden />,
+                variant: 'destructive' as const,
+                separator: true,
+                onClick: () => setToDelete(row.original),
+              },
+            ]}
+            max={1}
+          />
+        ),
+      },
     ],
-    [selected, t, staffNames, allOnPage, pageIds],
+    [selected, t, staffNames, allOnPage, pageIds, canWrite, isAdm],
   )
   const selectedStatus = (f.status ?? '').split(',').filter(Boolean)
   const dueIn30 = f.calibrationDueBefore === plusDays(30)
@@ -743,6 +783,27 @@ export function Component() {
         open={importOpen}
         onOpenChange={setImportOpen}
         onImported={() => void list.refetch()}
+      />
+      <ConfirmDialog
+        open={!!toDelete}
+        onOpenChange={(open) => !open && setToDelete(null)}
+        title={t('actions.deleteTitle', { defaultValue: 'Xoá thiết bị?' })}
+        description={
+          toDelete
+            ? t('actions.deleteHint', {
+                defaultValue:
+                  'Thiết bị {{code}} — {{name}} sẽ bị xoá. Hồ sơ đã phát sinh phiếu thì nên đổi trạng thái sang Thanh lý thay vì xoá.',
+                code: toDelete.code,
+                name: toDelete.name,
+              })
+            : undefined
+        }
+        destructive
+        loading={remove.isPending}
+        onConfirm={() => {
+          if (!toDelete) return
+          remove.mutate(toDelete.id, { onSuccess: () => setToDelete(null) })
+        }}
       />
     </>
   )

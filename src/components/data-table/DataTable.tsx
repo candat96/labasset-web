@@ -164,7 +164,7 @@ export function DataTable<T>({
           <ColumnToggle table={table} />
         </div>
       </div>
-      <div className="overflow-auto">
+      <div className="scroll-visible overflow-auto">
         <Table>
           <TableHeader className="sticky top-0 z-10">
             {table.getHeaderGroups().map((hg) => (

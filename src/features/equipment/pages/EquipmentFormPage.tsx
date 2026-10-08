@@ -483,19 +483,43 @@ export function Component() {
           </SectionCard>
           <SectionCard title={t('sections.specs')}>
             <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-              <TextField control={form.control} name="specs.voltage" label={t('fields.voltage')} />
-              <TextField control={form.control} name="specs.power" label={t('fields.power')} />
+              {/* Thông số có đơn vị ghi ngay trong gợi ý: người nhập biết điền
+                  220 V hay 220, 50 kg hay 50 (bảng lỗi 2026-10-07, mục #15). */}
+              <TextField
+                control={form.control}
+                name="specs.voltage"
+                label={t('fields.voltage')}
+                description="Ví dụ: 220 V / 50 Hz"
+              />
+              <TextField
+                control={form.control}
+                name="specs.power"
+                label={t('fields.power')}
+                description="Ví dụ: 1500 W"
+              />
               <TextField
                 control={form.control}
                 name="specs.dimensions"
                 label={t('fields.dimensions')}
+                description="Dài × rộng × cao (mm)"
               />
-              <TextField control={form.control} name="specs.weight" label={t('fields.weight')} />
-              <TextField control={form.control} name="specs.env.temp" label={t('fields.envTemp')} />
+              <TextField
+                control={form.control}
+                name="specs.weight"
+                label={t('fields.weight')}
+                description="Ví dụ: 75 kg"
+              />
+              <TextField
+                control={form.control}
+                name="specs.env.temp"
+                label={t('fields.envTemp')}
+                description="Ví dụ: 18–26 °C"
+              />
               <TextField
                 control={form.control}
                 name="specs.env.humidity"
                 label={t('fields.envHumidity')}
+                description="Ví dụ: 40–70 %"
               />
               <TextField control={form.control} name="specs.env.ups" label={t('fields.envUps')} />
               <TextField

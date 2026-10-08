@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import type { FieldValues, UseFormReturn } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import { Loader2 } from 'lucide-react'
+import { ArrowLeft, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -51,8 +51,23 @@ export function FormDialog<T extends FieldValues, O extends FieldValues = T>({
           width === 'md' && 'sm:max-w-2xl',
         )}
       >
+        {/* Tiêu đề popup: 18px/600 và luôn kèm nút quay lại bên trái, giống nhau
+            ở mọi popup cùng loại (bảng lỗi 2026-10-07, mục #26). */}
         <DialogHeader className="border-divider border-b px-6 py-4">
-          <DialogTitle>{title}</DialogTitle>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="-ml-2 size-8 shrink-0"
+              aria-label="Quay lại"
+              data-testid="dialog-back"
+              onClick={() => onOpenChange(false)}
+            >
+              <ArrowLeft aria-hidden />
+            </Button>
+            <DialogTitle className="text-[18px] leading-7 font-semibold">{title}</DialogTitle>
+          </div>
           {description ? (
             <DialogDescription>{description}</DialogDescription>
           ) : (

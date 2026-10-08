@@ -15,6 +15,8 @@ export const commonStatusMap: StatusMap = {
 }
 
 export const equipmentStatusMap: StatusMap = {
+  // Hồ sơ vừa khai, chưa đưa vào sử dụng — kích hoạt bằng thao tác đổi trạng thái.
+  draft: { label: 'Nháp', tone: 'muted' },
   active: { label: 'Hoạt động', tone: 'success' },
   broken: { label: 'Hỏng', tone: 'danger' },
   awaiting_parts: { label: 'Chờ linh kiện', tone: 'warning' },

@@ -70,6 +70,8 @@ it('lọc mã lỗi sau debounce', async () => {
   )
   const { router } = renderWithProviders(<Component />)
   await screen.findByText('Không hút mẫu')
+  // Bộ lọc nằm trong panel dọc bên trái, mặc định thu khi màn < 1600 (mục #28).
+  await userEvent.click(screen.getByTestId('filter-panel-open'))
   await userEvent.type(screen.getByLabelText('Mã lỗi'), 'E-01')
   await waitFor(() => expect(urls.some((u) => u.includes('errorCode=E-01'))).toBe(true))
   expect(router.state.location.search).toContain('errorCode=E-01')

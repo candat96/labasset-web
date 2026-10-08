@@ -262,6 +262,31 @@ export const auditActionLabels: EnumLabels = {
   message: 'Nhắn tin',
   settings: 'Cấu hình',
   get: 'Xem',
+  // Những hành động dưới đây trước không có nhãn nên dòng lịch sử hiện nguyên
+  // mã tiếng Anh, đọc ra thành "commissioning ngày nhận" (bảng lỗi
+  // 2026-10-07, mục #19).
+  commissioning: 'Nghiệm thu bàn giao',
+  checklist: 'Lưu mục kiểm tra',
+  save_template: 'Lưu thành mẫu',
+  cost_add: 'Thêm chi phí',
+  cost_update: 'Sửa chi phí',
+  cost_remove: 'Xoá chi phí',
+  disposal_create: 'Mở hồ sơ thanh lý',
+  disposal_update: 'Sửa hồ sơ thanh lý',
+  disposal_delete: 'Xoá hồ sơ thanh lý',
+  line_create: 'Thêm dòng',
+  line_update: 'Sửa dòng',
+  line_delete: 'Xoá dòng',
+  line_import: 'Nhập dòng từ file',
+  consolidate: 'Tổng hợp',
+  consolidation_update: 'Sửa tổng hợp',
+  consolidation_rebuild: 'Dựng lại tổng hợp',
+  recall: 'Thu hồi',
+  release_recall: 'Bỏ thu hồi',
+  return: 'Trả lại',
+  lock: 'Khoá',
+  unlock: 'Mở khoá',
+  suggest_all: 'Gợi ý toàn bộ',
 }
 
 export const demandPeriodKindLabels: EnumLabels = {

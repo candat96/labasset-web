@@ -44,7 +44,13 @@ import { DeleteIconButton, EditIconButton } from '@/components/icon-action'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/status-badge'
 import { FormDialog } from '@/components/form/FormDialog'
-import { TextField, NumberField, SelectField, SwitchField } from '@/components/form/fields'
+import {
+  TextField,
+  TextAreaField,
+  NumberField,
+  SelectField,
+  SwitchField,
+} from '@/components/form/fields'
 import { DateField } from '@/components/form/date-field'
 import { DatetimeField } from '@/components/form/datetime-field'
 import { MoneyField } from '@/components/form/money-field'
@@ -1846,7 +1852,7 @@ function PartDialog({
         name="source"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>{t('detail.parts.source')}</FormLabel>
+            <FormLabel required>{t('detail.parts.source')}</FormLabel>
             <div className="flex flex-wrap gap-3">
               {PART_SOURCES.map((item) => (
                 <label key={item} className="flex items-center gap-2 text-sm">
@@ -1944,19 +1950,7 @@ function PartDialog({
           <MoneyField control={form.control} name="cost" label={t('detail.parts.cost')} />
         </>
       )}
-      <FormField
-        control={form.control}
-        name="note"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>{t('detail.parts.note')}</FormLabel>
-            <FormControl>
-              <Textarea {...field} rows={3} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      <TextAreaField control={form.control} name="note" label={t('detail.parts.note')} />
     </FormDialog>
   )
 }
@@ -2141,13 +2135,19 @@ function CostDialog({
         control={form.control}
         name="category"
         label={t('detail.costs.category')}
+        required
         options={COST_CATEGORIES.map((item) => ({
           value: item,
           label: costCategoryMap[item]?.label ?? item,
         }))}
       />
-      <TextField control={form.control} name="description" label={t('detail.costs.description')} />
-      <MoneyField control={form.control} name="amount" label={t('detail.costs.amount')} />
+      <TextField
+        control={form.control}
+        name="description"
+        label={t('detail.costs.description')}
+        required
+      />
+      <MoneyField control={form.control} name="amount" label={t('detail.costs.amount')} required />
       <TextField control={form.control} name="invoiceNo" label={t('detail.costs.invoiceNoFull')} />
       <DateField control={form.control} name="invoiceDate" label={t('detail.costs.invoiceDate')} />
       <DatetimeField control={form.control} name="paidAt" label={t('detail.costs.paidAt')} />

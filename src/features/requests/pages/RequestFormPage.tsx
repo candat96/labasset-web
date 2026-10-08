@@ -90,6 +90,20 @@ export function Component() {
     },
   })
   const items = useFieldArray({ control: form.control, name: 'items' })
+  /**
+   * Đổi loại phiếu là bắt đầu một phiếu khác, nên xoá các ô chỉ thuộc loại cũ.
+   * Giữ lại thì nội dung tab vật tư chảy sang tab sửa chữa và người dùng thấy
+   * hai phiếu giống nhau (bảng lỗi 2026-10-07, mục #14). Khoa, mức độ và hạn
+   * là thông tin chung nên giữ.
+   */
+  const switchType = (next: 'supply' | 'repair') => {
+    if (form.getValues('type') === next) return
+    form.setValue('type', next)
+    form.setValue('reason', '')
+    form.setValue('equipmentId', null)
+    form.setValue('items', next === 'supply' ? [{ supplyId: '', qtyRequested: '0', note: '' }] : [])
+    form.clearErrors()
+  }
   useEffect(() => {
     if (!detail.data) return
     form.reset({
@@ -160,14 +174,14 @@ export function Component() {
                 <Button
                   type="button"
                   variant={type === 'supply' ? 'default' : 'outline'}
-                  onClick={() => form.setValue('type', 'supply')}
+                  onClick={() => switchType('supply')}
                 >
                   {t('typeSupply')}
                 </Button>
                 <Button
                   type="button"
                   variant={type === 'repair' ? 'default' : 'outline'}
-                  onClick={() => form.setValue('type', 'repair')}
+                  onClick={() => switchType('repair')}
                 >
                   {t('typeRepair')}
                 </Button>

@@ -199,6 +199,35 @@
   --radius-2xl: calc(var(--radius) + 8px);
 }
 
+/*
+ * Thanh cuộn luôn thấy trong vùng cuộn của bảng. Trên macOS thanh cuộn chỉ
+ * hiện khi đang cuộn, nên người dùng không biết bảng còn cột bên phải (bảng
+ * lỗi 2026-10-07, mục #26).
+ */
+@utility scroll-visible {
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+
+  &::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border: 2px solid transparent;
+    border-radius: 9999px;
+    background-clip: content-box;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: var(--color-muted-foreground);
+    background-clip: content-box;
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

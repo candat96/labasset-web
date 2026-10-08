@@ -20,6 +20,8 @@ interface BaseProps<T extends FieldValues> {
   disabled?: boolean
   /** Hiện dấu sao đỏ ở nhãn; không thay ràng buộc, việc đó vẫn ở zod. */
   required?: boolean
+  /** Lớp bố cục của nơi dùng, thường là số cột ô chiếm trong lưới. */
+  className?: string
 }
 
 /**
@@ -42,6 +44,7 @@ export function TextField<T extends FieldValues>({
   description,
   disabled,
   required,
+  className,
   type = 'text',
   placeholder,
   autoComplete,
@@ -62,7 +65,7 @@ export function TextField<T extends FieldValues>({
       control={control}
       name={name}
       render={({ field }) => (
-        <FormItem>
+        <FormItem className={className}>
           <FormLabel required={required}>{label}</FormLabel>
           <FormControl>
             <Input

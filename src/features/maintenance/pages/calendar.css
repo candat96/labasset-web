@@ -61,12 +61,16 @@
   border-radius: var(--radius-sm);
 }
 
-/* Sự kiện: nền tonal + chữ đậm cho dễ đọc, viền trái phân loại. */
+/* Sự kiện: nền tonal + chữ đậm cho dễ đọc, viền trái phân loại.
+   Chữ dùng token `*-fg` (đã kiểm tương phản ≥ 4,5:1 trên nền `*-bg`) và
+   weight 500; trước đây chữ xanh nhạt trên nền xanh nhạt khó đọc, nhất là
+   trên màn chiếu phòng họp (bảng lỗi 2026-10-07, mục #1 nhóm Lịch). */
 .calendar-shell .fc .fc-event {
   border-left-width: 3px;
   border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: 0.75rem;
+  font-weight: 500;
   padding: 1px 6px;
 }
 
@@ -79,7 +83,7 @@
 .calendar-shell .fc .fc-event-type-maintenance {
   background-color: var(--primary-soft);
   border-color: var(--primary);
-  color: var(--primary);
+  color: var(--info-fg);
 }
 
 .calendar-shell .fc .fc-event-type-calibration {

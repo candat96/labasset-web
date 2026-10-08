@@ -12,6 +12,7 @@ import { DataList, type DataListItem } from '@/components/page/DataList'
 import { CardSkeleton, DetailSkeleton } from '@/components/page/DetailSkeleton'
 import { EmptyState } from '@/components/page/EmptyState'
 import { ActionMenu } from '@/components/page/ActionMenu'
+import { ConfirmDialog } from '@/components/page/ConfirmDialog'
 import {
   Table,
   TableBody,
@@ -32,6 +33,7 @@ import {
   MapPin,
   Package,
   Pencil,
+  Power,
   Printer,
   Puzzle,
   QrCode,
@@ -202,8 +204,24 @@ export function Component() {
   const userNames = useUserNames(isAdm)
   const departmentNames = useDepartmentNames()
   const [statusOpen, setStatusOpen] = useState(false)
+  const [activateOpen, setActivateOpen] = useState(false)
   const [cloneOpen, setCloneOpen] = useState(false)
   const [transferOpen, setTransferOpen] = useState(false)
+  // Kích hoạt hồ sơ nháp: đổi trạng thái sang Hoạt động với lý do ghi sẵn, API
+  // tự lấy hôm nay làm ngày đưa vào sử dụng nếu hồ sơ chưa có ngày.
+  const activate = useMutation({
+    mutationFn: () =>
+      api.changeEquipmentStatus(id, {
+        status: 'active',
+        reason: t('actions.activateReason', { defaultValue: 'Kích hoạt đưa vào sử dụng' }),
+      }),
+    onSuccess: () => {
+      toast.success(t('actions.activated', { defaultValue: 'Đã kích hoạt thiết bị' }))
+      setActivateOpen(false)
+      invalidate()
+    },
+    onError: (error) => toast.error(messageFor(error)),
+  })
   if (detail.isPending) return <DetailSkeleton label={t('loading')} />
   if (detail.error) return <ErrorState error={detail.error} onRetry={() => void detail.refetch()} />
   const row = detail.data
@@ -270,10 +288,21 @@ export function Component() {
         actions={
           <ActionMenu
             items={[
+              // Hồ sơ nháp: việc cần làm tiếp theo là kích hoạt, nên đó là nút
+              // chính; bấm một lần là máy sang "Hoạt động" và lấy hôm nay làm
+              // ngày đưa vào sử dụng (bảng lỗi 2026-10-07, mục #16).
+              canWrite &&
+                status === 'draft' && {
+                  key: 'activate',
+                  label: t('actions.activate', { defaultValue: 'Kích hoạt' }),
+                  variant: 'primary' as const,
+                  icon: <Power />,
+                  onClick: () => setActivateOpen(true),
+                },
               canWrite && {
                 key: 'status',
                 label: t('actions.changeStatus'),
-                variant: 'primary',
+                variant: status === 'draft' ? undefined : ('primary' as const),
                 disabled: status === 'disposed',
                 onClick: () => setStatusOpen(true),
               },
@@ -427,7 +456,6 @@ export function Component() {
           components: 'config',
           repairs: 'service',
           maintenance: 'service',
-          transfers: 'history',
           timeline: 'history',
           audit: 'history',
         }}
@@ -530,17 +558,8 @@ export function Component() {
             label: t('tabs.history', { defaultValue: 'Lịch sử' }),
             content: (
               <>
-                <div data-testid="section-transfers">
-                  <TransfersTab
-                    id={id}
-                    canWrite={canWrite}
-                    isAdm={isAdm}
-                    userId={userId}
-                    userNames={userNames}
-                    departmentNames={departmentNames}
-                    onCreate={() => setTransferOpen(true)}
-                  />
-                </div>
+                {/* Điều chuyển có tab riêng: nó là việc phải làm (đề nghị,
+                    duyệt), không phải sổ lịch sử (bảng lỗi 2026-10-07, #19). */}
                 <div data-testid="section-timeline">
                   <TimelineTab id={id} userNames={userNames} />
                 </div>
@@ -548,6 +567,23 @@ export function Component() {
                   <AuditTrail entityType="equipment" entityId={id} />
                 </SectionCard>
               </>
+            ),
+          },
+          {
+            value: 'transfers',
+            label: t('tabs.transfers', { defaultValue: 'Điều chuyển' }),
+            content: (
+              <div data-testid="section-transfers">
+                <TransfersTab
+                  id={id}
+                  canWrite={canWrite}
+                  isAdm={isAdm}
+                  userId={userId}
+                  userNames={userNames}
+                  departmentNames={departmentNames}
+                  onCreate={() => setTransferOpen(true)}
+                />
+              </div>
             ),
           },
         ]}
@@ -561,6 +597,17 @@ export function Component() {
           onDone={invalidate}
         />
       )}
+      <ConfirmDialog
+        open={activateOpen}
+        onOpenChange={setActivateOpen}
+        title={t('actions.activateTitle', { defaultValue: 'Kích hoạt thiết bị?' })}
+        description={t('actions.activateHint', {
+          defaultValue:
+            'Thiết bị sang trạng thái Hoạt động và lấy hôm nay làm ngày đưa vào sử dụng (nếu hồ sơ chưa ghi ngày).',
+        })}
+        loading={activate.isPending}
+        onConfirm={() => activate.mutate()}
+      />
       {cloneOpen && <CloneDialog id={id} onClose={() => setCloneOpen(false)} onDone={invalidate} />}
       {transferOpen && (
         <TransferDialog id={id} onClose={() => setTransferOpen(false)} onDone={invalidate} />
@@ -691,7 +738,7 @@ function Overview({ row }: { row: NonNullable<ReturnType<typeof useEquipment>['d
       <SectionCard title={t('overview.general', { defaultValue: 'Thông tin chung' })}>
         <DataList columns={3} items={general} />
       </SectionCard>
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid gap-5 xl:grid-cols-2">
         <SectionCard title={t('overview.purchase', { defaultValue: 'Mua sắm & bảo hành' })}>
           <DataList columns={2} items={purchase} />
         </SectionCard>
@@ -772,8 +819,10 @@ function NetworkTab({ id, canWrite }: { id: string; canWrite: boolean }) {
       description={t('network.hint', { defaultValue: 'Kết nối mạng, LIS và máy tính chủ' })}
     >
       <Form {...form}>
+        {/* Bốn cột trên màn rộng: các ô mạng đều ngắn (IP, MAC, cổng…), xếp hai
+            cột thì nửa hàng bỏ trống (bảng lỗi 2026-10-07, mục #18). */}
         <form
-          className="grid max-w-2xl gap-4 sm:grid-cols-2"
+          className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
           onSubmit={form.handleSubmit(() => save.mutate())}
         >
           <TextField
@@ -817,6 +866,7 @@ function NetworkTab({ id, canWrite }: { id: string; canWrite: boolean }) {
             name="lisNote"
             label={t('network.lisNote')}
             disabled={!canWrite}
+            className="xl:col-span-2"
           />
           <TextField
             control={form.control}
@@ -834,7 +884,7 @@ function NetworkTab({ id, canWrite }: { id: string; canWrite: boolean }) {
             control={form.control}
             name="diagramFileId"
             render={({ field }) => (
-              <FormItem className="sm:col-span-2">
+              <FormItem className="sm:col-span-2 xl:col-span-4">
                 <FileField
                   label={t('network.diagram')}
                   value={field.value}
@@ -1937,7 +1987,7 @@ function CountersTab({ id, canWrite }: { id: string; canWrite: boolean }) {
       .join(' ')
   return (
     <>
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-5 md:grid-cols-2">
         <SectionCard title={t('counters.runHoursChart')} bodyClassName="pt-0">
           <svg
             viewBox="0 0 320 80"
@@ -2112,7 +2162,7 @@ function MaintenanceTab({ id }: { id: string }) {
   const taskRows = tasks.data?.items ?? []
   const calRows = cals.data ?? []
   return (
-    <div className="grid gap-4 xl:grid-cols-2">
+    <div className="grid gap-5 xl:grid-cols-2">
       <SectionCard title={t('maintenance.tasks')} flush={taskRows.length > 0}>
         {tasks.isPending && (
           <p role="status" className="text-muted-foreground text-[13px]">
