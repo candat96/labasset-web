@@ -178,12 +178,11 @@ it('renders the AI provider form with chat and embedding blocks', async () => {
   expect(screen.getByLabelText('Nhà cung cấp')).toHaveTextContent('OpenAI')
   expect(screen.getByLabelText('Base URL')).toHaveValue('https://api.openai.com/v1')
   expect(screen.getByLabelText('Mô hình')).toHaveValue('gpt-4o-mini')
-  // Ô nhập khoá bị ẩn: khoá do bên vận hành đặt chung, viện không tự khai.
-  expect(screen.getByLabelText('API key (đã đặt)')).not.toBeVisible()
+  expect(screen.getByLabelText('API key (đã đặt)')).toBeVisible()
   expect(screen.getByLabelText('Giao thức embedding')).toHaveTextContent('OpenAI-compatible')
   expect(screen.getByLabelText('Base URL embedding')).toHaveValue('https://api.openai.com/v1')
   expect(screen.getByLabelText('Mô hình embedding')).toHaveValue('text-embedding-3-small')
-  expect(screen.getByLabelText('API key embedding (chưa đặt)')).not.toBeVisible()
+  expect(screen.getByLabelText('API key embedding (chưa đặt)')).toBeVisible()
   expect(screen.queryByText(/API D2 chưa có/)).toBeNull()
 })
 
@@ -289,11 +288,10 @@ it('PUT sends changed ai.* keys per the provider contract and skips empty keys',
   })
 })
 
-it('không cho viện tự sửa hay xoá khoá API — khoá do bên vận hành đặt chung', async () => {
+it('viện khai được khoá API của nhà cung cấp riêng và xoá được khoá đang đặt', async () => {
   await openAiTab()
-  // Ô nhập và nút xoá vẫn nằm trong cây để bật lại dễ, nhưng người dùng không thấy.
-  expect(screen.getByLabelText('API key (đã đặt)')).not.toBeVisible()
-  expect(screen.getByRole('button', { name: 'Xoá key', hidden: true })).not.toBeVisible()
+  expect(screen.getByLabelText('API key (đã đặt)')).toBeVisible()
+  expect(screen.getByRole('button', { name: 'Xoá key' })).toBeVisible()
 })
 
 it('test connection shows latency and model on success', async () => {
@@ -369,4 +367,18 @@ it('validates Headers JSON as object<string,string> and blocks save on error', a
     target: { value: '{"HTTP-Referer": "https://labasset.example"}' },
   })
   expect(screen.queryByText(/Headers phải là JSON object/)).toBeNull()
+})
+
+it('gửi khoá API mới lên máy chủ khi lưu', async () => {
+  let sent: Record<string, unknown> | undefined
+  server.use(
+    http.put('/v1/settings', async ({ request }) => {
+      sent = (await request.json()) as Record<string, unknown>
+      return HttpResponse.json(settings)
+    }),
+  )
+  await openAiTab()
+  await userEvent.type(screen.getByLabelText('API key (đã đặt)'), 'sk-moi')
+  await userEvent.click(screen.getByRole('button', { name: 'Lưu thay đổi' }))
+  await waitFor(() => expect(sent?.['ai.chat.apiKey']).toBe('sk-moi'))
 })

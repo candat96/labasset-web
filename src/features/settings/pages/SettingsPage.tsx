@@ -219,13 +219,14 @@ function previewText(result: { example?: string } | string) {
 const TABS = ['hospital', 'workflow', 'stock', 'alerts', 'numbering', 'kpi', 'ai', 'other'] as const
 
 /**
- * Khoá API của nhà cung cấp AI do bên vận hành đặt chung cho mọi viện, nên ô nhập
- * khoá được ẩn khỏi màn cài đặt: bày ra chỉ khiến người dùng tưởng mình phải tự
- * khai, rồi dán nhầm khoá vào một viện và AI viện đó chết riêng.
+ * Hiện ô nhập khoá API của nhà cung cấp AI trong màn cài đặt.
  *
- * Đổi thành `true` là hiện lại, không phải dựng lại gì.
+ * Trước đây ẩn vì khoá do bên vận hành đặt chung cho mọi viện, nhưng khi viện tự
+ * dùng nhà cung cấp riêng thì không còn chỗ nào khai khoá — phải sửa thẳng trong
+ * bảng cấu hình. Khoá vẫn lưu ở máy chủ và chỉ trả về cờ "đã đặt", không bao giờ
+ * trả lại giá trị.
  */
-const SHOW_API_KEY_FIELDS = false
+const SHOW_API_KEY_FIELDS = true
 
 export function Component() {
   const { t } = useTranslation('settings')
@@ -1070,6 +1071,7 @@ export function Component() {
                               id="ai-chat-key"
                               type="password"
                               autoComplete="new-password"
+                              placeholder={chatKeySet ? undefined : t('ai.apiKeyPlaceholder')}
                               value={ai.chat.apiKey}
                               onChange={(event) =>
                                 setAi((current) => ({

@@ -159,7 +159,8 @@
     "statusEmbeddingOff": "Tắt",
     "statusBudget": "Ngân sách tháng",
     "statusBudgetValue": "Đã dùng {{used}} / {{total}} token",
-    "statusBudgetUnlimited": "Đã dùng {{used}} token (không giới hạn)"
+    "statusBudgetUnlimited": "Đã dùng {{used}} token (không giới hạn)",
+    "apiKeyPlaceholder": "Dán khoá của nhà cung cấp, ví dụ sk-…"
   },
   "backup": {
     "title": "Sao lưu & khôi phục",
